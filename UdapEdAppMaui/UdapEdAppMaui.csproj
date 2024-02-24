@@ -22,10 +22,10 @@
         <Nullable>enable</Nullable>
 
         <!-- Display name -->
-        <ApplicationTitle>UdapEdAppMaui</ApplicationTitle>
+        <ApplicationTitle>UdapEd</ApplicationTitle>
 
         <!-- App Identifier -->
-        <ApplicationId>com.companyname.udapedappmaui</ApplicationId>
+        <ApplicationId>net.fhirlabs.udaped</ApplicationId>
 
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -65,7 +65,7 @@
         <PackageReference Include="Serilog" Version="3.1.1" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-        <PackageReference Include="Udap.Client" Version="0.3.10" />
+        <PackageReference Include="Udap.Client" Version="0.3.*" />
     </ItemGroup>
 
     <ItemGroup>
