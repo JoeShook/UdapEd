@@ -5,6 +5,8 @@
 @using System.Collections.Specialized
 @using UdapEd.Shared.Model.Discovery
 @using UdapEd.Shared.Services
+@using UdapEd.Shared.Model.Smart;
+
 @implements UdapEd.Shared.Services.IAppState
 @inject ILocalStorageService LocalStorageService
 
@@ -174,6 +176,8 @@
     public AccessCodeRequestResult? AccessCodeRequestResult { get; private set; }
 
     public LoginCallBackResult? LoginCallBackResult { get; private set; }
+
+    public SmartSession? SmartSession { get; private set; }
 
     public TokenResponseModel? AccessTokens { get; private set; }
 

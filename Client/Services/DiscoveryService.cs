@@ -8,6 +8,7 @@
 #endregion
 
 using System.Net.Http.Json;
+using Hl7.Fhir.Model;
 using Udap.Model;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Discovery;
@@ -58,7 +59,20 @@ public class DiscoveryService : IDiscoveryService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed {GET /Metadata?");
+            _logger.LogError(ex, "Failed GET /Metadata?");
+            return null;
+        }
+    }
+
+    public async Task<CapabilityStatement?> GetCapabilityStatement(string url, CancellationToken token)
+    {
+        try
+        {
+            return await _httpClient.GetFromJsonAsync<CapabilityStatement>(url, token);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed GET /CapabilityStatement?");
             return null;
         }
     }

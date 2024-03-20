@@ -146,9 +146,6 @@
     [CascadingParameter]
     public CascadingAppState AppState { get; set; } = null!;
 
-    [CascadingParameter]
-    public MainLayout Layout { get; set; } = null!;
-
     [Inject] IFhirService FhirService { get; set; } = null!;
     [Inject] IDiscoveryService DiscoveryService { get; set; } = null!;
 
