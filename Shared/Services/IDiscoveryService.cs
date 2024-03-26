@@ -8,14 +8,16 @@
 #endregion
 
 using Hl7.Fhir.Model;
+using Udap.Smart.Model;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Discovery;
 
 namespace UdapEd.Shared.Services;
 public interface IDiscoveryService
 {
-    Task<MetadataVerificationModel?> GetMetadataVerificationModel(string metadataUrl, string? community, CancellationToken token);
+    Task<MetadataVerificationModel?> GetUdapMetadataVerificationModel(string metadataUrl, string? community, CancellationToken token);
     Task<CapabilityStatement?> GetCapabilityStatement(string url, CancellationToken token);
+    Task<SmartMetadata?> GetSmartMetadata(string metadataUrl, CancellationToken token);
     Task<CertificateStatusViewModel?> UploadAnchorCertificate(string certBytes);
     Task<CertificateStatusViewModel?> LoadUdapOrgAnchor();
     Task<CertificateStatusViewModel?> AnchorCertificateLoadStatus();

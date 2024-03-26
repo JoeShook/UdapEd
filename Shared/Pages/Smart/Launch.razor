@@ -1,0 +1,19 @@
+﻿@page "/smart/launch"
+@using Microsoft.IdentityModel.Tokens
+@using UdapEd.Shared.Extensions
+@using UdapEd.Shared.Model.Smart
+@using UdapEd.Shared.Services
+@using UdapEd.Shared.Services.Http
+@using Microsoft.AspNetCore.WebUtilities
+
+
+
+
+<MudExpansionPanels MultiExpansion="true">
+    <MudExpansionPanel Text="Metadata">
+        <pre>@Metadata</pre>
+    </MudExpansionPanel>
+    <MudExpansionPanel Text=".well-known/smart-configuration">
+        <pre>@SmartMetadata</pre>
+    </MudExpansionPanel>
+</MudExpansionPanels>

@@ -7,8 +7,11 @@
 // */
 #endregion
 
+using System.Net.Http.Json;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
+using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Udap.Client.Client;
@@ -17,11 +20,13 @@ using Udap.Common.Certificates;
 using Udap.Common.Extensions;
 using Udap.Common.Models;
 using Udap.Model;
+using Udap.Smart.Model;
 using Udap.Util.Extensions;
 using UdapEd.Shared;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Discovery;
 using UdapEd.Shared.Services;
+using Task = System.Threading.Tasks.Task;
 
 namespace UdapEdAppMaui.Services;
 internal class DiscoveryService : IDiscoveryService
@@ -40,7 +45,7 @@ internal class DiscoveryService : IDiscoveryService
     }
 
 
-    public async Task<MetadataVerificationModel?> GetMetadataVerificationModel(string metadataUrl, string? community,
+    public async Task<MetadataVerificationModel?> GetUdapMetadataVerificationModel(string metadataUrl, string? community,
         CancellationToken token)
     {
         try
@@ -119,6 +124,28 @@ internal class DiscoveryService : IDiscoveryService
 
             return null;
         }
+    }
+
+    public async Task<CapabilityStatement?> GetCapabilityStatement(string url, CancellationToken token)
+    {
+        try
+        {
+            //var response = await _httpClient.GetStringAsync($"Metadata/metadata?metadataUrl={url}");
+            var response = await _httpClient.GetStringAsync(url);
+            var statement = new FhirJsonParser().Parse<CapabilityStatement>(response);
+
+            return statement;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed GET /Metadata/metadata");
+            return null;
+        }
+    }
+
+    public async Task<SmartMetadata?> GetSmartMetadata(string metadataUrl, CancellationToken token)
+    {
+        return await _httpClient.GetFromJsonAsync<SmartMetadata>(metadataUrl, token);
     }
 
     public async Task<CertificateStatusViewModel?> UploadAnchorCertificate(string base64String)

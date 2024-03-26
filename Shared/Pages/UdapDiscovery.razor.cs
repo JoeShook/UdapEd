@@ -180,7 +180,7 @@ public partial class UdapDiscovery: IDisposable
         {
             if (BaseUrl != null)
             {
-                var model = await MetadataService.GetMetadataVerificationModel(BaseUrl, Community, default);
+                var model = await MetadataService.GetUdapMetadataVerificationModel(BaseUrl, Community, default);
                 await AppState.SetPropertyAsync(this, nameof(AppState.MetadataVerificationModel), model);
             }
 
@@ -226,7 +226,7 @@ public partial class UdapDiscovery: IDisposable
         {
             if (BaseUrl != null)
             {
-                var result = await MetadataService.GetMetadataVerificationModel(BaseUrl, Community, token);
+                var result = await MetadataService.GetUdapMetadataVerificationModel(BaseUrl, Community, token);
 
                 if (result != null)
                 {

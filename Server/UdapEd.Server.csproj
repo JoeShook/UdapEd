@@ -12,9 +12,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Duende.IdentityServer" Version="7.0.1" />
-    <PackageReference Include="Duende.IdentityServer.Storage" Version="7.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.2" />
+    <PackageReference Include="Duende.IdentityServer" Version="7.0.3" />
+    <PackageReference Include="Duende.IdentityServer.Storage" Version="7.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.3" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.6" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.7.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
@@ -26,6 +26,7 @@
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.7.0" />
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.7.1" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.7.1" />
+    <PackageReference Include="Udap.Smart.Model" Version="0.3.24" />
 
   </ItemGroup>
 
@@ -35,9 +36,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Udap.Client" Version="0.3.*" />
-    <PackageReference Include="Udap.Model" Version="0.3.*" />
-    <PackageReference Include="Udap.Common" Version="0.3.*" />
+    <PackageReference Include="Udap.Client" Version="0.3.24" />
+    <PackageReference Include="Udap.Model" Version="0.3.24" />
+    <PackageReference Include="Udap.Common" Version="0.3.24" />
   </ItemGroup>
 
   <ItemGroup>
@@ -53,6 +54,10 @@
     <None Update="SureFhirLabs_CA.cer">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

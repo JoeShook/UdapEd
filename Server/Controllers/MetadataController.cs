@@ -7,8 +7,12 @@
 // */
 #endregion
 
+using System;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
+using Hl7.Fhir.Model;
+using Hl7.Fhir.Rest;
+using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
@@ -81,6 +85,34 @@ public class MetadataController : Controller
         }
 
         return BadRequest("Missing anchor");
+    }
+
+    /// <summary>
+    /// This is ran from the WASM client instead via DirectoryService.cs
+    /// Leaving here for experimentation.
+    /// </summary>
+    /// <param name="metadataUrl"></param>
+    /// <returns></returns>
+    [HttpGet("metadata")]
+    public async Task<IActionResult> Get([FromQuery] string metadataUrl)
+    {
+        try
+        {
+            var client = new FhirClient(metadataUrl);
+            var result = await client.CapabilityStatementAsync();
+
+            if (result == null)
+            {
+                return NotFound();
+            }
+            
+            return Ok(await result.ToJsonAsync());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed loading metadata from {metadataUrl}", metadataUrl);
+            return BadRequest();
+        }
     }
 
     // get metadata from .well-known/udap  that is not validated and trust is not validated

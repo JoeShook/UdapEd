@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using Udap.Model.Registration;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Discovery;
+using UdapEd.Shared.Model.Smart;
 
 namespace UdapEd.Shared.Services;
 
@@ -33,6 +34,8 @@ public interface IAppState
     AccessCodeRequestResult? AccessCodeRequestResult { get;  }
 
     LoginCallBackResult? LoginCallBackResult { get;  }
+
+    SmartSession? SmartSession { get; }
 
     TokenResponseModel? AccessTokens { get;  }
 

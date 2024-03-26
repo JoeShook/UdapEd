@@ -9,7 +9,10 @@
 
 using System.Net.Http.Json;
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Rest;
+using Hl7.Fhir.Serialization;
 using Udap.Model;
+using Udap.Smart.Model;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Discovery;
 using UdapEd.Shared.Services;
@@ -26,8 +29,8 @@ public class DiscoveryService : IDiscoveryService
         _httpClient = httpClient;
         _logger = logger;
     }
-
-    public async Task<MetadataVerificationModel?> GetMetadataVerificationModel(string metadataUrl, string? community, CancellationToken token)
+    
+    public async Task<MetadataVerificationModel?> GetUdapMetadataVerificationModel(string metadataUrl, string? community, CancellationToken token)
     {
         try
         {
@@ -68,13 +71,22 @@ public class DiscoveryService : IDiscoveryService
     {
         try
         {
-            return await _httpClient.GetFromJsonAsync<CapabilityStatement>(url, token);
+            //var response = await _httpClient.GetStringAsync($"Metadata/metadata?metadataUrl={url}");
+            var response = await _httpClient.GetStringAsync(url);
+            var statement = new FhirJsonParser().Parse<CapabilityStatement>(response);
+            
+            return statement;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed GET /CapabilityStatement?");
+            _logger.LogError(ex, "Failed GET /Metadata/metadata");
             return null;
         }
+    }
+
+    public async Task<SmartMetadata?> GetSmartMetadata(string metadataUrl, CancellationToken token)
+    {
+        return await _httpClient.GetFromJsonAsync<SmartMetadata>(metadataUrl, token);
     }
 
     public async Task<CertificateStatusViewModel?> UploadAnchorCertificate(string certBytes)

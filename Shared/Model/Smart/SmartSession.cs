@@ -12,7 +12,7 @@ public class SmartSession
         State = state;
     }
 
-    public StringValues ServiceUri { get; set; }
+    public string ServiceUri { get; set; }
     public CapabilityStatement? CapabilityStatement { get; set; }
     public string RedirectUri { get; set; }
     public string? TokenUri { get; set; }
