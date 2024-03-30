@@ -88,7 +88,7 @@ public class MetadataController : Controller
     }
 
     /// <summary>
-    /// This is ran from the WASM client instead via DirectoryService.cs
+    /// This is run from the WASM client instead via DirectoryService.cs
     /// Leaving here for experimentation.
     /// </summary>
     /// <param name="metadataUrl"></param>
@@ -243,6 +243,17 @@ public class MetadataController : Controller
 
         return Ok();
     }
+
+    // TODO: If I start building public and confidential base clients this should not exist?
+    // Well confidential should not need this but public would.
+    [HttpPut("Token")]
+    public IActionResult SetToken([FromBody] string token)
+    {
+        HttpContext.Session.SetString(UdapEdConstants.TOKEN, token);
+
+        return Ok();
+    }
+
 
     [HttpGet("MyIp")]
     public IActionResult Get()

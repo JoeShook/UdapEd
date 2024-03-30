@@ -17,4 +17,6 @@ public class SmartSession
     public string RedirectUri { get; set; }
     public string? TokenUri { get; set; }
     public string AuthCodeUrlWithQueryString { get; set; }
+    public string Challenge { get; set; }
+    public string Verifier { get; set; }
 }

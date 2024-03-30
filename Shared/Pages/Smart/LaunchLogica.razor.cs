@@ -21,10 +21,10 @@ using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace UdapEd.Shared.Pages.Smart;
 
-public partial class LaunchBP
+public partial class LaunchLogica
 {
     // private string _requestClientId = "udaped-client";
-    private readonly string _requestClientId = "udaped-client";
+    private readonly string _requestClientId = "12377c4d-72f8-4ff5-93d2-ff0ffd26317b";
     // private string? _launchEhrOpenidProfilePatient = "launch-ehr openid profile patient/*.*";
     private string? _launchEhrOpenidProfilePatient = "patient/*.read launch openid";
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
@@ -203,7 +203,7 @@ public partial class LaunchBP
                 .Add("client_id", client?.ClientId ?? string.Empty)
                 .Add("response_type", "code")
                 .Add("scope", client?.Scope ?? string.Empty)
-                .Add("redirect_uri", "https://localhost:7041/smart/launchBP")
+                .Add("redirect_uri", "http://localhost:5171/Smart/launchBP")
                 .Add("aud", iss!)
                 .Add("launch", launch!)
                 .Add("state", state)
@@ -216,13 +216,9 @@ public partial class LaunchBP
                 RedirectUri = redirectUri,
                 TokenUri = smartMetadata.token_endpoint,
                 // CapabilityStatement = capabilityStatement,
-                AuthCodeUrlWithQueryString = builder.Build(),
-                Challenge = challenge,
-                Verifier = verifier
+                AuthCodeUrlWithQueryString = builder.Build()
             };
 
-
-            
             AppState.SetProperty(this, nameof(AppState.SmartSession), session, true, false);
 
             var smartContext = JsonSerializer.Serialize(session, new JsonSerializerOptions { WriteIndented = true });
@@ -247,8 +243,8 @@ public partial class LaunchBP
         request.ClientCredentialStyle = ClientCredentialStyle.PostBody;
         request.Parameters.AddRequired(OidcConstants.TokenRequest.Code, AuthCode);
         request.Parameters.AddRequired(OidcConstants.TokenRequest.GrantType, "authorization_code");
-        request.Parameters.AddRequired(OidcConstants.TokenRequest.RedirectUri, "https://localhost:7041/smart/launchBP");
-        request.Parameters.AddRequired(OidcConstants.TokenRequest.CodeVerifier, AppState.SmartSession?.Verifier);
+        request.Parameters.AddRequired(OidcConstants.TokenRequest.RedirectUri, "http://localhost:5171/Smart/launchBP");
+        request.Parameters.AddRequired(OidcConstants.TokenRequest.CodeVerifier, "joe");
         request.Prepare();
         request.Method = HttpMethod.Post;
 
@@ -292,36 +288,3 @@ public partial class LaunchBP
 }
 
 
-public static class Pkce
-{
-    /// <summary>
-    /// Generates a code_verifier and the corresponding code_challenge, as specified in RFC 7636.
-    /// </summary>
-    /// <param name="size">Size of the code_verifier (default is 32 bytes).</param>
-    /// <returns>A tuple containing the code_challenge and code_verifier.</returns>
-    /// <remarks>See [RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636)</remarks>
-    public static (string code_challenge, string verifier) Generate(int size = 32)
-    {
-        using var rng = RandomNumberGenerator.Create();
-        var randomBytes = new byte[size];
-        rng.GetBytes(randomBytes);
-
-        // Generate code_verifier
-        var verifier = Base64UrlEncode(randomBytes);
-
-        // Compute SHA-256 hash of code_verifier
-        var buffer = Encoding.UTF8.GetBytes(verifier);
-        var hash = SHA256.Create().ComputeHash(buffer);
-
-        // Generate code_challenge
-        var challenge = Base64UrlEncode(hash);
-
-        return (challenge, verifier);
-    }
-
-    private static string Base64UrlEncode(byte[] data) =>
-        Convert.ToBase64String(data)
-            .Replace("+", "-")
-            .Replace("/", "_")
-            .TrimEnd('=');
-}
