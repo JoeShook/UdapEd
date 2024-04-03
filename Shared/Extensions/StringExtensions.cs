@@ -24,19 +24,20 @@ public static class StringExtensions
         return input;
     }
 
-    public static string ToMauiAppScheme(this string uriString)
+    public static string ToPlatformScheme(this string uriString)
     {
+#if ANDROID || IOS || MACCATALYST || WINDOWS
         var uri = new Uri(uriString);
 
         if (uri.Scheme == "http" || uri.Scheme == "https")
         {
             return $"mauiapp{Uri.SchemeDelimiter}{uri.Authority}{uri.AbsolutePath}";
         }
-
+#endif
         return uriString;
     }
 
-    public static ICollection<string> ToMauiAppSchemes(this IEnumerable<string> uriStrings)
+    public static ICollection<string> ToPlatformSchemes(this IEnumerable<string> uriStrings)
     {
         var mauiAppSchemes = new List<string>();
 

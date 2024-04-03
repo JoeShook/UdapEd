@@ -145,7 +145,7 @@ internal class RegisterService : IRegisterService
             .WithTokenEndpointAuthMethod(UdapConstants.RegistrationDocumentValues.TokenEndpointAuthMethodValue)
             .WithScope(request.Scope ?? string.Empty)
             .WithResponseTypes(request.ResponseTypes)
-            .WithRedirectUrls(request.RedirectUris?.ToMauiAppSchemes())
+            .WithRedirectUrls(request.RedirectUris?.ToPlatformSchemes())
             .WithLogoUri(request.LogoUri ?? "https://udaped.fhirlabs.net/images/hl7/icon-fhir-32.png")
             .Build();
 

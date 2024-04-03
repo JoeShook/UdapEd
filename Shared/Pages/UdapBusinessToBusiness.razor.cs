@@ -126,7 +126,7 @@ public partial class UdapBusinessToBusiness
             State = $"state={CryptoRandom.CreateUniqueId()}",
             ClientId = $"client_id={AppState.ClientRegistrations?.SelectedRegistration?.ClientId}",
             Scope = $"scope={AppState.ClientRegistrations?.SelectedRegistration?.Scope}",
-            RedirectUri = $"redirect_uri={NavManager.Uri.RemoveQueryParameters().ToMauiAppScheme()}",
+            RedirectUri = $"redirect_uri={NavManager.Uri.RemoveQueryParameters().ToPlatformScheme()}",
             Aud = $"aud={AppState.BaseUrl}"
         };
 
@@ -402,7 +402,7 @@ public partial class UdapBusinessToBusiness
       
 #if ANDROID || IOS || MACCATALYST || WINDOWS
 
-        var result = await ExternalWebAuthenticator.AuthenticateAsync(AuthCodeRequestLink, NavManager.Uri.RemoveQueryParameters().ToMauiAppScheme());
+        var result = await ExternalWebAuthenticator.AuthenticateAsync(AuthCodeRequestLink, NavManager.Uri.RemoveQueryParameters().ToPlatformScheme());
 
         var loginCallbackResult = new LoginCallBackResult
         {

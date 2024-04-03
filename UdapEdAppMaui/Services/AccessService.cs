@@ -91,7 +91,7 @@ internal class AccessService : IAccessService
             tokenRequestModel.ClientId,
             tokenRequestModel.TokenEndpointUrl,
             clientCert,
-            tokenRequestModel.RedirectUrl?.ToMauiAppScheme(),
+            tokenRequestModel.RedirectUrl?.ToPlatformScheme(),
             tokenRequestModel.Code);
 
         var tokenRequest = tokenRequestBuilder.Build(tokenRequestModel.LegacyMode, signingAlgorithm);
