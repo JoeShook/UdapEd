@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
-using Microsoft.Maui.Authentication;
 using Udap.Common.Extensions;
 using Udap.Model;
 using UdapEd.Shared.Extensions;

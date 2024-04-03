@@ -212,6 +212,7 @@ public class RegisterController : Controller
 
         var document = dcrBuilder
             .WithAudience(request.Audience)
+            .WithIssuedAt(request.IssuedAt)
             .WithExpiration(request.Expiration)
             .WithJwtId(request.JwtId)
             .WithClientName(request.ClientName ?? UdapEdConstants.CLIENT_NAME)
@@ -281,6 +282,7 @@ public class RegisterController : Controller
 
         var document = dcrBuilder
             .WithAudience(request.Audience)
+            .WithIssuedAt(request.IssuedAt)
             .WithExpiration(request.Expiration)
             .WithJwtId(request.JwtId)
             .WithClientName(request.ClientName ?? UdapEdConstants.CLIENT_NAME)
@@ -352,6 +354,7 @@ public class RegisterController : Controller
         dcrBuilder.Document.Subject = document.Subject;
 
         dcrBuilder.WithAudience(document.Audience)
+            .WithIssuedAt(document.IssuedAt)
             .WithExpiration(document.Expiration)
             .WithJwtId(document.JwtId)
             .WithClientName(document.ClientName!)
@@ -412,6 +415,7 @@ public class RegisterController : Controller
         dcrBuilder.Document.Subject = document.Subject;
 
         dcrBuilder.WithAudience(document.Audience)
+            .WithIssuedAt(document.IssuedAt)
             .WithExpiration(document.Expiration)
             .WithJwtId(document.JwtId)
             .WithClientName(document.ClientName!)

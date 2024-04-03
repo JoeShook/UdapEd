@@ -7,8 +7,6 @@
 // */
 #endregion
 
-using Microsoft.Maui.Storage;
-
 namespace UdapEd.Shared.Extensions;
 public static class StringExtensions
 {

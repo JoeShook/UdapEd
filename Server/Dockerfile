@@ -16,6 +16,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 ENV GCPDeploy=true
+ENV UseMauiEssentials=false
 #this technique of setting env to control version is not working yet.
 ARG TAG_NAME
 ENV TAG_NAME_ENV=$TAG_NAME
@@ -25,17 +26,18 @@ COPY ["Server/UdapEd.Server.csproj", "Server/"]
 COPY ["Client/UdapEd.Client.csproj", "Client/"]
 COPY ["Shared/UdapEd.Shared.csproj", "Shared/"]
 
-RUN dotnet restore "Client/UdapEd.Client.csproj"
-RUN dotnet restore "Shared/UdapEd.Shared.csproj"
-RUN dotnet restore "Server/UdapEd.Server.csproj"
+RUN dotnet restore -p:TargetFramework=net8.0 "Shared/UdapEd.Shared.csproj"
+RUN dotnet restore -p:TargetFramework=net8.0 "Server/UdapEd.Server.csproj"
+RUN dotnet restore -p:TargetFramework=net8.0 "Client/UdapEd.Client.csproj" 
 COPY . .
 
-RUN dotnet build "Server/UdapEd.Server.csproj" -c Release  -o /app/build 
+RUN dotnet build "Server/UdapEd.Server.csproj" -p:TargetFramework=net8.0 -c Release --no-restore -o /app/build 
 
 
 FROM build AS publish
 ARG TAG_NAME
-RUN dotnet publish "Server/UdapEd.Server.csproj" --version-suffix 99 -c Release -o /app/publish /p:UseAppHost=false 
+ENV UseMauiEssentials=false
+RUN dotnet publish "Server/UdapEd.Server.csproj" -p:TargetFramework=net8.0  -c Release --no-restore -o /app/publish /p:UseAppHost=false 
 
 FROM base AS final
 WORKDIR /app

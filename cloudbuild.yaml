@@ -21,7 +21,7 @@ steps:
   '--image', 'us-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/fhirlabs.udaped:$TAG_NAME', 
   '--max-instances', '1', 
   '--concurrency', '5',
-  '--set-env-vars', 'MyIp=34.82.29.68,DOTNET_SYSTEM_NET_HTTP_SOCKETSHTTPHANDLER_HTTP3SUPPORT=false',
+  '--set-env-vars', 'MyIp=34.82.29.68,DOTNET_SYSTEM_NET_HTTP_SOCKETSHTTPHANDLER_HTTP3SUPPORT=false,proxy-hosts=35.212.149.197 fhirlabs.net;35.212.149.197 securedcontrols.net;35.212.149.197 idp1.securedcontrols.net;35.212.149.197 idp2.securedcontrols.net;35.212.149.197 udap.zimt.work;35.212.149.197 securefhir.zimt.work;35.212.149.197 test.udap.org;35.212.149.197 mktac-restapis-stable.meditech.com;35.212.149.197 udap.fast.poolnook.me;35.212.149.197 stage.healthtogo.me',
   '--vpc-connector', 'udaped-connect-us-west1',
   '--vpc-egress', 'all-traffic'
   ]

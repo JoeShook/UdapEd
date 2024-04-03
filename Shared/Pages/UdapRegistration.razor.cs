@@ -37,6 +37,8 @@ public partial class UdapRegistration
 
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
 
+    public bool ExactlyFiveMinExp { get; set; } = false;
+
     private string RawSoftwareStatementError { get; set; } = string.Empty;
 
     private string _beforeEncodingHeader = string.Empty;

@@ -206,6 +206,7 @@ internal class RegisterService : IRegisterService
         dcrBuilder.Document.Subject = document.Subject;
 
         dcrBuilder.WithAudience(document.Audience)
+            .WithIssuedAt(document.IssuedAt)
             .WithExpiration(document.Expiration)
             .WithJwtId(document.JwtId)
             .WithClientName(document.ClientName!)
@@ -263,6 +264,7 @@ internal class RegisterService : IRegisterService
         dcrBuilder.Document.Subject = document.Subject;
 
         dcrBuilder.WithAudience(document.Audience)
+            .WithIssuedAt(document.IssuedAt)
             .WithExpiration(document.Expiration)
             .WithJwtId(document.JwtId)
             .WithClientName(document.ClientName!)
