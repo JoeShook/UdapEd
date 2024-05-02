@@ -24,7 +24,7 @@ public class UdapClientState : IAppState
 {
     public UdapClientState() {}
 
-    public string BaseUrl { get; set; } = "https://fhirlabs.net/fhir/r4/.well-known/udap";
+    public string BaseUrl { get; set; }
 
     public string Community { get; set; }
 

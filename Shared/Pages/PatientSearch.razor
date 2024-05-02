@@ -1,11 +1,7 @@
 ﻿@page "/patientSearch"
 @using Hl7.Fhir.Model
-@using Hl7.Fhir.Serialization
 @using Task = System.Threading.Tasks.Task
-@using System.Net
 @using UdapEd.Shared.Extensions
-@using UdapEd.Shared.Services
-@using UdapEd.Shared.Shared
 
 
 <MudCard Elevation="3" Style="margin-top: 10px">
@@ -15,7 +11,7 @@
             <MudItem md="4" sm="6" xs="12">
                 <MudText Color="Color.Primary">Access Token:</MudText>
                 <MudText Color="@(AppState.Status is {IsValid: false }
-                                    ? Color.Error : Color.Success)">@AppState.AccessTokens?.AccessToken.TrimForDisplay(30, "...")</MudText>
+                                    ? Color.Error : Color.Success)">@AppState.AccessTokens?.AccessToken?.TrimForDisplay(30, "...")</MudText>
             </MudItem>
 
             <MudItem md="4" sm="6" xs="12">
@@ -82,41 +78,41 @@
     </MudCardContent>
 </MudCard>
 
-@if (_patients != null && _patients.Any() || _outComeMessage != null)
-{
     <MudCard Elevation="3" Style="margin-top: 10px">
         <MudCardContent>
-            <MudTable @ref="_table"
-                      @bind-RowsPerPage="AppState.PatientSearchPref.RowsPerPage"
-                      T="Patient"
-                      Items="@_patients"
-                      MultiSelection="true"
-                      Dense="@false"
-                      Hover="@true"
-                      ReadOnly="@true"
-                      SortLabel="Name"
-                      CommitEditTooltip="Commit Edit"
-                      IsEditRowSwitchingBlocked="@true"
-                      ApplyButtonPosition="@TableApplyButtonPosition.Start"
-                      OnRowClick="@OnRowClick">
-                <HeaderContent>
-                    <MudTh>Name</MudTh>
-                    <MudTh>BirthDate</MudTh>
-                    <MudTh>Id</MudTh>
-                    <MudTh>Identifier</MudTh>
-                    <MudTh/>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd DataLabel="Name">@(new MarkupString(string.Join("<br/> ", context.Name.Select(hn => $"{hn.Given.First()}, {hn.Family}"))))</MudTd>
-                    <MudTd DataLabel="BirthDate">@context.BirthDate</MudTd>
-                    <MudTd DataLabel="Id">@context.Id</MudTd>
-                    <MudTd DataLabel="Identifier">@(new MarkupString(string.Join("<br/> ", context.Identifier.Select(identifier => $"{identifier.System}|{identifier.Value}"))))</MudTd>
-                </RowTemplate>
-                <PagerContent>
-                    <MudTablePager PageSizeOptions="new[] { 5, 10, 20, 50, 100 }"/>
-                </PagerContent>
+        <CascadingValue Value="CurrentBundle">
+                <MudTable @ref="_table"
+                          @bind-RowsPerPage="AppState.PatientSearchPref.RowsPerPage"
+                          T="Patient"
+                          ServerData="@(new Func<TableState, Task<TableData<Patient>>>(Reload))"
+                          MultiSelection="true"
+                          Dense="@false"
+                          Hover="@true"
+                          ReadOnly="@true"
+                          SortLabel="Name"
+                          CommitEditTooltip="Commit Edit"
+                          IsEditRowSwitchingBlocked="@true"
+                          ApplyButtonPosition="@TableApplyButtonPosition.Start"
+                          OnRowClick="@OnRowClick">
+                    <HeaderContent>
+                        <MudTh>Name</MudTh>
+                        <MudTh>BirthDate</MudTh>
+                        <MudTh>Id</MudTh>
+                        <MudTh>Identifier</MudTh>
+                        <MudTh/>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Name">@(new MarkupString(string.Join("<br/> ", context.Name.Select(hn => $"{hn.Given.First()}, {hn.Family}"))))</MudTd>
+                        <MudTd DataLabel="BirthDate">@context.BirthDate</MudTd>
+                        <MudTd DataLabel="Id">@context.Id</MudTd>
+                        <MudTd DataLabel="Identifier">@(new MarkupString(string.Join("<br/> ", context.Identifier.Select(identifier => $"{identifier.System}|{identifier.Value}"))))</MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <FhirTablePager PageSizeOptions="new[] { 5, 10, 20, 50, 100 }" @ref="_pager"/>
+                    </PagerContent>
 
-            </MudTable>
+                </MudTable>
+            </CascadingValue>
 
             @if (_outComeMessage != null)
             {
@@ -124,7 +120,7 @@
             }
         </MudCardContent>
     </MudCard>
-}
+
 
 @if (!string.IsNullOrEmpty(_selectedItemText))
 {
@@ -133,123 +129,4 @@
             <pre>@_selectedItemText</pre>
         </MudCardContent>
     </MudCard>
-}
-@code {
-
-    MudForm form = null!;
-    private MudTable<Patient> _table = null!;
-    PatientSearchModel _model = new();
-    List<Patient>? _patients;
-    string? _outComeMessage;
-    private string _selectedItemText = string.Empty;
-
-    [CascadingParameter]
-    public CascadingAppState AppState { get; set; } = null!;
-
-    [Inject] IFhirService FhirService { get; set; } = null!;
-    [Inject] IDiscoveryService DiscoveryService { get; set; } = null!;
-
-    private string? _baseUrlOverride = string.Empty;
-
-    private string? BaseUrlOverride
-    {
-        get
-        {
-            if (string.IsNullOrEmpty(_baseUrlOverride))
-            {
-                _baseUrlOverride = AppState.BaseUrl;
-            }
-            return _baseUrlOverride;
-        }
-
-        set => _baseUrlOverride = value;
-    }
-    private async Task ChangeBaseUrl()
-    {
-        await AppState.SetPropertyAsync(this, nameof(AppState.BaseUrl), _baseUrlOverride);
-        await DiscoveryService.SetBaseFhirUrl(_baseUrlOverride);
-    }
-
-    //
-    // Potential container for post formatting presentation.
-    //
-    // public class PatientViewModel
-    // {
-    //     public string Name { get; set; }
-    //     public string BirthDate { get; set; }
-    //     public string Id { get; set; }
-    //     public string Identifier { get; set; }
-    // }
-
-    private async Task Search()
-    {
-        _selectedItemText = string.Empty;
-        _patients = null;
-        StateHasChanged();
-        await Task.Delay(100);
-
-        if (AppState.BaseUrl != null)
-        {
-            _model.RowsPerPage = AppState.PatientSearchPref.RowsPerPage;
-            var result = await FhirService.SearchPatient(_model);
-
-            if (result.UnAuthorized)
-            {
-                _outComeMessage = HttpStatusCode.Unauthorized.ToString();
-            }
-            else if (result.HttpStatusCode == HttpStatusCode.PreconditionFailed)
-            {
-                var setResult = await DiscoveryService.SetBaseFhirUrl(AppState.BaseUrl);
-                _outComeMessage = "BaseUrl was reset.  Try again";
-            }
-
-            else if (result.OperationOutCome != null)
-            {
-                _patients = null;
-                string? errorMessage = null;
-
-                foreach (var issue in result.OperationOutCome.Issue)
-                {
-                    errorMessage += $"Error:: Details: {issue.Details?.Text}.<br/>"
-                                    + $"Diagnostics: {issue.Diagnostics}.<br/>"
-                                    + $"IssueType: {issue.Code}.<br/>";
-                }
-
-                _outComeMessage = errorMessage;
-            }
-            else
-            {
-                _outComeMessage = null;
-                _patients = result.Result;
-            }
-        }
-    }
-
-    private async Task Get()
-    {
-        _model.GetResource = true;
-
-        await Search();
-    }
-
-    private void Cancel()
-    {
-        _model = new();
-    }
-
-    void OnRowClick(TableRowClickEventArgs<Patient> args)
-    {
-        if (args.Row.IsChecked)
-        {
-            _selectedItemText = new FhirJsonSerializer(new SerializerSettings { Pretty = true })
-                .SerializeToString(args.Item);
-        }
-        else
-        {
-            _selectedItemText = string.Empty;
-        }
-    }
-
-    
-
 }

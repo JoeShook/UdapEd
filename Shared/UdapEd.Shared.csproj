@@ -10,34 +10,43 @@
     <!-- <Version>$(TAG_NAME)</Version> -->
 
     <UseMauiEssentials Condition="'$(UseMauiEssentials)' != 'false'">true</UseMauiEssentials>
-
+    <SkipValidateMauiImplicitPackageReferences>true</SkipValidateMauiImplicitPackageReferences>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Udap.Model" Version="0.3.27" />
-    <PackageReference Include="Udap.Common" Version="0.3.27" />
+    <PackageReference Include="Udap.Model" Version="0.3.*" />
+    <PackageReference Include="Udap.Common" Version="0.3.*" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="BQuery" Version="3.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Razor.Language" Version="6.0.28" />
-    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.4" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
     <PackageReference Include="MudBlazor" Version="6.19.1" />
-    <PackageReference Include="Udap.Smart.Model" Version="0.3.27" />
+    <PackageReference Include="Udap.Smart.Model" Version="0.3.*" />
+
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="8.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <SupportedPlatform Include="browser" />
+    <!-- <SupportedPlatform Include="browser" /> -->
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
 
-  <ItemGroup  Condition="'$(UseMauiEssentials)' != 'false'">
-    <PackageReference Update="Microsoft.Maui.Essentials" Version="8.0.14" />
+  <ItemGroup Condition="'$(UseMauiEssentials)' != 'false'">
+    <PackageReference Update="Microsoft.Maui.Essentials" Version="8.0.21" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="wwwroot\images\UdapEdLogobyDesigner.png">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 </Project>

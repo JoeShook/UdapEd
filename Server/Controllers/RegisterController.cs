@@ -11,6 +11,7 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -291,7 +292,11 @@ public class RegisterController : Controller
             .WithScope(request.Scope ?? string.Empty)
             .WithResponseTypes(request.ResponseTypes)
             .WithRedirectUrls(request.RedirectUris)
-            .WithLogoUri(request.LogoUri ?? "https://udaped.fhirlabs.net/images/hl7/icon-fhir-32.png")
+            .WithLogoUri(request.LogoUri ?? $"{HttpContext.Request.Scheme}" +
+                $"{Uri.SchemeDelimiter}" +
+                $"{HttpContext.Request.Host}" +
+                $"{HttpContext.Request.PathBase}" +
+                $"/images/UdapEdLogobyDesigner.png")
             .Build();
 
         var signedSoftwareStatement =

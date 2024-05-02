@@ -28,7 +28,7 @@ public class FhirService : IFhirService
         _httpClient = httpClient;
     }
     
-    public async Task<FhirResultModel<List<Patient>>> SearchPatient(PatientSearchModel model)
+    public async Task<FhirResultModel<Bundle>> SearchPatient(PatientSearchModel model)
     {
         var response = await _httpClient.PostAsJsonAsync("Fhir/SearchForPatient", model);
 
@@ -38,7 +38,16 @@ public class FhirService : IFhirService
             if (model.GetResource)
             {
                 var patient = new FhirJsonParser().Parse<Patient>(result);
-                return new FhirResultModel<List<Patient>>(new List<Patient> { patient }, response.StatusCode, response.Version);
+                var singlePatientBundle = new Bundle();
+                
+                var bundleEntry = new Bundle.EntryComponent
+                {
+                    Resource = patient
+                };
+
+                singlePatientBundle.Entry.Add(bundleEntry);
+
+                return new FhirResultModel<Bundle>(singlePatientBundle, response.StatusCode, response.Version);
             }
 
             var bundle = new FhirJsonParser().Parse<Bundle>(result);
@@ -46,17 +55,15 @@ public class FhirService : IFhirService
             
             if (operationOutcome.Any(o => o != null))
             {
-                return new FhirResultModel<List<Patient>>(operationOutcome.First(), response.StatusCode, response.Version);
+                return new FhirResultModel<Bundle>(operationOutcome.First(), response.StatusCode, response.Version);
             }
-
-            var patients = bundle.Entry.Select(e => e.Resource as Patient).ToList();
-
-            return new FhirResultModel<List<Patient>>(patients, response.StatusCode, response.Version);
+            
+            return new FhirResultModel<Bundle>(bundle, response.StatusCode, response.Version);
         }
 
         if(response.StatusCode == HttpStatusCode.Unauthorized)
         {
-            return new FhirResultModel<List<Patient>>(true);
+            return new FhirResultModel<Bundle>(true);
         }
 
         if (response.StatusCode == HttpStatusCode.InternalServerError)
@@ -70,7 +77,7 @@ public class FhirService : IFhirService
                     ResourceBase = null
                 };
 
-                return new FhirResultModel<List<Patient>>(operationOutCome, HttpStatusCode.PreconditionFailed, response.Version);
+                return new FhirResultModel<Bundle>(operationOutCome, HttpStatusCode.PreconditionFailed, response.Version);
             }
         }
         //todo constant :: and this whole routine is ugly.  Should move logic upstream to controller
@@ -92,7 +99,7 @@ public class FhirService : IFhirService
                     }
                 };
 
-                return new FhirResultModel<List<Patient>>(operationOutCome, HttpStatusCode.InternalServerError,
+                return new FhirResultModel<Bundle>(operationOutCome, HttpStatusCode.InternalServerError,
                     response.Version);
             }
         }
@@ -101,7 +108,7 @@ public class FhirService : IFhirService
             var result = await response.Content.ReadAsStringAsync();
             var operationOutcome = new FhirJsonParser().Parse<OperationOutcome>(result);
 
-            return new FhirResultModel<List<Patient>>(operationOutcome, response.StatusCode, response.Version);
+            return new FhirResultModel<Bundle>(operationOutcome, response.StatusCode, response.Version);
         }
     }
 

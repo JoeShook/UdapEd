@@ -8,12 +8,14 @@
 #endregion
 
 using System.Net;
+using System.Reflection.Metadata;
 using System.Text.Json;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.IdentityModel.Tokens;
 using Udap.Client.Rest;
 using UdapEd.Server.Extensions;
 using UdapEd.Shared;
@@ -35,6 +37,56 @@ public class FhirController : ControllerBase
 
     [HttpPost("SearchForPatient")]
     public async Task<IActionResult> SearchForPatient([FromBody] PatientSearchModel model)
+    {
+        try
+        {
+            _fhirClient.Settings.PreferredFormat = ResourceFormat.Json;
+
+            if (model.GetResource)
+            {
+                var patient = await _fhirClient.ReadAsync<Patient>($"Patient/{model.Id}");
+                var patientJson = await new FhirJsonSerializer().SerializeToStringAsync(patient);
+                return Ok(patientJson);
+            }
+
+            if (model.Bundle.IsNullOrEmpty())
+            {
+                
+                var bundle = await _fhirClient.SearchAsync<Patient>(BuildSearchParams(model).OrderBy("given"));
+                var bundleJson = await new FhirJsonSerializer().SerializeToStringAsync(bundle);
+                return Ok(bundleJson);
+            }
+            var links = new FhirJsonParser().Parse<Bundle>(model.Bundle);
+            var nextBundle = await _fhirClient.ContinueAsync(links, model.PageDirection);
+            return Ok(await new FhirJsonSerializer().SerializeToStringAsync(nextBundle));
+        }
+        catch (FhirOperationException ex)
+        {
+            _logger.LogWarning(ex.Message);
+
+            if (ex.Status == HttpStatusCode.Unauthorized)
+            {
+                return Unauthorized();
+            }
+
+            if (ex.Outcome != null)
+            {
+                var outcomeJson = await new FhirJsonSerializer().SerializeToStringAsync(ex.Outcome);
+                return NotFound(outcomeJson);
+            }
+            else
+            {
+                return NotFound("Resource Server Error: " + ex.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message);
+            throw;
+        }
+    }
+
+    private static SearchParams BuildSearchParams(PatientSearchModel model)
     {
         var searchParams = new SearchParams();
 
@@ -69,46 +121,7 @@ public class FhirController : ControllerBase
         }
         
         searchParams.Add("_count", model.RowsPerPage.ToString());
-
-        try
-        {
-            if (model.GetResource)
-            {
-                _fhirClient.Settings.PreferredFormat = ResourceFormat.Json;
-                var patient = await _fhirClient.ReadAsync<Patient>($"Patient/{model.Id}");
-                var patientJson = await new FhirJsonSerializer().SerializeToStringAsync(patient);
-                return Ok(patientJson);
-            }
-
-            _fhirClient.Settings.PreferredFormat = ResourceFormat.Json;
-            var bundle = await _fhirClient.SearchAsync<Patient>(searchParams);
-            var bundleJson = await new FhirJsonSerializer().SerializeToStringAsync(bundle);
-            return Ok(bundleJson);
-        }
-        catch (FhirOperationException ex)
-        {
-            _logger.LogWarning(ex.Message);
-
-            if (ex.Status == HttpStatusCode.Unauthorized)
-            {
-                return Unauthorized();
-            }
-
-            if (ex.Outcome != null)
-            {
-                var outcomeJson = await new FhirJsonSerializer().SerializeToStringAsync(ex.Outcome);
-                return NotFound(outcomeJson);
-            }
-            else
-            {
-                return NotFound("Resource Server Error: " + ex.Message);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex.Message);
-            throw;
-        }
+        return searchParams;
     }
 
     [HttpPost("MatchPatient")]

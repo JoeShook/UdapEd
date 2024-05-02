@@ -7,7 +7,6 @@
 // */
 #endregion
 
-using Hl7.Fhir.Model;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 
@@ -21,12 +20,12 @@ internal class FhirService : IFhirService
         _httpClient = httpClient;
     }
 
-    public Task<FhirResultModel<List<Patient>>> SearchPatient(PatientSearchModel model)
+    public Task<FhirResultModel<Hl7.Fhir.Model.Bundle>> SearchPatient(PatientSearchModel model)
     {
         throw new NotImplementedException();
     }
 
-    public Task<FhirResultModel<Bundle>> MatchPatient(string parametersJson)
+    public Task<FhirResultModel<Hl7.Fhir.Model.Bundle>> MatchPatient(string parametersJson)
     {
         throw new NotImplementedException();
     }

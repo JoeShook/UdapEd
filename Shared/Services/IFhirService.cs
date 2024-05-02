@@ -9,13 +9,12 @@
 
 #endregion
 
-using Hl7.Fhir.Model;
 using UdapEd.Shared.Model;
 
 namespace UdapEd.Shared.Services;
 
 public interface IFhirService
 {
-    Task<FhirResultModel<List<Patient>>> SearchPatient(PatientSearchModel model);
+    Task<FhirResultModel<Hl7.Fhir.Model.Bundle>> SearchPatient(PatientSearchModel model);
     Task<FhirResultModel<Hl7.Fhir.Model.Bundle>> MatchPatient(string parametersJson);
 }

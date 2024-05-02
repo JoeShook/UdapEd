@@ -8,6 +8,7 @@
 #endregion
 
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Rest;
 
 namespace UdapEd.Shared.Model;
 
@@ -23,7 +24,12 @@ public class PatientSearchModel
     public string? Identifier { get; set; }
 
     public int RowsPerPage { get; set; }
-    
+
+    // public Uri? NextLink { get; set; }
+    public PageDirection PageDirection { get; set; }
+    public int Page { get; set; }
+
+    public string? Bundle { get; set; }
 }
 
 public class PatientMatchModel

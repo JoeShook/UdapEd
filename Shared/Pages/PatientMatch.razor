@@ -15,7 +15,7 @@
         <MudItem md="4" sm="6" xs="12">
             <MudText Color="Color.Primary">Access Token:</MudText>
             <MudText Color="@(AppState.Status is {IsValid: false }
-                                ? Color.Error : Color.Success)">@AppState.AccessTokens?.AccessToken.TrimForDisplay(30, "...")</MudText>
+                                ? Color.Error : Color.Success)">@AppState.AccessTokens?.AccessToken?.TrimForDisplay(30, "...")</MudText>
         </MudItem>
 
         <MudItem md="4" sm="6" xs="12">

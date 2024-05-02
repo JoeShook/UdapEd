@@ -146,7 +146,7 @@ internal class RegisterService : IRegisterService
             .WithScope(request.Scope ?? string.Empty)
             .WithResponseTypes(request.ResponseTypes)
             .WithRedirectUrls(request.RedirectUris?.ToPlatformSchemes())
-            .WithLogoUri(request.LogoUri ?? "https://udaped.fhirlabs.net/images/hl7/icon-fhir-32.png")
+            .WithLogoUri(request.LogoUri ?? "https://udaped.fhirlabs.net/images/UdapEdLogobyDesigner.png") 
             .Build();
 
         var signedSoftwareStatement =
