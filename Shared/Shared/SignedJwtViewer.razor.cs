@@ -12,6 +12,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.IdentityModel.Tokens;
+using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Services;
 
 namespace UdapEd.Shared.Shared;
@@ -26,6 +27,9 @@ public partial class SignedJwtViewer
 
     [Parameter]
     public string? Title { get; set; }
+
+    [Parameter]
+    public bool HighlightScopes { get; set; }
 
     [Inject]
     public IDiscoveryService MetadataService { get; set; } = null!;
@@ -68,7 +72,14 @@ public partial class SignedJwtViewer
         
         sb.AppendLine(formattedHeader);
         sb.AppendLine("<p class=\"text-line\">PAYLOAD: <span>DATA</span></p>");
-        sb.AppendLine(formattedStatement);
+        if (HighlightScopes)
+        {
+            sb.AppendLine(formattedStatement.HighlightScope());
+        }
+        else
+        {
+            sb.AppendLine(formattedStatement);
+        }
 
         _decodedJwt = sb.ToString();
     }

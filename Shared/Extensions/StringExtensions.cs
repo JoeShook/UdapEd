@@ -7,6 +7,9 @@
 // */
 #endregion
 
+using System.Text;
+using System.Text.RegularExpressions;
+
 namespace UdapEd.Shared.Extensions;
 public static class StringExtensions
 {
@@ -57,5 +60,22 @@ public static class StringExtensions
         }
 
         return mauiAppSchemes;
+    }
+
+    public static string HighlightScope(this string input)
+    {
+        var regExp = new Regex("\"scope\":\\s*\".*\"", RegexOptions.Multiline);
+        var match = regExp.Match(input); //first occurence
+
+        if (match.Success)
+        {
+            var sb = new StringBuilder(input);
+            sb.Insert(match.Index, "<mark>");
+            sb.Insert(match.Index + match.Length + 6, "</mark>");
+
+            return sb.ToString();
+        }
+
+        return input;
     }
 }

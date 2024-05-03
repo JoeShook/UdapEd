@@ -21,8 +21,7 @@ public static class Auth2FlowChoice
             new GrantTypeWithScopeFilter
             {
                 Name = Oauth2FlowEnum.client_credentials.ToString(), 
-                GrantType = "client_credentials",
-                ScopePrefix = "system"
+                GrantType = "client_credentials"
             }
         },
         {
@@ -30,8 +29,7 @@ public static class Auth2FlowChoice
             new GrantTypeWithScopeFilter
             {
                 Name = "authorization_code (B2B)",
-                GrantType = "authorization_code",
-                ScopePrefix = "patient"
+                GrantType = "authorization_code"
             }
         },
         {
@@ -39,8 +37,7 @@ public static class Auth2FlowChoice
             new GrantTypeWithScopeFilter
             {
                 Name = "authorization_code  (Consumer)",
-                GrantType = "authorization_code",
-                ScopePrefix = "user"
+                GrantType = "authorization_code"
             }
         }
     };
@@ -59,5 +56,4 @@ public class GrantTypeWithScopeFilter
 {
     public string Name { get; set; }
     public string GrantType { get; set; } = string.Empty;
-    public string ScopePrefix { get; set; } = string.Empty;
 }

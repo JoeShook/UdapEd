@@ -2,52 +2,42 @@
 @implements IDisposable
 
 <InputFile id="fileInput" OnChange="UploadFilesAsync" hidden />
-<MudGrid Spacing="2" Justify="Justify.FlexEnd" Class="bottom:0;right:0">
-    <MudItem xs="12">
 
-        <MudFab Class="ma-2"
-                style="float: right;"
-                HtmlTag="label"
-                Size="Size.Small"
-                Color="@CertLoadedColor"
-                Icon="@AppState.CertificateIcon"
-                Label="Client Cert"
-                Title="Upload Client Certificate"
-                IconSize="Size.Small"
-                for="fileInput"/>
 
-        <MudFab HtmlTag="label"
-                Class="ma-2"
-                style="float: right;"
-                Size="Size.Small"
-                Color="@CertLoadedColor"
-                Icon="@AppState.CertificateIcon"
-                Label="Test Cert"
-                Title="Use Test Client Certificate"
-                IconSize="Size.Small"
-                OnClick="@LoadTestCertificate"/>
-    </MudItem>   
-    @if (!string.IsNullOrEmpty(AppState.ClientCertificateInfo?.DistinguishedName) ||
-         !string.IsNullOrEmpty(AppState.ClientCertificateInfo?.Thumbprint))
+<MudFab Class="ma-2"
+        HtmlTag="label"
+        Size="Size.Small"
+        Color="@CertLoadedColor"
+        Icon="@AppState.CertificateIcon"
+        Label="Client Cert"
+        Title="Upload Client Certificate"
+        IconSize="Size.Small"
+        for="fileInput"/>
+
+<MudFab HtmlTag="label"
+        Class="ma-2"
+        Size="Size.Small"
+        Color="@CertLoadedColor"
+        Icon="@AppState.CertificateIcon"
+        Label="Test Cert"
+        Title="Use Test Client Certificate"
+        IconSize="Size.Small"
+        OnClick="@LoadTestCertificate"/>
+
+
+@if (!string.IsNullOrEmpty(AppState.ClientCertificateInfo?.DistinguishedName) ||
+     !string.IsNullOrEmpty(AppState.ClientCertificateInfo?.Thumbprint))
+{   
+        <MudText Typo="Typo.body2">@AppState.ClientCertificateInfo?.DistinguishedName</MudText>
+        <MudText  Typo="Typo.caption"> Thumbprint (sha1) </MudText>
+        <MudText  Typo="Typo.body2">@AppState.ClientCertificateInfo?.Thumbprint </MudText>
+       
+
+    @if (AppState.ClientCertificateInfo.CertLoaded == CertLoadedEnum.Expired)
     {
-
-        <MudItem xs="12">
-            <MudText style="float: right;" Typo="Typo.body2">@AppState.ClientCertificateInfo?.DistinguishedName</MudText>
-        </MudItem>
-
-        <MudItem xs="12">
-            <MudText style="float: right;" Typo="Typo.caption"> Thumbprint (sha1) </MudText>
-            <MudText style="float: right;" Typo="Typo.body2">@AppState.ClientCertificateInfo?.Thumbprint </MudText>
-        </MudItem>
-
-        @if (AppState.ClientCertificateInfo.CertLoaded == CertLoadedEnum.Expired)
-        {
-            <MudItem xs="12">
-                <MudAlert Severity="Severity.Error">Certificate Expired</MudAlert>
-            </MudItem>
-        }
+        <MudAlert Severity="Severity.Error">Certificate Expired</MudAlert>
     }
-</MudGrid>
+}
 
 @code {
     

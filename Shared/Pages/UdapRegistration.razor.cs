@@ -13,6 +13,7 @@ using Hl7.Fhir.Rest;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
+using MudBlazor;
 using Udap.Model;
 using Udap.Model.Registration;
 using UdapEd.Shared.Model;
@@ -24,6 +25,18 @@ namespace UdapEd.Shared.Pages;
 
 public partial class UdapRegistration
 {
+    private string? SubjectAltName { get; set; }
+    private string _signingAlgorithm = UdapConstants.SupportedAlgorithm.RS256;
+    private bool TieredOauth { get; set; }
+    private bool SmartLaunch { get; set; }
+    public string? IdP { get; set; }
+    private string? _requestBody;
+    private bool _missingScope;
+    private bool _cancelRegistration;
+    private UdapDynamicClientRegistrationDocument? _udapDcrDocument;
+    private string _localRegisteredClients = string.Empty;
+    private string? ScopeLevel { get; set; }
+
     [CascadingParameter]
     public CascadingAppState AppState { get; set; } = null!;
 
@@ -172,16 +185,7 @@ public partial class UdapRegistration
         set => AppState.SetProperty(this, nameof(AppState.Oauth2Flow), value);
     }
 
-    private string? SubjectAltName { get; set; }
-    private string _signingAlgorithm = UdapConstants.SupportedAlgorithm.RS256;
-    public bool TieredOauth { get; set; }
-    public string? IdP { get; set; }
-    private string? _requestBody;
-    private bool _missingScope;
-    private bool _cancelRegistration;
-    private UdapDynamicClientRegistrationDocument? _udapDcrDocument;
-    private string _localRegisteredClients = string.Empty;
-
+    
     private string RequestBody
     {
         get
@@ -217,15 +221,10 @@ public partial class UdapRegistration
         {
             await BuildRawSoftwareStatementForClientCredentials();
         }
-        else if (AppState.Oauth2Flow == Oauth2FlowEnum.authorization_code_b2b)
-        {
-            await BuildRawSoftwareStatementForAuthorizationCode(
-                RegisterService.GetScopesForAuthorizationCodeB2B(AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported, TieredOauth));
-        }
         else
         {
             await BuildRawSoftwareStatementForAuthorizationCode(
-                RegisterService.GetScopesForAuthorizationCodeConsumer(AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported, TieredOauth));
+                RegisterService.GetScopesForAuthorizationCode(AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported, TieredOauth, ScopeLevel, SmartLaunch));
         }
     }
     private async Task BuildRawCancelSoftwareStatement()

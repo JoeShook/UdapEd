@@ -11,6 +11,8 @@ using System.Net.Http.Json;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using IdentityModel;
+using Microsoft.IdentityModel.Tokens;
 using Udap.Model;
 using Udap.Model.Registration;
 using Udap.Util.Extensions;
@@ -179,49 +181,39 @@ public class RegisterService : IRegisterService
         return null;
     }
 
-    public string GetScopesForAuthorizationCodeB2B(ICollection<string>? scopes, bool tieredOauth = false)
+    public string GetScopesForAuthorizationCode(ICollection<string>? scopes, bool tieredOauth = false, string? scopeLevel = null, bool smartLaunch = false)
     {
-        var enrichScopes = scopes == null ? new List<string>() : scopes.ToList();
+        var published = scopes == null ? new List<string>() : scopes.ToList();
+        var enrichScopes = new List<string>();
+
+        if (published.Contains(OidcConstants.StandardScopes.OpenId))
+        {
+            enrichScopes.Add(OidcConstants.StandardScopes.OpenId);
+        }
 
         if (tieredOauth)
         {
-            if (!enrichScopes.Contains(UdapConstants.StandardScopes.Udap))
-            {
-                enrichScopes.Insert(0, UdapConstants.StandardScopes.Udap);
-            }
+            enrichScopes.Add(UdapConstants.StandardScopes.Udap);
         }
 
-        if (enrichScopes.Any())
+        if (smartLaunch && !scopeLevel.IsNullOrEmpty())
+        { 
+            enrichScopes.Add($"launch/{scopeLevel}");
+        }
+
+        if (published.Any() && !scopeLevel.IsNullOrEmpty())
         {
-            return enrichScopes
-                .Where(s => !s.StartsWith("system") && !s.StartsWith("user"))
-                .Take(10).ToList()
-                .ToSpaceSeparatedString();
+            var selectedScopes = published
+                .Where(s => s.StartsWith(scopeLevel))
+                .Take(10).ToList();
+
+            enrichScopes.AddRange(selectedScopes);
         }
-
-        return "openid";
-    }
-
-    public string GetScopesForAuthorizationCodeConsumer(ICollection<string>? scopes, bool tieredOauth = false)
-    {
-        var enrichScopes = scopes == null ? new List<string>() : scopes.ToList();
-
-        if (tieredOauth)
+        else if (!scopeLevel.IsNullOrEmpty())
         {
-            if (!enrichScopes.Contains(UdapConstants.StandardScopes.Udap))
-            {
-                enrichScopes.Insert(0, UdapConstants.StandardScopes.Udap);
-            }
+            enrichScopes.Add($"{scopeLevel}/read");
         }
 
-        if (enrichScopes.Any())
-        {
-            return enrichScopes
-                .Where(s => !s.StartsWith("system") && !s.StartsWith("patient"))
-                .Take(10).ToList()
-                .ToSpaceSeparatedString();
-        }
-
-        return "openid";
+        return enrichScopes.ToSpaceSeparatedString();
     }
 }

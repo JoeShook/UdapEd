@@ -50,6 +50,5 @@ public interface IRegisterService
     string GetScopes(ICollection<string>? scopes);
 
     string? GetScopesForClientCredentials(ICollection<string>? scopes);
-    string GetScopesForAuthorizationCodeB2B(ICollection<string>? scopes, bool tieredOauth = false);
-    string GetScopesForAuthorizationCodeConsumer(ICollection<string>? scopes, bool tieredOauth = false);
+    string GetScopesForAuthorizationCode(ICollection<string>? scopes, bool tieredOauth = false, string? scopeLevel = null, bool smartLaunch = false);
 }

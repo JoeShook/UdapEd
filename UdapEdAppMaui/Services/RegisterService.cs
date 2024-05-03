@@ -23,6 +23,7 @@ using UdapEd.Shared.Services;
 using Udap.Model.Statement;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model.Registration;
+using IdentityModel;
 
 namespace UdapEdAppMaui.Services;
 internal class RegisterService : IRegisterService
@@ -501,49 +502,39 @@ internal class RegisterService : IRegisterService
         return null;
     }
 
-    public string GetScopesForAuthorizationCodeB2B(ICollection<string>? scopes, bool tieredOauth = false)
+    public string GetScopesForAuthorizationCode(ICollection<string>? scopes, bool tieredOauth = false, string? scopeLevel = null, bool smartLaunch = false)
     {
-        var enrichScopes = scopes == null ? new List<string>() : scopes.ToList();
+        var published = scopes == null ? new List<string>() : scopes.ToList();
+        var enrichScopes = new List<string>();
+
+        if (published.Contains(OidcConstants.StandardScopes.OpenId))
+        {
+            enrichScopes.Add(OidcConstants.StandardScopes.OpenId);
+        }
 
         if (tieredOauth)
         {
-            if (!enrichScopes.Contains(UdapConstants.StandardScopes.Udap))
-            {
-                enrichScopes.Insert(0, UdapConstants.StandardScopes.Udap);
-            }
+            enrichScopes.Add(UdapConstants.StandardScopes.Udap);
         }
 
-        if (enrichScopes.Any())
+        if (smartLaunch && !scopeLevel.IsNullOrEmpty())
         {
-            return enrichScopes
-                .Where(s => !s.StartsWith("system") && !s.StartsWith("user"))
-                .Take(10).ToList()
-                .ToSpaceSeparatedString();
+            enrichScopes.Add($"launch/{scopeLevel}");
         }
 
-        return "openid";
-    }
-
-    public string GetScopesForAuthorizationCodeConsumer(ICollection<string>? scopes, bool tieredOauth = false)
-    {
-        var enrichScopes = scopes == null ? new List<string>() : scopes.ToList();
-
-        if (tieredOauth)
+        if (published.Any() && !scopeLevel.IsNullOrEmpty())
         {
-            if (!enrichScopes.Contains(UdapConstants.StandardScopes.Udap))
-            {
-                enrichScopes.Insert(0, UdapConstants.StandardScopes.Udap);
-            }
-        }
+            var selectedScopes = published
+                .Where(s => s.StartsWith(scopeLevel))
+                .Take(10).ToList();
 
-        if (enrichScopes.Any())
+            enrichScopes.AddRange(selectedScopes);
+        }
+        else if (!scopeLevel.IsNullOrEmpty())
         {
-            return enrichScopes
-                .Where(s => !s.StartsWith("system") && !s.StartsWith("patient"))
-                .Take(10).ToList()
-                .ToSpaceSeparatedString();
+            enrichScopes.Add($"{scopeLevel}/read");
         }
 
-        return "openid";
+        return enrichScopes.ToSpaceSeparatedString();
     }
 }
