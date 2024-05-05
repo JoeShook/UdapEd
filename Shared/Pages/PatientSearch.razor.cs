@@ -2,8 +2,6 @@
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.Maui.Graphics;
 using MudBlazor;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Smart;
@@ -96,7 +94,7 @@ public partial class PatientSearch
             }
             
             _model.RowsPerPage = AppState.PatientSearchPref.RowsPerPage;
-
+            _model.LaunchContext = AppState.LaunchContext;
             if (_pager != null) {_model.PageDirection = _pager.PageDirection;}
             
             var result = await FhirService.SearchPatient(_model);

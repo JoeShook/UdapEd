@@ -42,6 +42,11 @@ public class FhirController : ControllerBase
         {
             _fhirClient.Settings.PreferredFormat = ResourceFormat.Json;
 
+            if (model.LaunchContext != null && !model.LaunchContext.Patient.IsNullOrEmpty())
+            {
+                _fhirClient.RequestHeaders?.Add("X-Authorization-Patient", model.LaunchContext.Patient);
+            }
+
             if (model.GetResource)
             {
                 var patient = await _fhirClient.ReadAsync<Patient>($"Patient/{model.Id}");

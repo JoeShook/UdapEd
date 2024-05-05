@@ -9,6 +9,7 @@
 
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
+using UdapEd.Shared.Model.Smart;
 
 namespace UdapEd.Shared.Model;
 
@@ -30,6 +31,8 @@ public class PatientSearchModel
     public int Page { get; set; }
 
     public string? Bundle { get; set; }
+
+    public LaunchContext? LaunchContext { get; set; }
 }
 
 public class PatientMatchModel

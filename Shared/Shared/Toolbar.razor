@@ -11,6 +11,7 @@
     {
         <MudIcon Color="Color.Secondary" Icon="@Icons.Material.Outlined.PersonPin" />
         <MudText Color="Color.Primary" Class="overflow-hidden">@AppState.LaunchContext.Patient</MudText>
+        <MudIconButton Color="Color.Secondary" Icon="@Icons.Material.Outlined.Clear" OnClick="ClearLaunchContext" />
     }
    <MudSpacer />
    <MudText Color="Color.Primary">Token Status:</MudText>&nbsp;<MudText Color="@(AppState.Status is {IsValid: false } ? Color.Error : Color.Success)">@AppState.Status.StatusMessage</MudText>
@@ -70,4 +71,10 @@
     {
         await JSRuntime.InvokeVoidAsync("open", "http://udap.org/", "_blank");
     }
+
+    private async Task ClearLaunchContext()
+    {
+        await AppState.SetPropertyAsync(this, nameof(AppState.LaunchContext), null);
+    }
+
 }
