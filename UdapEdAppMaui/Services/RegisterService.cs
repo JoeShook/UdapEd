@@ -24,6 +24,7 @@ using Udap.Model.Statement;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model.Registration;
 using IdentityModel;
+using System.Text.RegularExpressions;
 
 namespace UdapEdAppMaui.Services;
 internal class RegisterService : IRegisterService
@@ -487,14 +488,17 @@ internal class RegisterService : IRegisterService
         return scopes.ToSpaceSeparatedString();
     }
 
-    public string? GetScopesForClientCredentials(ICollection<string>? scopes)
+    public string? GetScopesForClientCredentials(ICollection<string>? scopes,
+        bool smartV1Scopes = true,
+        bool smartV2Scopes = true)
     {
         if (scopes != null)
         {
             return scopes
                 .Where(s => !s.StartsWith("user") &&
                             !s.StartsWith("patient") &&
-                            !s.StartsWith("openid"))
+                            !s.StartsWith("openid") &&
+                            KeepSmartVersion(s, smartV1Scopes, smartV2Scopes))
                 .Take(10).ToList()
                 .ToSpaceSeparatedString();
         }
@@ -502,9 +506,19 @@ internal class RegisterService : IRegisterService
         return null;
     }
 
-    public string GetScopesForAuthorizationCode(ICollection<string>? scopes, bool tieredOauth = false, string? scopeLevel = null, bool smartLaunch = false)
+    public string GetScopesForAuthorizationCode(ICollection<string>?
+        scopes,
+        bool tieredOauth = false,
+        string? scopeLevel = null,
+        bool smartLaunch = false,
+        bool smartV1Scopes = true,
+        bool smartV2Scopes = true)
     {
-        var published = scopes == null ? new List<string>() : scopes.ToList();
+        var published = scopes == null ? new List<string>() :
+            scopes
+                .Where(s => KeepSmartVersion(s, smartV1Scopes, smartV2Scopes))
+                .ToList();
+
         var enrichScopes = new List<string>();
 
         if (published.Contains(OidcConstants.StandardScopes.OpenId))
@@ -517,10 +531,16 @@ internal class RegisterService : IRegisterService
             enrichScopes.Add(UdapConstants.StandardScopes.Udap);
         }
 
-        if (smartLaunch && !scopeLevel.IsNullOrEmpty())
+        if (smartLaunch && scopeLevel == "patient")
         {
             enrichScopes.Add($"launch/{scopeLevel}");
         }
+
+        if (smartLaunch && scopeLevel == "user")
+        {
+            enrichScopes.Add($"launch");
+        }
+
 
         if (published.Any() && !scopeLevel.IsNullOrEmpty())
         {
@@ -536,5 +556,30 @@ internal class RegisterService : IRegisterService
         }
 
         return enrichScopes.ToSpaceSeparatedString();
+    }
+
+    private static bool KeepSmartVersion(string scope, bool smartV1Scopes, bool smartV2Scopes)
+    {
+        if (!smartV1Scopes)
+        {
+            var smartV1Regex = new Regex(@"^(system|user|patient)[\/].*\.(read|write)$");
+            var match = smartV1Regex.Match(scope);
+            if (match.Success)
+            {
+                return false;
+            }
+        }
+
+        if (!smartV2Scopes)
+        {
+            var smartV2Regex = new Regex(@"^(system|user|patient)[\/].*\.[cruds]+$");
+            var match = smartV2Regex.Match(scope);
+            if (match.Success)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

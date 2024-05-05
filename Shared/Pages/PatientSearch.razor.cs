@@ -2,8 +2,11 @@
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Maui.Graphics;
 using MudBlazor;
 using UdapEd.Shared.Model;
+using UdapEd.Shared.Model.Smart;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Shared;
 using Task = System.Threading.Tasks.Task;
@@ -82,6 +85,8 @@ public partial class PatientSearch
     
     private async Task<TableData<Patient>> Reload(TableState state)
     {
+        _selectedItemText = "";
+
         if (AppState.BaseUrl != null && _searchEnabled)
         {
             if (_currentBundle != null)
@@ -135,14 +140,18 @@ public partial class PatientSearch
     
     private void OnRowClick(TableRowClickEventArgs<Patient> args)
     {
-        if (args.Row.IsChecked)
+        _selectedItemText = new FhirJsonSerializer(new SerializerSettings { Pretty = true })
+            .SerializeToString(args.Item);
+        
+    }
+
+    private async Task SetLaunchContext(Patient patient)
+    {
+        var launchContext = new LaunchContext
         {
-            _selectedItemText = new FhirJsonSerializer(new SerializerSettings { Pretty = true })
-                .SerializeToString(args.Item);
-        }
-        else
-        {
-            _selectedItemText = string.Empty;
-        }
+            Patient = patient.Id
+        };
+
+        await AppState.SetPropertyAsync(this, nameof(AppState.LaunchContext), launchContext);
     }
 }

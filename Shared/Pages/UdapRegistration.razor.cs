@@ -7,6 +7,7 @@
 // */
 #endregion
 
+using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Hl7.Fhir.Rest;
@@ -29,6 +30,8 @@ public partial class UdapRegistration
     private string _signingAlgorithm = UdapConstants.SupportedAlgorithm.RS256;
     private bool TieredOauth { get; set; }
     private bool SmartLaunch { get; set; }
+    private bool SmartV1Scopes { get; set; } = true;
+    private bool SmartV2Scopes { get; set; }
     public string? IdP { get; set; }
     private string? _requestBody;
     private bool _missingScope;
@@ -224,7 +227,13 @@ public partial class UdapRegistration
         else
         {
             await BuildRawSoftwareStatementForAuthorizationCode(
-                RegisterService.GetScopesForAuthorizationCode(AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported, TieredOauth, ScopeLevel, SmartLaunch));
+                RegisterService.GetScopesForAuthorizationCode(
+                    AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported, 
+                    TieredOauth, 
+                    ScopeLevel, 
+                    SmartLaunch,
+                    SmartV1Scopes,
+                    SmartV2Scopes));
         }
     }
     private async Task BuildRawCancelSoftwareStatement()
@@ -261,7 +270,10 @@ public partial class UdapRegistration
                     "mailto:Joseph.Shook@Surescripts.com", "mailto:JoeShook@gmail.com"
                 })
                 .WithTokenEndpointAuthMethod(UdapConstants.RegistrationDocumentValues.TokenEndpointAuthMethodValue)
-                .WithScope(RegisterService.GetScopesForClientCredentials(AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported));
+                .WithScope(RegisterService.GetScopesForClientCredentials(
+                    AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported,
+                    SmartV1Scopes,
+                    SmartV2Scopes));
 
             dcrBuilder.Document.Subject = SubjectAltName;
             dcrBuilder.Document.Issuer = SubjectAltName;
@@ -538,5 +550,18 @@ public partial class UdapRegistration
             return _localRegisteredClients;
         }
         set => _localRegisteredClients = value;
+    }
+
+    private IEnumerable<ClientRegistration?>? CurrentClientRegistrations
+    {
+        get
+        {
+            return AppState.ClientRegistrations?.Registrations
+                .Where(r => r.Value != null &&
+                            AppState.ClientCertificateInfo != null &&
+                            AppState.ClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
+                            AppState.BaseUrl == r.Value.ResourceServer)
+                .Select(r => r.Value);
+        }
     }
 }

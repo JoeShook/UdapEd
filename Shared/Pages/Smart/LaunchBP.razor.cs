@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System.CodeDom.Compiler;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
@@ -255,25 +256,26 @@ public partial class LaunchBP
         var response = await ((HttpMessageInvoker)HttpClient).SendAsync(request, default).ConfigureAwait(false);
 
         var tokenResponse = await ProtocolResponse.FromHttpResponseAsync<TokenResponse>(response).ConfigureAwait(false);
-
+        
         var tokenResponseModel = new TokenResponseModel
         {
-            Raw = tokenResponse.Json.AsJson(),
+            Raw = tokenResponse.Raw,
             IsError = tokenResponse.IsError,
             Error = tokenResponse.Error,
             AccessToken = tokenResponse.AccessToken,
             IdentityToken = tokenResponse.IdentityToken,
             RefreshToken = tokenResponse.RefreshToken,
             ExpiresAt = DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn),
-            Scope = tokenResponse.Raw,
+            Scope = tokenResponse.Scope,
             TokenType = tokenResponse.TokenType,
             Headers = JsonSerializer.Serialize(
                 tokenResponse.HttpResponse.Headers,
                 new JsonSerializerOptions { WriteIndented = true })
         };
 
-        AppState.SetProperty(this, nameof(AppState.AccessTokens), tokenResponseModel, true, false);
-        AppState.SetProperty(this, nameof(AppState.BaseUrl), AppState.SmartSession?.ServiceUri);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), tokenResponseModel, true, false);
+        await AppState.SetPropertyAsync(this, nameof(AppState.BaseUrl), AppState.SmartSession?.ServiceUri);
+        
         //Token = JsonExtensions.FormatJson(await response.Content.ReadAsStringAsync());
         Token = JsonExtensions.FormatJson(JsonSerializer.Serialize(tokenResponse));
 

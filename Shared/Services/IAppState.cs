@@ -39,6 +39,8 @@ public interface IAppState
 
     TokenResponseModel? AccessTokens { get;  }
 
+    LaunchContext? LaunchContext { get; }
+
     ClientStatus Status { get; }
 
     AuthorizationCodeRequest?AuthorizationCodeRequest { get; }

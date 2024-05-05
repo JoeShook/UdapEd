@@ -106,6 +106,7 @@ public class FhirService : IFhirService
 
         {
             var result = await response.Content.ReadAsStringAsync();
+            Console.WriteLine(result);
             var operationOutcome = new FhirJsonParser().Parse<OperationOutcome>(result);
 
             return new FhirResultModel<Bundle>(operationOutcome, response.StatusCode, response.Version);

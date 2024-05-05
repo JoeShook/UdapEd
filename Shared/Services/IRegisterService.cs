@@ -49,6 +49,7 @@ public interface IRegisterService
     /// <exception cref="NotImplementedException"></exception>
     string GetScopes(ICollection<string>? scopes);
 
-    string? GetScopesForClientCredentials(ICollection<string>? scopes);
-    string GetScopesForAuthorizationCode(ICollection<string>? scopes, bool tieredOauth = false, string? scopeLevel = null, bool smartLaunch = false);
+    string? GetScopesForClientCredentials(ICollection<string>? scopes, bool smartV1Scopes = true, bool smartV2Scopes = true);
+    string GetScopesForAuthorizationCode(ICollection<string>? scopes, 
+        bool tieredOauth = false, string? scopeLevel = null, bool smartLaunch = false, bool smartV1Scopes = true, bool smartV2Scopes = true);
 }

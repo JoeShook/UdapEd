@@ -85,7 +85,7 @@
                           @bind-RowsPerPage="AppState.PatientSearchPref.RowsPerPage"
                           T="Patient"
                           ServerData="@(new Func<TableState, Task<TableData<Patient>>>(Reload))"
-                          MultiSelection="true"
+                          MultiSelection="false"
                           Dense="@false"
                           Hover="@true"
                           ReadOnly="@true"
@@ -106,9 +106,13 @@
                         <MudTd DataLabel="BirthDate">@context.BirthDate</MudTd>
                         <MudTd DataLabel="Id">@context.Id</MudTd>
                         <MudTd DataLabel="Identifier">@(new MarkupString(string.Join("<br/> ", context.Identifier.Select(identifier => $"{identifier.System}|{identifier.Value}"))))</MudTd>
+                        <MudTd>
+                        <MudIconButton Icon="@Icons.Material.Outlined.PersonPin" Color="Color.Secondary" aria-label="Set patient context"
+                                       OnClick="@(() => SetLaunchContext(context))" />
+                    </MudTd>
                     </RowTemplate>
                     <PagerContent>
-                        <FhirTablePager PageSizeOptions="new[] { 5, 10, 20, 50, 100 }" @ref="_pager"/>
+                        <FhirTablePager PageSizeOptions="new[] { 5, 10, 20, 50, 100 }" @ref="_pager" />
                     </PagerContent>
 
                 </MudTable>

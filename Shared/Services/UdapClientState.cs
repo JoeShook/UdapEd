@@ -61,6 +61,8 @@ public class UdapClientState : IAppState
 
     public TokenResponseModel? AccessTokens { get; set; }
 
+    public LaunchContext? LaunchContext { get; set; }
+
     public ClientStatus Status
     {
         get

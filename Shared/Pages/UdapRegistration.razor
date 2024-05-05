@@ -35,34 +35,32 @@
                     <MudCardHeader>
                         @if (AppState.ClientCertificateInfo != null && AppState.ClientCertificateInfo.SubjectAltNames.Any())
                         {
-                            string color = "#E8F5E9";
-                            int i = 0;
-
                             <MudCard >
                                 <MudCardHeader><MudText Typo="Typo.h6">Registered Clients: </MudText></MudCardHeader>
                                 <MudCardContent>
-                                    <MudSimpleTable Dense="true">
-                                        <thead>
-                                        <tr>
-                                            <th>Subject Alt Name (URI)</th>
-                                            <th>Client ID</th>
-                                        </tr>
-                                        </thead>
-                                        @foreach (var clientRegistration in AppState.ClientRegistrations?.Registrations
-                                                      .Where(r => AppState.ClientCertificateInfo != null &&
-                                                                  AppState.ClientCertificateInfo.SubjectAltNames.Contains(r.Value?.SubjAltName))
-                                                      .Select(r => r.Value))
-                                        {
-                                            color = i % 2 == 0 ? "background-color: #E8F5E9;" : "background-color: #EDE7F6";
-                                            <tbody>
-                                            <tr>
-                                                <td Style="@color">@clientRegistration?.SubjAltName</td>
-                                                <td Style="@color">@clientRegistration?.ClientId</td>
-                                            </tr>
-                                            </tbody>
-                                            i++;
-                                        }
-                                    </MudSimpleTable>
+                                    <MudDataGrid Dense="true"
+                                                 ReadOnly="true" 
+                                                 Items="@CurrentClientRegistrations"
+                                                 Striped="true" >
+                                        <Columns>
+                                            <HierarchyColumn T="ClientRegistration"></HierarchyColumn>
+                                            <PropertyColumn Property="x => x.SubjAltName" Title="Subject Alt Name (URI)" />
+                                            <PropertyColumn Property="x => x.ClientId" Title="Client ID" />
+                                            <PropertyColumn Property="x => x.GrantType" Title="Grant Type" />
+                                        </Columns>
+                                        <ChildRowContent>
+                                            <MudCard>
+                                                <MudCardHeader>
+                                                    <CardHeaderContent>
+                                                        <MudText Typo="Typo.h6">Scopes</MudText>
+                                                    </CardHeaderContent>
+                                                </MudCardHeader>
+                                                <MudCardContent>
+                                                    <MudText><pre>@(context.Item?.Scope.Replace(" ", "\r\n"))</pre></MudText>
+                                                </MudCardContent>
+                                            </MudCard>
+                                        </ChildRowContent>
+                                    </MudDataGrid>
                                 </MudCardContent>
                             </MudCard>
                         }
@@ -221,6 +219,16 @@
                 }
             }
             
+            <MudItem Class="d-inline-flex pa-4">
+                <MudCheckBox @bind-Checked="SmartV1Scopes"
+                             Label="SMART V1 Sopes"/>
+            </MudItem>
+            
+            <MudItem Class="d-inline-flex pa-4">
+                <MudCheckBox @bind-Checked="SmartV2Scopes"
+                             Label="SMART V2 Sopes"/>
+            </MudItem>
+
             @if (!string.IsNullOrEmpty(RawSoftwareStatementError))
             {
                 <MudItem Class="d-inline-flex pa-4">

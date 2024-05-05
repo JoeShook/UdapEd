@@ -7,6 +7,11 @@
    <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Primary" Edge="Edge.Start"
                   OnClick="@DrawerToggle" />
 
+    @if (AppState.LaunchContext != null)
+    {
+        <MudIcon Color="Color.Secondary" Icon="@Icons.Material.Outlined.PersonPin" />
+        <MudText Color="Color.Primary" Class="overflow-hidden">@AppState.LaunchContext.Patient</MudText>
+    }
    <MudSpacer />
    <MudText Color="Color.Primary">Token Status:</MudText>&nbsp;<MudText Color="@(AppState.Status is {IsValid: false } ? Color.Error : Color.Success)">@AppState.Status.StatusMessage</MudText>
              <MudImage Class="cursor-pointer mud-ripple ma-2" Src="_content/UdapEd.Shared/images/hl7/icon-fhir-32.png" Alt="Fhir Icon" style="height: 36px; width: 36px; margin: 24px"
