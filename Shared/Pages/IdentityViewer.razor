@@ -1,7 +1,6 @@
-﻿<h3>IdentityViewer</h3>
-
-<pre>@if (_decodedJwt != null)
+﻿<pre>@if (_decodedJwt != null)
      {
+        @((MarkupString)Title)
          @((MarkupString)DecodedJwt)
      }
     </pre>

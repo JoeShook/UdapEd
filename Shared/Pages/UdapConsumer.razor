@@ -191,11 +191,6 @@
                                 <MudSelectItem Value="UdapConstants.SupportedAlgorithm.ES384">@UdapConstants.SupportedAlgorithm.ES384</MudSelectItem>
                             </MudSelect>
                         </MudItem>
-                        <MudItem md="3" sm="6" xs="12">
-                            <MudSwitch Label="@(LegacyMode ? "udap.org Mode (sub==iss==SubjectAltName)" : "HL7 FHIR Mode (sub==iss==client_id)")"
-                                       T="bool"
-                                       @bind-Checked="@LegacyMode" />
-                        </MudItem>
                     </MudGrid>
                 </MudCardActions>
                 <MudCardContent>
@@ -241,17 +236,27 @@
           <MudGrid Spacing="1">
               <MudItem sm="6" xs="12">
                   <MudPaper Class="pa-4 ma-2" Elevation="3">
-                      <MudText Align="Align.Right" Color="Color.Tertiary">7.1 Success</MudText>
+                            <MudText Align="Align.Right" Color="Color.Tertiary">OpenID Connect/OAuth 2 Response</MudText>
                       <pre>@AccessToken</pre>
                   </MudPaper>
               </MudItem>
               <MudItem sm="6" xs="12">
+                  <MudPaper Class="udap-knowledge" Elevation="3">
+                      <MudText Align="Align.Left" Color="Color.Tertiary">See <a href="https://build.fhir.org/ig/HL7/fhir-identity-matching-ig/digital-identity.html#requirements-for-digital-identifiers-for-individuals">Requirements for Digital Identifiers for Individuals</a>
+                          to understand more about the Identity Token. During Tiered OAuth the hl7_identifier is used in this tool as the context</MudText>
+                  </MudPaper>
                   <MudPaper Class="udap-analyzed">
-                      <MudText Align="Align.Right" Color="Color.Tertiary">TODO: Links to Identity IG</MudText>
-                           
-                      <IdentityViewer Title="<b>Decoded Identity Token::</b>"
-                                      IdentityToken="@AppState.AccessTokens?.IdentityToken" />
-
+                      <MudText Align="Align.Right" Color="Color.Tertiary">Decoded</MudText>
+                      <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+                          <MudTabPanel Text="Identity Token">
+                              <IdentityViewer Title="<h3>Decoded Identity Token::</h3>"
+                                              IdentityToken="@AppState.AccessTokens?.IdentityToken"/>
+                          </MudTabPanel>
+                          <MudTabPanel Text="Access Token">
+                              <SignedJwtViewer Title="<h3>Decoded Access Token::</h3>"
+                                               SignedSoftwareStatement="@AppState.AccessTokens?.AccessToken"/>
+                          </MudTabPanel>
+                      </MudTabs>
                   </MudPaper>
               </MudItem>
           </MudGrid>

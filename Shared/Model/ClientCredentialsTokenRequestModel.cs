@@ -13,7 +13,5 @@ public class ClientCredentialsTokenRequestModel
     public string? ClientId { get; set; }
     public string? TokenEndpointUrl { get; set; }
 
-    public bool LegacyMode { get; set; } = false;
-
     public string? Scope { get; set; }
 }

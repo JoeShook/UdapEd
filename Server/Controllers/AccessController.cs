@@ -101,7 +101,7 @@ public class AccessController : Controller
             tokenRequestModel.RedirectUrl,
             tokenRequestModel.Code);
 
-        var tokenRequest = tokenRequestBuilder.Build(tokenRequestModel.LegacyMode, alg);
+        var tokenRequest = tokenRequestBuilder.Build(alg);
         
         return Task.FromResult<IActionResult>(Ok(tokenRequest));
     }
@@ -148,7 +148,7 @@ public class AccessController : Controller
             tokenRequestBuilder.WithScope(tokenRequestModel.Scope);
         }
 
-        var tokenRequest = tokenRequestBuilder.Build(tokenRequestModel.LegacyMode, alg);
+        var tokenRequest = tokenRequestBuilder.Build(alg);
         
         return Task.FromResult<IActionResult>(Ok(tokenRequest));
     }

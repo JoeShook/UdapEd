@@ -58,29 +58,36 @@ public partial class SignedJwtViewer
             return;
         }
 
-        var jwt = new JwtSecurityToken(SignedSoftwareStatement);
-        using var jsonDocument = JsonDocument.Parse(jwt.Payload.SerializeToJson());
-        var formattedStatement = JsonSerializer.Serialize(
-            jsonDocument, 
-            new JsonSerializerOptions { WriteIndented = true }
+        try
+        {
+            var jwt = new JwtSecurityToken(SignedSoftwareStatement);
+            using var jsonDocument = JsonDocument.Parse(jwt.Payload.SerializeToJson());
+            var formattedStatement = JsonSerializer.Serialize(
+                jsonDocument,
+                new JsonSerializerOptions { WriteIndented = true }
             );
-        
-        var formattedHeader = UdapEd.Shared.JsonExtensions.FormatJson(Base64UrlEncoder.Decode(jwt.EncodedHeader));
 
-        var sb = new StringBuilder();
-        sb.AppendLine("<p class=\"text-line\">HEADER: <span>Algorithm & TOKEN TYPE</span></p>");
-        
-        sb.AppendLine(formattedHeader);
-        sb.AppendLine("<p class=\"text-line\">PAYLOAD: <span>DATA</span></p>");
-        if (HighlightScopes)
-        {
-            sb.AppendLine(formattedStatement.HighlightScope());
-        }
-        else
-        {
-            sb.AppendLine(formattedStatement);
-        }
+            var formattedHeader = UdapEd.Shared.JsonExtensions.FormatJson(Base64UrlEncoder.Decode(jwt.EncodedHeader));
 
-        _decodedJwt = sb.ToString();
+            var sb = new StringBuilder();
+            sb.AppendLine("<p class=\"text-line\">HEADER: <span>Algorithm & TOKEN TYPE</span></p>");
+
+            sb.AppendLine(formattedHeader);
+            sb.AppendLine("<p class=\"text-line\">PAYLOAD: <span>DATA</span></p>");
+            if (HighlightScopes)
+            {
+                sb.AppendLine(formattedStatement.HighlightScope());
+            }
+            else
+            {
+                sb.AppendLine(formattedStatement);
+            }
+
+            _decodedJwt = sb.ToString();
+        }
+        catch (Exception ex)
+        {
+            _decodedJwt = SignedSoftwareStatement;
+        }
     }
 }

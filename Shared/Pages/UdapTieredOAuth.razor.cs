@@ -39,8 +39,6 @@ public partial class UdapTieredOAuth
 
     private string LoginRedirectLinkText { get; set; } = "Login Redirect";
 
-    public bool LegacyMode { get; set; } = false;
-
     
     private string? TokenRequest1 { get; set; }
     private string? TokenRequest2 { get; set; }
@@ -251,8 +249,6 @@ public partial class UdapTieredOAuth
         {
             tokenRequestModel.Code = AppState.LoginCallBackResult?.Code!;
         }
-
-        tokenRequestModel.LegacyMode = LegacyMode;
 
         var requestToken = await AccessService
             .BuildRequestAccessTokenForAuthCode(tokenRequestModel, _signingAlgorithm);

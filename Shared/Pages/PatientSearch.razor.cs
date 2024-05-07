@@ -95,7 +95,7 @@ public partial class PatientSearch
             
             _model.RowsPerPage = AppState.PatientSearchPref.RowsPerPage;
             _model.LaunchContext = AppState.LaunchContext;
-            if (_pager != null) {_model.PageDirection = _pager.PageDirection;}
+            if (_pager != null) { _model.PageDirection = _pager.PageDirection; }
             
             var result = await FhirService.SearchPatient(_model);
 

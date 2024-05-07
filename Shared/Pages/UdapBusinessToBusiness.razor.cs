@@ -43,9 +43,7 @@ public partial class UdapBusinessToBusiness
     private string _signingAlgorithm = UdapConstants.SupportedAlgorithm.RS256;
 
     private string LoginRedirectLinkText { get; set; } = "Login Redirect";
-
-    public bool LegacyMode { get; set; } = false;
-
+    
     private string? TokenRequest1 { get; set; }
     private string? TokenRequest2 { get; set; }
     private string? TokenRequest3 { get; set; }
@@ -255,9 +253,7 @@ public partial class UdapBusinessToBusiness
             {
                 tokenRequestModel.Code = AppState.LoginCallBackResult?.Code!;
             }
-
-            tokenRequestModel.LegacyMode = LegacyMode;
-
+            
             var requestToken = await AccessService
                 .BuildRequestAccessTokenForAuthCode(tokenRequestModel, _signingAlgorithm);
             
@@ -281,7 +277,6 @@ public partial class UdapBusinessToBusiness
             {
                 ClientId = AppState.ClientRegistrations?.SelectedRegistration?.ClientId,
                 TokenEndpointUrl = AppState.MetadataVerificationModel?.UdapServerMetaData?.TokenEndpoint,
-                LegacyMode = LegacyMode,
                 Scope = AppState.ClientRegistrations?.SelectedRegistration?.Scope
             };
 

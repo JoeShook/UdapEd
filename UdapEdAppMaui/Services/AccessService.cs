@@ -94,7 +94,7 @@ internal class AccessService : IAccessService
             tokenRequestModel.RedirectUrl?.ToPlatformScheme(),
             tokenRequestModel.Code);
 
-        var tokenRequest = tokenRequestBuilder.Build(tokenRequestModel.LegacyMode, signingAlgorithm);
+        var tokenRequest = tokenRequestBuilder.Build(signingAlgorithm);
 
         return await Task.FromResult(tokenRequest.ToModel());
     }
@@ -140,7 +140,7 @@ internal class AccessService : IAccessService
             tokenRequestBuilder.WithScope(tokenRequestModel.Scope);
         }
 
-        var tokenRequest = tokenRequestBuilder.Build(tokenRequestModel.LegacyMode, signingAlgorithm);
+        var tokenRequest = tokenRequestBuilder.Build(signingAlgorithm);
 
         return await Task.FromResult(tokenRequest.ToModel());
     }

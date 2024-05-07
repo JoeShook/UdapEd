@@ -24,7 +24,7 @@
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.8.1" />
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.8.1" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.8.1" />
-    <PackageReference Include="Udap.Smart.Model" Version="0.3.40" />
+    <PackageReference Include="Udap.Smart.Model" Version="0.3.41" />
 
   </ItemGroup>
 
@@ -34,9 +34,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Udap.Client" Version="0.3.40" />
-    <PackageReference Include="Udap.Model" Version="0.3.40" />
-    <PackageReference Include="Udap.Common" Version="0.3.40" />
+    <PackageReference Include="Udap.Client" Version="0.3.41" />
+    <PackageReference Include="Udap.Model" Version="0.3.41" />
+    <PackageReference Include="Udap.Common" Version="0.3.41" />
   </ItemGroup>
 
   <ItemGroup>

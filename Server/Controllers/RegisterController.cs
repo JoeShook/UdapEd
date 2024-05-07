@@ -24,6 +24,7 @@ using UdapEd.Server.Extensions;
 using UdapEd.Shared;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Registration;
+using static System.Net.WebRequestMethods;
 using static Udap.Model.UdapConstants;
 
 namespace UdapEd.Server.Controllers;
@@ -292,11 +293,7 @@ public class RegisterController : Controller
             .WithScope(request.Scope ?? string.Empty)
             .WithResponseTypes(request.ResponseTypes)
             .WithRedirectUrls(request.RedirectUris)
-            .WithLogoUri(request.LogoUri ?? $"{HttpContext.Request.Scheme}" +
-                $"{Uri.SchemeDelimiter}" +
-                $"{HttpContext.Request.Host}" +
-                $"{HttpContext.Request.PathBase}" +
-                $"/images/UdapEdLogobyDesigner.png")
+            .WithLogoUri(request.LogoUri ?? "https://udaped.fhirlabs.net/_content/UdapEd.Shared/images/UdapEdLogobyDesigner.png")
             .Build();
 
         var signedSoftwareStatement =
