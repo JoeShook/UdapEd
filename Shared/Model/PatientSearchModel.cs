@@ -44,4 +44,17 @@ public class PatientMatchModel
 
     public string? Identifier { get; set; }
 
+    public List<Address>? AddressList { get; set; }
+
+}
+
+public class Address
+{
+    public string? Line1 { get; set; }
+
+    public string? City { get; set; }
+
+    public string? State {get; set; }
+
+    public string? PostalCode { get; set; }
 }

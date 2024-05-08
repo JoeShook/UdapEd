@@ -4,9 +4,11 @@
 @using UdapEd.Shared.Extensions
 @using Task = System.Threading.Tasks.Task
 @using System.Net
+@using Microsoft.IdentityModel.Tokens
 @using UdapEd.Shared
 @using UdapEd.Shared.Services
 @using UdapEd.Shared.Shared
+@using Address = Hl7.Fhir.Model.Address
 
 <MudCard Elevation="3" Style="margin-top: 10px">
   <MudForm Model="_model" @ref="_form" />
@@ -71,12 +73,52 @@
                       Label="Fhir Identifier"
                       TextChanged="BuildMatch" />
       </MudItem>
-
+      
       <MudItem md="4" sm="6" xs="12">
-        <MudTextField @bind-Value="_model.Identifier"
-                      For="@(() => _model.Identifier)"
-                      Label="Address Identifier" 
-                      TextChanged="BuildMatch" />
+          <MudFab Icon="@Icons.Material.Filled.Add"
+                  Color="Color.Inherit"
+                  @onclick="AddAddress"
+                  Label="Add Address" />
+      </MudItem>
+
+      
+      
+
+      <MudItem xs="12">
+
+          <MudTable Dense="true"
+                    ReadOnly="false"
+                    Items="@_model.AddressList"
+                    Striped="true"
+                    CanCancelEdit="@true"
+                    OnCommitEditClick="BuildMatch">
+              <HeaderContent>
+                  <MudTh>Line 1</MudTh>
+                  <MudTh>City</MudTh>
+                  <MudTh>State</MudTh>
+                  <MudTh>Postal Code</MudTh>
+              </HeaderContent>
+              <RowTemplate>
+                  <MudTd DataLabel="Address Line 1">@context.Line1</MudTd>
+                  <MudTd DataLabel="City">@context.City</MudTd>
+                  <MudTd DataLabel="State">@context.State</MudTd>
+                  <MudTd DataLabel="Postal Code">@context.PostalCode</MudTd>
+              </RowTemplate>
+              <RowEditingTemplate>
+                  <MudTd DataLabel="Address Line 1">
+                      <MudTextField @bind-Value="@context.Line1"/>
+                  </MudTd>
+                  <MudTd DataLabel="City">
+                      <MudTextField @bind-Value="@context.City"/>
+                  </MudTd>
+                  <MudTd DataLabel="State">
+                      <MudTextField @bind-Value="@context.State" Required/>
+                  </MudTd>
+                  <MudTd DataLabel="Postal Code">
+                      <MudTextField @bind-Value="@context.PostalCode"/>
+                  </MudTd>
+              </RowEditingTemplate>
+          </MudTable>
       </MudItem>
 
     </MudGrid>
@@ -268,7 +310,16 @@
 
         if (!string.IsNullOrEmpty(_model.Identifier))
         {
-            patient.Identifier.Add(new Identifier() { Value = _model.Identifier });
+            var parts = _model.Identifier.Split("|");
+
+            if (parts.Length == 2)
+            {
+                patient.Identifier.Add(new Identifier(parts.First(), parts.Last()));
+            }
+            else
+            {
+                patient.Identifier.Add(new Identifier() { Value = parts.First() });
+            }
         }
 
         if (!string.IsNullOrEmpty(_model.Family) ||
@@ -294,6 +345,40 @@
         if (_model.BirthDate.HasValue)
         {
             patient.BirthDate = _model.BirthDate.Value.ToString("yyyy-MM-dd");
+        }
+
+        if (_model.AddressList != null && _model.AddressList.Any())
+        {
+            var address = new Address();
+            var modelAddress = _model.AddressList.First();
+
+            var lines = new List<string>();
+            if (!modelAddress.Line1.IsNullOrEmpty())
+            {
+                lines.Add(modelAddress.Line1);
+                address.Line = lines;
+            }
+            
+            if (!modelAddress.City.IsNullOrEmpty())
+            {
+                address.City = modelAddress.City;
+            }
+
+            if (!modelAddress.State.IsNullOrEmpty())
+            {
+                address.State = modelAddress.State;
+            }
+
+            if (!modelAddress.PostalCode.IsNullOrEmpty())
+            {
+                address.PostalCode = modelAddress.PostalCode;
+            }
+
+            patient.Address.Add(address);
+
+
+            // patient.Telecom = new List<ContactPoint>();
+            // patient.Telecom.Add(new ContactPoint(ContactPoint.ContactPointSystem.Phone, ContactPoint.ContactPointUse.Mobile, "(03) 3410 5613"));
         }
 
         var parameters = new Parameters();
@@ -383,4 +468,15 @@
 
         return $"{score} / {grade}";
     }
+
+    private void AddAddress()
+    {
+        if (_model.AddressList == null)
+        {
+            _model.AddressList = new List<Model.Address>();
+        }
+
+        _model.AddressList.Add(new Model.Address());
+    }
+
 }

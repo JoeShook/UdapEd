@@ -14,7 +14,6 @@ using Hl7.Fhir.Rest;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
-using MudBlazor;
 using Udap.Model;
 using Udap.Model.Registration;
 using UdapEd.Shared.Model;
