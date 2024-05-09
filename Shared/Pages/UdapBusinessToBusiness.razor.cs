@@ -10,6 +10,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using IdentityModel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.WebUtilities;
@@ -109,13 +110,13 @@ public partial class UdapBusinessToBusiness
     private async Task BuildAuthCodeRequest()
     {
         AccessToken = string.Empty;
-        AppState.SetProperty(this, nameof(AppState.AccessTokens), string.Empty, true, false);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), null, true, false);
         AuthorizationCodeRequest = new AuthorizationCodeRequest
         {
             RedirectUri = "Loading..."
         };
 
-        AppState.SetProperty(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
         await Task.Delay(250);
 
         AuthorizationCodeRequest = new AuthorizationCodeRequest
@@ -128,7 +129,7 @@ public partial class UdapBusinessToBusiness
             Aud = $"aud={AppState.BaseUrl}"
         };
 
-        AppState.SetProperty(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
 
         BuildAuthorizeLink();
     }
@@ -391,6 +392,8 @@ public partial class UdapBusinessToBusiness
         }
     }
 
+    
+    
     private async Task LaunchAuthorize()
     {
         BuildAuthorizeLink();

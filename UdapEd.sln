@@ -20,7 +20,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UdapEd.Server", "Server\Uda
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UdapEd.Client", "Client\UdapEd.Client.csproj", "{2E7C12F9-FA4D-472B-B092-F5611D653699}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UdapEdAppMaui", "UdapEdAppMaui\UdapEdAppMaui.csproj", "{95FE4594-743A-41DA-B294-FCB80613449A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UdapEdAppMaui", "UdapEdAppMaui\UdapEdAppMaui.csproj", "{F146B90B-3CA1-4A79-AF17-B9743626B041}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -40,12 +40,12 @@ Global
 		{2E7C12F9-FA4D-472B-B092-F5611D653699}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2E7C12F9-FA4D-472B-B092-F5611D653699}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2E7C12F9-FA4D-472B-B092-F5611D653699}.Release|Any CPU.Build.0 = Release|Any CPU
-		{95FE4594-743A-41DA-B294-FCB80613449A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{95FE4594-743A-41DA-B294-FCB80613449A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{95FE4594-743A-41DA-B294-FCB80613449A}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
-		{95FE4594-743A-41DA-B294-FCB80613449A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{95FE4594-743A-41DA-B294-FCB80613449A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{95FE4594-743A-41DA-B294-FCB80613449A}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{F146B90B-3CA1-4A79-AF17-B9743626B041}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F146B90B-3CA1-4A79-AF17-B9743626B041}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F146B90B-3CA1-4A79-AF17-B9743626B041}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{F146B90B-3CA1-4A79-AF17-B9743626B041}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F146B90B-3CA1-4A79-AF17-B9743626B041}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F146B90B-3CA1-4A79-AF17-B9743626B041}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

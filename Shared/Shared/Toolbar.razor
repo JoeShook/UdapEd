@@ -1,4 +1,7 @@
 ﻿@using UdapEd.Shared.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inherits LayoutComponentBase
 @inject IJSRuntime JSRuntime
 @inject IRegisterService RegisterService
 
@@ -13,6 +16,12 @@
         <MudText Color="Color.Primary" Class="overflow-hidden">@AppState.LaunchContext.Patient</MudText>
         <MudIconButton Color="Color.Secondary" Icon="@Icons.Material.Outlined.Clear" OnClick="ClearLaunchContext" />
     }
+    <AuthorizeView>
+        <Authorized>
+            <strong>Hello,@(User?.Identity?.Name)</strong>
+        </Authorized>
+    </AuthorizeView>
+
    <MudSpacer />
    <MudText Color="Color.Primary">Token Status:</MudText>&nbsp;<MudText Color="@(AppState.Status is {IsValid: false } ? Color.Error : Color.Success)">@AppState.Status.StatusMessage</MudText>
              <MudImage Class="cursor-pointer mud-ripple ma-2" Src="_content/UdapEd.Shared/images/hl7/icon-fhir-32.png" Alt="Fhir Icon" style="height: 36px; width: 36px; margin: 24px"
@@ -55,7 +64,28 @@
     
     [CascadingParameter]
     public CascadingAppState AppState { get; set; } = null!;
+
+    [CascadingParameter] 
+    private Task<AuthenticationState>? AuthState { get; set; }
+    
+    private ClaimsPrincipal? User { get; set; }
+
     bool _drawerOpen = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState == null)
+        {
+            Console.WriteLine("AuthState = null");
+            return;
+        }
+
+        var authState = await AuthState;
+        User = authState.User;
+
+        Console.WriteLine(User.Identity.Name);
+    }
+
 
     void DrawerToggle()
     {

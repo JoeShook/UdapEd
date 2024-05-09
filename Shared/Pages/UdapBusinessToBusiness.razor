@@ -1,5 +1,6 @@
 ﻿@page "/udapBusinessToBusiness"
 @using System.Collections.Immutable
+@using Microsoft.AspNetCore.Authorization
 
 
 <ErrorBoundary @ref="ErrorBoundary">
@@ -214,8 +215,17 @@
                                    Color="Color.Primary"
                                    Variant="Variant.Filled"
                                    Disabled="@(string.IsNullOrWhiteSpace(AuthCodeRequestLink))"
-                                   OnClick="@LaunchAuthorize">
+                                   OnClick="LaunchAuthorize">
                             Run Authorize Code Request
+                        </MudButton>
+                    </MudItem>
+                    <MudItem>
+                        <MudButton Class="mt-3"
+                                   Color="Color.Primary"
+                                   Variant="Variant.Filled"
+                                   Disabled="@(string.IsNullOrWhiteSpace(AuthCodeRequestLink))"
+                                   Href="bff/login">
+                            OIDC
                         </MudButton>
                     </MudItem>
                 </MudCardActions>
@@ -224,8 +234,7 @@
                         <MudItem sm="6" xs="12">
                             <MudPaper Class="udap-input" Elevation="3">
                   <MudText Align="Align.Right" Color="Color.Tertiary">3.1 Authorization Code Flow (part 3)</MudText>
-                                <pre>HTTP/1.1 302 Found</pre>
-                                @{
+                                <pre>HTTP/1.1 302 Found</pre>@{
 #if ANDROID || IOS || MACCATALYST || WINDOWS
                                 }
                                 <pre style="padding-left: 10px">@DeviceLoginCallback()</pre>

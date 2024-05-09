@@ -1,8 +1,10 @@
 ﻿@page "/"
 @using UdapEd.Shared.Services
+@using Microsoft.AspNetCore.Authorization
 @inject IInfrastructure Infrastructure
 @inject IJSRuntime JSRuntime
 @inject IDiscoveryService DiscoveryService
+@attribute [AllowAnonymous]
 
 <ErrorBoundary @ref="ErrorBoundary">
 <ChildContent>

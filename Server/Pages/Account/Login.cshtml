@@ -1,0 +1,24 @@
+﻿@page
+@using Microsoft.AspNetCore.Authentication;
+@using Microsoft.AspNetCore.Mvc;
+@functions {
+    public ChallengeResult OnGet(string returnUrl = "/")
+    {
+        Console.WriteLine("Hello Joe");
+        Console.WriteLine(returnUrl);
+
+        var props = new AuthenticationProperties
+        {
+            RedirectUri = returnUrl,
+
+            Items =
+            {
+                { "returnUrl", returnUrl },
+                { "scheme", "oidc" },
+            }
+        };
+
+
+        return Challenge(props, "oidc");
+    }
+}

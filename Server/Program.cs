@@ -7,8 +7,10 @@
 // */
 #endregion
 
-using Microsoft.AspNetCore.Mvc.Filters;
+using Hl7.Fhir.Model;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using Microsoft.Maui.Authentication;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
@@ -17,10 +19,11 @@ using Udap.Client.Client;
 using Udap.Client.Configuration;
 using Udap.Client.Rest;
 using Udap.Common.Certificates;
-
+using UdapEd.Client.Services;
 using UdapEd.Server.Authentication;
 using UdapEd.Server.Extensions;
 using UdapEd.Server.Rest;
+using UdapEd.Shared.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,42 +56,51 @@ builder.Services.AddControllersWithViews(options =>
 });
 
 builder.Services.AddRazorPages();
-// builder.Services.AddBff();
+    // options =>
+// {
+    // options.Conventions.AuthorizePage("/udapBusinessToBusiness");
+// });
+builder.Services.AddBff();
 
-//
-// builder.Services.AddAuthentication(options =>
-//     {
-//         options.DefaultScheme = "cookie";
-//         options.DefaultChallengeScheme = "oidc";
-//         options.DefaultSignOutScheme = "oidc";
-//     })
-//     .AddCookie("cookie", options =>
-//     {
-//         options.Cookie.Name = "__UdapClientBackend";
-//         options.Cookie.SameSite = SameSiteMode.Strict;
-//     })
-//     .AddOpenIdConnect("oidc", options =>
-//     {
-//         options.Authority = "https://loclahost:5002";
-//
-//         // Udap Authorization code flow
-//         options.ClientId = "interactive.confidential";  //TODO Dynamic
-//         options.ClientSecret = "secret";
-//         options.ResponseType = "code";
-//         options.ResponseMode = "query";
-//
-//         options.MapInboundClaims = false;
-//         options.GetClaimsFromUserInfoEndpoint = true;
-//         options.SaveTokens = true;
-//
-//         // request scopes + refresh tokens
-//         options.Scope.Clear();
-//         options.Scope.Add("openid");
-//         options.Scope.Add("profile");
-//         options.Scope.Add("api");
-//         options.Scope.Add("offline_access");
-//
-//     });
+
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultScheme = "cookie";
+        options.DefaultChallengeScheme = "oidc";
+        options.DefaultSignOutScheme = "oidc";
+    })
+    .AddCookie("cookie", options =>
+    {
+        options.Cookie.Name = "__UdapClientBackend";
+        options.Cookie.SameSite = SameSiteMode.Strict;
+    })
+    .AddOpenIdConnect("oidc", options =>
+    {
+        options.Authority = "https://demo.duendesoftware.com";
+        
+        // confidential client using code flow + PKCE
+        options.ClientId = "interactive.confidential";
+        options.ClientSecret = "secret";
+        options.ResponseType = "code";
+        options.ResponseMode = "query";
+
+        options.MapInboundClaims = false;
+        options.GetClaimsFromUserInfoEndpoint = true;
+        options.SaveTokens = true;
+
+        // request scopes + refresh tokens
+        options.Scope.Clear();
+        options.Scope.Add("openid");
+        options.Scope.Add("profile");
+        options.Scope.Add("api");
+        options.Scope.Add("offline_access");
+
+        // options.Scope.Add("openid");
+        // options.Scope.Add("udap");
+        // options.Scope.Add("user/AllergyIntolerance.read");
+        // options.Scope.Add("user/Patient.read");
+
+    });
 
 builder.Services.AddScoped<TrustChainValidator>();
 builder.Services.AddScoped<UdapClientDiscoveryValidator>();
@@ -137,11 +149,17 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseRateLimiter(); //after routing
 
+
+app.UseAuthentication();
+app.UseBff();
+app.UseAuthorization();
+
+app.MapBffManagementEndpoints();
+
 app.UseSession();
 app.MapRazorPages();
 app.MapControllers()
-    .RequireRateLimiting(RateLimitExtensions.Policy)
-    ;
+    .RequireRateLimiting(RateLimitExtensions.Policy);
 
 app.MapFallbackToFile("index.html");
 
