@@ -16,7 +16,7 @@
                 <MudGrid Spacing="1" Justify="Justify.FlexStart" Class="mb-2">
 
                     <MudItem md="8" xs="12">
-                        <ClientIdSelection ClientRegistrations="@AppState.ClientRegistrations?.Registrations.Where(r => r.Value.UserFlowSelected != "client_credentials").ToImmutableDictionary()"
+                                <ClientIdSelection ClientRegistrations="@FilterRegistrations()"
                                            SelectedRegistration="@AppState.ClientRegistrations?.SelectedRegistration"
                                            TieredOauth="true"
                                            IdPBaseUrl="@AppState.ClientRegistrations?.SelectedRegistration?.IdPBaseUrl"

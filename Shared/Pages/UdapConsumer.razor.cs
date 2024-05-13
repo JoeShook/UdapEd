@@ -7,6 +7,7 @@
 // */
 #endregion
 
+using System.Collections.Immutable;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using IdentityModel;
@@ -402,5 +403,16 @@ public partial class UdapConsumer
 
         var jwt = new JwtSecurityToken(tokenString);
         return JsonExtensions.FormatJson(Base64UrlEncoder.Decode(jwt.EncodedHeader));
+    }
+
+    private IDictionary<string, ClientRegistration?>? FilterRegistrations()
+    {
+        return AppState.ClientRegistrations?.Registrations
+            .Where(r => r.Value != null &&
+                        !r.Value.UserFlowSelected.EndsWith("_consumer") &&
+                        AppState.ClientCertificateInfo != null &&
+                        AppState.ClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
+                        AppState.BaseUrl == r.Value.ResourceServer)
+            .ToImmutableDictionary();
     }
 }
