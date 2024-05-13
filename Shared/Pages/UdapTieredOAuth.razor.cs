@@ -353,7 +353,9 @@ public partial class UdapTieredOAuth
     {
         return AppState.ClientRegistrations?.Registrations
             .Where(r => r.Value != null &&
-                        !r.Value.UserFlowSelected.EndsWith("_consumer") &&
+                        r.Value.UserFlowSelected != "client_credentials" &&
+                        r.Value.Scope != null &&
+                        r.Value.Scope.Contains("udap") && 
                         AppState.ClientCertificateInfo != null &&
                         AppState.ClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
                         AppState.BaseUrl == r.Value.ResourceServer)

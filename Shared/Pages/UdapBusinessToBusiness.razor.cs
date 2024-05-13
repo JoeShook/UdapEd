@@ -450,7 +450,7 @@ public partial class UdapBusinessToBusiness
     {
         return AppState.ClientRegistrations?.Registrations
             .Where(r => r.Value != null && 
-                        !r.Value.UserFlowSelected.EndsWith("_consumer") &&
+                        r.Value.UserFlowSelected.EndsWith("_b2b") &&
                         AppState.ClientCertificateInfo != null &&
                         AppState.ClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
                         AppState.BaseUrl == r.Value.ResourceServer)
