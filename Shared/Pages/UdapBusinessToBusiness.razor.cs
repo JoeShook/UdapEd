@@ -124,7 +124,7 @@ public partial class UdapBusinessToBusiness
             ResponseType = "response_type=code",
             State = $"state={CryptoRandom.CreateUniqueId()}",
             ClientId = $"client_id={AppState.ClientRegistrations?.SelectedRegistration?.ClientId}",
-            Scope = $"scope={AppState.ClientRegistrations?.SelectedRegistration?.Scope}",
+            Scope = $"scope={AppState.ClientRegistrations?.SelectedRegistration?.Scope?.Replace("udap", "").Replace("  ", " ")}",
             RedirectUri = $"redirect_uri={NavManager.Uri.RemoveQueryParameters().ToPlatformScheme()}",
             Aud = $"aud={AppState.BaseUrl}"
         };

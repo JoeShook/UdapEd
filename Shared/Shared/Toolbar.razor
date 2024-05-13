@@ -13,9 +13,21 @@
         <MudText Color="Color.Primary" Class="overflow-hidden">@AppState.LaunchContext.Patient</MudText>
         <MudIconButton Color="Color.Secondary" Icon="@Icons.Material.Outlined.Clear" OnClick="ClearLaunchContext" />
     }
-   <MudSpacer />
-   <MudText Color="Color.Primary">Token Status:</MudText>&nbsp;<MudText Color="@(AppState.Status is {IsValid: false } ? Color.Error : Color.Success)">@AppState.Status.StatusMessage</MudText>
-             <MudImage Class="cursor-pointer mud-ripple ma-2" Src="_content/UdapEd.Shared/images/hl7/icon-fhir-32.png" Alt="Fhir Icon" style="height: 36px; width: 36px; margin: 24px"
+    <MudSpacer />
+    
+    <div Class="pl-1 pr-1 ml-2 mr-2 d-flex flex-nowrap" style="align-items: center; border-style: solid; border-width: 1px">
+        <MudText 
+            Color="Color.Primary">Token Status:</MudText>&nbsp;
+        <MudText Color="@(AppState.Status is {IsValid: false } ? Color.Error : Color.Success)">@AppState.Status.StatusMessage</MudText>
+        @if (AppState.Status.IsValid)
+        {
+            <MudIconButton Icon="@Icons.Material.Outlined.DeleteForever" OnClick="DeleteTokens"></MudIconButton>
+        }
+    </div>
+   <MudImage 
+       Class="cursor-pointer mud-ripple ma-2" 
+       Src="_content/UdapEd.Shared/images/hl7/icon-fhir-32.png" 
+       Alt="Fhir Icon" style="height: 36px; width: 36px; margin: 24px"
              @onclick="@GoToIG" />
     <MudImage Class="cursor-pointer mud-ripple" src="_content/UdapEd.Shared/images/udap/UDAP_Ecosystem_Gears.png" Alt="UDAP Icon" style="height: 36px; width: 36px; margin: 24px"
               @onclick="@GoToUdapOrg" />
@@ -77,4 +89,8 @@
         await AppState.SetPropertyAsync(this, nameof(AppState.LaunchContext), null);
     }
 
+    private async Task DeleteTokens()
+    {
+        await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), null);
+    }
 }

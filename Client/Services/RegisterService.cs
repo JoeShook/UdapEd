@@ -13,6 +13,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Microsoft.IdentityModel.Tokens;
+using Udap.Model;
 using Udap.Model.Registration;
 using Udap.Util.Extensions;
 using UdapEd.Shared.Model;
@@ -196,6 +197,11 @@ public class RegisterService : IRegisterService
                 .ToList();
 
         var enrichScopes = new List<string>();
+
+        if (tieredOauth)
+        {
+            enrichScopes.Add(UdapConstants.StandardScopes.Udap);
+        }
 
         if (smartLaunch && scopeLevel == "patient")
         { 

@@ -521,6 +521,11 @@ internal class RegisterService : IRegisterService
 
         var enrichScopes = new List<string>();
 
+        if (tieredOauth)
+        {
+            enrichScopes.Add(UdapConstants.StandardScopes.Udap);
+        }
+
         if (smartLaunch && scopeLevel == "patient")
         {
             enrichScopes.Add($"launch/{scopeLevel}");
