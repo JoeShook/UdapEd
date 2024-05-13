@@ -521,16 +521,6 @@ internal class RegisterService : IRegisterService
 
         var enrichScopes = new List<string>();
 
-        if (published.Contains(OidcConstants.StandardScopes.OpenId))
-        {
-            enrichScopes.Add(OidcConstants.StandardScopes.OpenId);
-        }
-
-        if (tieredOauth)
-        {
-            enrichScopes.Add(UdapConstants.StandardScopes.Udap);
-        }
-
         if (smartLaunch && scopeLevel == "patient")
         {
             enrichScopes.Add($"launch/{scopeLevel}");
@@ -552,7 +542,7 @@ internal class RegisterService : IRegisterService
         }
         else if (!scopeLevel.IsNullOrEmpty())
         {
-            enrichScopes.Add($"{scopeLevel}/read");
+            enrichScopes.Add($"{scopeLevel}/*.read");
         }
 
         return enrichScopes.ToSpaceSeparatedString();
