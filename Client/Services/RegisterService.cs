@@ -231,7 +231,7 @@ public class RegisterService : IRegisterService
         }
         else if (!scopeLevel.IsNullOrEmpty())
         {
-            enrichScopes.Add($"{scopeLevel}/read");
+            enrichScopes.Add($"{scopeLevel}/*.read");
         }
         
         return enrichScopes.ToSpaceSeparatedString();
