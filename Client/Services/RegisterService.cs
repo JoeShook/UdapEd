@@ -39,7 +39,7 @@ public class RegisterService : IRegisterService
 
     public async Task<RawSoftwareStatementAndHeader?> BuildSoftwareStatementForClientCredentials(
         UdapDynamicClientRegistrationDocument request, 
-        string signingAlgorithm)
+        string? signingAlgorithm)
     {
         var result = await _httpClient.PostAsJsonAsync(
             $"Register/BuildSoftwareStatement/ClientCredentials?alg={signingAlgorithm}", 

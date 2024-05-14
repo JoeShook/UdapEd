@@ -28,7 +28,7 @@
         <MudTabPanel Text="Client Certificate">
             <MudGrid Spacing="2" Justify="Justify.FlexStart" align-start>
                 <MudItem>
-                    <ClientCertLoader/>
+                            <ClientCertLoader OnCertificateLoaded="@Reset" />
                 </MudItem>
                 <MudSpacer/>
                 <MudItem Class="d-inline-flex pa-2">
@@ -125,19 +125,25 @@
             }
 
             <MudItem md="4" sm="6" xs="12">
-                <MudSelect @bind-Value="_signingAlgorithm"
+                        <MudSelect @bind-Value="SigningAlgorithm"
+                           @onload="SelectDefaultAlgorithm"
                            Label="Select Signing Algorithm"
                            T="string"
                            Clearable="true"
                            AdornmentIcon="@Icons.Material.Outlined.ArrowDropDown"
                            AdornmentColor="Color.Primary"
                            Variant="Variant.Outlined">
-                    <MudSelectItem Value="UdapConstants.SupportedAlgorithm.RS256">@UdapConstants.SupportedAlgorithm.RS256</MudSelectItem>
-                    <MudSelectItem Value="UdapConstants.SupportedAlgorithm.RS384">@UdapConstants.SupportedAlgorithm.RS384</MudSelectItem>
-                    <MudSelectItem Value="UdapConstants.SupportedAlgorithm.ES256">@UdapConstants.SupportedAlgorithm.ES256</MudSelectItem>
-                    <MudSelectItem Value="UdapConstants.SupportedAlgorithm.ES384">@UdapConstants.SupportedAlgorithm.ES384</MudSelectItem>
+                    @if (AppState.ClientCertificateInfo?.PublicKeyAlgorithm == "RS")
+                    {
+                        <MudSelectItem Value="UdapConstants.SupportedAlgorithm.RS256">@UdapConstants.SupportedAlgorithm.RS256</MudSelectItem>
+                        <MudSelectItem Value="UdapConstants.SupportedAlgorithm.RS384">@UdapConstants.SupportedAlgorithm.RS384</MudSelectItem>
+                    }
+                    @if (AppState.ClientCertificateInfo?.PublicKeyAlgorithm == "ES")
+                    {
+                        <MudSelectItem Value="UdapConstants.SupportedAlgorithm.ES256">@UdapConstants.SupportedAlgorithm.ES256</MudSelectItem>
+                        <MudSelectItem Value="UdapConstants.SupportedAlgorithm.ES384">@UdapConstants.SupportedAlgorithm.ES384</MudSelectItem>
+                    }
                 </MudSelect>
-
             </MudItem>
         </MudGrid>
     </MudCardContent>
@@ -315,8 +321,20 @@
             <MudItem sm="6" xs="12">
                 <MudPaper Class="udap-input" Elevation="3">
                     <MudText Align="Align.Right" Color="Color.Tertiary">Registration Response</MudText>
-                            <pre>@((MarkupString)RegistrationResult.HighlightScope())</pre>
+                    <pre>@((MarkupString)RegistrationResult.HighlightScope())</pre>
                 </MudPaper>
+
+                @if (AppState.ClientRegistrations.SelectedRegistration?.Scope == null)
+                {
+                    <MudPaper Class="udap-input" Elevation="3">
+                        <MudText Align="Align.Left" Color="Color.Primary">Null scope response.  
+                            Some registration servers do not indicated the scopes granted in the response document.
+                            Click the Save Scopes button to save requested scopes for this client.</MudText>
+                        <MudButton StartIcon="@Icons.Material.Filled.Save" OnClick="SaveScopesToClient">Save Scopes</MudButton>
+
+                    </MudPaper>
+                }
+
             </MudItem>
             <MudItem sm="6" xs="12">
                 <MudPaper Class="udap-knowledge" Elevation="3">

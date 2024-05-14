@@ -378,8 +378,8 @@
             
         }
 
-        // patient.Telecom = new List<ContactPoint>();
-        // patient.Telecom.Add(new ContactPoint(ContactPoint.ContactPointSystem.Phone, ContactPoint.ContactPointUse.Mobile, "+1 (555) 777-1234"));
+        patient.Telecom = new List<ContactPoint>();
+        patient.Telecom.Add(new ContactPoint(ContactPoint.ContactPointSystem.Phone, ContactPoint.ContactPointUse.Work, "(03) 5555 6473"));
 
         var parameters = new Parameters();
         parameters.Add(UdapEdConstants.PatientMatch.InParameterNames.RESOURCE, patient);

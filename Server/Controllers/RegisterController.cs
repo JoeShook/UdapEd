@@ -8,9 +8,12 @@
 #endregion
 
 using System.Net.Http.Headers;
+using System.Runtime.ConstrainedExecution;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -59,10 +62,13 @@ public class RegisterController : Controller
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
+            
             result.SubjectAltNames = certificate
                 .GetSubjectAltNames(n => n.TagNo == (int)X509Extensions.GeneralNameType.URI)
-                .Select(tuple => tuple.Item2)
+            .Select(tuple => tuple.Item2)
                 .ToList();
+            
+            result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(certificate);
         }
         catch (Exception ex)
         {
@@ -73,6 +79,24 @@ public class RegisterController : Controller
         }
 
         return Ok(result);
+    }
+
+    private string GetPublicKeyAlgorithm(X509Certificate2 certificate)
+    {
+        string keyAlgOid = certificate.GetKeyAlgorithm();
+        var oid = new Oid(keyAlgOid);
+
+        if (oid.Value == "1.2.840.113549.1.1.1")
+        {
+            return "RS";
+        }
+
+        if (oid.Value == "1.2.840.10045.2.1")
+        {
+            return "ES";
+        }
+
+        return "";
     }
 
     [HttpPost("UploadClientCertificate")]
@@ -118,6 +142,8 @@ public class RegisterController : Controller
                 .GetSubjectAltNames(n => n.TagNo == (int)X509Extensions.GeneralNameType.URI)
                 .Select(tuple => tuple.Item2)
                 .ToList();
+
+            result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(certificate);
         }
         catch (Exception ex)
         {
@@ -169,6 +195,8 @@ public class RegisterController : Controller
                     .GetSubjectAltNames(n => n.TagNo == (int)X509Extensions.GeneralNameType.URI)
                     .Select(tuple => tuple.Item2)
                     .ToList();
+
+                result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(clientCert);
             }
 
             return Ok(result);
@@ -223,7 +251,6 @@ public class RegisterController : Controller
             .WithScope(request.Scope ?? string.Empty)
             .Build();
     
-        
         var signedSoftwareStatement =
             SignedSoftwareStatementBuilder<UdapDynamicClientRegistrationDocument>
                 .Create(clientCert, document)

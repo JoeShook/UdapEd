@@ -136,6 +136,7 @@
         var certViewModel = await RegisterService.ValidateCertificate(result.Data?.ToString() ?? "");
         await SetCertLoadedColor(certViewModel?.CertLoaded);
         await AppState.SetPropertyAsync(this, nameof(AppState.ClientCertificateInfo), certViewModel);
+        await OnCertificateLoaded.InvokeAsync();
     }
 
     private async Task LoadTestCertificate()
@@ -143,6 +144,7 @@
         var certViewModel = await RegisterService.LoadTestCertificate();
         await SetCertLoadedColor(certViewModel?.CertLoaded);
         await AppState.SetPropertyAsync(this, nameof(AppState.ClientCertificateInfo), certViewModel);
+        await OnCertificateLoaded.InvokeAsync();
     }
 
     async void RunTimer()
@@ -158,7 +160,9 @@
         }
     }
 
-
+    [Parameter]
+    public EventCallback OnCertificateLoaded { get; set; }
+    
     public void Dispose()
     {
         _periodicTimer.Dispose();
