@@ -30,6 +30,9 @@ public partial class UdapBusinessToBusiness
     [CascadingParameter]
     public CascadingAppState AppState { get; set; } = null!;
 
+    private ClientRegistration? ClientSelectedInUi { get; set; }
+    public string ScopeOverride { get; set; } = String.Empty;
+
     private ErrorBoundary? ErrorBoundary { get; set; }
 
 #if ANDROID || IOS || MACCATALYST || WINDOWS
@@ -85,11 +88,11 @@ public partial class UdapBusinessToBusiness
     /// want the component to refresh when that operation is completed.
     /// </summary>
     /// <returns>A <see cref="T:System.Threading.Tasks.Task" /> representing any asynchronous operation.</returns>
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        ResetSoftwareStatement();
+        await ResetSoftwareStatement();
         
-        return base.OnInitializedAsync();
+        await base.OnInitializedAsync();
     }
 
     protected override void OnParametersSet()
@@ -209,20 +212,20 @@ public partial class UdapBusinessToBusiness
         return uri.Query.Replace("&", "&\r\n");
     }
 
-    private void ResetSoftwareStatement()
+    private async Task ResetSoftwareStatement()
     {
         TokenRequest1 = string.Empty;
         TokenRequest2 = string.Empty;
         TokenRequest3 = string.Empty;
         TokenRequest4 = string.Empty;
-        AppState.SetProperty(this, nameof(AppState.AuthorizationCodeRequest), null);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeRequest), null);
         LoginCallback(true);
         StateHasChanged();
     }
 
     private async Task BuildAccessTokenRequest ()
     {
-        ResetSoftwareStatement();
+        await ResetSoftwareStatement();
         TokenRequest1 = "Loading ...";
         await Task.Delay(50);
 
@@ -241,6 +244,7 @@ public partial class UdapBusinessToBusiness
 
         if (AppState.Oauth2Flow == Oauth2FlowEnum.authorization_code_b2b)
         {
+            Console.WriteLine("Why");
             var tokenRequestModel = new AuthorizationCodeTokenRequestModel
             {
                 ClientId = AppState.ClientRegistrations?.SelectedRegistration?.ClientId,
@@ -258,7 +262,7 @@ public partial class UdapBusinessToBusiness
             var requestToken = await AccessService
                 .BuildRequestAccessTokenForAuthCode(tokenRequestModel, _signingAlgorithm);
             
-            AppState.SetProperty(this, nameof(AppState.AuthorizationCodeTokenRequest), requestToken);
+            await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeTokenRequest), requestToken);
 
             if (AppState.AuthorizationCodeTokenRequest == null)
             {
@@ -278,13 +282,13 @@ public partial class UdapBusinessToBusiness
             {
                 ClientId = AppState.ClientRegistrations?.SelectedRegistration?.ClientId,
                 TokenEndpointUrl = AppState.MetadataVerificationModel?.UdapServerMetaData?.TokenEndpoint,
-                Scope = AppState.ClientRegistrations?.SelectedRegistration?.Scope
+                Scope = ScopeOverride.IsNullOrEmpty() ? TokenRequestScope?.Replace("scope=", "").TrimEnd('&').Trim() : ScopeOverride
             };
 
             var requestToken = await AccessService
                 .BuildRequestAccessTokenForClientCredentials(tokenRequestModel, _signingAlgorithm);
 
-            AppState.SetProperty(this, nameof(AppState.ClientCredentialsTokenRequest), requestToken);
+            await AppState.SetPropertyAsync(this, nameof(AppState.ClientCredentialsTokenRequest), requestToken);
 
             BuildAccessTokenRequestVisualForClientCredentials();
         }
@@ -306,11 +310,10 @@ public partial class UdapBusinessToBusiness
         TokenRequest2 = sb.ToString();
 
         TokenRequest3 = $"client_assertion={AppState.ClientCredentialsTokenRequest?.ClientAssertion?.Value}&";
-        TokenRequestScope = $"scope={AppState.ClientCredentialsTokenRequest?.Scope}&";
+        TokenRequestScope = $"scope={(ScopeOverride.IsNullOrEmpty() ? AppState.ClientCredentialsTokenRequest?.Scope : ScopeOverride)}&";
         sb = new StringBuilder();
         sb.Append($"udap={UdapConstants.UdapVersionsSupportedValue}&\r\n");
         TokenRequest4 = sb.ToString();
-        
     }
 
     private void BuildAccessTokenRequestVisualForAuthorizationCode()
@@ -362,7 +365,7 @@ public partial class UdapBusinessToBusiness
                     .RequestAccessTokenForAuthorizationCode(
                         AppState.AuthorizationCodeTokenRequest);
 
-                AppState.SetProperty(this, nameof(AppState.AccessTokens), tokenResponse);
+                await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), tokenResponse);
 
                 AccessToken = tokenResponse is { IsError: false } ? tokenResponse.Raw : tokenResponse?.Error;
             }
@@ -378,7 +381,7 @@ public partial class UdapBusinessToBusiness
                     .RequestAccessTokenForClientCredentials(
                         AppState.ClientCredentialsTokenRequest);
 
-                AppState.SetProperty(this, nameof(AppState.AccessTokens), tokenResponse);
+                await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), tokenResponse);
 
                 AccessToken = tokenResponse is { IsError: false }
                     ? tokenResponse.Raw 

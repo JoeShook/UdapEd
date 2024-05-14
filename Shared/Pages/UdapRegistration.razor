@@ -5,13 +5,13 @@
 <ErrorBoundary @ref="ErrorBoundary">
 <ChildContent>
     <MudGrid Justify="Justify.FlexStart">
-        <MudItem>
+            <MudItem>
             <MudText Typo="Typo.h4">Udap Registration</MudText>
-            <MudGrid Justify="Justify.FlexStart" align-start>
+                <MudGrid Justify="Justify.FlexStart" style="align-items: center">
                 <MudItem>
                     <MudLink Href="/udapDiscovery" Color="Color.Info"> [ @RequestUrl.GetWellKnownUdap(AppState.BaseUrl, AppState.Community) ]</MudLink>
                 </MudItem>
-                <MudItem>
+                    <MudItem>
                     @if (AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported == null ||
                          AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported.Any() == false)
                     {

@@ -20,24 +20,24 @@ public class ClientRegistrations
     public ClientRegistration? SelectedRegistration { get; set; } 
 
     public Dictionary<string, ClientRegistration?> Registrations { get; set; } = new();
-
-    public ClientRegistration? SetRegistration(RegistrationDocument registrationDocument, UdapDynamicClientRegistrationDocument? resultModelResult, Oauth2FlowEnum oauth2Flow, string resourceServer)
+    
+    public ClientRegistration? SetRegistration(RegistrationDocument resultModelResult, UdapDynamicClientRegistrationDocument? registrationDocument, Oauth2FlowEnum oauth2Flow, string resourceServer)
     {
-        if (resultModelResult is { Issuer: not null, Audience: not null })
+        if (registrationDocument is { Issuer: not null, Audience: not null })
         {
             _clientRegistration = new ClientRegistration
             {
-                ClientId = registrationDocument.ClientId,
-                GrantType = resultModelResult.GrantTypes?.FirstOrDefault(),
-                SubjAltName = resultModelResult.Issuer,
+                ClientId = resultModelResult.ClientId,
+                GrantType = registrationDocument.GrantTypes?.FirstOrDefault(),
+                SubjAltName = registrationDocument.Issuer,
                 UserFlowSelected = oauth2Flow.ToString(),
-                AuthServer = resultModelResult.Audience,
+                AuthServer = registrationDocument.Audience,
                 ResourceServer = resourceServer,
-                RedirectUri = resultModelResult.RedirectUris,
-                Scope = registrationDocument.Scope
+                RedirectUri = registrationDocument.RedirectUris,
+                Scope = resultModelResult.Scope
             };
 
-            Registrations[registrationDocument.ClientId] = _clientRegistration;
+            Registrations[resultModelResult.ClientId] = _clientRegistration;
             CleanUpRegistration(_clientRegistration);
 
             return _clientRegistration;

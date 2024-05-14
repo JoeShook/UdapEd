@@ -375,11 +375,11 @@
             }
 
             patient.Address.Add(address);
-
-
-            // patient.Telecom = new List<ContactPoint>();
-            // patient.Telecom.Add(new ContactPoint(ContactPoint.ContactPointSystem.Phone, ContactPoint.ContactPointUse.Mobile, "(03) 3410 5613"));
+            
         }
+
+        // patient.Telecom = new List<ContactPoint>();
+        // patient.Telecom.Add(new ContactPoint(ContactPoint.ContactPointSystem.Phone, ContactPoint.ContactPointUse.Mobile, "+1 (555) 777-1234"));
 
         var parameters = new Parameters();
         parameters.Add(UdapEdConstants.PatientMatch.InParameterNames.RESOURCE, patient);

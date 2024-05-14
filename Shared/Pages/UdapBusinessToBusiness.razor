@@ -1,5 +1,6 @@
 ﻿@page "/udapBusinessToBusiness"
 @using System.Collections.Immutable
+@using Microsoft.IdentityModel.Tokens
 
 
 <ErrorBoundary @ref="ErrorBoundary">
@@ -25,7 +26,11 @@
                                   AppState.SetProperty(this, nameof(AppState.Oauth2Flow), flow, true, false);
                                   AppState.ClientRegistrations.SelectedRegistration = registration;
                                   AppState.SetProperty(this, nameof(AppState.ClientRegistrations), AppState.ClientRegistrations, true, true);
+                                  ClientSelectedInUi = registration; 
+
+                                  if (ScopeOverride.IsNullOrEmpty()) { ScopeOverride = registration.Scope; }
                               }"/>
+
                       </MudItem>
 
                       <MudItem md="4" xs="12">
@@ -49,7 +54,7 @@
                                        Color="Color.Primary"
                                        ButtonType="ButtonType.Button"
                                        Variant="Variant.Filled"
-                                       Disabled="@(AppState.ClientRegistrations.SelectedRegistration == null)"
+                                       Disabled="@(ClientSelectedInUi == null)"
                                        OnClick="BuildAccessTokenRequest">Build Access Token Request</MudButton>
                         </MudItem>
                         <MudItem md="3" sm="6" xs="12">
@@ -65,6 +70,16 @@
                                 <MudSelectItem Value="UdapConstants.SupportedAlgorithm.ES256">@UdapConstants.SupportedAlgorithm.ES256</MudSelectItem>
                                 <MudSelectItem Value="UdapConstants.SupportedAlgorithm.ES384">@UdapConstants.SupportedAlgorithm.ES384</MudSelectItem>
                             </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12">
+                            @if (ClientSelectedInUi != null)
+                            {
+                                @if (ClientSelectedInUi.Scope.IsNullOrEmpty())
+                                {
+                                    <MudAlert Severity="Severity.Warning">Don't forget a scope</MudAlert>
+                                }
+                                <MudTextField Label="Override Scopes" T="string" @bind-Text="ScopeOverride" Class="pre"/>
+                            }
                         </MudItem>
                     </MudGrid>
                 </MudCardActions>
