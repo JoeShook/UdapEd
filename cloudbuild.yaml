@@ -21,7 +21,7 @@ steps:
   '--image', 'us-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/fhirlabs.udaped:$TAG_NAME', 
   '--max-instances', '1', 
   '--concurrency', '5',
-  '--set-env-vars', 'MyIp=34.82.29.68,DOTNET_SYSTEM_NET_HTTP_SOCKETSHTTPHANDLER_HTTP3SUPPORT=false,proxy-hosts=35.212.221.57 fhirlabs.net;35.212.221.57 securedcontrols.net;35.212.221.57 idp1.securedcontrols.net;35.212.221.57 idp2.securedcontrols.net;35.212.221.57 udap.zimt.work;35.212.221.57 securefhir.zimt.work;35.212.221.57 test.udap.org;35.212.221.57 mktac-restapis-stable.meditech.com;35.212.221.57 udap.fast.poolnook.me;35.212.221.57 stage.healthtogo.me',
+  '--set-env-vars', 'MyIp=34.82.29.68,DOTNET_SYSTEM_NET_HTTP_SOCKETSHTTPHANDLER_HTTP3SUPPORT=false,proxy-hosts=35.212.221.57 fhirlabs.net;35.212.221.57 securedcontrols.net;35.212.221.57 idp1.securedcontrols.net;35.212.221.57 idp2.securedcontrols.net;35.212.221.57 udap.zimt.work;35.212.221.57 securefhir.zimt.work;35.212.221.57 test.udap.org;35.212.221.57 mktac-restapis-stable.meditech.com;35.212.221.57 udap.fast.poolnook.me;35.212.221.57 stage.healthtogo.me;35.212.221.57 identity-matching.fast.hl7.org;35.212.221.57 udap-security.fast.hl7.org;35.212.221.57 national-directory.fast.hl7.org',
   '--vpc-connector', 'udaped-connect-us-west1',
   '--vpc-egress', 'all-traffic'
   ]
