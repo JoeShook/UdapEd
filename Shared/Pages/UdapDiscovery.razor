@@ -57,11 +57,11 @@
                                         Size="Size.Small"
                                         Color="@CertLoadedColor"
                                         Icon="@AppState.CertificateIcon"
-                                        Label="Load udap.org"
+                                        Label="Load EMR Direct Test CA"
                                         Title="Use UDAP Test Tool Anchor Certificate"
                                         IconSize="Size.Small"
                                         OnClick="@LoadUdapOrgAnchor" />
-
+                                
                             </MudItem>
                             @if (!string.IsNullOrEmpty(AppState.AnchorCertificateInfo?.DistinguishedName) ||
                                  !string.IsNullOrEmpty(AppState.AnchorCertificateInfo?.Thumbprint))

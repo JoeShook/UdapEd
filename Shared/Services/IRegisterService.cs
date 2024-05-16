@@ -51,5 +51,5 @@ public interface IRegisterService
 
     string? GetScopesForClientCredentials(ICollection<string>? scopes, bool smartV1Scopes = true, bool smartV2Scopes = true);
     string GetScopesForAuthorizationCode(ICollection<string>? scopes, 
-        bool tieredOauth = false, string? scopeLevel = null, bool smartLaunch = false, bool smartV1Scopes = true, bool smartV2Scopes = true);
+        bool tieredOauth = false, bool oidcScope = true, string ? scopeLevel = null, bool smartLaunch = false, bool smartV1Scopes = true, bool smartV2Scopes = true);
 }

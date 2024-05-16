@@ -44,7 +44,29 @@ public partial class UdapBusinessToBusiness
     
     [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
 
-    private string _signingAlgorithm = UdapConstants.SupportedAlgorithm.RS256;
+    private string? _signingAlgorithm;
+
+    public string SigningAlgorithm
+    {
+        get
+        {
+            if (_signingAlgorithm == null && AppState.ClientCertificateInfo?.PublicKeyAlgorithm == "RS")
+            {
+                _signingAlgorithm = UdapConstants.SupportedAlgorithm.RS256;
+            }
+            if (_signingAlgorithm == null && AppState.ClientCertificateInfo?.PublicKeyAlgorithm == "ES")
+            {
+                _signingAlgorithm = UdapConstants.SupportedAlgorithm.ES256;
+            }
+
+            return _signingAlgorithm ?? "Unknown";
+        }
+        set
+        {
+            Console.WriteLine(value);
+            _signingAlgorithm = value;
+        }
+    }
 
     private string LoginRedirectLinkText { get; set; } = "Login Redirect";
     
@@ -79,7 +101,11 @@ public partial class UdapBusinessToBusiness
         set => _accessToken = value;
     }
 
-   
+    private void Reset()
+    {
+        _signingAlgorithm = null;
+        StateHasChanged();
+    }
 
     /// <summary>
     /// Method invoked when the component is ready to start, having received its

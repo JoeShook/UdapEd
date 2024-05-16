@@ -12,6 +12,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using IdentityModel;
 using Microsoft.IdentityModel.Tokens;
 using Udap.Model;
 using Udap.Model.Registration;
@@ -185,7 +186,8 @@ public class RegisterService : IRegisterService
 
     public string GetScopesForAuthorizationCode(ICollection<string>? 
         scopes, 
-        bool tieredOauth = false, 
+        bool tieredOauth = false,
+        bool oidcScope = true,
         string? scopeLevel = null, 
         bool smartLaunch = false,
         bool smartV1Scopes = true,
@@ -201,6 +203,11 @@ public class RegisterService : IRegisterService
         if (tieredOauth)
         {
             enrichScopes.Add(UdapConstants.StandardScopes.Udap);
+        }
+
+        if (oidcScope)
+        {
+            enrichScopes.Add(OidcConstants.StandardScopes.OpenId);
         }
 
         if (smartLaunch && scopeLevel == "patient")

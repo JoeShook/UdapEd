@@ -28,7 +28,7 @@
         <MudTabPanel Text="Client Certificate">
             <MudGrid Spacing="2" Justify="Justify.FlexStart" align-start>
                 <MudItem>
-                            <ClientCertLoader OnCertificateLoaded="@Reset" />
+                    <ClientCertLoader OnCertificateLoaded="@Reset" />
                 </MudItem>
                 <MudSpacer/>
                 <MudItem Class="d-inline-flex pa-2">
@@ -125,8 +125,7 @@
             }
 
             <MudItem md="4" sm="6" xs="12">
-                        <MudSelect @bind-Value="SigningAlgorithm"
-                           @onload="SelectDefaultAlgorithm"
+                <MudSelect @bind-Value="SigningAlgorithm"
                            Label="Select Signing Algorithm"
                            T="string"
                            Clearable="true"
@@ -188,6 +187,18 @@
                         <MudItem Class="d-inline-flex pa-4">
                             <MudCheckBox @bind-Checked="TieredOauth"
                                          Label="Tiered Oauth"/>
+                        </MudItem>
+                    </ChildContent>
+                    <TooltipContent>
+                        <MudText Typo="Typo.h6">Add udap scope</MudText>
+                    </TooltipContent>
+                </MudTooltip>
+
+                <MudTooltip Placement="Placement.Bottom" Delay="1000">
+                    <ChildContent>
+                        <MudItem Class="d-inline-flex pa-4">
+                            <MudCheckBox @bind-Checked="OpenIdScope"
+                                         Label="oidc"/>
                         </MudItem>
                     </ChildContent>
                     <TooltipContent>

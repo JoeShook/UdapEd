@@ -7,7 +7,6 @@
 // */
 #endregion
 
-using System.Net.NetworkInformation;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Hl7.Fhir.Rest;
@@ -27,7 +26,21 @@ public partial class UdapRegistration
 {
     private string? SubjectAltName { get; set; }
     private string? _signingAlgorithm;
-    private bool TieredOauth { get; set; }
+
+    private bool TieredOauth
+    {
+        get => _tieredOauth;
+        set
+        {
+            _tieredOauth = value;
+            if (value)
+            {
+                OpenIdScope = true;
+            }
+        }
+    }
+
+    private bool OpenIdScope { get; set; } = true;
     private bool SmartLaunch { get; set; }
     private bool SmartV1Scopes { get; set; } = true;
     private bool SmartV2Scopes { get; set; }
@@ -38,13 +51,7 @@ public partial class UdapRegistration
     private UdapDynamicClientRegistrationDocument? _udapDcrDocument;
     private string _localRegisteredClients = string.Empty;
     private string? ScopeLevel { get; set; }
-
-    public void Reset()
-    {
-        _signingAlgorithm = null; 
-        StateHasChanged();
-    }
-
+    
     public string SigningAlgorithm
     {
         get
@@ -161,6 +168,12 @@ public partial class UdapRegistration
     private const string INVALID_STYLE = "pre udap-indent-1 jwt-invalid";
     public string ValidRawSoftwareStatementStyle { get; set; } = VALID_STYLE;
 
+    private void Reset()
+    {
+        _signingAlgorithm = null;
+        StateHasChanged();
+    }
+
     private void PersistSoftwareStatement()
     {
         try
@@ -186,6 +199,7 @@ public partial class UdapRegistration
     }
 
     private string? _registrationResult;
+    private bool _tieredOauth;
 
     private string RegistrationResult
     {
@@ -256,6 +270,7 @@ public partial class UdapRegistration
                 RegisterService.GetScopesForAuthorizationCode(
                     AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported, 
                     TieredOauth, 
+                    OpenIdScope,
                     ScopeLevel, 
                     SmartLaunch,
                     SmartV1Scopes,
@@ -603,10 +618,5 @@ public partial class UdapRegistration
             AppState.ClientRegistrations.SelectedRegistration.Scope = beforeEncodingScope;
             await AppState.SetPropertyAsync(this, nameof(AppState.ClientRegistrations), AppState.ClientRegistrations);
         }
-    }
-
-    private void SelectDefaultAlgorithm()
-    {
-        Console.WriteLine();
     }
 }
