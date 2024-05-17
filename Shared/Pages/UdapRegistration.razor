@@ -152,7 +152,7 @@
     <MudCardHeader Class="bold">
         <MudText Typo="Typo.h6">Build Raw Software Statements For Registration</MudText>
     </MudCardHeader>
-    <MudCardActions>
+            <MudCardActions Class="border-solid mud-border-primary">
         <MudGrid Spacing="2" Justify="Justify.FlexStart" align-start>
                     
             <MudItem >
@@ -179,83 +179,103 @@
                     </TooltipContent>
                 </MudTooltip>
             </MudItem>
+            <MudSpacer/>
+            <MudItem>
+                <MudCard Outlined="true" Class="mud-border-primary">
+                    <MudGrid >
+                        <MudItem xs="12" Class="pt-2 mt-2" >
+                            <MudText Class="mr-4" Align="Align.Right" Color="Color.Primary" Typo="Typo.h6">Scope picker</MudText>
+                        </MudItem> 
 
-            @if (AppState.Oauth2Flow != Oauth2FlowEnum.client_credentials)
-            {
-                <MudTooltip Placement="Placement.Bottom" Delay="1000">
-                    <ChildContent>
-                        <MudItem Class="d-inline-flex pa-4">
-                            <MudCheckBox @bind-Checked="TieredOauth"
-                                         Label="Tiered Oauth"/>
-                        </MudItem>
-                    </ChildContent>
-                    <TooltipContent>
-                        <MudText Typo="Typo.h6">Add udap scope</MudText>
-                    </TooltipContent>
-                </MudTooltip>
-
-                <MudTooltip Placement="Placement.Bottom" Delay="1000">
-                    <ChildContent>
-                        <MudItem Class="d-inline-flex pa-4">
-                            <MudCheckBox @bind-Checked="OpenIdScope"
-                                         Label="oidc"/>
-                        </MudItem>
-                    </ChildContent>
-                    <TooltipContent>
-                        <MudText Typo="Typo.h6">Add udap scope</MudText>
-                    </TooltipContent>
-                </MudTooltip>
-
-                <MudItem Class="d-inline-flex pa-4">
-                    <MudSelect @bind-Value="ScopeLevel"
-                               T="string"
-                               Label="Scope level"
-                               Clearable="true"
-                               AdornmentIcon="@Icons.Material.Outlined.ArrowDropDown"
-                               AdornmentColor="Color.Primary"
-                               Variant="Variant.Outlined">
-                        <MudSelectItem T="string" Value=@("patient")/>
-                        <MudSelectItem T="string" Value=@("user")/>
-                    </MudSelect>
-                </MudItem>
-
-                @if (ScopeLevel != null)
-                {
-                    <MudTooltip Placement="Placement.Bottom" Delay="1000">
-                        <ChildContent>
-                            <MudItem Class="d-inline-flex pa-4">
-                                <MudCheckBox @bind-Checked="SmartLaunch"
-                                             Label="SMART Launch Scope"/>
+              
+                        @if (AppState.Oauth2Flow != Oauth2FlowEnum.client_credentials)
+                        {
+                            <MudItem Class="d-inline-flex pa-2">
+                                <MudTooltip Placement="Placement.Bottom" Delay="1000">
+                                    <ChildContent>
+                                        <MudItem Class="d-inline-flex">
+                                            <MudCheckBox @bind-Checked="TieredOauth"
+                                                         Label="Tiered Oauth"/>
+                                        </MudItem>
+                                    </ChildContent>
+                                    <TooltipContent>
+                                        <MudText Typo="Typo.h6">Add udap and oidc scope</MudText>
+                                    </TooltipContent>
+                                </MudTooltip>
                             </MudItem>
 
-                        </ChildContent>
-                        <TooltipContent>
-                            <MudText Typo="Typo.h6">Add launch scope according to scope level selected</MudText>
-                        </TooltipContent>
-                    </MudTooltip>
-                }
-            }
-            
-            <MudItem Class="d-inline-flex pa-4">
-                <MudCheckBox @bind-Checked="SmartV1Scopes"
-                             Label="SMART V1 Sopes"/>
-            </MudItem>
-            
-            <MudItem Class="d-inline-flex pa-4">
-                <MudCheckBox @bind-Checked="SmartV2Scopes"
-                             Label="SMART V2 Sopes"/>
-            </MudItem>
+                            <MudItem Class="d-inline-flex pa-2">
+                                <MudTooltip Placement="Placement.Bottom" Delay="1000">
+                                    <ChildContent>
+                                        <MudItem Class="d-inline-flex">
+                                            <MudCheckBox @bind-Checked="OpenIdScope"
+                                                         Label="oidc"/>
+                                        </MudItem>
+                                    </ChildContent>
+                                    <TooltipContent>
+                                        <MudText Typo="Typo.h6">Add oidc scope</MudText>
+                                    </TooltipContent>
+                                </MudTooltip>
+                            </MudItem>
 
-            @if (!string.IsNullOrEmpty(RawSoftwareStatementError))
-            {
-                <MudItem Class="d-inline-flex pa-4">
-                    <MudAlert Severity="Severity.Error">@RawSoftwareStatementError</MudAlert>
-                </MudItem>
-            }
-            
+                            <MudItem Class="d-inline-flex pa-2">
+                                <MudSelect @bind-Value="ScopeLevel"
+                                           T="string"
+                                           Label="Level"
+                                           Clearable="true"
+                                           AdornmentIcon="@Icons.Material.Outlined.ArrowDropDown"
+                                           AdornmentColor="Color.Primary"
+                                           Variant="Variant.Outlined"
+                                           Dense="true"
+                                           FullWidth="false"
+                                                   Class="mb-2">
+                                    <MudSelectItem T="string" Value=@("patient") Class="flex-grow-0"/>
+                                    <MudSelectItem T="string" Value=@("user") Class="flex-grow-0"/>
+                                </MudSelect>
+
+                            </MudItem>
+
+                            @if (ScopeLevel != null)
+                            {
+                                <MudItem Class="d-inline-flex pa-2">
+                                    <MudTooltip Placement="Placement.Bottom" Delay="1000">
+                                        <ChildContent>
+                                            <MudItem Class="d-inline-flex">
+                                                <MudCheckBox @bind-Checked="SmartLaunch"
+                                                             Label="SMART Launch"/>
+                                            </MudItem>
+
+                                        </ChildContent>
+                                        <TooltipContent>
+                                            <MudText Typo="Typo.h6">Add launch scope according to scope level selected</MudText>
+                                        </TooltipContent>
+                                    </MudTooltip>
+                                </MudItem>
+                            }
+                        }
+
+                        <MudItem Class="d-inline-flex pa-2">
+                            <MudCheckBox @bind-Checked="SmartV1Scopes"
+                                         Label="SMART V1"/>
+                        </MudItem>
+
+                        <MudItem Class="d-inline-flex pa-2">
+                            <MudCheckBox @bind-Checked="SmartV2Scopes"
+                                         Label="SMART V2"/>
+                        </MudItem>
+
+                        @if (!string.IsNullOrEmpty(RawSoftwareStatementError))
+                        {
+                            <MudItem xs="12" Class="d-inline-flex pa-2">
+                                <MudAlert Severity="Severity.Error">@RawSoftwareStatementError</MudAlert>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudCard>
+            </MudItem>
         </MudGrid>
-
     </MudCardActions>
+
     <MudCardContent>
         <MudGrid Spacing="1" Class="mt-8">
             <MudItem sm="6" xs="12">
