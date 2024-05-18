@@ -73,15 +73,13 @@
                   Color="Color.Inherit"
                   @onclick="AddAddress"
                   Label="Add Address" />
+          
+          <MudFab Icon="@Icons.Material.Filled.Add"
+                  Color="Color.Inherit"
+                  @onclick="AddContactSystem"
+                  Label="Add Contact System" />
       </MudItem>
 
-            @* <MudItem md="4" sm="6" xs="12"> *@
-            @*     <MudFab Icon="@Icons.Material.Filled.Add" *@
-            @*             Color="Color.Inherit" *@
-            @*             @onclick="AddContactSystem" *@
-            @*             Label="Add Contact System" /> *@
-            @* </MudItem> *@
-      
 
       <MudItem xs="12">
 
@@ -98,7 +96,14 @@
                   <MudTh>Postal Code</MudTh>
               </HeaderContent>
               <RowTemplate>
-                  <MudTd DataLabel="Address Line 1">@context.Line1</MudTd>
+                  @if (context.Id == 0)
+                  {
+                            <MudTd DataLabel="System" id="@($"AddressId:{context.Id}")">@context.Line1</MudTd>
+                  }
+                  else
+                  {
+                      <MudTd DataLabel="Address Line 1">@context.Line1</MudTd>
+                  }
                   <MudTd DataLabel="City">@context.City</MudTd>
                   <MudTd DataLabel="State">@context.State</MudTd>
                   <MudTd DataLabel="Postal Code">@context.PostalCode</MudTd>
@@ -115,6 +120,87 @@
                   </MudTd>
                   <MudTd DataLabel="Postal Code">
                       <MudTextField @bind-Value="@context.PostalCode"/>
+                  </MudTd>
+                  <MudTd @onclick:stopPropagation="true" Style="">
+                     
+                      <MudFab HtmlTag="label"
+                              Size="Size.Small"
+                              Color="Color.Warning"
+                              Icon="@Icons.Filled.DeleteForever"
+                              Label="Delete"
+                              class="ma-2"
+                              OnClick="@(() => DeleteAddress(context))"
+                              Disabled="@_addressIsInEditMode"/>
+                      
+                  </MudTd>
+              </RowEditingTemplate>
+          </MudTable>
+      </MudItem>
+      
+      <MudItem xs="12">
+
+          <MudTable Dense="true"
+                    ReadOnly="false"
+                    Items="@_model.ContactSystemList"
+                    Striped="true"
+                    CanCancelEdit="@true"
+                    OnCommitEditClick="BuildMatch">
+              <HeaderContent>
+                  <MudTh>System</MudTh>
+                  <MudTh>Use</MudTh>
+                  <MudTh>Value</MudTh>
+              </HeaderContent>
+              <RowTemplate>
+                  @if (context.Id == 0)
+                  {
+                      <MudTd DataLabel="System" id="@($"ContactSystemId:{context.Id}")">@context.ContactPointSystem</MudTd>
+                  }
+                  else
+                  {
+                      <MudTd DataLabel="System">@context.ContactPointSystem</MudTd>
+                  }
+                  <MudTd DataLabel="Use">@context.ContactPointUse</MudTd>
+                  <MudTd DataLabel="Value">@context.Value</MudTd>
+                  <MudTd @onclick:stopPropagation="true" Style="">
+                     
+                          <MudFab HtmlTag="label"
+                                  Size="Size.Small"
+                                  Color="Color.Warning"
+                                  Icon="@Icons.Filled.DeleteForever"
+                                  Label="Delete"
+                                  class="ma-2"
+                                  OnClick="@(() => DeleteContactSystem(context))"
+                                  Disabled="@_contactSystemIsInEditMode"/>
+                      
+                  </MudTd>
+              </RowTemplate>
+              <RowEditingTemplate>
+                  <MudTd DataLabel="Contact System">
+                      <MudSelect Label="System"
+                                 T="string"
+                                 HelperText="ContactPointSystem"
+                                 Clearable="true">
+
+                          @foreach (ContactPoint.ContactPointSystem? item in Enum.GetValues(typeof(ContactPoint.ContactPointSystem)))
+                          {
+                              <MudSelectItem Value="@item.ToString()">@item.ToString()</MudSelectItem>
+                          }
+                      </MudSelect>
+                  </MudTd>
+                  <MudTd DataLabel="Use">
+                      <MudSelect Label="Use"
+                                 T="string"
+                                 HelperText="ContactPointUse"
+                                 Clearable="true">
+
+                          @foreach (ContactPoint.ContactPointUse? item in Enum.GetValues(typeof(ContactPoint.ContactPointUse)))
+                          {
+                              <MudSelectItem Value="@item.ToString()">@item.ToString()</MudSelectItem>
+                          }
+                      </MudSelect>
+                  </MudTd>
+                  <MudTd DataLabel="Value">
+                      <MudTextField @bind-Value="@context.Value" Required/>
                   </MudTd>
               </RowEditingTemplate>
           </MudTable>

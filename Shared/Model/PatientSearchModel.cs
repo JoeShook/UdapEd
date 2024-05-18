@@ -46,10 +46,12 @@ public class PatientMatchModel
 
     public List<Address>? AddressList { get; set; }
 
+    public List<ContactSystem>? ContactSystemList { get; set; }
 }
 
 public class Address
 {
+    public int Id { get; set; }
     public string? Line1 { get; set; }
 
     public string? City { get; set; }
@@ -57,4 +59,12 @@ public class Address
     public string? State {get; set; }
 
     public string? PostalCode { get; set; }
+}
+
+public class ContactSystem
+{
+    public int Id { get; set; }
+    public ContactPoint.ContactPointSystem ContactPointSystem { get; set; }
+    public ContactPoint.ContactPointUse ContactPointUse { get; set; }
+    public string? Value { get; set; }
 }

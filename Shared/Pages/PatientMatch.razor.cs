@@ -3,10 +3,14 @@ using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.JSInterop;
 using MudBlazor;
+using Org.BouncyCastle.Utilities.Net;
+using Udap.Common.Models;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Shared;
+using Address = UdapEd.Shared.Model.Address;
 using Task = System.Threading.Tasks.Task;
 
 namespace UdapEd.Shared.Pages;
@@ -23,12 +27,14 @@ public partial class PatientMatch
     private string _selectedItemText = string.Empty;
 
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
-
+    [Inject] private IJSRuntime Js { get; set; } = null!;
     [Inject] private IFhirService FhirService { get; set; } = null!;
     [Inject] private IDiscoveryService DiscoveryService { get; set; } = null!;
     private const string ValidStyle = "pre udap-indent-1";
     private const string InvalidStyle = "pre udap-indent-1 jwt-invalid";
     private string? _baseUrlOverride = string.Empty;
+    private bool _contactSystemIsInEditMode;
+    private bool _addressIsInEditMode;
 
     private string? BaseUrlOverride
     {
@@ -130,39 +136,54 @@ public partial class PatientMatch
             patient.BirthDate = _model.BirthDate.Value.ToString("yyyy-MM-dd");
         }
 
-        if (_model.AddressList != null && _model.AddressList.Any())
+        if (_model.AddressList != null)
         {
-            var address = new Hl7.Fhir.Model.Address();
-            var modelAddress = _model.AddressList.First();
-
-            var lines = new List<string>();
-            if (!modelAddress.Line1.IsNullOrEmpty())
+            foreach (var modelAddress in _model.AddressList)
             {
-                lines.Add(modelAddress.Line1);
-                address.Line = lines;
+                var address = new Hl7.Fhir.Model.Address();
+
+                var lines = new List<string>();
+                if (!modelAddress.Line1.IsNullOrEmpty())
+                {
+                    lines.Add(modelAddress.Line1!);
+                    address.Line = lines;
+                }
+
+                if (!modelAddress.City.IsNullOrEmpty())
+                {
+                    address.City = modelAddress.City;
+                }
+
+                if (!modelAddress.State.IsNullOrEmpty())
+                {
+                    address.State = modelAddress.State;
+                }
+
+                if (!modelAddress.PostalCode.IsNullOrEmpty())
+                {
+                    address.PostalCode = modelAddress.PostalCode;
+                }
+
+                patient.Address.Add(address);
             }
 
-            if (!modelAddress.City.IsNullOrEmpty())
-            {
-                address.City = modelAddress.City;
-            }
-
-            if (!modelAddress.State.IsNullOrEmpty())
-            {
-                address.State = modelAddress.State;
-            }
-
-            if (!modelAddress.PostalCode.IsNullOrEmpty())
-            {
-                address.PostalCode = modelAddress.PostalCode;
-            }
-
-            patient.Address.Add(address);
         }
 
-        patient.Telecom = new List<ContactPoint>();
-        patient.Telecom.Add(new ContactPoint(ContactPoint.ContactPointSystem.Phone, ContactPoint.ContactPointUse.Work,
-            "(03) 5555 6473"));
+
+        if (_model.ContactSystemList != null && _model.ContactSystemList.Any())
+        {
+            foreach (var contactSystem in _model.ContactSystemList)
+            {
+                var contactPoint = new ContactPoint
+                {
+                    System = contactSystem.ContactPointSystem,
+                    Use = contactSystem.ContactPointUse,
+                    Value = contactSystem.Value
+                };
+
+                patient.Telecom.Add(contactPoint);
+            }
+        }
 
         var parameters = new Parameters();
         parameters.Add(UdapEdConstants.PatientMatch.InParameterNames.RESOURCE, patient);
@@ -253,7 +274,7 @@ public partial class PatientMatch
         return $"{score} / {grade}";
     }
 
-    private void AddAddress()
+    private async Task AddAddress()
     {
         if (_model.AddressList == null)
         {
@@ -261,5 +282,45 @@ public partial class PatientMatch
         }
 
         _model.AddressList.Add(new Model.Address());
+
+        await Task.Delay(1);
+        StateHasChanged();
+
+        await Js.InvokeVoidAsync("UdapEd.setFocus", "AddressId:0");
+
+        StateHasChanged();
+    }
+
+    private async Task AddContactSystem()
+    {
+        if (_model.ContactSystemList == null)
+        {
+            _model.ContactSystemList = new List<Model.ContactSystem>();
+        }
+
+        _model.ContactSystemList.Add(new Model.ContactSystem());
+
+
+        await Task.Delay(1);
+        StateHasChanged();
+
+        await Js.InvokeVoidAsync("UdapEd.setFocus", "ContactSystemId:0");
+
+        StateHasChanged();
+
+    }
+
+    private void DeleteContactSystem(ContactSystem contactSystem)
+    {
+        _contactSystemIsInEditMode = false;
+        _model.ContactSystemList?.Remove(contactSystem);
+        StateHasChanged();
+    }
+
+    private void DeleteAddress(Address address)
+    {
+        _addressIsInEditMode = false;
+        _model.AddressList?.Remove(address);
+        StateHasChanged();
     }
 }
