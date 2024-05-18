@@ -507,8 +507,9 @@ internal class RegisterService : IRegisterService
     }
 
     public string GetScopesForAuthorizationCode(ICollection<string>?
-        scopes,
+            scopes,
         bool tieredOauth = false,
+        bool oidcScope = true,
         string? scopeLevel = null,
         bool smartLaunch = false,
         bool smartV1Scopes = true,
@@ -526,6 +527,11 @@ internal class RegisterService : IRegisterService
             enrichScopes.Add(UdapConstants.StandardScopes.Udap);
         }
 
+        if (oidcScope)
+        {
+            enrichScopes.Add(OidcConstants.StandardScopes.OpenId);
+        }
+
         if (smartLaunch && scopeLevel == "patient")
         {
             enrichScopes.Add($"launch/{scopeLevel}");
@@ -535,7 +541,6 @@ internal class RegisterService : IRegisterService
         {
             enrichScopes.Add($"launch");
         }
-
 
         if (published.Any() && !scopeLevel.IsNullOrEmpty())
         {
