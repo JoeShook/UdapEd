@@ -8,8 +8,6 @@
 #endregion
 
 using System.Net;
-using System.Reflection.Metadata;
-using System.Text.Json;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
@@ -18,8 +16,8 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Udap.Client.Rest;
 using UdapEd.Server.Extensions;
-using UdapEd.Shared;
 using UdapEd.Shared.Model;
+using FhirClientWithUrlProvider = UdapEd.Server.Services.FhirClientWithUrlProvider;
 
 namespace UdapEd.Server.Controllers;
 [Route("[controller]")]
@@ -27,11 +25,13 @@ namespace UdapEd.Server.Controllers;
 public class FhirController : ControllerBase
 {
     private readonly FhirClientWithUrlProvider _fhirClient;
+    private readonly FhirClient _fhirTerminologyClient;
     private readonly ILogger<RegisterController> _logger;
 
-    public FhirController(FhirClientWithUrlProvider fhirClient, ILogger<RegisterController> logger)
+    public FhirController(FhirClientWithUrlProvider fhirClient, FhirClient fhirTerminologyClient, ILogger<RegisterController> logger)
     {
         _fhirClient = fhirClient;
+        _fhirTerminologyClient = fhirTerminologyClient;
         _logger = logger;
     }
 
@@ -150,6 +150,42 @@ public class FhirController : ControllerBase
             }
 
             if(ex.Outcome != null)
+            {
+                var outcomeJson = await new FhirJsonSerializer().SerializeToStringAsync(ex.Outcome);
+                return NotFound(outcomeJson);
+            }
+            else
+            {
+                return NotFound("Resource Server Error: " + ex.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message);
+            throw;
+        }
+    }
+
+    [HttpGet("CodeSystem")]
+    public async Task<IActionResult> GetCodeSystem([FromQuery] string location)
+    {
+        try
+        {
+            var codeSystem = await _fhirTerminologyClient.ReadAsync<Hl7.Fhir.Model.CodeSystem>(location);
+            var codeSystemJson = await new FhirJsonSerializer().SerializeToStringAsync(codeSystem);
+
+            return Ok(codeSystemJson);
+        }
+        catch (FhirOperationException ex)
+        {
+            _logger.LogWarning(ex.Message);
+
+            if (ex.Status == HttpStatusCode.Unauthorized)
+            {
+                return Unauthorized();
+            }
+
+            if (ex.Outcome != null)
             {
                 var outcomeJson = await new FhirJsonSerializer().SerializeToStringAsync(ex.Outcome);
                 return NotFound(outcomeJson);

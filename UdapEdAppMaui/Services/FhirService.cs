@@ -9,6 +9,7 @@
 
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
+using CodeSystem = Hl7.Fhir.Model.CodeSystem;
 
 namespace UdapEdAppMaui.Services;
 internal class FhirService : IFhirService
@@ -26,6 +27,11 @@ internal class FhirService : IFhirService
     }
 
     public Task<FhirResultModel<Hl7.Fhir.Model.Bundle>> MatchPatient(string parametersJson)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<FhirResultModel<CodeSystem>> GetCodeSystem(string location)
     {
         throw new NotImplementedException();
     }

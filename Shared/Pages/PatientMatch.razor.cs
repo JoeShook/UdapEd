@@ -1,5 +1,7 @@
 ﻿using System.Net;
+using System.Reflection.PortableExecutable;
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.IdentityModel.Tokens;
@@ -11,6 +13,7 @@ using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Shared;
 using Address = UdapEd.Shared.Model.Address;
+using CodeSystem = UdapEd.Shared.Model.CodeSystem;
 using Task = System.Threading.Tasks.Task;
 
 namespace UdapEd.Shared.Pages;
@@ -35,6 +38,56 @@ public partial class PatientMatch
     private string? _baseUrlOverride = string.Empty;
     private bool _contactSystemIsInEditMode;
     private bool _addressIsInEditMode;
+    private bool _v2IdentifierSystemIsInEditMode;
+    private Hl7.Fhir.Model.CodeSystem? _v2CodeSystem;
+    private Hl7.Fhir.Model.CodeSystem? V2CodeSystem => _v2CodeSystem;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await LoadCodeSystems();
+        await SetHeaders();
+        await SetBaseUrl();
+    }
+    
+    private async Task SetHeaders()
+    {
+        if (AppState.ClientHeaders?.Headers != null)
+        {
+            await DiscoveryService.SetClientHeaders(
+                AppState.ClientHeaders!.Headers!.ToDictionary(h => h.Name, h => h.Value));
+
+        }
+    }
+    private async Task SetBaseUrl()
+    {
+        await DiscoveryService.SetBaseFhirUrl(BaseUrlOverride);
+    }
+
+    private async Task LoadCodeSystems()
+    {
+        var result = await FhirService.GetCodeSystem("https://tx.fhir.org/r4/CodeSystem/v2-0203");
+
+        if (result.OperationOutCome != null)
+        {
+            _entries = null;
+            string? errorMessage = null;
+
+            foreach (var issue in result.OperationOutCome.Issue)
+            {
+                errorMessage += $"Error:: Details: {issue.Details?.Text}.<br/>"
+                                + $"Diagnostics: {issue.Diagnostics}.<br/>"
+                                + $"IssueType: {issue.Code}.<br/>";
+            }
+
+            _outComeMessage = errorMessage;
+        }
+        else
+        {
+            _outComeMessage = null;
+
+            _v2CodeSystem = result.Result;
+        }
+    }
 
     private string? BaseUrlOverride
     {
@@ -185,6 +238,33 @@ public partial class PatientMatch
             }
         }
 
+        if (_model.V2IdentifierSystemList != null && _model.V2IdentifierSystemList.Any())
+        {
+            foreach (var codeSystem in _model.V2IdentifierSystemList)
+            {
+                var parts = codeSystem.Value.Split('|');
+                var identifier = new Identifier();
+
+                if (parts.Length == 2)
+                {
+                    identifier.System = parts.First();
+                    identifier.Value = parts.Last();
+                }
+                else
+                {
+                    identifier.Value = parts.Last();
+                }
+
+                patient.Identifier.Add(identifier);
+            }
+        }
+
+        //
+        // var item = new Identifier();
+        //
+        // patient.Identifier.Add(item);
+
+
         var parameters = new Parameters();
         parameters.Add(UdapEdConstants.PatientMatch.InParameterNames.RESOURCE, patient);
 
@@ -251,10 +331,6 @@ public partial class PatientMatch
                 _matchResultRaw += await new FhirJsonSerializer(new SerializerSettings { Pretty = true })
                     .SerializeToStringAsync(result.Result);
 
-                // var joe = $"{((Bundle.SearchComponent)result.Result?.Entry.SingleOrDefault().Search).Score.Value}/" +
-                //               $"{((Code)((Bundle.SearchComponent)result.Result.Entry.SingleOrDefault().Search)
-                //                   .Extension.SingleOrDefault(e => e.Url == \"http://hl7.org/fhir/StructureDefinition/match-grade\").Value).Value}";
-
                 _entries = result.Result?.Entry
                     .Where(e => e.Resource is Patient)
                     .Select(e => e)
@@ -310,6 +386,24 @@ public partial class PatientMatch
 
     }
 
+    private async Task AddV2IdentifierSystem()
+    {
+        if (_model.V2IdentifierSystemList == null)
+        {
+            _model.V2IdentifierSystemList = new List<Model.CodeSystem>();
+        }
+
+        _model.V2IdentifierSystemList.Add(new Model.CodeSystem());
+
+
+        await Task.Delay(1);
+        StateHasChanged();
+
+        await Js.InvokeVoidAsync("UdapEd.setFocus", "CodeSystemId:0");
+
+        StateHasChanged();
+    }
+
     private void DeleteContactSystem(ContactSystem contactSystem)
     {
         _contactSystemIsInEditMode = false;
@@ -321,6 +415,13 @@ public partial class PatientMatch
     {
         _addressIsInEditMode = false;
         _model.AddressList?.Remove(address);
+        StateHasChanged();
+    }
+
+    private void DeleteV2IdentifierSystem(CodeSystem codeSystem)
+    {
+        _v2IdentifierSystemIsInEditMode = false;
+        _model.V2IdentifierSystemList?.Remove(codeSystem);
         StateHasChanged();
     }
 }

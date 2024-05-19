@@ -31,6 +31,27 @@ public partial class PatientSearch
     [Inject] private IDiscoveryService DiscoveryService { get; set; } = null!;
     private string? _baseUrlOverride = string.Empty;
 
+    
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await SetHeaders();
+        await SetBaseUrl();
+    }
+
+    private async Task SetHeaders()
+    {
+        if (AppState.ClientHeaders?.Headers != null)
+        {
+            await DiscoveryService.SetClientHeaders(
+                AppState.ClientHeaders!.Headers!.ToDictionary(h => h.Name, h => h.Value));
+        }
+    }
+    private async Task SetBaseUrl()
+    {
+        await DiscoveryService.SetBaseFhirUrl(BaseUrlOverride);
+    }
+
     private string? BaseUrlOverride
     {
         get
@@ -38,6 +59,7 @@ public partial class PatientSearch
             if (string.IsNullOrEmpty(_baseUrlOverride))
             {
                 _baseUrlOverride = AppState.BaseUrl;
+                DiscoveryService.SetBaseFhirUrl(_baseUrlOverride);
             }
 
             return _baseUrlOverride;

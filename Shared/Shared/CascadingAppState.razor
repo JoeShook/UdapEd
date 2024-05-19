@@ -92,7 +92,8 @@
         "https://national-directory.fast.hl7.org/fhir",
         "https://udap.fhir.poolnook.me/evernorth"
     };
-    private string? _baseUrl = _certDefaultBaseUrLs.First();
+
+    private string? _baseUrl;
 
     public string? BaseUrl
     {

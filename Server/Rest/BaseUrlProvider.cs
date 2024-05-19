@@ -10,6 +10,7 @@
 using Hl7.Fhir.Utility;
 using Udap.Client.Rest;
 using UdapEd.Shared;
+using IBaseUrlProvider = UdapEd.Server.Services.IBaseUrlProvider;
 
 namespace UdapEd.Server.Rest;
 
@@ -25,7 +26,12 @@ public class BaseUrlProvider : IBaseUrlProvider
     public Uri GetBaseUrl()
     {
         var baseUrl = _httpContextAccessor.HttpContext?.Session.GetString(UdapEdConstants.BASE_URL);
-        
+
+        if (baseUrl == null)
+        {
+            baseUrl = "https://fhirlabs.net/fhir/r4";
+        }
+
         return new Uri(baseUrl.EnsureEndsWith("/"));
     }
 }

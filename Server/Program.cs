@@ -7,6 +7,8 @@
 // */
 #endregion
 
+using System.Net;
+using Hl7.Fhir.Rest;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Logging;
@@ -22,6 +24,8 @@ using Udap.Common.Certificates;
 using UdapEd.Server.Authentication;
 using UdapEd.Server.Extensions;
 using UdapEd.Server.Rest;
+using FhirClientWithUrlProvider = UdapEd.Server.Services.FhirClientWithUrlProvider;
+using IBaseUrlProvider = UdapEd.Server.Services.IBaseUrlProvider;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -106,6 +110,31 @@ builder.Services.AddHttpClient<FhirClientWithUrlProvider>((sp, httpClient) =>
 { })
     .AddHttpMessageHandler(sp => new AuthTokenHttpMessageHandler(sp.GetRequiredService<IAccessTokenProvider>()))
     .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()));
+
+
+
+var url = builder.Configuration["FHIR_TERMINOLOGY_ROOT_URL"];
+
+var settings = new FhirClientSettings
+{
+    PreferredFormat = ResourceFormat.Json,
+    VerifyFhirVersion = false
+};
+
+
+builder.Services.AddHttpClient("FhirTerminologyClient")
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
+    {
+        AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
+    });
+
+builder.Services.AddTransient(ctx => {
+
+    var httpClient = ctx.GetRequiredService<IHttpClientFactory>().CreateClient("FhirTerminologyClient");
+    return new FhirClient(url, httpClient, settings);
+});
+
+
 
 builder.Services.AddHttpContextAccessor();
 

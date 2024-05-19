@@ -22,8 +22,6 @@ namespace UdapEd.Shared.Services;
 /// </summary>
 public class UdapClientState : IAppState
 {
-    public UdapClientState() {}
-
     public string BaseUrl { get; set; }
 
     public string Community { get; set; }

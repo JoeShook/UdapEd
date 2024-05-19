@@ -47,6 +47,8 @@ public class PatientMatchModel
     public List<Address>? AddressList { get; set; }
 
     public List<ContactSystem>? ContactSystemList { get; set; }
+
+    public List<CodeSystem>? V2IdentifierSystemList{ get; set; }
 }
 
 public class Address
@@ -67,4 +69,12 @@ public class ContactSystem
     public ContactPoint.ContactPointSystem ContactPointSystem { get; set; }
     public ContactPoint.ContactPointUse ContactPointUse { get; set; }
     public string? Value { get; set; }
+}
+
+public class CodeSystem
+{
+    public int Id { get; set; }
+    public string Code { get; set; }
+    public string CodeDisplay { get; set; }
+    public string Value { get; set; }
 }

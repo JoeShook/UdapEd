@@ -16,6 +16,7 @@ using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
+using CodeSystem = Hl7.Fhir.Model.CodeSystem;
 
 namespace UdapEd.Client.Services;
 
@@ -181,6 +182,69 @@ public class FhirService : IFhirService
             var operationOutcome = new FhirJsonParser().Parse<OperationOutcome>(result);
 
             return new FhirResultModel<Bundle>(operationOutcome, response.StatusCode, response.Version);
+        }
+    }
+
+    public async Task<FhirResultModel<CodeSystem>> GetCodeSystem(string location)
+    {
+        var response = await _httpClient.GetAsync($"Fhir/CodeSystem?location={location}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadAsStringAsync();
+            var codeSystem = new FhirJsonParser().Parse<CodeSystem>(result);
+
+            return new FhirResultModel<CodeSystem>(codeSystem, response.StatusCode, response.Version);
+        }
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            return new FhirResultModel<CodeSystem>(true);
+        }
+
+        if (response.StatusCode == HttpStatusCode.InternalServerError)
+        {
+            var result = await response.Content.ReadAsStringAsync();
+
+            if (result.Contains(nameof(UriFormatException)))
+            {
+                var operationOutCome = new OperationOutcome()
+                {
+                    ResourceBase = null
+                };
+
+                return new FhirResultModel<CodeSystem>(operationOutCome, HttpStatusCode.PreconditionFailed, response.Version);
+            }
+        }
+        
+        if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            var result = await response.Content.ReadAsStringAsync();
+            if (result.Contains("Resource Server Error:"))
+            {
+                var operationOutCome = new OperationOutcome()
+                {
+                    ResourceBase = null,
+                    Issue = new List<OperationOutcome.IssueComponent>
+                    {
+                        new OperationOutcome.IssueComponent
+                        {
+                            Diagnostics = result
+                        }
+                    }
+                };
+
+                return new FhirResultModel<CodeSystem>(operationOutCome, HttpStatusCode.InternalServerError,
+                    response.Version);
+            }
+        }
+
+        {
+            var result = await response.Content.ReadAsStringAsync();
+            Console.WriteLine(result);
+            var operationOutcome = new FhirJsonParser().Parse<OperationOutcome>(result);
+
+            return new FhirResultModel<CodeSystem>(operationOutcome, response.StatusCode, response.Version);
         }
     }
 }
