@@ -134,6 +134,7 @@ public class FhirController : ControllerBase
     {
         try
         {
+            _fhirClient.Settings.PreferredFormat = ResourceFormat.Json;
             var parametersResource = await new FhirJsonParser().ParseAsync<Parameters>(parametersJson);
             var bundle = await _fhirClient.TypeOperationAsync<Patient>("match", parametersResource);
             var bundleJson = await new FhirJsonSerializer().SerializeToStringAsync(bundle);
@@ -171,6 +172,7 @@ public class FhirController : ControllerBase
     {
         try
         {
+            _fhirTerminologyClient.Settings.PreferredFormat = ResourceFormat.Json;
             var codeSystem = await _fhirTerminologyClient.ReadAsync<Hl7.Fhir.Model.CodeSystem>(location);
             var codeSystemJson = await new FhirJsonSerializer().SerializeToStringAsync(codeSystem);
 

@@ -4,6 +4,7 @@ using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
 using MudBlazor;
@@ -146,7 +147,82 @@ public partial class PatientMatch
         }
     }
 
-    private async Task BuildMatch()
+    private void AddressEditComplete(object address)
+    {
+        var addressView = (Address)address;
+
+        if (_model.AddressList != null && addressView.Id == 0)
+        {
+            var maxId = _model.AddressList.Max(cs => cs.Id);
+            addressView.Id = ++maxId;
+        }
+
+        BuildMatch();
+        StateHasChanged();
+    }
+
+    private void AddressCancelComplete(object address)
+    {
+        var addressView = (Address)address;
+
+        if (addressView.Id == 0)
+        {
+            _model.AddressList?.Remove(addressView);
+            StateHasChanged();
+        }
+    }
+
+    private void ContactSystemEditComplete(object contact)
+    {
+        var contactView = (ContactSystem)contact;
+    
+        if (_model.ContactSystemList != null && contactView.Id == 0)
+        {
+            var maxId = _model.ContactSystemList.Max(cs => cs.Id);
+            contactView.Id = ++maxId;
+        }
+    
+        BuildMatch();
+        StateHasChanged();
+    }
+
+    private void ContactSystemCancelComplete(object contact)
+    {
+        var contactView = (ContactSystem)contact;
+
+        if (contactView.Id == 0)
+        {
+            _model.ContactSystemList?.Remove(contactView);
+            StateHasChanged();
+        }
+    }
+
+    private void V2IdentifierSystemEditComplete(object codeSystem)
+    {
+        var codeSystemView = (CodeSystem)codeSystem;
+
+        if (_model.V2IdentifierSystemList != null && codeSystemView.Id == 0)
+        {
+            var maxId = _model.V2IdentifierSystemList.Max(cs => cs.Id);
+            codeSystemView.Id = ++maxId;
+        }
+
+        BuildMatch();
+        StateHasChanged();
+    }
+
+    private void V2IdentifierSystemCancelComplete(object codeSystem)
+    {
+        var codeSystemView = (CodeSystem)codeSystem;
+
+        if (codeSystemView.Id == 0)
+        {
+            _model.V2IdentifierSystemList?.Remove(codeSystemView);
+            StateHasChanged();
+        }
+    }
+
+    private void BuildMatch()
     {
         var patient = new Patient();
 
@@ -242,20 +318,23 @@ public partial class PatientMatch
         {
             foreach (var codeSystem in _model.V2IdentifierSystemList)
             {
-                var parts = codeSystem.Value.Split('|');
-                var identifier = new Identifier();
-
-                if (parts.Length == 2)
+                if (!codeSystem.Value.IsNullOrEmpty())
                 {
-                    identifier.System = parts.First();
-                    identifier.Value = parts.Last();
-                }
-                else
-                {
-                    identifier.Value = parts.Last();
-                }
+                    var parts = codeSystem.Value.Split('|');
+                    var identifier = new Identifier();
 
-                patient.Identifier.Add(identifier);
+                    if (parts.Length == 2)
+                    {
+                        identifier.System = parts.First();
+                        identifier.Value = parts.Last();
+                    }
+                    else
+                    {
+                        identifier.Value = parts.Last();
+                    }
+
+                    patient.Identifier.Add(identifier);
+                }
             }
         }
 
@@ -268,8 +347,8 @@ public partial class PatientMatch
         var parameters = new Parameters();
         parameters.Add(UdapEdConstants.PatientMatch.InParameterNames.RESOURCE, patient);
 
-        _parametersJson = await new FhirJsonSerializer(new SerializerSettings { Pretty = true })
-            .SerializeToStringAsync(parameters);
+        _parametersJson = new FhirJsonSerializer(new SerializerSettings { Pretty = true })
+            .SerializeToString(parameters);
     }
 
     private async Task OnSelectedGenderChanged(IEnumerable<string> obj)
@@ -279,7 +358,7 @@ public partial class PatientMatch
         if (gender != null)
         {
             _model.Gender = (AdministrativeGender)Enum.Parse(typeof(AdministrativeGender), gender);
-            await BuildMatch();
+            BuildMatch();
         }
     }
 
@@ -361,9 +440,7 @@ public partial class PatientMatch
 
         await Task.Delay(1);
         StateHasChanged();
-
         await Js.InvokeVoidAsync("UdapEd.setFocus", "AddressId:0");
-
         StateHasChanged();
     }
 
@@ -379,9 +456,7 @@ public partial class PatientMatch
 
         await Task.Delay(1);
         StateHasChanged();
-
         await Js.InvokeVoidAsync("UdapEd.setFocus", "ContactSystemId:0");
-
         StateHasChanged();
 
     }
@@ -395,12 +470,9 @@ public partial class PatientMatch
 
         _model.V2IdentifierSystemList.Add(new Model.CodeSystem());
 
-
         await Task.Delay(1);
         StateHasChanged();
-
         await Js.InvokeVoidAsync("UdapEd.setFocus", "CodeSystemId:0");
-
         StateHasChanged();
     }
 
@@ -408,20 +480,20 @@ public partial class PatientMatch
     {
         _contactSystemIsInEditMode = false;
         _model.ContactSystemList?.Remove(contactSystem);
-        StateHasChanged();
+        BuildMatch();
     }
 
     private void DeleteAddress(Address address)
     {
         _addressIsInEditMode = false;
         _model.AddressList?.Remove(address);
-        StateHasChanged();
+        BuildMatch();
     }
 
     private void DeleteV2IdentifierSystem(CodeSystem codeSystem)
     {
         _v2IdentifierSystemIsInEditMode = false;
         _model.V2IdentifierSystemList?.Remove(codeSystem);
-        StateHasChanged();
+        BuildMatch();
     }
 }

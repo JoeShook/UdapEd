@@ -208,7 +208,7 @@ public partial class UdapDiscovery: IDisposable
     //
     // Just validates that a url in the list view are valid
     //
-    private async Task<IEnumerable<string>?> GetMetadata(string value, CancellationToken token)
+    private async Task<IEnumerable<string>?> GetMetadata(string? value, CancellationToken token)
     {
         await Task.Delay(5, token);
 
@@ -217,7 +217,8 @@ public partial class UdapDiscovery: IDisposable
             await AppState.SetPropertyAsync(this, nameof(AppState.BaseUrls), new OrderedDictionary(), true, false);
         }
 
-        if (AppState.BaseUrls!.Contains(value))
+        if ((value == null && AppState.BaseUrls != null) 
+            || (value != null && AppState.BaseUrls != null && AppState.BaseUrls!.Contains(value)))
         {
             return AppState.BaseUrls.Cast<DictionaryEntry>().Select(e => (string)e.Key);
         }
