@@ -70,12 +70,14 @@
       </MudItem>
       
       
-      <MudItem md="4" sm="6" xs="12">
-        <MudTextField @bind-Value="_model.Identifier"
-                      For="@(() => _model.Identifier)"
-                      Label="Fhir Identifier"
-                      TextChanged="BuildMatch" />
-      </MudItem>
+    <MudItem md="4" sm="6" xs="12">
+        <MudSelect Label="IDI Profile" @bind-Value="IdiProfile">
+            @foreach (var idiProfile in IdiProfiles)
+            {
+                <MudSelectItem Value="@idiProfile.Value">@idiProfile.Key</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
 
       <MudItem xs="12">
         
@@ -306,7 +308,7 @@
                                                 Icon="@Icons.Material.Filled.DeleteForever"
                                                 Label="Delete"
                                                 class="ma-2"
-                                                OnClick="@(() => DeleteV2IdentifierSystem(context))"
+                                                OnClick="@(() => DeleteIdentityValueSet(context))"
                                                 Disabled="@_v2IdentifierSystemIsInEditMode"/>
                                     }
                               </MudTd>

@@ -223,6 +223,9 @@ public partial class PatientMatch
     {
         var patient = new Patient();
 
+        patient.Meta = new Meta();
+        patient.Meta.ProfileElement.Add(new FhirUri(IdiProfile)); 
+
         if (!string.IsNullOrEmpty(_model.Identifier))
         {
             var parts = _model.Identifier.Split("|");
@@ -497,10 +500,30 @@ public partial class PatientMatch
         BuildMatch();
     }
 
-    private void DeleteV2IdentifierSystem(IdentityValueSetValue codeSystem)
+    private void DeleteIdentityValueSet(IdentityValueSetValue codeSystem)
     {
         _v2IdentifierSystemIsInEditMode = false;
         _model.IdentityValueSetList?.Remove(codeSystem);
         BuildMatch();
     }
+
+    private string? IdiProfile
+    {
+        get => _idiProfile;
+        set
+        {
+            _idiProfile = value;
+            BuildMatch();
+        }
+    }
+
+    private Dictionary<string, string?> IdiProfiles = new Dictionary<string,string?>()
+    {
+        {"Empty", null},
+        {"IDI-Patient", "http://hl7.org/fhir/us/identity-matching/StructureDefinition/IDI-Patient"},
+        {"IDI-Patient-L0", "http://hl7.org/fhir/us/identity-matching/StructureDefinition/IDI-Patient-L0"},
+        {"IDI-Patient-L1", "http://hl7.org/fhir/us/identity-matching/StructureDefinition/IDI-Patient-L1"},
+    };
+
+    private string? _idiProfile;
 }
