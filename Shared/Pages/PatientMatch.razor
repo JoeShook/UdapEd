@@ -2,6 +2,7 @@
 @using UdapEd.Shared.Extensions
 @using Task = System.Threading.Tasks.Task
 @using Hl7.Fhir.Model
+@using Microsoft.IdentityModel.Tokens
 
 
 <MudCard Elevation="3" Style="margin-top: 10px">
@@ -90,7 +91,7 @@
                               <MudFab Icon="@Icons.Material.Filled.Add"
                                       Color="Color.Inherit"
                                       @onclick="AddAddress"
-                                      Label="Add Address"
+                                      Label="Add"
                                       Class="px-2 mx-2"/></MudItem>
                       </MudGrid>
 
@@ -172,7 +173,7 @@
                               <MudFab Icon="@Icons.Material.Filled.Add"
                                       Color="Color.Inherit"
                                       @onclick="AddContactSystem"
-                                      Label="Add Contact System"
+                                      Label="Add"
                                       Class="px-2 mx-2"/>
                           </MudItem>
                       </MudGrid>
@@ -259,29 +260,29 @@
                   <CardHeaderContent>
                       <MudGrid>
                           <MudItem>
-                              <MudText Typo="Typo.h5">V2 Identifier System</MudText>
+                              <MudText Typo="Typo.h5">Identity Valueset</MudText>
                           </MudItem>
                           <MudSpacer/>
                           <MudItem>
                               <MudFab Icon="@Icons.Material.Filled.Add"
                                       Color="Color.Inherit"
-                                      @onclick="AddV2IdentifierSystem"
-                                      Label="Add V2 Identifier System"
+                                      @onclick="AddVIdentityValueSetValue"
+                                      Label="Add"
                                       Class="px-2 mx-2"/>
                           </MudItem>
                       </MudGrid>
                   </CardHeaderContent>
               </MudCardHeader>
               <MudCardContent>
-                  @if (_model.V2IdentifierSystemList != null && _model.V2IdentifierSystemList.Any())
+                  @if (_model.IdentityValueSetList != null && _model.IdentityValueSetList.Any())
                   {
                       <MudTable Dense="true"
                                 ReadOnly="false"
-                                Items="@_model.V2IdentifierSystemList"
+                                Items="@_model.IdentityValueSetList"
                                 Striped="true"
                                 CanCancelEdit="@true"
-                                RowEditCommit="V2IdentifierSystemEditComplete"
-                                RowEditCancel=" V2IdentifierSystemCancelComplete">
+                                RowEditCommit="IdentityValueSetEditComplete"
+                                RowEditCancel=" IdentityValueSetCancelComplete">
                           <HeaderContent>
                               <MudTh>Code</MudTh>
                               <MudTh>Value</MudTh>
@@ -289,11 +290,11 @@
                           <RowTemplate>
                               @if (context.Id == 0)
                               {
-                                  <MudTd DataLabel="Code" id="@($"CodeSystemId:{context.Id}")">@context.CodeDisplay</MudTd>
+                                        <MudTd DataLabel="Code" id="@($"IdentityValueSet:{context.Id}")">@context.Code</MudTd>
                               }
                               else
                               {
-                                  <MudTd DataLabel="Code">@context.CodeDisplay</MudTd>
+                                  <MudTd DataLabel="Code">@context.Code</MudTd>
                               }
                               <MudTd DataLabel="Value">@($"{context.Value}")</MudTd>
                               <MudTd @onclick:stopPropagation="true" Style="">
@@ -313,16 +314,23 @@
                           <RowEditingTemplate>
                               <MudTd DataLabel="Contact System">
                                   <MudSelect Label="System"
-                                             T="string"
                                              HelperText="ContactPointSystem"
                                              Clearable="true"
-                                             @bind-Value="context.CodeDisplay">
+                                             T="string"
+                                             @bind-Value="context.Code">
 
-                                      @if (V2CodeSystem?.Concept != null)
+                                      @if (IdentityValueSet?.Expansion.Contains != null)
                                       {
-                                          foreach (var concept in V2CodeSystem?.Concept!)
+                                          foreach (var concept in IdentityValueSet.Expansion.Contains)
                                           {
-                                              <MudSelectItem Value="@concept.Code">@($"{concept.Code} ({concept.Display})")</MudSelectItem>
+                                              if (!concept.Display.IsNullOrEmpty())
+                                              {
+                                                  <MudSelectItem Value="@concept.Code">@($"{concept.Code} ({concept.Display})")</MudSelectItem>
+                                              }
+                                              else
+                                              {
+                                                  <MudSelectItem Value="@concept.Code">@($"{concept.Code}")</MudSelectItem>
+                                              }
                                           }
                                       }
                                   </MudSelect>

@@ -19,4 +19,6 @@ public interface IFhirService
     Task<FhirResultModel<Hl7.Fhir.Model.Bundle>> MatchPatient(string parametersJson);
 
     Task<FhirResultModel<Hl7.Fhir.Model.CodeSystem>> GetCodeSystem(string location);
+
+    Task<FhirResultModel<Hl7.Fhir.Model.ValueSet>> GetValueSet(string location);
 }

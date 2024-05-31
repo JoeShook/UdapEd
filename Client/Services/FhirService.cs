@@ -241,10 +241,71 @@ public class FhirService : IFhirService
 
         {
             var result = await response.Content.ReadAsStringAsync();
-            Console.WriteLine(result);
             var operationOutcome = new FhirJsonParser().Parse<OperationOutcome>(result);
 
             return new FhirResultModel<CodeSystem>(operationOutcome, response.StatusCode, response.Version);
+        }
+    }
+
+    public async Task<FhirResultModel<ValueSet>> GetValueSet(string location)
+    {
+        var response = await _httpClient.GetAsync($"Fhir/ValueSet?location={location}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadAsStringAsync();
+            var codeSystem = new FhirJsonParser().Parse<ValueSet>(result);
+
+            return new FhirResultModel<ValueSet>(codeSystem, response.StatusCode, response.Version);
+        }
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            return new FhirResultModel<ValueSet>(true);
+        }
+
+        if (response.StatusCode == HttpStatusCode.InternalServerError)
+        {
+            var result = await response.Content.ReadAsStringAsync();
+
+            if (result.Contains(nameof(UriFormatException)))
+            {
+                var operationOutCome = new OperationOutcome()
+                {
+                    ResourceBase = null
+                };
+
+                return new FhirResultModel<ValueSet>(operationOutCome, HttpStatusCode.PreconditionFailed, response.Version);
+            }
+        }
+
+        if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            var result = await response.Content.ReadAsStringAsync();
+            if (result.Contains("Resource Server Error:"))
+            {
+                var operationOutCome = new OperationOutcome()
+                {
+                    ResourceBase = null,
+                    Issue = new List<OperationOutcome.IssueComponent>
+                    {
+                        new OperationOutcome.IssueComponent
+                        {
+                            Diagnostics = result
+                        }
+                    }
+                };
+
+                return new FhirResultModel<ValueSet>(operationOutCome, HttpStatusCode.InternalServerError,
+                    response.Version);
+            }
+        }
+
+        {
+            var result = await response.Content.ReadAsStringAsync();
+            var operationOutcome = new FhirJsonParser().Parse<OperationOutcome>(result);
+
+            return new FhirResultModel<ValueSet>(operationOutcome, response.StatusCode, response.Version);
         }
     }
 }

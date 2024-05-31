@@ -8,9 +8,12 @@
 #endregion
 
 using System.Net;
+using Firely.Fhir.Packages;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
+using Hl7.Fhir.Specification.Source;
+using Hl7.Fhir.Specification.Terminology;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
@@ -167,6 +170,11 @@ public class FhirController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Get code system.  Currently, needs a terminology server configured in DI
+    /// </summary>
+    /// <param name="location"></param>
+    /// <returns></returns>
     [HttpGet("CodeSystem")]
     public async Task<IActionResult> GetCodeSystem([FromQuery] string location)
     {
@@ -177,6 +185,46 @@ public class FhirController : ControllerBase
             var codeSystemJson = await new FhirJsonSerializer().SerializeToStringAsync(codeSystem);
 
             return Ok(codeSystemJson);
+        }
+        catch (FhirOperationException ex)
+        {
+            _logger.LogWarning(ex.Message);
+
+            if (ex.Status == HttpStatusCode.Unauthorized)
+            {
+                return Unauthorized();
+            }
+
+            if (ex.Outcome != null)
+            {
+                var outcomeJson = await new FhirJsonSerializer().SerializeToStringAsync(ex.Outcome);
+                return NotFound(outcomeJson);
+            }
+            else
+            {
+                return NotFound("Resource Server Error: " + ex.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message);
+            throw;
+        }
+    }
+
+
+    [HttpGet("ValueSet")]
+    public async Task<IActionResult> GetValueSet([FromQuery] string location)
+    {
+        try
+        {
+            var resolver = new FhirPackageSource(ModelInfo.ModelInspector, @"hl7.fhir.us.identity-matching-2.0.0-draft.tgz");
+            var termService = new LocalTerminologyService(resolver);
+            var p = new ExpandParameters().WithValueSet(url: location);
+            var valueSet = await termService.Expand(p) as ValueSet;
+            var valueSetJson = await new FhirJsonSerializer().SerializeToStringAsync(valueSet);
+
+            return Ok(valueSetJson);
         }
         catch (FhirOperationException ex)
         {

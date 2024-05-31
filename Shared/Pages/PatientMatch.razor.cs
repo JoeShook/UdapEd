@@ -1,20 +1,14 @@
 ﻿using System.Net;
-using System.Reflection.PortableExecutable;
 using Hl7.Fhir.Model;
-using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
 using MudBlazor;
-using Org.BouncyCastle.Utilities.Net;
-using Udap.Common.Models;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Shared;
 using Address = UdapEd.Shared.Model.Address;
-using CodeSystem = UdapEd.Shared.Model.CodeSystem;
 using Task = System.Threading.Tasks.Task;
 
 namespace UdapEd.Shared.Pages;
@@ -40,12 +34,12 @@ public partial class PatientMatch
     private bool _contactSystemIsInEditMode;
     private bool _addressIsInEditMode;
     private bool _v2IdentifierSystemIsInEditMode;
-    private Hl7.Fhir.Model.CodeSystem? _v2CodeSystem;
-    private Hl7.Fhir.Model.CodeSystem? V2CodeSystem => _v2CodeSystem;
+    private Hl7.Fhir.Model.ValueSet? _identityValueSet;
+    private Hl7.Fhir.Model.ValueSet? IdentityValueSet => _identityValueSet;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await LoadCodeSystems();
+        await LoadIdentityValueSet();
         await SetHeaders();
         await SetBaseUrl();
     }
@@ -64,9 +58,9 @@ public partial class PatientMatch
         await DiscoveryService.SetBaseFhirUrl(BaseUrlOverride);
     }
 
-    private async Task LoadCodeSystems()
+    private async Task LoadIdentityValueSet()
     {
-        var result = await FhirService.GetCodeSystem("https://tx.fhir.org/r4/CodeSystem/v2-0203");
+        var result = await FhirService.GetValueSet("http://hl7.org/fhir/us/identity-matching/ValueSet/Identity-Identifier-vs");
 
         if (result.OperationOutCome != null)
         {
@@ -86,7 +80,7 @@ public partial class PatientMatch
         {
             _outComeMessage = null;
 
-            _v2CodeSystem = result.Result;
+            _identityValueSet = result.Result;
         }
     }
 
@@ -197,27 +191,30 @@ public partial class PatientMatch
         }
     }
 
-    private void V2IdentifierSystemEditComplete(object codeSystem)
+    private void IdentityValueSetEditComplete(object codeSystem)
     {
-        var codeSystemView = (CodeSystem)codeSystem;
+        var codeSystemView = (IdentityValueSetValue)codeSystem;
 
-        if (_model.V2IdentifierSystemList != null && codeSystemView.Id == 0)
+        if (_model.IdentityValueSetList != null && codeSystemView.Id == 0)
         {
-            var maxId = _model.V2IdentifierSystemList.Max(cs => cs.Id);
+            var maxId = _model.IdentityValueSetList.Max(cs => cs.Id);
             codeSystemView.Id = ++maxId;
         }
+
+        var s = IdentityValueSet?.Expansion.Contains.FirstOrDefault(s => s.Code == codeSystemView.Code)?.System;
+        codeSystemView.System = s;
 
         BuildMatch();
         StateHasChanged();
     }
 
-    private void V2IdentifierSystemCancelComplete(object codeSystem)
+    private void IdentityValueSetCancelComplete(object codeSystem)
     {
-        var codeSystemView = (CodeSystem)codeSystem;
+        var codeSystemView = (IdentityValueSetValue)codeSystem;
 
         if (codeSystemView.Id == 0)
         {
-            _model.V2IdentifierSystemList?.Remove(codeSystemView);
+            _model.IdentityValueSetList?.Remove(codeSystemView);
             StateHasChanged();
         }
     }
@@ -314,14 +311,24 @@ public partial class PatientMatch
             }
         }
 
-        if (_model.V2IdentifierSystemList != null && _model.V2IdentifierSystemList.Any())
+        if (_model.IdentityValueSetList != null && _model.IdentityValueSetList.Any())
         {
-            foreach (var codeSystem in _model.V2IdentifierSystemList)
+            
+
+            foreach (var valueSetValue in _model.IdentityValueSetList)
             {
-                if (!codeSystem.Value.IsNullOrEmpty())
+                if (!valueSetValue.Value.IsNullOrEmpty())
                 {
-                    var parts = codeSystem.Value.Split('|');
                     var identifier = new Identifier();
+                    var parts = valueSetValue.Value.Split('|');
+                    var codeableConcept = new CodeableConcept
+                    {
+                        Coding = new List<Coding>
+                        {
+                            new Coding(valueSetValue.System, valueSetValue.Code)
+                        }
+                    };
+                    identifier.Type = codeableConcept;
 
                     if (parts.Length == 2)
                     {
@@ -461,18 +468,18 @@ public partial class PatientMatch
 
     }
 
-    private async Task AddV2IdentifierSystem()
+    private async Task AddVIdentityValueSetValue()
     {
-        if (_model.V2IdentifierSystemList == null)
+        if (_model.IdentityValueSetList == null)
         {
-            _model.V2IdentifierSystemList = new List<Model.CodeSystem>();
+            _model.IdentityValueSetList = new List<Model.IdentityValueSetValue>();
         }
 
-        _model.V2IdentifierSystemList.Add(new Model.CodeSystem());
+        _model.IdentityValueSetList.Add(new Model.IdentityValueSetValue());
 
         await Task.Delay(1);
         StateHasChanged();
-        await Js.InvokeVoidAsync("UdapEd.setFocus", "CodeSystemId:0");
+        await Js.InvokeVoidAsync("UdapEd.setFocus", "IdentityValueSet:0");
         StateHasChanged();
     }
 
@@ -490,10 +497,10 @@ public partial class PatientMatch
         BuildMatch();
     }
 
-    private void DeleteV2IdentifierSystem(CodeSystem codeSystem)
+    private void DeleteV2IdentifierSystem(IdentityValueSetValue codeSystem)
     {
         _v2IdentifierSystemIsInEditMode = false;
-        _model.V2IdentifierSystemList?.Remove(codeSystem);
+        _model.IdentityValueSetList?.Remove(codeSystem);
         BuildMatch();
     }
 }
