@@ -43,6 +43,17 @@
       "publishAllPorts": true,
       "useSSL": false,
       "GCPDeploy": "true"
+    },
+    "WSL": {
+      "commandName": "WSL2",
+      "launchBrowser": true,
+      "launchUrl": "https://localhost:7041",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "https://localhost:7041;http://host.docker.internal:5171",
+        "MyIp": "0.0.0.0"
+      },
+      "distributionName": ""
     }
   }
 }

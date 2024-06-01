@@ -39,9 +39,12 @@ public partial class PatientMatch
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await LoadIdentityValueSet();
-        await SetHeaders();
-        await SetBaseUrl();
+        if (firstRender)
+        {
+            await LoadIdentityValueSet();
+            await SetHeaders();
+            await SetBaseUrl();
+        }
     }
     
     private async Task SetHeaders()

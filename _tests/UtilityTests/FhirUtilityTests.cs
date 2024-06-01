@@ -1,0 +1,56 @@
+using System.Text.Json;
+using Firely.Fhir.Packages;
+using Hl7.Fhir.Introspection;
+using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
+using Hl7.Fhir.Specification;
+using Hl7.Fhir.Specification.Source;
+using Hl7.Fhir.Specification.Terminology;
+using Xunit.Abstractions;
+using T = System.Threading.Tasks;
+
+namespace UtilityTests;
+
+public class FhirUtilityTests
+{
+    private readonly ITestOutputHelper _testOutputHelper;
+    private const string PACKAGESERVER = "http://packages.simplifier.net";
+
+    public FhirUtilityTests(ITestOutputHelper testOutputHelper)
+    {
+        _testOutputHelper = testOutputHelper;
+    }
+
+    [Fact]
+    public async T.Task FhirTermExternalTest()
+    {
+        FhirPackageSource _clientResolver = new(new ModelInspector(FhirRelease.R4), PACKAGESERVER, new string[] { "hl7.fhir.r4.core@4.0.1" });
+        var termService = new LocalTerminologyService(resolver: _clientResolver);
+        var p = new ExpandParameters().WithValueSet(url: "http://hl7.org/fhir/us/identity-matching/ValueSet/Identity-Identifier-vs");
+        await termService.Expand(p); //Don't that is fails.  Just want the package to download
+
+    }
+
+    /// <summary>
+    /// Run this test second and use the json output as a expanded Identity-Identifier-vs.  Otherwise it is just too expensive to
+    /// start up a cloud run instance and always downloading the bigger dependency of hl7.fhir.r4.core@4.0.1
+    ///
+    /// I am starting to understand why a terminology server is important.  They probably have strategies to pre expand and always being
+    /// hot and ready to server data.
+    /// </summary>
+    /// <returns></returns>
+    [Fact]
+    public async T.Task FhirTermTest()
+    {
+        IAsyncResourceResolver _resolver = new FhirPackageSource(ModelInfo.ModelInspector, @"hl7.fhir.us.identity-matching-2.0.0-draft.tgz");
+        var termService = new LocalTerminologyService(resolver: _resolver, new ValueSetExpanderSettings() { IncludeDesignations = true });
+        var p = new ExpandParameters()
+            .WithValueSet(url: "http://hl7.org/fhir/us/identity-matching/ValueSet/Identity-Identifier-vs");
+
+        var idiValueSet = await termService.Expand(p);
+        _testOutputHelper.WriteLine(await new FhirJsonSerializer().SerializeToStringAsync(idiValueSet));
+
+
+    }
+
+}

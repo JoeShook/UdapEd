@@ -216,13 +216,21 @@ public class FhirController : ControllerBase
     [HttpGet("ValueSet")]
     public async Task<IActionResult> GetValueSet([FromQuery] string location)
     {
+        Console.WriteLine("Hello Joe");
         try
         {
-            var resolver = new FhirPackageSource(ModelInfo.ModelInspector, @"hl7.fhir.us.identity-matching-2.0.0-draft.tgz");
-            var termService = new LocalTerminologyService(resolver);
-            var p = new ExpandParameters().WithValueSet(url: location);
-            var valueSet = await termService.Expand(p) as ValueSet;
-            var valueSetJson = await new FhirJsonSerializer().SerializeToStringAsync(valueSet);
+            //
+            // This technique only works if the hl7.fhir.r4.core@4.0.1 package has been downloaded and
+            // extracted
+            //
+
+            // var resolver = new FhirPackageSource(ModelInfo.ModelInspector, @"hl7.fhir.us.identity-matching-2.0.0-draft.tgz");
+            // var termService = new LocalTerminologyService(resolver);
+            // var p = new ExpandParameters().WithValueSet(url: location);
+            // var valueSet = await termService.Expand(p) as ValueSet;
+            // var valueSetJson = await new FhirJsonSerializer().SerializeToStringAsync(valueSet);
+            
+            var valueSetJson = await System.IO.File.ReadAllTextAsync("hl7.fhir.us.identity-matching-2.0.0-draft-expanded.json");
 
             return Ok(valueSetJson);
         }
