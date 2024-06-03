@@ -9,16 +9,13 @@
 
 using System.Net;
 using Hl7.Fhir.Rest;
-using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Logging;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
 using Udap.Client.Authentication;
 using Udap.Client.Client;
 using Udap.Client.Configuration;
-using Udap.Client.Rest;
 using Udap.Common.Certificates;
 
 using UdapEd.Server.Authentication;

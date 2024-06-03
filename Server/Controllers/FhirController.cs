@@ -8,16 +8,12 @@
 #endregion
 
 using System.Net;
-using Firely.Fhir.Packages;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
-using Hl7.Fhir.Specification.Source;
-using Hl7.Fhir.Specification.Terminology;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
-using Udap.Client.Rest;
 using UdapEd.Server.Extensions;
 using UdapEd.Shared.Model;
 using FhirClientWithUrlProvider = UdapEd.Server.Services.FhirClientWithUrlProvider;

@@ -62,10 +62,10 @@
         <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="8.0.40" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="8.0.40" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
-        <PackageReference Include="Serilog" Version="3.1.1" />
+        <PackageReference Include="Serilog" Version="4.0.0" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-        <PackageReference Include="Udap.Client" Version="0.3.47" />
+        <PackageReference Include="Udap.Client" Version="0.3.48" />
     </ItemGroup>
 
     <ItemGroup>

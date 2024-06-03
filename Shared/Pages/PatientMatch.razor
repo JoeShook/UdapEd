@@ -360,13 +360,15 @@
 @if (!string.IsNullOrEmpty(_parametersJson))
 {
     <MudCard Elevation="3" Style="margin-top: 10px">
-      <MudCardContent>
-        <pre>POST @($"{AppState.BaseUrl}/Patient/$match")</pre><br />
-        <InputTextArea Class="@ValidPatientResourceStyle"
-                   rows="@(_parametersJson.Count(s => s == '\n') + 1)"
-                   @bind-Value="_parametersJson"
-                   @onfocusout="PersistSoftwareStatement" />
-      </MudCardContent>
+        <MudCardContent>
+            <MudExpansionPanel Text="@($"POST {AppState.BaseUrl}/Patient/$match")">
+            @* <pre>POST @($"{AppState.BaseUrl}/Patient/$match")</pre><br/> *@
+            <InputTextArea Class="@ValidPatientResourceStyle"
+                           rows="@(_parametersJson.Count(s => s == '\n') + 1)"
+                           @bind-Value="_parametersJson"
+                           @onfocusout="PersistSoftwareStatement"/>
+            </MudExpansionPanel>
+        </MudCardContent>
 
       <MudCardActions>
         <MudButton Class="mt-3"
@@ -389,7 +391,7 @@
                     <MudTable @ref="_table"
                               T="Hl7.Fhir.Model.Bundle.EntryComponent"
                               Items="@_entries"
-                              MultiSelection="true"
+                              MultiSelection="false"
                               Dense="@false"
                               Hover="@true"
                               ReadOnly="@true"

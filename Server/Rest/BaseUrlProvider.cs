@@ -8,7 +8,6 @@
 #endregion
 
 using Hl7.Fhir.Utility;
-using Udap.Client.Rest;
 using UdapEd.Shared;
 using IBaseUrlProvider = UdapEd.Server.Services.IBaseUrlProvider;
 

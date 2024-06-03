@@ -133,15 +133,8 @@ public partial class PatientMatch
 
     private void OnRowClick(TableRowClickEventArgs<Hl7.Fhir.Model.Bundle.EntryComponent> args)
     {
-        if (args.Row.IsChecked)
-        {
-            _selectedItemText = new FhirJsonSerializer(new SerializerSettings { Pretty = true })
+        _selectedItemText = new FhirJsonSerializer(new SerializerSettings { Pretty = true })
                 .SerializeToString(args.Item);
-        }
-        else
-        {
-            _selectedItemText = string.Empty;
-        }
     }
 
     private void AddressEditComplete(object address)

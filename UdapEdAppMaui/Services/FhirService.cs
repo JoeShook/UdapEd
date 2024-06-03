@@ -7,6 +7,7 @@
 // */
 #endregion
 
+using Hl7.Fhir.Model;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 using CodeSystem = Hl7.Fhir.Model.CodeSystem;
@@ -32,6 +33,11 @@ internal class FhirService : IFhirService
     }
 
     public Task<FhirResultModel<CodeSystem>> GetCodeSystem(string location)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<FhirResultModel<ValueSet>> GetValueSet(string location)
     {
         throw new NotImplementedException();
     }
