@@ -63,7 +63,6 @@ public partial class UdapBusinessToBusiness
         }
         set
         {
-            Console.WriteLine(value);
             _signingAlgorithm = value;
         }
     }
@@ -139,13 +138,13 @@ public partial class UdapBusinessToBusiness
     private async Task BuildAuthCodeRequest()
     {
         AccessToken = string.Empty;
-        AppState.SetProperty(this, nameof(AppState.AccessTokens), string.Empty, true, false);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), null, true, false);
         AuthorizationCodeRequest = new AuthorizationCodeRequest
         {
             RedirectUri = "Loading..."
         };
 
-        AppState.SetProperty(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
         await Task.Delay(250);
 
         AuthorizationCodeRequest = new AuthorizationCodeRequest
@@ -158,7 +157,7 @@ public partial class UdapBusinessToBusiness
             Aud = $"aud={AppState.BaseUrl}"
         };
 
-        AppState.SetProperty(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
 
         BuildAuthorizeLink();
     }
@@ -200,7 +199,6 @@ public partial class UdapBusinessToBusiness
             AppState.AuthorizationCodeRequest?.RedirectUri,
             AppState.AuthorizationCodeRequest?.Aud);
 
-        Console.WriteLine(accessCodeRequestUrl);
         //
         // Builds an anchor href link the user clicks to initiate a user login page at the authorization server
         //
@@ -209,7 +207,7 @@ public partial class UdapBusinessToBusiness
         AppState.SetProperty(this, nameof(AppState.AccessCodeRequestResult), loginLink);
         LoginRedirectLinkText = "Login Redirect";
     }
-
+    
     public string LoginCallback(bool reset = false)
     {
         if (reset)
@@ -236,6 +234,23 @@ public partial class UdapBusinessToBusiness
         }
 
         return uri.Query.Replace("&", "&\r\n");
+    }
+
+    private bool _callBackEntryScrolled = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {   
+        var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
+        if (!_callBackEntryScrolled && !string.IsNullOrEmpty(uri.Query))
+        {
+            var queryParams = QueryHelpers.ParseQuery(uri.Query);
+            if (!queryParams.GetValueOrDefault("code").ToString().IsNullOrEmpty())
+            {
+                var success = await JSRuntime.InvokeAsync<bool>("UdapEd.scrollTo", "CallBackEntry");
+                _callBackEntryScrolled = success;
+            }
+        }
+        
     }
 
     private async Task ResetSoftwareStatement()
