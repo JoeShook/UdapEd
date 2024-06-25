@@ -42,8 +42,8 @@
     ]
   },
   "expansion": {
-    "identifier": "urn:uuid:8e80861c-a9a2-40e4-89eb-019682c352b4",
-    "timestamp": "2024-06-01T08:01:50.0552583-07:00",
+    "identifier": "urn:uuid:cbe3396f-da24-4721-a642-25a00ca8dfcc",
+    "timestamp": "2024-06-25T16:18:21.206753-07:00",
     "total": 20,
     "parameter": [
       {
@@ -66,75 +66,93 @@
       },
       {
         "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-        "code": "DL"
+        "code": "DL",
+        "display": "Driver's license number"
       },
       {
         "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-        "code": "PPN"
+        "code": "PPN",
+        "display": "Passport number"
       },
       {
         "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-        "code": "BRN"
+        "code": "BRN",
+        "display": "Breed Registry Number"
       },
       {
         "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-        "code": "MR"
+        "code": "MR",
+        "display": "Medical record number"
       },
       {
         "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-        "code": "MCN"
+        "code": "MCN",
+        "display": "Microchip Number"
       },
       {
         "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-        "code": "EN"
+        "code": "EN",
+        "display": "Employer number"
       },
       {
         "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-        "code": "TAX"
+        "code": "TAX",
+        "display": "Tax ID number"
       },
       {
         "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-        "code": "NIIP"
+        "code": "NIIP",
+        "display": "National Insurance Payor Identifier (Payor)"
       },
       {
         "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-        "code": "PRN"
+        "code": "PRN",
+        "display": "Provider number"
       },
       {
         "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-        "code": "MD"
+        "code": "MD",
+        "display": "Medical License number"
       },
       {
         "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-        "code": "DR"
+        "code": "DR",
+        "display": "Donor Registration Number"
       },
       {
         "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-        "code": "ACSN"
+        "code": "ACSN",
+        "display": "Accession ID"
       },
       {
         "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-        "code": "UDI"
+        "code": "UDI",
+        "display": "Universal Device Identifier"
       },
       {
         "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-        "code": "SNO"
+        "code": "SNO",
+        "display": "Serial Number"
       },
       {
         "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-        "code": "SB"
+        "code": "SB",
+        "display": "Social Beneficiary Identifier"
       },
       {
         "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-        "code": "PLAC"
+        "code": "PLAC",
+        "display": "Placer Identifier"
       },
       {
         "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-        "code": "FILL"
+        "code": "FILL",
+        "display": "Filler Identifier"
       },
       {
         "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-        "code": "JHN"
+        "code": "JHN",
+        "display": "Jurisdictional health number (Canada)"
       }
     ]
   }

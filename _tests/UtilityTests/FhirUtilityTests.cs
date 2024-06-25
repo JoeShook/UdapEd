@@ -42,15 +42,30 @@ public class FhirUtilityTests
     [Fact]
     public async T.Task FhirTermTest()
     {
-        IAsyncResourceResolver _resolver = new FhirPackageSource(ModelInfo.ModelInspector, @"hl7.fhir.us.identity-matching-2.0.0-draft.tgz");
-        var termService = new LocalTerminologyService(resolver: _resolver, new ValueSetExpanderSettings() { IncludeDesignations = true });
+        IAsyncResourceResolver coreSource = new FhirPackageSource(ModelInfo.ModelInspector, PACKAGESERVER, new string[] {  "hl7.fhir.r4.expansions@4.0.1" });
+        var coreResolver = new CachedResolver(coreSource);
+
+        IAsyncResourceResolver localSource = new FhirPackageSource(ModelInfo.ModelInspector, @"hl7.fhir.us.identity-matching-2.0.0-draft.tgz");
+        var resourceResolver = new CachedResolver(localSource);
+
+        var multiResourceResolver = new MultiResolver(coreResolver, resourceResolver);
+
+        var termService = new LocalTerminologyService(resolver: multiResourceResolver, new ValueSetExpanderSettings() { IncludeDesignations = true });
         var p = new ExpandParameters()
             .WithValueSet(url: "http://hl7.org/fhir/us/identity-matching/ValueSet/Identity-Identifier-vs");
-
-        var idiValueSet = await termService.Expand(p);
+        
+        var idiValueSet = await termService.Expand(p, useGet:true) as ValueSet;
         _testOutputHelper.WriteLine(await new FhirJsonSerializer().SerializeToStringAsync(idiValueSet));
-
-
     }
 
+    
+    [Fact]
+    public void ShowSearchParameters()
+    {
+        foreach (var searchParamDefinition in ModelInfo.SearchParameters.Where(sp => sp.Resource == "Organization"))
+        {
+            _testOutputHelper.WriteLine($"{searchParamDefinition.Name}: {searchParamDefinition.Description}");
+        }
+
+    }
 }
