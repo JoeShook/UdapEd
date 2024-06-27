@@ -41,4 +41,14 @@ internal class FhirService : IFhirService
     {
         throw new NotImplementedException();
     }
+
+    public Task<FhirResultModel<Bundle>> SearchGet(string queryParameters)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<FhirResultModel<Bundle>> SearchPost(SearchForm searchForm)
+    {
+        throw new NotImplementedException();
+    }
 }

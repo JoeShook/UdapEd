@@ -78,4 +78,14 @@ public static class StringExtensions
 
         return input;
     }
+
+    public static string Prefix(this string? input, string prefix)
+    {
+        if (input == null)
+        {
+            return null;
+        }
+
+        return prefix + input;
+    }
 }

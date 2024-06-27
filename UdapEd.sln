@@ -22,7 +22,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UdapEd.Client", "Client\Uda
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UdapEdAppMaui", "UdapEdAppMaui\UdapEdAppMaui.csproj", "{95FE4594-743A-41DA-B294-FCB80613449A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UtilityTests", "_tests\UtilityTests\UtilityTests.csproj", "{364E6518-77F0-4AD8-9D45-556194C2DE2F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UtilityTests", "_tests\UtilityTests\UtilityTests.csproj", "{364E6518-77F0-4AD8-9D45-556194C2DE2F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,6 +55,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{364E6518-77F0-4AD8-9D45-556194C2DE2F} = {E6D32F39-AFCD-4EC3-BCD3-BC0F2B844DFF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D2E85C12-49FA-4542-BF49-6E2A9B2D1879}

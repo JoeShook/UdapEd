@@ -55,7 +55,6 @@ public class FhirController : ControllerBase
 
             if (model.Bundle.IsNullOrEmpty())
             {
-                
                 var bundle = await _fhirClient.SearchAsync<Patient>(BuildSearchParams(model).OrderBy("given"));
                 var bundleJson = await new FhirJsonSerializer().SerializeToStringAsync(bundle);
                 return Ok(bundleJson);
@@ -255,4 +254,91 @@ public class FhirController : ControllerBase
             throw;
         }
     }
+
+
+    [HttpPost("GetSearch")]
+    public async Task<IActionResult> GetSearch([FromBody] string fullSearch)
+    {
+        try
+        {
+            //Todo maybe inject in the future, so we don't exhaust underlying HttpClient
+            var fhirClient = new FhirClient(fullSearch, new FhirClientSettings(){ PreferredFormat = ResourceFormat.Json });
+            Console.WriteLine(fullSearch);
+            var bundle = await fhirClient.GetAsync(fullSearch);
+            var bundleJson = await new FhirJsonSerializer().SerializeToStringAsync(bundle);
+            
+            return Ok(bundleJson);
+        }
+        catch (FhirOperationException ex)
+        {
+            _logger.LogWarning(ex.Message);
+
+            if (ex.Status == HttpStatusCode.Unauthorized)
+            {
+                return Unauthorized();
+            }
+
+            if (ex.Outcome != null)
+            {
+                var outcomeJson = await new FhirJsonSerializer().SerializeToStringAsync(ex.Outcome);
+                return NotFound(outcomeJson);
+            }
+            else
+            {
+                return NotFound("Resource Server Error: " + ex.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message);
+            throw;
+        }
+    }
+
+    [HttpPost("PostSearch")]
+    public async Task<IActionResult> PostSearch([FromBody] SearchForm searchForm)
+    {
+        try
+        {
+            //Todo maybe inject in the future, so we don't exhaust underlying HttpClient
+            var fhirClient = new FhirClient(searchForm.Url, new FhirClientSettings() { PreferredFormat = ResourceFormat.Json });
+            var searchParams = new SearchParams();
+
+            foreach (var pair in searchForm.FormUrlEncoded)
+            {
+                var item = pair.Split('=');
+                searchParams.Add(item[0], item[1]);
+            }
+
+            var bundle = await fhirClient.SearchUsingPostAsync<Organization>(searchParams);
+            var bundleJson = await new FhirJsonSerializer().SerializeToStringAsync(bundle);
+
+            return Ok(bundleJson);
+        }
+        catch (FhirOperationException ex)
+        {
+            _logger.LogWarning(ex.Message);
+
+            if (ex.Status == HttpStatusCode.Unauthorized)
+            {
+                return Unauthorized();
+            }
+
+            if (ex.Outcome != null)
+            {
+                var outcomeJson = await new FhirJsonSerializer().SerializeToStringAsync(ex.Outcome);
+                return NotFound(outcomeJson);
+            }
+            else
+            {
+                return NotFound("Resource Server Error: " + ex.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message);
+            throw;
+        }
+    }
+
 }

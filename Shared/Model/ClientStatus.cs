@@ -20,4 +20,3 @@ public class ClientStatus
 
     public string StatusMessage { get; set; }
 }
-

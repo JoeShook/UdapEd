@@ -2,6 +2,7 @@
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Smart;
@@ -29,14 +30,19 @@ public partial class PatientSearch
 
     [Inject] private IFhirService FhirService { get; set; } = null!;
     [Inject] private IDiscoveryService DiscoveryService { get; set; } = null!;
+    private ErrorBoundary? ErrorBoundary { get; set; }
     private string? _baseUrlOverride = string.Empty;
-
     
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await SetHeaders();
         await SetBaseUrl();
+    }
+
+    protected override void OnParametersSet()
+    {
+        ErrorBoundary?.Recover();
     }
 
     private async Task SetHeaders()

@@ -2,6 +2,7 @@
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
 using MudBlazor;
@@ -28,6 +29,7 @@ public partial class PatientMatch
     [Inject] private IJSRuntime Js { get; set; } = null!;
     [Inject] private IFhirService FhirService { get; set; } = null!;
     [Inject] private IDiscoveryService DiscoveryService { get; set; } = null!;
+    private ErrorBoundary? ErrorBoundary { get; set; }
     private const string ValidStyle = "pre udap-indent-1";
     private const string InvalidStyle = "pre udap-indent-1 jwt-invalid";
     private string? _baseUrlOverride = string.Empty;
@@ -46,7 +48,12 @@ public partial class PatientMatch
             await SetBaseUrl();
         }
     }
-    
+
+    protected override void OnParametersSet()
+    {
+        ErrorBoundary?.Recover();
+    }
+
     private async Task SetHeaders()
     {
         if (AppState.ClientHeaders?.Headers != null)

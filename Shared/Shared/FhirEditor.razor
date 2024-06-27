@@ -1,0 +1,150 @@
+@* Thank you, Gino Canessa.  This component build to host the Monaco editor came from the Fhir-Candle project. *@
+
+@inject IJSRuntime JS
+@implements IDisposable
+
+<StandaloneCodeEditor @ref="_editor"
+    Id="resource-editor"
+    ConstructionOptions="ResourceConstructorOptions"
+                      OnDidFocusEditorText="EditorOnDidInit"
+                      OnDidChangeModel="EditorOnDidInit"
+    OnDidInit="EditorOnDidInit"/>
+
+@code {
+    private string _language = "json";
+
+    /// <summary>Gets or sets the language.</summary>
+    [Parameter]
+    public string Language
+    { 
+        get => _language;
+        set
+        {
+            if (value.Equals(_language, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _language = value;
+            _ = SetHightlightLanguage();
+        }
+    }
+
+    private bool _darkMode = true;
+
+    [Parameter]
+    public bool DarkMode 
+    { 
+        get => _darkMode;
+        set
+        {
+            if (value == _darkMode)
+            {
+                return;
+            }
+
+            _darkMode = value;
+            _ = UpdateTheme();
+        }
+    }
+
+
+    private string _editorContent = "";
+
+    /// <summary>Gets or sets the editor content.</summary>
+    [Parameter]
+    public string EditorContent
+    { 
+        get => _editorContent;
+        set
+        {
+            if (value.Equals(_editorContent, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _editorContent = value;
+            _editor?.SetValue(value);
+        }
+    }
+
+    /// <summary>The editor.</summary>
+    private StandaloneCodeEditor? _editor = null;
+
+    /// <summary>Resource construction options.</summary>
+    /// <param name="editor">The editor.</param>
+    /// <returns>The StandaloneEditorConstructionOptions.</returns>
+    private StandaloneEditorConstructionOptions ResourceConstructorOptions(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            Language = _language,
+            Theme = _darkMode ? "vs-dark" : "vs-light",
+            GlyphMargin = false,
+            Value = _editorContent,
+            ShowFoldingControls = "false",
+            AutoDetectHighContrast = false,
+            
+        };
+    }
+
+    /// <summary>Editor on did initialize.</summary>
+    /// <returns>An asynchronous result.</returns>
+    private async Task EditorOnDidInit()
+    {
+        if (_editor == null)
+        {
+            return;
+        }
+
+        await UpdateTheme();
+        await JS.InvokeVoidAsync("setMonacoEditorResize", _editor.Id);
+        await _editor.SetValue(_editorContent ?? string.Empty);
+    }
+
+    /// <summary>Updates the theme.</summary>
+    /// <returns>An asynchronous result.</returns>
+    private async Task UpdateTheme()
+    {
+        if (_editor == null)
+        {
+            return;
+        }
+
+        await JS.InvokeVoidAsync(
+            "blazorMonaco.editor.setTheme",
+            _darkMode ? "vs-dark" : "vs-light");
+    }
+
+    /// <summary>Sets hightlight language.</summary>
+    private async Task SetHightlightLanguage()
+    {
+        if (_editor == null)
+        {
+            return;
+        }
+
+        // need to get the editor model uri
+        TextModel tm = await _editor.GetModel();
+        await JS.InvokeVoidAsync(
+            "blazorMonaco.editor.setModelLanguage",
+            tm.Uri,
+            _language);
+    }
+
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        _ = UpdateTheme();
+    }
+
+    /// <summary>
+    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged
+    /// resources.
+    /// </summary>
+    public void Dispose()
+    {
+    }
+}
