@@ -14,6 +14,7 @@ using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
+using MudBlazor;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Search;
@@ -83,7 +84,15 @@ public partial class Directory
                 searchParam.Name = param.Code!;
                 searchParam.ModifierName = SearchModifierValueSet.SearchModifiers.First().Name;
                 searchParam.Modifier = SearchModifierValueSet.SearchModifiers.First().Value;
-
+                if (searchParam.Name == "active")
+                {
+                    searchParam.Value = "true";
+                }
+                else if(searchParam.Value != "FhirLabsOrg")
+                {
+                    searchParam.Value = string.Empty;
+                }
+                
                 break;
             }
         }
@@ -92,7 +101,7 @@ public partial class Directory
         _fhirSearch.SearchParams.Add(searchParam);
 
         await T.Task.Delay(1);
-        StateHasChanged();
+        BuildSearch();
     }
 
     private void DeleteParam(FhirSearchParam fhirSearchParam)
@@ -101,6 +110,11 @@ public partial class Directory
         _fhirSearch.SearchParams?.Remove(fhirSearchParam);
         BuildSearch();
         StateHasChanged();
+    }
+    
+    private void ActiveModifierChanged(bool obj)
+    {
+        BuildSearch();
     }
 
     private void BuildSearch()
@@ -115,6 +129,7 @@ public partial class Directory
             queryParameters.Add($"{param.Name}{modifier.Prefix(":")}={param.Value}");
            
         }
+        
         _searchString = string.Join('&', queryParameters);
         _postSearchString = string.Join("\n", queryParameters);
         _postSearchParams = queryParameters;
@@ -197,5 +212,50 @@ public partial class Directory
                 .Select(e => e)
                 .ToList();
         }
+    }
+
+ 
+    public class ObjectToFhirBoolConverter : BoolConverter<string>
+    {
+
+        public ObjectToFhirBoolConverter()
+        {
+            SetFunc = OnSet;
+            GetFunc = OnGet;
+        }
+
+        private string OnGet(bool? value)
+        {
+            try
+            {
+                return value == true ? "true" : "false";
+            }
+            catch (Exception e)
+            {
+                UpdateGetError("Conversion error: " + e.Message);
+                return default;
+            }
+        }
+
+        private bool? OnSet(string arg)
+        {
+            if (arg == null)
+                return null;
+            try
+            {
+                if (arg == "true")
+                    return true;
+                if (arg == "false")
+                    return false;
+                else
+                    return null;
+            }
+            catch (FormatException e)
+            {
+                UpdateSetError("Conversion error: " + e.Message);
+                return null;
+            }
+        }
+
     }
 }

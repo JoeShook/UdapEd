@@ -6,8 +6,6 @@
 <StandaloneCodeEditor @ref="_editor"
     Id="resource-editor"
     ConstructionOptions="ResourceConstructorOptions"
-                      OnDidFocusEditorText="EditorOnDidInit"
-                      OnDidChangeModel="EditorOnDidInit"
     OnDidInit="EditorOnDidInit"/>
 
 @code {
@@ -30,7 +28,7 @@
         }
     }
 
-    private bool _darkMode = true;
+    private bool _darkMode = false;
 
     [Parameter]
     public bool DarkMode 

@@ -8,7 +8,7 @@
     <ChildContent>
     
         <MudGrid Justify="Justify.FlexStart">
-            <MudItem xs="12" sm="6">
+            <MudItem lg="12" xl="6">
                 <MudTabs>
                     <MudTabPanel Text="Search" >
                         <MudCard Elevation="3" Style="margin-top: 10px">
@@ -106,7 +106,8 @@
                                                                 }
                                                                 else
                                                                 {
-                                                                    <MudSwitch @bind-Checked="_fhirSearch.ActiveSwitch">Active</MudSwitch>
+                                                                    <MudSwitch @bind-Value="@context.Value" @bind-Value:after="BuildSearch"
+                                                                               Converter="@(new ObjectToFhirBoolConverter())">@(@context.Value)</MudSwitch>
                                                                 }
                                                             }
                                                         </MudTd>
@@ -173,7 +174,7 @@
                 </MudTabs>
             </MudItem>
             
-            <MudItem xs="12" sm="6">
+            <MudItem lg="12" xl="6">
                 <MudCard Elevation="3" Style="margin-top: 10px">
                     <MudCardContent>
                         @if (_outComeMessage != null)
@@ -185,6 +186,7 @@
                             <FhirEditor
                                 Language="json"
                                 EditorContent="@_resultRaw"
+                                DarkMode="false"
                             />
                             @* DarkMode="@(NavTracker?.IsDarkMode ?? true)" *@
 

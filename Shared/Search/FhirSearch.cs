@@ -18,7 +18,7 @@ public class FhirSearch
     public string? Summary { get; set; }
 
     public int ResultCountPerPage { get; set; } = 10;
-    public bool ActiveSwitch { get; set; } = true;
+
 }
 
 
