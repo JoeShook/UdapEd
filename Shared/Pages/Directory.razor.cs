@@ -41,6 +41,8 @@ public partial class Directory
     private string _resultRaw = string.Empty;
     private string? _outComeMessage;
     private List<Hl7.Fhir.Model.Bundle.EntryComponent?>? _entries;
+    private Dictionary<string, bool> _includeCheckBoxes = new Dictionary<string, bool>();
+    private Dictionary<string, bool> _revIncludeCheckBoxes = new Dictionary<string, bool>();
 
     /// <summary>
     /// Hl7.Fhir.Model.ModelInfo.SupportedResources is a source of truth for Resource names
@@ -129,10 +131,21 @@ public partial class Directory
             queryParameters.Add($"{param.Name}{modifier.Prefix(":")}={param.Value}");
            
         }
-        
+
+        foreach (var cb in _includeCheckBoxes.Where(i => i.Value))
+        {
+            queryParameters.Add($"_include={cb.Key}");
+        }
+
+        foreach (var cb in _revIncludeCheckBoxes.Where(i => i.Value))
+        {
+            queryParameters.Add($"_revinclude={cb.Key}");
+        }
+
         _searchString = string.Join('&', queryParameters);
         _postSearchString = string.Join("\n", queryParameters);
         _postSearchParams = queryParameters;
+
     }
 
     private void BuildManualGetSearch(string obj)
