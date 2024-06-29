@@ -11,6 +11,7 @@ using System;
 using System.Net;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
+using Hl7.Fhir.Specification.Navigation;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
@@ -38,16 +39,16 @@ public partial class Directory
     private string _postSearchString = string.Empty;
     private List<string>? _postSearchParams;
     private const string ValidStyle = "pre udap-indent-1";
-    private string _resultRaw = string.Empty;
+    private FhirResults _fhirResults = new FhirResults();
     private string? _outComeMessage;
     private List<Hl7.Fhir.Model.Bundle.EntryComponent?>? _entries;
     private Dictionary<string, bool> _includeCheckBoxes = new Dictionary<string, bool>();
     private Dictionary<string, bool> _revIncludeCheckBoxes = new Dictionary<string, bool>();
-
-    /// <summary>
-    /// Hl7.Fhir.Model.ModelInfo.SupportedResources is a source of truth for Resource names
-    /// </summary>
-    private readonly List<string> _supportedResources = new List<string>()
+    private FhirJsonSerializer _fhirJsonSerializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
+/// <summary>
+/// Hl7.Fhir.Model.ModelInfo.SupportedResources is a source of truth for Resource names
+/// </summary>
+private readonly List<string> _supportedResources = new List<string>()
     {
         "Practitioner", "PractitionerRole", "Organization", "OrganizationAffiliation",
         "InsurancePlan", "Endpoint", "Location"
@@ -160,7 +161,7 @@ public partial class Directory
 
     private async T.Task SearchGet()
     {
-        _entries = null;
+        _fhirResults.Entries = null;
         StateHasChanged();
         await T.Task.Delay(100);
 
@@ -195,7 +196,7 @@ public partial class Directory
 
         else if (result.OperationOutCome != null)
         {
-            _entries = null;
+            _fhirResults.Entries = null;
             string? errorMessage = null;
 
             foreach (var issue in result.OperationOutCome.Issue)
@@ -213,21 +214,35 @@ public partial class Directory
 
             if (result.HttpStatusCode != null)
             {
-                _resultRaw = $"HTTP/{result.Version} {(int)result.HttpStatusCode} {result.HttpStatusCode}";
-                _resultRaw += Environment.NewLine + Environment.NewLine;
+                _fhirResults.HttpStatus = $"HTTP/{result.Version} {(int)result.HttpStatusCode} {result.HttpStatusCode}";
             }
 
-            _resultRaw += await new FhirJsonSerializer(new SerializerSettings { Pretty = true })
-                .SerializeToStringAsync(result.Result);
+            if (result.Result != null)
+            {
+                _fhirResults.RawFhir = await new FhirJsonSerializer(new SerializerSettings { Pretty = true })
+                    .SerializeToStringAsync(result.Result);
 
-            _entries = result.Result?.Entry
-                .Where(e => e.Resource is Resource)
-                .Select(e => e)
-                .ToList();
+                _fhirResults.Entries = result.Result?.Entry
+                    .Where(e => e.Resource is Resource)
+                    .Select(e => e)
+                    .ToList();
+            }
+            else
+            {
+                _fhirResults.RawFhir = string.Empty;
+
+            }
         }
     }
 
- 
+    record FhirResults
+    {
+        public string HttpStatus { get; set; }
+        public string RawFhir { get; set; }
+        public List<Hl7.Fhir.Model.Bundle.EntryComponent>? Entries { get; set; }
+    }
+
+
     public class ObjectToFhirBoolConverter : BoolConverter<string>
     {
 

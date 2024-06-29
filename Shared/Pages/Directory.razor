@@ -1,5 +1,6 @@
 ﻿@page "/ndh"
 @using Hl7.Fhir.Model
+@using Hl7.Fhir.Serialization
 @using Microsoft.IdentityModel.Tokens
 @using UdapEd.Shared.Search
 
@@ -226,19 +227,33 @@
                         {
                             <MudAlert Severity="Severity.Error">@(new MarkupString(_outComeMessage))</MudAlert>
                         }
-                        @if(!_resultRaw.IsNullOrEmpty())
+                        @if (!_fhirResults.RawFhir.IsNullOrEmpty())
                         {
-                            <FhirEditor
-                                Language="json"
-                                EditorContent="@_resultRaw"
-                                DarkMode="false"
-                            />
-                            @* DarkMode="@(NavTracker?.IsDarkMode ?? true)" *@
+                        <MudTabs>
+                            <MudTabPanel Text="Results">
+                                <MudExpansionPanels>
+                                    @if (_fhirResults.Entries != null)
+                                    {
+                                        @foreach (var entry in _fhirResults.Entries)
+                                        {
+                                            <MudExpansionPanel Text="@($"{entry.Resource.TypeName}/{entry.Resource.Id}")" Dense="true">
+                                                <pre>@_fhirJsonSerializer.SerializeToString(entry)</pre>
+                                            </MudExpansionPanel>
+                                        }
+                                    }
+                                
+                                </MudExpansionPanels>
+                            </MudTabPanel>
+                            <MudTabPanel Text="FHIR">
+                                <FhirEditor
+                                    Language="json"
+                                    EditorContent="@_fhirResults.RawFhir"
+                                    DarkMode="false"
+                                />
+                                @* DarkMode="@(NavTracker?.IsDarkMode ?? true)" *@
 
-
-                            @* <InputTextArea Class="@ValidStyle" *@
-                            @*                rows="@(_resultRaw?.Count(s => s == '\n') + 1)" *@
-                            @*                @bind-Value="_resultRaw"/> *@
+                            </MudTabPanel>
+                        </MudTabs>
                         }
                     </MudCardContent>
                 </MudCard>
