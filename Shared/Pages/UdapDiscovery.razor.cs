@@ -15,6 +15,7 @@ using BQuery;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
 using MudBlazor;
@@ -117,7 +118,10 @@ public partial class UdapDiscovery: IDisposable
 
     protected override async Task OnInitializedAsync()
     {
-        _baseUrl = AppState.BaseUrl;
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var queryParams = !string.IsNullOrEmpty(uri.Query) ? QueryHelpers.ParseQuery(uri.Query) : null;
+        _baseUrl = queryParams?.GetValueOrDefault("BaseUrl") ?? AppState.BaseUrl;
+        
         var anchorCertificateLoadStatus = await DiscoveryService.AnchorCertificateLoadStatus();
         await AppState.SetPropertyAsync(this, nameof(AppState.AnchorCertificateInfo), anchorCertificateLoadStatus);
         await SetCertLoadedColor(anchorCertificateLoadStatus?.CertLoaded);

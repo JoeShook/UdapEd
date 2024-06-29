@@ -242,6 +242,27 @@
                                         }
                                     }
                                 
+                                    
+                                        <MudTreeView Items="@_fhirTreeViewStore" Hover="true" Width="100%">
+                                        <ItemTemplate Context="item">
+                                            <MudTreeViewItem Items="@item.TreeItems" Icon="@item.Icon">
+                                                <BodyContent>
+                                                    <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
+                                                            @if (item.Link == null)
+                                                            {
+                                                                <MudText Style="justify-self: start;">@item.Name</MudText>
+                                                            }
+                                                            else
+                                                            {
+                                                                <MudLink Style="justify-self: start;" Href="@($"/udapDiscovery?BaseUrl={item.Link}")" Target="_blank">@item.Name</MudLink>
+                                                            }
+                                                        
+                                                    </div>
+                                                </BodyContent>
+                                            </MudTreeViewItem>
+                                        </ItemTemplate>
+                                    </MudTreeView>
+
                                 </MudExpansionPanels>
                             </MudTabPanel>
                             <MudTabPanel Text="FHIR">

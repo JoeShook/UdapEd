@@ -9,9 +9,12 @@
 
 using System;
 using System.Net;
+using Hl7.Fhir.ElementModel;
+using Hl7.Fhir.FhirPath;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Hl7.Fhir.Specification.Navigation;
+using Hl7.FhirPath;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
@@ -171,6 +174,10 @@ private readonly List<string> _supportedResources = new List<string>()
 
     private async T.Task SearchPost()
     {
+        _fhirResults.Entries = null;
+        StateHasChanged();
+        await T.Task.Delay(100);
+
         var formSearch = new SearchForm()
         {
             Url = _fhirSearch.BaseUrl,
@@ -222,10 +229,65 @@ private readonly List<string> _supportedResources = new List<string>()
                 _fhirResults.RawFhir = await new FhirJsonSerializer(new SerializerSettings { Pretty = true })
                     .SerializeToStringAsync(result.Result);
 
+                var r = result.Result.GetResources(); //.Where(r => r.GetType() == typeof(Endpoint));
+
+                Hl7.FhirPath.FhirPathCompiler.DefaultSymbolTable.AddFhirExtensions();
+
+                foreach (var resource in result.Result.GetResources())
+                {
+                    Console.WriteLine(
+                        $"{resource.ToTypedElement().InstanceType}/{resource.ToTypedElement().ToScopedNode().Id()}");
+
+                }
+
+                var scopeNode = result.Result.ToTypedElement().ToScopedNode();
+                var OrgsRefedByEndoints = scopeNode.Select(
+                    "Bundle.entry.resource.where($this is Endpoint).descendants().select(reference)");
+
+                   
+                foreach (var orgsRefedByEndoint in OrgsRefedByEndoints)
+                {
+                    Console.WriteLine(orgsRefedByEndoint.Value);
+
+                    //Organization/FhirLabsOrg
+
+                    Console.WriteLine(
+                        $"Bundle.entry.where($this.resource is Organization and $this.fullUrl.endsWith('{orgsRefedByEndoint.Value}')).resource.id");
+                    // Get Name of Org
+                    var OrgNames =
+                        scopeNode.Select(
+                            $"Bundle.entry.where($this.resource is Organization and $this.fullUrl.endsWith('{orgsRefedByEndoint.Value}')).resource.id");
+
+                    foreach (var typedElement in OrgNames)
+                    {
+                        var orgEntry = new FhirHierarchyEntries() { Name = typedElement.Value?.ToString() };
+                        _fhirTreeViewStore.Add(orgEntry);
+
+                        Console.WriteLine(typedElement.Value);
+
+                        Console.WriteLine(
+                            $"Bundle.entry.resource.select($this).where($this is Endpoint and $this.descendants().reference.endsWith('Organization/{typedElement.Value}'))");
+                        // Get Endpoint addresses
+                        var endpoints =
+                            scopeNode.Select(
+                                $"Bundle.entry.resource.select($this).where($this is Endpoint and $this.descendants().reference.endsWith('Organization/{typedElement.Value}'))");
+                        
+                        foreach (var endpoint in endpoints)
+                        {
+                            var epResource = new FhirJsonParser().Parse<Endpoint>(endpoint);
+                            orgEntry.TreeItems.Add(new FhirHierarchyEntries() { Name = epResource.Name, Link = epResource.Address });
+
+                            Console.WriteLine(endpoint.Name);
+                            Console.WriteLine(epResource.Address);
+                        }
+                    }
+                }
+
                 _fhirResults.Entries = result.Result?.Entry
-                    .Where(e => e.Resource is Resource)
+                    .Where(e => e.Resource != null)
                     .Select(e => e)
                     .ToList();
+                
             }
             else
             {
@@ -234,6 +296,21 @@ private readonly List<string> _supportedResources = new List<string>()
             }
         }
     }
+
+    private HashSet<FhirHierarchyEntries> _fhirTreeViewStore = new HashSet<FhirHierarchyEntries>();
+    private FhirHierarchyEntries _fhirHierarchyEntries;
+
+    record FhirHierarchyEntries
+    {
+        public HashSet<FhirHierarchyEntries> TreeItems = new HashSet<FhirHierarchyEntries>();
+
+        public string Name;
+
+        public string? Link;
+
+        public string Icon { get; set; } = Icons.Custom.FileFormats.FileDocument;
+    }
+
 
     record FhirResults
     {
