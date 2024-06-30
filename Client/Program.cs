@@ -9,6 +9,7 @@
 
 using Blazored.LocalStorage;
 using BQuery;
+using Hl7.Fhir.FhirPath;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
@@ -36,5 +37,8 @@ builder.Services.AddScoped<IDiscoveryService, DiscoveryService>();
 builder.Services.AddScoped<IAccessService, AccessService>();
 builder.Services.AddScoped<IFhirService, FhirService>();
 builder.Services.AddScoped<IInfrastructure, Infrastructure>();
+
+// Add this so that the resolve() extension will be available when including in FhirPath
+Hl7.FhirPath.FhirPathCompiler.DefaultSymbolTable.AddFhirExtensions();
 
 await builder.Build().UseBQuery().RunAsync();

@@ -131,7 +131,7 @@
                                             </MudCardContent>
                                         </MudCard>
                                     </MudItem>
-                                    <MudItem xs="12">
+                                    <MudItem sm="12" md="6">
                                         <MudCard>
                                             <MudCardHeader>
                                                 <CardHeaderContent>
@@ -152,7 +152,7 @@
                                         </MudCard>
 
                                     </MudItem>
-                                    <MudItem xs="12">
+                                    <MudItem sm="12" md="6">
                                         <MudCard>
                                             <MudCardHeader>
                                                 <CardHeaderContent>
@@ -189,7 +189,7 @@
                                         <MudButton Class="mt-3"
                                                    Color="Color.Primary"
                                                    ButtonType="ButtonType.Button"
-                                                   Variant="Variant.Text"
+                                                   Variant="Variant.Filled"
                                                    OnClick="SearchGet">Search</MudButton>
                                     </MudCardActions>
                                 </MudCard>
@@ -205,21 +205,19 @@
                                         <MudButton Class="mt-3"
                                                    Color="Color.Primary"
                                                    ButtonType="ButtonType.Button"
-                                                   Variant="Variant.Text"
+                                                   Variant="Variant.Filled"
                                                    OnClick="SearchPost">Search</MudButton>
                                     </MudCardActions>
                                 </MudCard>
+                                
                             </MudTabPanel>
                         </MudTabs>
-                        
-                        
                     </MudTabPanel>
                     <MudTabPanel Text="Get">
                         Get
                     </MudTabPanel>
                 </MudTabs>
             </MudItem>
-            
             <MudItem lg="12" xl="6">
                 <MudCard Elevation="3" Style="margin-top: 10px">
                     <MudCardContent>
@@ -232,29 +230,29 @@
                         <MudTabs>
                             <MudTabPanel Text="Results">
                                 <MudExpansionPanels>
-                                    @if (_fhirResults.Entries != null)
-                                    {
-                                        @foreach (var entry in _fhirResults.Entries)
-                                        {
-                                            <MudExpansionPanel Text="@($"{entry.Resource.TypeName}/{entry.Resource.Id}")" Dense="true">
-                                                <pre>@_fhirJsonSerializer.SerializeToString(entry)</pre>
-                                            </MudExpansionPanel>
-                                        }
-                                    }
+                                    @* @if (_fhirResults.Entries != null) *@
+                                    @* { *@
+                                    @*     @foreach (var entry in _fhirResults.Entries) *@
+                                    @*     { *@
+                                    @*         <MudExpansionPanel Text="@($"{entry.Resource.TypeName}/{entry.Resource.Id}")" Dense="true"> *@
+                                    @*             <pre>@_fhirJsonSerializer.SerializeToString(entry)</pre> *@
+                                    @*         </MudExpansionPanel> *@
+                                    @*     } *@
+                                    @* } *@
                                 
                                     
-                                        <MudTreeView Items="@_fhirTreeViewStore" Hover="true" Width="100%">
+                                        <MudTreeView Items="@_fhirResults.TreeViewStore" Hover="true" Width="100%" >
                                         <ItemTemplate Context="item">
-                                            <MudTreeViewItem Items="@item.TreeItems" Icon="@item.Icon">
+                                            <MudTreeViewItem Items="@item.TreeItems" Icon="@item.Icon" Expanded="true">
                                                 <BodyContent>
                                                     <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                                             @if (item.Link == null)
                                                             {
-                                                                <MudText Style="justify-self: start;">@item.Name</MudText>
+                                                                <MudText Style="justify-self: start;">@item.Name (@item.Id)</MudText>
                                                             }
                                                             else
                                                             {
-                                                                <MudLink Style="justify-self: start;" Href="@($"/udapDiscovery?BaseUrl={item.Link}")" Target="_blank">@item.Name</MudLink>
+                                                                <MudLink Style="justify-self: start;" Href="@($"/udapDiscovery?BaseUrl={item.Link}")" Target="_blank">@item.Name ({@item.Link})</MudLink>
                                                             }
                                                         
                                                     </div>
@@ -284,9 +282,6 @@
        
     </ChildContent>
     <ErrorContent Context="ex">
-        @{
-            Console.Write(ex.Message);
-        }
         <pre class="blazor-error-boundary">
             @ex.Message
       </pre>
