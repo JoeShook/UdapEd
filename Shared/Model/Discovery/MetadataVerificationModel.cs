@@ -15,5 +15,8 @@ public class MetadataVerificationModel
 {
     public UdapMetadata? UdapServerMetaData { get; set; }
 
+    /// <summary>
+    /// Information about why the metadata is not trusted.
+    /// </summary>
     public List<string> Notifications { get; set; } = new List<string>();
 }

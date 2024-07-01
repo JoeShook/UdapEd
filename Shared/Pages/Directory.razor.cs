@@ -20,11 +20,14 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using MudBlazor;
+using Udap.Model;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
+using UdapEd.Shared.Model.Discovery;
 using UdapEd.Shared.Search;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Shared;
+using static MudBlazor.CategoryTypes;
 using T = System.Threading.Tasks;
 
 namespace UdapEd.Shared.Pages;
@@ -35,6 +38,7 @@ public partial class Directory
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
     [Inject] private IJSRuntime Js { get; set; } = null!;
     [Inject] private IFhirService FhirService { get; set; } = null!;
+    [Inject] IDiscoveryService MetadataService { get; set; } = null!;
 
     private ErrorBoundary? _errorBoundary;
     private readonly FhirSearch _fhirSearch = new(){BaseUrl = "https://national-directory.fast.hl7.org/fhir"};
@@ -240,7 +244,12 @@ private readonly List<string> _supportedResources = new List<string>()
                     var domainResource = referenceContext.ToPoco<DomainResource>();
                     var nameMaybe = domainResource.NamedChildren.FirstOrDefault(nc => nc.ElementName == "name");
                     var resource = new FhirJsonParser().Parse(referenceContext) as DomainResource;
-                    var orgEntry = new FhirHierarchyEntries() { Name = nameMaybe.Value?.ToString() ?? resource?.Id ?? "Unknown", Id = resource?.Id ?? "Unknown" };
+                    var orgEntry = new FhirHierarchyEntries()
+                    {
+                        Name = nameMaybe.Value?.ToString() ?? resource?.Id ?? "Unknown", Id = resource?.Id ?? "Unknown",
+                        IconColor = Color.Primary,
+                        Icon = Icons.Material.TwoTone.List
+                    };
                     _fhirResults.TreeViewStore.Add(orgEntry);
                 }
                 
@@ -265,7 +274,60 @@ private readonly List<string> _supportedResources = new List<string>()
                         foreach (var endpoint in endpoints)
                         {
                             var epResource = new FhirJsonParser().Parse<Endpoint>(endpoint);
-                            orgEntry.TreeItems.Add(new FhirHierarchyEntries() { Name = epResource.Name, Link = epResource.Address });
+
+                            var dynamicEndpointTypes = epResource.ToTypedElement().Select(
+                                $"extension.where($this.url in 'http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-dynamicRegistration').descendants().select($this.descendants().coding.code)");
+
+                            // var joe = epResource.Extension
+                            //     .Where(e => e.Url ==
+                            //                 "http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-dynamicRegistration")
+                            //     .SelectMany(e => e.Children)
+                            //     .SelectMany(e => e.Children)
+                            //     .SelectMany(e => e.Children)
+                            //     .SelectMany(e => e.NamedChildren.Where(e => e.ElementName == "code")).Select(e => e.Value);
+
+                            foreach (var dynamicEndpointType in dynamicEndpointTypes)
+                            {
+                                if (dynamicEndpointType.Value?.ToString() == "udap")
+                                {
+                                    var results =
+                                        await MetadataService.GetUdapMetadataVerificationModel(
+                                            $"{epResource.Address}", null, default);
+                                    
+                                    orgEntry.TreeItems.Add(new FhirHierarchyEntries()
+                                    {
+                                        Id = epResource.Id,
+                                        Name = epResource.Name,
+                                        Link = epResource.Address,
+                                        Type = dynamicEndpointType.Value?.ToString(),
+                                        UdapMetadata = results,
+                                        ErrorNotifications = results.Notifications,
+                                        IconColor = results.Notifications.Any() ? Color.Error : Color.Success,
+                                        Icon = Icons.Material.TwoTone.DynamicForm
+                                    });
+                                }
+
+                                if (dynamicEndpointType.Value?.ToString() == "smart")
+                                {
+                                    Console.WriteLine($"{epResource.Address}/.well-known/smart-configuration");
+
+                                    var results =
+                                        await MetadataService.GetSmartMetadata(
+                                            $"{epResource.Address}/.well-known/smart-configuration", default);
+
+                                    orgEntry.TreeItems.Add(new FhirHierarchyEntries()
+                                    {
+                                        Id = epResource.Id,
+                                        Name = epResource.Name,
+                                        Link = epResource.Address,
+                                        Type = dynamicEndpointType.Value?.ToString(),
+                                        Metadata = results.AsJson(),
+                                        IconColor = results == null ? Color.Error : Color.Success,
+                                        Icon = Icons.Material.TwoTone.SmartDisplay
+                                    });
+                                }
+
+                            }
                         }
                     }
                 }
@@ -284,6 +346,13 @@ private readonly List<string> _supportedResources = new List<string>()
         }
     }
 
+    private void DynamicallyRegister(FhirHierarchyEntries item)
+    {
+        AppState.SetProperty(this, nameof(AppState.MetadataVerificationModel), item.UdapMetadata);
+        AppState.SetProperty(this, nameof(AppState.BaseUrl), item.Link);
+        Js.InvokeVoidAsync("open", ($"/udapRegistration?BaseUrl={item.Link}"), "_blank");
+    }
+
     private FhirHierarchyEntries _fhirHierarchyEntries;
 
     record FhirHierarchyEntries
@@ -292,10 +361,16 @@ private readonly List<string> _supportedResources = new List<string>()
 
         public string Id;
         public string Name;
-        public string Type;
+        public string? Type;
         public string? Link;
 
-        public string Icon { get; set; } = Icons.Custom.FileFormats.FileDocument;
+        public string Icon { get; set; }
+        public Color IconColor { get; set; } = Color.Warning;
+
+        public string? Metadata { get; set; }
+
+        public List<string>? ErrorNotifications { get; set; } = null;
+        public MetadataVerificationModel? UdapMetadata { get; set; } = null;
     }
 
 
@@ -351,4 +426,6 @@ private readonly List<string> _supportedResources = new List<string>()
         }
 
     }
+
+    
 }

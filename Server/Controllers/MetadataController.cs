@@ -8,6 +8,7 @@
 #endregion
 
 using System;
+using System.Net.Http.Json;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using Hl7.Fhir.Model;
@@ -22,6 +23,7 @@ using Udap.Common.Certificates;
 using Udap.Common.Extensions;
 using Udap.Common.Models;
 using Udap.Model;
+using Udap.Smart.Model;
 using Udap.Util.Extensions;
 using UdapEd.Server.Extensions;
 using UdapEd.Shared;
@@ -112,6 +114,21 @@ public class MetadataController : Controller
         {
             _logger.LogError(ex, "Failed loading metadata from {metadataUrl}", metadataUrl);
             return BadRequest();
+        }
+    }
+
+    [HttpGet("Smart")]
+    public async Task<IActionResult> GetSmartMetadata([FromQuery] string metadataUrl)
+    {
+        try
+        {
+            var httpClient = new HttpClient();
+            return Ok(await httpClient.GetFromJsonAsync<SmartMetadata>(metadataUrl));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed loading metadata from {metadataUrl}", metadataUrl);
+            throw;
         }
     }
 

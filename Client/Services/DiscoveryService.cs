@@ -29,7 +29,14 @@ public class DiscoveryService : IDiscoveryService
         _httpClient = httpClient;
         _logger = logger;
     }
-    
+
+    /// <summary>
+    /// Get UDAP metadata. Included is a list of <see cref="MetadataVerificationModel.Notifications"/> indicating any reason for failed trust.
+    /// </summary>
+    /// <param name="metadataUrl"></param>
+    /// <param name="community"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
     public async Task<MetadataVerificationModel?> GetUdapMetadataVerificationModel(string metadataUrl, string? community, CancellationToken token)
     {
         try
@@ -86,7 +93,7 @@ public class DiscoveryService : IDiscoveryService
 
     public async Task<SmartMetadata?> GetSmartMetadata(string metadataUrl, CancellationToken token)
     {
-        return await _httpClient.GetFromJsonAsync<SmartMetadata>(metadataUrl, token);
+        return await _httpClient.GetFromJsonAsync<SmartMetadata>($"Metadata/Smart/?metadataUrl={metadataUrl}", token);
     }
 
     public async Task<CertificateStatusViewModel?> UploadAnchorCertificate(string certBytes)

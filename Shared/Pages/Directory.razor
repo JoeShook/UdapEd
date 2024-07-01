@@ -218,7 +218,7 @@
                     </MudTabPanel>
                 </MudTabs>
             </MudItem>
-            <MudItem lg="12" xl="6">
+            <MudItem sm="12" lg="12" xl="6">
                 <MudCard Elevation="3" Style="margin-top: 10px">
                     <MudCardContent>
                         @if (_outComeMessage != null)
@@ -241,26 +241,83 @@
                                     @* } *@
                                 
                                     
-                                        <MudTreeView Items="@_fhirResults.TreeViewStore" Hover="true" Width="100%" >
+                                    <MudTreeView Items="@_fhirResults.TreeViewStore" Hover="true" Width="100%" >
                                         <ItemTemplate Context="item">
-                                            <MudTreeViewItem Items="@item.TreeItems" Icon="@item.Icon" Expanded="true">
+                                            <MudTreeViewItem Items="@item.TreeItems"  Icon="@item.Icon" IconColor="@item.IconColor" Expanded="true">
                                                 <BodyContent>
                                                     <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
-                                                            @if (item.Link == null)
-                                                            {
-                                                                <MudText Style="justify-self: start;">@item.Name (@item.Id)</MudText>
-                                                            }
-                                                            else
-                                                            {
-                                                                <MudLink Style="justify-self: start;" Href="@($"/udapDiscovery?BaseUrl={item.Link}")" Target="_blank">@item.Name ({@item.Link})</MudLink>
-                                                            }
-                                                        
+                                                        @if (item.Link == null)
+                                                        {
+                                                            <MudText Style="justify-self: start;">@($"{item.Name} ({_fhirSearch.ResourceName}/{item.Id})")</MudText>
+                                                        }
+                                                        else
+                                                        {
+                                                            <MudStack>
+                                                                        
+                                                                @switch (item.Type)
+                                                                {
+                                                                    case "udap":
+                                                                                
+                                                                                    
+                                                                        <Mudtext><b>UDAP: </b>@($" {item.Name} (Endpoint/{item.Id})")</Mudtext>
+
+                                                                        <MudLink Style="justify-self: start;"
+                                                                                 Href="@($"{item.Link}/.well-known/udap")" Target="_blank">
+                                                                            View Metadata
+                                                                                        
+                                                                        </MudLink>
+
+                                                                        @if (item.ErrorNotifications != null && item.ErrorNotifications.Any())
+                                                                        {
+                                                                                   
+                                                                            <MudAlert Severity="Severity.Error">
+                                                                                @foreach (string note in item.ErrorNotifications)
+                                                                                {
+                                                                                    <li>@note</li>
+                                                                                }
+                                                                            </MudAlert>
+                                                                                   
+                                                                        }
+                                                                            
+                                                                        @if (@item.ErrorNotifications != null && @item.ErrorNotifications.Any())
+                                                                        {
+                                                                            <MudLink Class="mt-3" Style="justify-self: start;"
+                                                                                     Color="Color.Primary"
+                                                                                     ButtonType="ButtonType.Button"
+                                                                                     Variant="Variant.Filled"
+                                                                                     Href="@($"/udapDiscovery?BaseUrl={item.Link}")" Target="_blank">Trouble Shoot</MudLink>
+                                                                                        
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <MudLink Class="mt-3" Style="justify-self: start;"
+                                                                                     Color="Color.Primary"
+                                                                                     ButtonType="ButtonType.Button"
+                                                                                     Variant="Variant.Filled"
+                                                                                     OnClick="() => DynamicallyRegister(item)">Dynamically Register</MudLink>
+                                                                                        
+                                                                        }
+                                                                                
+                                                                        break;
+
+                                                                    case "smart":
+                                                                        <Mudtext><b>SMART:</b> @($" {item.Name} (Endpoint/{item.Id})")</Mudtext>
+                                                                        <MudLink Style="justify-self: start;"
+                                                                                 Href="@($"{item.Link}/.well-known/smart-configuration")" Target="_blank">
+                                                                            View Metadata
+                                                                            <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew"/>
+                                                                        </MudLink>
+                                                                                
+                                                                        break;
+                                                                }
+                                                                    
+                                                            </MudStack>
+                                                        }
                                                     </div>
                                                 </BodyContent>
                                             </MudTreeViewItem>
                                         </ItemTemplate>
                                     </MudTreeView>
-
                                 </MudExpansionPanels>
                             </MudTabPanel>
                             <MudTabPanel Text="FHIR">
