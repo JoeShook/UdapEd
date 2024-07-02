@@ -244,8 +244,8 @@
                                         <ItemTemplate Context="item">
                                             <MudTreeViewItem Items="@item.TreeItems"  Icon="@item.Icon" IconColor="@item.IconColor" Expanded="true">
                                                 <BodyContent>
-                                                    @* <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%"> *@
-                                                    <MudStack>
+                                                    
+                                                    <MudStack Wrap="Wrap.Wrap">
                                                     
                                                         @if (item.Link == null)
                                                         {
@@ -259,7 +259,7 @@
                                                                 case "udap":
                                                                                 
                                                                                     
-                                                                    <Mudtext><b>UDAP: </b>@($" {item.Name} (Endpoint/{item.Id})")</Mudtext>
+                                                                    <MudText Typo="Typo.h6" Color="Color.Primary" ><b>UDAP: </b>@($" {item.Name} (Endpoint/{item.Id})")</MudText>
 
                                                                     <MudLink Style="justify-self: start;"
                                                                              Href="@($"{item.Link}/.well-known/udap")" Target="_blank">
@@ -301,7 +301,7 @@
                                                                     break;
 
                                                                 case "smart":
-                                                                    <Mudtext><b>SMART:</b> @($" {item.Name} (Endpoint/{item.Id})")</Mudtext>
+                                                                    <MudText Typo="Typo.h6" Color="Color.Primary" ><b>SMART:</b> @($" {item.Name} (Endpoint/{item.Id})")</MudText>
                                                                     <MudLink Style="justify-self: start;"
                                                                              Href="@($"{item.Link}/.well-known/smart-configuration")" Target="_blank">
                                                                         View Metadata
@@ -312,20 +312,14 @@
 
                                                                 default:
 
-                                                                    <Mudtext><b>@item.Type:</b> @($" {item.Name} (Endpoint/{item.Id})")</Mudtext>
+                                                                        <MudText Typo="Typo.h6" Color="Color.Primary"><b>@item.Type:</b> @($" {item.Name} (Endpoint/{item.Id})")</MudText>
                                                                         
                                                                     break;
 
                                                             }
-                                                               
-                                                            
                                                         }
-                                                        
-
+                                                        <MudSpacer/>
                                                     </MudStack>
-
-                                                    @* </div> *@
-
                                                 </BodyContent>
                                                
                                             </MudTreeViewItem>

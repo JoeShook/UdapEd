@@ -37,7 +37,7 @@ public interface IRegisterService
     Task<ResultModel<RegistrationDocument>?> Register(RegistrationRequest registrationRequest);
     Task<CertificateStatusViewModel?> ValidateCertificate(string password);
     Task<CertificateStatusViewModel?> ClientCertificateLoadStatus();
-    Task<CertificateStatusViewModel?> LoadTestCertificate();
+    Task<CertificateStatusViewModel?> LoadTestCertificate(string certificateName);
 
     /// <summary>
     /// This service currently gets all scopes from Metadata published supported scopes.

@@ -439,7 +439,7 @@ internal class RegisterService : IRegisterService
         }
     }
 
-    public async Task<CertificateStatusViewModel?> LoadTestCertificate()
+    public async Task<CertificateStatusViewModel?> LoadTestCertificate(string certificateName)
     {
         var result = new CertificateStatusViewModel
         {
@@ -448,7 +448,7 @@ internal class RegisterService : IRegisterService
 
         try
         {
-            await using var fileStream = await FileSystem.Current.OpenAppPackageFileAsync("fhirlabs.net.client.pfx");
+            await using var fileStream = await FileSystem.Current.OpenAppPackageFileAsync(certificateName);
             var certBytes = new byte[fileStream.Length];
 
             await fileStream.ReadAsync(certBytes, 0, certBytes.Length);

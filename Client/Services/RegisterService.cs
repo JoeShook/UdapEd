@@ -141,9 +141,9 @@ public class RegisterService : IRegisterService
         return response;
     }
 
-    public async Task<CertificateStatusViewModel?> LoadTestCertificate()
+    public async Task<CertificateStatusViewModel?> LoadTestCertificate(string certificateName)
     {
-        var response = await _httpClient.PutAsJsonAsync("Register/UploadTestClientCertificate", "fhirlabs.net.client.pfx");
+        var response = await _httpClient.PutAsJsonAsync("Register/UploadTestClientCertificate", certificateName);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -152,6 +152,7 @@ public class RegisterService : IRegisterService
 
         return await response.Content.ReadFromJsonAsync<CertificateStatusViewModel>();
     }
+    
 
     /// <summary>
     /// This service currently gets all scopes from Metadata published supported scopes.

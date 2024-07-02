@@ -1,4 +1,4 @@
-﻿#region (c) 2023 Joseph Shook. All rights reserved.
+﻿#region (c) 2024 Joseph Shook. All rights reserved.
 // /*
 //  Authors:
 //     Joseph Shook   Joseph.Shook@Surescripts.com
@@ -8,13 +8,10 @@
 #endregion
 
 using System.Net.Http.Headers;
-using System.Runtime.ConstrainedExecution;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
-using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -27,7 +24,6 @@ using UdapEd.Server.Extensions;
 using UdapEd.Shared;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Registration;
-using static System.Net.WebRequestMethods;
 using static Udap.Model.UdapConstants;
 
 namespace UdapEd.Server.Controllers;
@@ -38,12 +34,14 @@ public class RegisterController : Controller
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<RegisterController> _logger;
-    
+    private readonly IConfiguration _configuration;
 
-    public RegisterController(HttpClient httpClient, ILogger<RegisterController> logger)
+
+    public RegisterController(HttpClient httpClient, ILogger<RegisterController> logger, IConfiguration configuration)
     {
         _httpClient = httpClient;
         _logger = logger;
+        _configuration = configuration;
     }
 
     [HttpPut("UploadTestClientCertificate")]
@@ -56,7 +54,17 @@ public class RegisterController : Controller
 
         try
         {
-            var certificate = new X509Certificate2(testClientCert, "udap-test", X509KeyStorageFlags.Exportable);
+            X509Certificate2 certificate;
+
+            try
+            {
+                certificate = new X509Certificate2(testClientCert, "udap-test", X509KeyStorageFlags.Exportable);
+            }
+            catch
+            {
+                certificate = new X509Certificate2(testClientCert, _configuration["sampleKeyC"], X509KeyStorageFlags.Exportable);
+            }
+
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             HttpContext.Session.SetString(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
             result.DistinguishedName = certificate.SubjectName.Name;
@@ -69,6 +77,8 @@ public class RegisterController : Controller
                 .ToList();
             
             result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(certificate);
+
+            result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
         }
         catch (Exception ex)
         {

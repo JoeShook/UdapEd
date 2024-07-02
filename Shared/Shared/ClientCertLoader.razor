@@ -9,7 +9,7 @@
         Size="Size.Small"
         Color="@CertLoadedColor"
         Icon="@AppState.CertificateIcon"
-        Label="Client Cert"
+        Label="Upload a Client Certificate"
         Title="Upload Client Certificate"
         IconSize="Size.Small"
         for="fileInput"/>
@@ -19,18 +19,29 @@
         Size="Size.Small"
         Color="@CertLoadedColor"
         Icon="@AppState.CertificateIcon"
-        Label="Test Cert"
+        Label="FhirLabs Community Test Certificate"
         Title="Use Test Client Certificate"
         IconSize="Size.Small"
-        OnClick="@LoadTestCertificate"/>
+        OnClick="@LoadFhirLabsTestCertificate"/>
+
+<MudFab HtmlTag="label"
+        Class="ma-2"
+        Size="Size.Small"
+        Color="@CertLoadedColor"
+        Icon="@AppState.CertificateIcon"
+        Label="EMR Direct Default Certificate"
+        Title="Use Test Client Certificate"
+        IconSize="Size.Small"
+        OnClick="@LoadEmrTestCertificate" />
 
 
 @if (!string.IsNullOrEmpty(AppState.ClientCertificateInfo?.DistinguishedName) ||
      !string.IsNullOrEmpty(AppState.ClientCertificateInfo?.Thumbprint))
 {   
-        <MudText Typo="Typo.body2">@AppState.ClientCertificateInfo?.DistinguishedName</MudText>
-        <MudText  Typo="Typo.caption"> Thumbprint (sha1) </MudText>
+        <MudText Typo="Typo.body2"><b>Subject:</b>@AppState.ClientCertificateInfo?.DistinguishedName</MudText>
+    <MudText Typo="Typo.caption"> <b>Thumbprint (sha1)</b> </MudText>
         <MudText  Typo="Typo.body2">@AppState.ClientCertificateInfo?.Thumbprint </MudText>
+        <MudText Typo="Typo.body2"><b>Issuer:</b> @AppState.ClientCertificateInfo?.Issuer </MudText>
        
 
     @if (AppState.ClientCertificateInfo.CertLoaded == CertLoadedEnum.Expired)
@@ -139,9 +150,17 @@
         await OnCertificateLoaded.InvokeAsync();
     }
 
-    private async Task LoadTestCertificate()
+    private async Task LoadFhirLabsTestCertificate()
     {
-        var certViewModel = await RegisterService.LoadTestCertificate();
+        var certViewModel = await RegisterService.LoadTestCertificate("fhirlabs.net.client.pfx");
+        await SetCertLoadedColor(certViewModel?.CertLoaded);
+        await AppState.SetPropertyAsync(this, nameof(AppState.ClientCertificateInfo), certViewModel);
+        await OnCertificateLoaded.InvokeAsync();
+    }
+
+    private async Task LoadEmrTestCertificate()
+    {
+        var certViewModel = await RegisterService.LoadTestCertificate("udap-sandbox-surescripts-2.p12");
         await SetCertLoadedColor(certViewModel?.CertLoaded);
         await AppState.SetPropertyAsync(this, nameof(AppState.ClientCertificateInfo), certViewModel);
         await OnCertificateLoaded.InvokeAsync();

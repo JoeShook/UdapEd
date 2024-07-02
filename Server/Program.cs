@@ -17,7 +17,6 @@ using Udap.Client.Authentication;
 using Udap.Client.Client;
 using Udap.Client.Configuration;
 using Udap.Common.Certificates;
-
 using UdapEd.Server.Authentication;
 using UdapEd.Server.Extensions;
 using UdapEd.Server.Rest;
@@ -39,6 +38,9 @@ builder.Host.UseSerilog((ctx, lc) => lc
         outputTemplate:
         "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}",
         theme: AnsiConsoleTheme.Code));
+
+// Mount Cloud Secrets
+builder.Configuration.AddJsonFile("/secret/udapEdAppsettings", true, false);
 
 builder.Services.AddSession(options =>
 {
