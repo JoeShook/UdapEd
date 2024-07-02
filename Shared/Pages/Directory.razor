@@ -17,7 +17,7 @@
                                 <MudTextField @bind-Value="_fhirSearch.BaseUrl" Label="Directory Base Url" Variant="Variant.Outlined" />
                                 <MudGrid>
                                     <MudItem xs="12">
-                                        <MudSelect Label="Resource" @bind-Value="_fhirSearch.ResourceName" Variant="Variant.Outlined" >
+                                        <MudSelect Label="Resource" @bind-Value="_fhirSearch.ResourceName" Variant="Variant.Outlined" @bind-Value:after="@(() => { _fhirSearch.ResetParameters(); BuildSearch(); })">
                                             @foreach (var resource in _supportedResources)
                                             {
                                                 <MudSelectItem Value="@resource">@resource</MudSelectItem>
@@ -77,7 +77,7 @@
                                                                     {
                                                                         foreach (var paramDef in paramDefs)
                                                                         {
-                                                                            <MudSelectItem Value="@paramDef.Code">@paramDef.Name</MudSelectItem>
+                                                                            <MudSelectItem Value="@paramDef.Code">@paramDef.Code</MudSelectItem>
                                                                         }
                                                                     }
                                                                 </MudSelect>
@@ -121,8 +121,7 @@
                                                                                Icon="@Icons.Material.TwoTone.DeleteForever"
                                                                                Label="Delete"
                                                                                class="ma-2"
-                                                                               OnClick="@(() => DeleteParam(context))"
-                                                                               Disabled="@_searchParmIsInEditMode"/>
+                                                                               OnClick="@(() => DeleteParam(context))"/>
                                                             
                                                             </MudTd>
                                                         </RowTemplate>
@@ -141,12 +140,12 @@
                                             <MudCardContent>
                                                 @foreach (var include in IncludesLookup.Map.Where(m => m.Key == _fhirSearch.ResourceName).SelectMany(m => m.Value))
                                                 {
-                                                    if (!_includeCheckBoxes.ContainsKey(include))
+                                                    if (!_fhirSearch.Includes.ContainsKey(include))
                                                     {
-                                                        _includeCheckBoxes.Add(include, false);
+                                                        _fhirSearch.Includes.Add(include, false);
                                                     }
 
-                                                    <MudCheckBox @bind-Value="@_includeCheckBoxes[include]" Label="@include" @bind-Value:after="BuildSearch"></MudCheckBox>
+                                                    <MudCheckBox @bind-Value="@_fhirSearch.Includes[include]" Label="@include" @bind-Value:after="BuildSearch"></MudCheckBox>
                                                 }
                                             </MudCardContent>
                                         </MudCard>
@@ -162,12 +161,12 @@
                                             <MudCardContent>
                                                 @foreach (var revInclude in IncludesLookup.Reverse.Where(m => m.Key == _fhirSearch.ResourceName).SelectMany(m => m.Value))
                                                 {
-                                                    if (!_revIncludeCheckBoxes.ContainsKey(revInclude))
+                                                    if (!_fhirSearch.RevIncludes.ContainsKey(revInclude))
                                                     {
-                                                        _revIncludeCheckBoxes.Add(revInclude, false);
+                                                        _fhirSearch.RevIncludes.Add(revInclude, false);
                                                     }
 
-                                                    <MudCheckBox @bind-Value="@_revIncludeCheckBoxes[revInclude]" Label="@revInclude" @bind-Value:after="BuildSearch"></MudCheckBox>
+                                                    <MudCheckBox @bind-Value="@_fhirSearch.RevIncludes[revInclude]" Label="@revInclude" @bind-Value:after="BuildSearch"></MudCheckBox>
                                                 }
                                             </MudCardContent>
                                         </MudCard>

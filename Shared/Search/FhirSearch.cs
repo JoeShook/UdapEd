@@ -13,12 +13,19 @@ public class FhirSearch
 
     public string SortOrder { get; set; } = string.Empty;
 
-    public List<string>? Includes { get; set; }
-
     public string? Summary { get; set; }
 
     public int ResultCountPerPage { get; set; } = 10;
+    
+    public Dictionary<string, bool> Includes = new Dictionary<string, bool>();
+    public Dictionary<string, bool> RevIncludes = new Dictionary<string, bool>();
 
+    public void ResetParameters()
+    {
+        SearchParams.Clear();
+        Includes.Clear();
+        RevIncludes.Clear();
+    }
 }
 
 

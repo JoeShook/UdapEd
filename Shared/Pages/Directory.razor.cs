@@ -42,7 +42,6 @@ public partial class Directory
 
     private ErrorBoundary? _errorBoundary;
     private readonly FhirSearch _fhirSearch = new(){BaseUrl = "https://national-directory.fast.hl7.org/fhir"};
-    private bool _searchParmIsInEditMode;
     private string _searchString = string.Empty;
     private string _postSearchString = string.Empty;
     private List<string>? _postSearchParams;
@@ -50,8 +49,6 @@ public partial class Directory
     private FhirResults _fhirResults = new FhirResults();
     private string? _outComeMessage;
     private List<Hl7.Fhir.Model.Bundle.EntryComponent?>? _entries;
-    private Dictionary<string, bool> _includeCheckBoxes = new Dictionary<string, bool>();
-    private Dictionary<string, bool> _revIncludeCheckBoxes = new Dictionary<string, bool>();
     private FhirJsonSerializer _fhirJsonSerializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
 /// <summary>
 /// Hl7.Fhir.Model.ModelInfo.SupportedResources is a source of truth for Resource names
@@ -117,7 +114,6 @@ private readonly List<string> _supportedResources = new List<string>()
 
     private void DeleteParam(FhirSearchParam fhirSearchParam)
     {
-        _searchParmIsInEditMode = false;
         _fhirSearch.SearchParams?.Remove(fhirSearchParam);
         BuildSearch();
         StateHasChanged();
@@ -141,14 +137,14 @@ private readonly List<string> _supportedResources = new List<string>()
            
         }
 
-        foreach (var cb in _includeCheckBoxes.Where(i => i.Value))
+        foreach (var include in _fhirSearch.Includes.Where(i => i.Value))
         {
-            queryParameters.Add($"_include={cb.Key}");
+            queryParameters.Add($"_include={include.Key}");
         }
 
-        foreach (var cb in _revIncludeCheckBoxes.Where(i => i.Value))
+        foreach (var revInclude in _fhirSearch.RevIncludes.Where(i => i.Value))
         {
-            queryParameters.Add($"_revinclude={cb.Key}");
+            queryParameters.Add($"_revinclude={revInclude.Key}");
         }
 
         _searchString = string.Join('&', queryParameters);

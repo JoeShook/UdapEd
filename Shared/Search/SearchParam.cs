@@ -27,6 +27,18 @@ public static class SearchParamLookup
         spDefinition = ModelInfo.SearchParameters.Where(sp => sp.Resource == "InsurancePlan" && !sp.Name.IsNullOrEmpty()).ToList();
         Map.Add(new ResourceToSearchParamMap("InsurancePlan", spDefinition.Select(sp => sp!).ToList()));
         spDefinition = ModelInfo.SearchParameters.Where(sp => sp.Resource == "Endpoint" && !sp.Name.IsNullOrEmpty()).ToList();
+     
+        
+        spDefinition.Add(new ModelInfo.SearchParamDefinition(){ Resource = "Endpoint", Name = "EndpointAccessControlMechanismSearchParameter", Code = "access-control-mechanism", Description = new Markdown(@"Select Endpoints that support the type of services indicated by a specific access-control-mechanism"), Type = SearchParamType.Token, Expression = "Endpoint.extension.where(url='http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-endpointAccessControlMechanism').value.ofType(CodeableConcept)", Url = "http://hl7.org/fhir/us/ndh/SearchParameter/endpoint-access-control-mechanism" });
+        spDefinition.Add(new ModelInfo.SearchParamDefinition() { Resource = "Endpoint", Name = "EndpointConnectionTypeVersionSearchParameter", Code = "connection-type-version", Description = new Markdown(@"Select Endpoints that support the type of services indicated by a specific connection-type-version"), Type = SearchParamType.Token, Expression = "Endpoint.extension.where(url='http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-endpoint-connection-type-version').value.ofType(CodeableConcept)", Url = "http://hl7.org/fhir/us/ndh/SearchParameter/endpoint-connection-type-version" });
+        spDefinition.Add(new ModelInfo.SearchParamDefinition() { Resource = "Endpoint", Name = "EndpointDynamicRegistrationTrustProfileSearchParameter", Code = "dynamic-registration-trust-profile", Description = new Markdown(@"Select Endpoints that support the type of services indicated by a specific dynamic-registration-trust-profile"), Type = SearchParamType.Token, Expression = "Endpoint.extension.where(url='http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-dynamicRegistration').extension.where(url='trustProfile').value.ofType(CodeableConcept)", Url = "http://hl7.org/fhir/us/ndh/SearchParameter/endpoint-dynamic-registration-trust-profile" });
+        spDefinition.Add(new ModelInfo.SearchParamDefinition() { Resource = "Endpoint", Name = "EndpointIheConnectionTypeSearchParameter", Code = "ihe-connection-type", Description = new Markdown(@"Select Endpoints that support the type of services indicated by a specific ihe-connection-type"), Type = SearchParamType.Token, Expression = "Endpoint.extension.where(url='http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-endpoint-ihe-specific-connection-type').value.ofType(CodeableConcept)", Url = "http://hl7.org/fhir/us/ndh/SearchParameter/endpoint-ihe-connection-type" });
+        spDefinition.Add(new ModelInfo.SearchParamDefinition() { Resource = "Endpoint", Name = "EndpointNonfhirUsecaseTypeSearchParameter", Code = "nonfhir-usecase-type", Description = new Markdown(@"Select Endpoints that support the type of services indicated by a specific nonfhir-usecase-type"), Type = SearchParamType.Token, Expression = "Endpoint.extension.where(url='http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-endpoint-non-fhir-usecase').extension.where(url='endpointUsecasetype').value.ofType(CodeableConcept)", Url = "http://hl7.org/fhir/us/ndh/SearchParameter/endpoint-nonfhir-usecase-type" });
+        spDefinition.Add(new ModelInfo.SearchParamDefinition() { Resource = "Endpoint", Name = "EndpointTrustFrameworkTypeSearchParameter", Code = "trust-framework-type", Description = new Markdown(@"Select Endpoints that support the type of services indicated by a specific trust-framework-type"), Type = SearchParamType.Token, Expression = "Endpoint.extension.where(url='http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-trustFramework').extension.where(url='trustFrameworkType').value.ofType(CodeableConcept)", Url = "http://hl7.org/fhir/us/ndh/SearchParameter/endpoint-trust-framework-type" });
+        spDefinition.Add(new ModelInfo.SearchParamDefinition() { Resource = "Endpoint", Name = "EndpointUsecaseTypeSearchParameter", Code = "usecase-type", Description = new Markdown(@"Select Endpoints that support the type of services indicated by a specific usecase-type"), Type = SearchParamType.Token, Expression = "Endpoint.extension.where(url='http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-endpoint-usecase').extension.where(url='endpointUsecasetype').value.ofType(CodeableConcept)", Url = "http://hl7.org/fhir/us/ndh/SearchParameter/endpoint-usecase-type" });
+        spDefinition.Add(new ModelInfo.SearchParamDefinition() { Resource = "Endpoint", Name = "EndpointVerificationStatusSearchParameter", Code = "verification-status", Description = new Markdown(@"Select Endpoints that support the type of services indicated by a specific verification-status"), Type = SearchParamType.Token, Expression = "Endpoint.extension.where(url='http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-verification-status').value.ofType(CodeableConcept)", Url = "http://hl7.org/fhir/us/ndh/SearchParameter/endpoint-verification-status" });
+
+
         Map.Add(new ResourceToSearchParamMap("Endpoint", spDefinition.Select(sp => sp!).ToList()));
         spDefinition = ModelInfo.SearchParameters.Where(sp => sp.Resource == "Location" && !sp.Name.IsNullOrEmpty()).ToList();
         Map.Add(new ResourceToSearchParamMap("Location", spDefinition.Select(sp => sp!).ToList()));
@@ -48,32 +60,3 @@ public class ResourceToSearchParamMap
     public List<ModelInfo.SearchParamDefinition>? ParamDefinitions { get; }
 
 }
-
-public static class IncludesLookup
-{
-    static IncludesLookup()
-    {
-        Map.Add("Organization", ModelInfo.SearchParameters.Where(sp => sp.Resource == "Organization" && !sp.Name.IsNullOrEmpty() && sp is { Target: not null, Expression: not null } && !sp.Expression.EndsWith("partOf")).Select(sp => sp.Expression!.Replace('.', ':')).ToList()!);
-        Map.Add("Practitioner", ModelInfo.SearchParameters.Where(sp => sp.Resource == "Practitioner" && !sp.Name.IsNullOrEmpty() && sp is { Target: not null, Expression: not null } && !sp.Expression.EndsWith("partOf")).Select(sp => sp.Expression!.Replace('.', ':')).ToList()!);
-        Map.Add("PractitionerRole", ModelInfo.SearchParameters.Where(sp => sp.Resource == "PractitionerRole" && !sp.Name.IsNullOrEmpty() && sp is { Target: not null, Expression: not null } && !sp.Expression.EndsWith("partOf")).Select(sp => sp.Expression!.Replace('.', ':')).ToList()!);
-        Map.Add("OrganizationAffiliation", ModelInfo.SearchParameters.Where(sp => sp.Resource == "OrganizationAffiliation" && !sp.Name.IsNullOrEmpty() && sp is { Target: not null, Expression: not null } && !sp.Expression.EndsWith("partOf")).Select(sp => sp.Expression!.Replace('.', ':')).ToList()!);
-        Map.Add("InsurancePlan", ModelInfo.SearchParameters.Where(sp => sp.Resource == "InsurancePlan" && !sp.Name.IsNullOrEmpty() && sp is { Target: not null, Expression: not null } && !sp.Expression.EndsWith("partOf")).Select(sp => sp.Expression!.Replace('.', ':')).ToList()!);
-        Map.Add("Endpoint", ModelInfo.SearchParameters.Where(sp => sp.Resource == "Endpoint" && !sp.Name.IsNullOrEmpty() && sp is { Target: not null, Expression: not null } && !sp.Expression.EndsWith("partOf")).Select(sp => sp.Expression!.Replace('.', ':')).ToList()!);
-        Map.Add("Location", ModelInfo.SearchParameters.Where(sp => sp.Resource == "Location" && !sp.Name.IsNullOrEmpty() && sp is { Target: not null, Expression: not null } && !sp.Expression.EndsWith("partOf")).Select(sp => sp.Expression!.Replace('.', ':')).ToList()!);
-
-        var reversedExpressions = Map.SelectMany(m => m.Value.Select(e =>
-        {
-            var parts = e.Split(":");
-            return new Tuple<string, string>(parts[^1].Substring(0, 1).ToUpper() + parts[^1].Substring(1), parts[^2].ToLower());
-        })).Where(t => Map.ContainsKey(t.Item1));
-
-        foreach (var group in reversedExpressions.GroupBy(re => re.Item2))
-        {
-            Reverse.Add(group.Key.Substring(0, 1).ToUpper() + group.Key.Substring(1), group.Select(g => g.Item1 + ":" + g.Item2).ToList());
-        }
-    }
-
-    public static Dictionary<string, List<string>> Map { get; set; } = new Dictionary<string, List<string>>();
-    public static Dictionary<string, List<string>> Reverse { get; set; } = new Dictionary<string, List<string>>();
-}
-
