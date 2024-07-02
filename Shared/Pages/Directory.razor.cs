@@ -298,9 +298,9 @@ private readonly List<string> _supportedResources = new List<string>()
         var treeStore = parentEntry?.TreeItems ?? _fhirResults.TreeViewStore;
         foreach (var endpoint in endpoints)
         {
-            var epResource = new FhirJsonParser().Parse<Endpoint>(endpoint);
+            var endpointResource = new FhirJsonParser().Parse<Endpoint>(endpoint);
 
-            var dynamicEndpointTypes = epResource.ToTypedElement().Select(
+            var dynamicEndpointTypes = endpointResource.ToTypedElement().Select(
                 $"extension.where($this.url in 'http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-dynamicRegistration').descendants().select($this.descendants().coding.code)");
 
 
@@ -310,13 +310,13 @@ private readonly List<string> _supportedResources = new List<string>()
                 {
                     var results =
                         await MetadataService.GetUdapMetadataVerificationModel(
-                            $"{epResource.Address}", null, default);
+                            $"{endpointResource.Address}", null, default);
 
                     treeStore.Add(new FhirHierarchyEntries()
                     {
-                        Id = epResource.Id,
-                        Name = epResource.Name,
-                        Link = epResource.Address,
+                        Id = endpointResource.Id,
+                        Name = endpointResource.Name,
+                        Link = endpointResource.Address,
                         Type = dynamicEndpointType.Value?.ToString(),
                         UdapMetadata = results,
                         ErrorNotifications = results.Notifications,
@@ -329,20 +329,35 @@ private readonly List<string> _supportedResources = new List<string>()
                 {
                     var results =
                         await MetadataService.GetSmartMetadata(
-                            $"{epResource.Address}/.well-known/smart-configuration", default);
+                            $"{endpointResource.Address}/.well-known/smart-configuration", default);
 
                     treeStore.Add(new FhirHierarchyEntries()
                     {
-                        Id = epResource.Id,
-                        Name = epResource.Name,
-                        Link = epResource.Address,
+                        Id = endpointResource.Id,
+                        Name = endpointResource.Name,
+                        Link = endpointResource.Address,
                         Type = dynamicEndpointType.Value?.ToString(),
                         Metadata = results.AsJson(),
                         IconColor = results == null ? Color.Error : Color.Success,
                         Icon = Icons.Material.TwoTone.SmartDisplay
                     });
                 }
+            }
 
+            var nondynamicEndpointTypes = endpointResource.ToTypedElement().Select(
+                $"extension.where($this.url != 'http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-dynamicRegistration').descendants().select($this.descendants().coding.code)");
+
+            foreach (var nonDynamicEndpointType in nondynamicEndpointTypes)
+            {
+                treeStore.Add(new FhirHierarchyEntries()
+                {
+                    Id = endpointResource.Id,
+                    Name = endpointResource.Name,
+                    Link = endpointResource.Address,
+                    Type = nonDynamicEndpointType.Value?.ToString(),
+                    IconColor = Color.Default,
+                    Icon = Icons.Material.TwoTone.Link
+                });
             }
         }
     }
