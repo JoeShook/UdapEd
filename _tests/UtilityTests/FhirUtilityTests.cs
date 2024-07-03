@@ -7,6 +7,7 @@ using Hl7.Fhir.Specification;
 using Hl7.Fhir.Specification.Source;
 using Hl7.Fhir.Specification.Terminology;
 using Xunit.Abstractions;
+using Xunit.Sdk;
 using T = System.Threading.Tasks;
 
 namespace UtilityTests;
@@ -66,6 +67,37 @@ public class FhirUtilityTests
         {
             _testOutputHelper.WriteLine($"{searchParamDefinition.Name}: {searchParamDefinition.Description}");
         }
+    }
+
+    [Fact(Skip = "")]
+    public async T.Task CapabilityStatement()
+    {
+        var capabilityStatement = await new FhirJsonParser().ParseAsync<CapabilityStatement>(await File.ReadAllTextAsync(@"C:\Users\Joseph.Shook\.fhir\packages\hl7.fhir.us.ndh#1.0.0-ballot\package\CapabilityStatement-national-directory-api-server.json"));
+
+        foreach (var resourceComponent in capabilityStatement.Rest.SelectMany(restComponent => restComponent.Resource))
+        {
+            _testOutputHelper.WriteLine(resourceComponent.Type);
+
+            _testOutputHelper.WriteLine("\tSearch Parameters");
+            foreach (var searchParam in resourceComponent.SearchParam)
+            {
+                _testOutputHelper.WriteLine($"\t\t{searchParam.Name} :: {searchParam.Documentation}");
+            }
+
+            _testOutputHelper.WriteLine("\t_includes");
+            foreach (var include in resourceComponent.SearchInclude)
+            {
+                _testOutputHelper.WriteLine($"\t\t{include} ");
+            }
+
+            _testOutputHelper.WriteLine("\t_revincludes");
+            foreach (var revInclude in resourceComponent.SearchRevInclude)
+            {
+                _testOutputHelper.WriteLine($"\t\t{revInclude} ");
+            }
+        }
+
+        _testOutputHelper.WriteLine(string.Empty);
 
     }
 }

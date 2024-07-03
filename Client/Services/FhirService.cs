@@ -356,7 +356,7 @@ public class FhirService : IFhirService
                     [
                         new OperationOutcome.IssueComponent
                         {
-                            Diagnostics = result + "Hello joe"
+                            Diagnostics = result
                         }
                     ]
                 };

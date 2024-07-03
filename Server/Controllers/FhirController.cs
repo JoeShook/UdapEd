@@ -211,7 +211,6 @@ public class FhirController : ControllerBase
     [HttpGet("ValueSet")]
     public async Task<IActionResult> GetValueSet([FromQuery] string location)
     {
-        Console.WriteLine("Hello Joe");
         try
         {
             //

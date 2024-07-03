@@ -71,7 +71,7 @@
 
 
                                                                     @{
-                                                                        var paramDefs = SearchParamLookup.Map.SingleOrDefault(m => m.Resource == _fhirSearch.ResourceName)?.ParamDefinitions;
+                                                                        var paramDefs = CapabilityLookup.SearchParamMap.SingleOrDefault(m => m.Resource == _fhirSearch.ResourceName)?.ParamDefinitions;
                                                                     }
                                                                     @if (paramDefs != null)
                                                                     {
@@ -131,14 +131,9 @@
                                         </MudCard>
                                     </MudItem>
                                     <MudItem sm="12" md="6">
-                                        <MudCard>
-                                            <MudCardHeader>
-                                                <CardHeaderContent>
-                                                    <MudText Typo="Typo.h6" Color="Color.Primary">Includes</MudText>
-                                                </CardHeaderContent>
-                                            </MudCardHeader>
-                                            <MudCardContent>
-                                                @foreach (var include in IncludesLookup.Map.Where(m => m.Key == _fhirSearch.ResourceName).SelectMany(m => m.Value))
+                                        <MudExpansionPanels>
+                                            <MudExpansionPanel Text="Includes" Typo="Typo.h6" Color="Color.Primary" IsInitiallyExpanded="false">
+                                                @foreach (var include in CapabilityLookup.IncludeMap.Where(m => m.Key == _fhirSearch.ResourceName).SelectMany(m => m.Value))
                                                 {
                                                     if (!_fhirSearch.Includes.ContainsKey(include))
                                                     {
@@ -147,19 +142,13 @@
 
                                                     <MudCheckBox @bind-Value="@_fhirSearch.Includes[include]" Label="@include" @bind-Value:after="BuildSearch"></MudCheckBox>
                                                 }
-                                            </MudCardContent>
-                                        </MudCard>
-
+                                            </MudExpansionPanel>
+                                        </MudExpansionPanels>
                                     </MudItem>
                                     <MudItem sm="12" md="6">
-                                        <MudCard>
-                                            <MudCardHeader>
-                                                <CardHeaderContent>
-                                                    <MudText Typo="Typo.h6" Color="Color.Primary">Reverse Includes</MudText>
-                                                </CardHeaderContent>
-                                            </MudCardHeader>
-                                            <MudCardContent>
-                                                @foreach (var revInclude in IncludesLookup.Reverse.Where(m => m.Key == _fhirSearch.ResourceName).SelectMany(m => m.Value))
+                                        <MudExpansionPanels >
+                                            <MudExpansionPanel Text="Reverse Includes" Typo="Typo.h6" Color="Color.Primary" IsInitiallyExpanded="false">
+                                                @foreach (var revInclude in CapabilityLookup.ReverseIncludeMap.Where(m => m.Key == _fhirSearch.ResourceName).SelectMany(m => m.Value))
                                                 {
                                                     if (!_fhirSearch.RevIncludes.ContainsKey(revInclude))
                                                     {
@@ -168,12 +157,11 @@
 
                                                     <MudCheckBox @bind-Value="@_fhirSearch.RevIncludes[revInclude]" Label="@revInclude" @bind-Value:after="BuildSearch"></MudCheckBox>
                                                 }
-                                            </MudCardContent>
-                                        </MudCard>
+                                            </MudExpansionPanel>
+                                        </MudExpansionPanels>
                                     </MudItem>
                                 </MudGrid>
-                                </MudCardContent>
-
+                            </MudCardContent>
 
                         </MudCard>
                         <MudTabs>
@@ -239,7 +227,8 @@
                                     @*     } *@
                                     @* } *@
                                 
-                                    
+                                    <MudText Typo="Typo.h5" Color="Color.Primary" Style="justify-self: start;">@_fhirSearch.ResourceName List</MudText>
+
                                     <MudTreeView Items="@_fhirResults.TreeViewStore" Hover="true" Width="100%" >
                                         <ItemTemplate Context="item">
                                             <MudTreeViewItem Items="@item.TreeItems"  Icon="@item.Icon" IconColor="@item.IconColor" Expanded="true">
@@ -249,7 +238,7 @@
                                                     
                                                         @if (item.Link == null)
                                                         {
-                                                            <MudText Style="justify-self: start;">@($"{item.Name} ({_fhirSearch.ResourceName}/{item.Id})")</MudText>
+                                                            <MudText Typo="Typo.h5" Color="Color.Primary" Style="justify-self: start;">@($"{item.Name} ({_fhirSearch.ResourceName}/{item.Id})")</MudText>
                                                         }
                                                         else
                                                         {
@@ -259,7 +248,7 @@
                                                                 case "udap":
                                                                                 
                                                                                     
-                                                                    <MudText Typo="Typo.h6" Color="Color.Primary" ><b>UDAP: </b>@($" {item.Name} (Endpoint/{item.Id})")</MudText>
+                                                                    <MudText Typo="Typo.h6" Color="Color.Tertiary" ><b>UDAP: </b>@($" {item.Name} (Endpoint/{item.Id})")</MudText>
 
                                                                     <MudLink Style="justify-self: start;"
                                                                              Href="@($"{item.Link}/.well-known/udap")" Target="_blank">
@@ -301,7 +290,7 @@
                                                                     break;
 
                                                                 case "smart":
-                                                                    <MudText Typo="Typo.h6" Color="Color.Primary" ><b>SMART:</b> @($" {item.Name} (Endpoint/{item.Id})")</MudText>
+                                                                        <MudText Typo="Typo.h6" Color="Color.Tertiary"><b>SMART:</b> @($" {item.Name} (Endpoint/{item.Id})")</MudText>
                                                                     <MudLink Style="justify-self: start;"
                                                                              Href="@($"{item.Link}/.well-known/smart-configuration")" Target="_blank">
                                                                         View Metadata
@@ -312,7 +301,7 @@
 
                                                                 default:
 
-                                                                        <MudText Typo="Typo.h6" Color="Color.Primary"><b>@item.Type:</b> @($" {item.Name} (Endpoint/{item.Id})")</MudText>
+                                                                        <MudText Typo="Typo.h6" Color="Color.Tertiary"><b>@item.Type:</b> @($" {item.Name} (Endpoint/{item.Id})")</MudText>
                                                                         
                                                                     break;
 
@@ -344,7 +333,8 @@
 
         </MudGrid>
        
-    </ChildContent>
+        <a href="_content/UdapEd.Shared/CapabilityStatement-national-directory-api-server.json"></a>
+        </ChildContent>
     <ErrorContent Context="ex">
         <pre class="blazor-error-boundary">
             @ex.Message

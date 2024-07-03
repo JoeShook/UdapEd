@@ -29,16 +29,28 @@ public class FhirSearch
 }
 
 
-public class FhirSearchParam(string name, string modifierName, string? modifier, string value)
+public class FhirSearchParam
 {
+    public FhirSearchParam(string name, string modifierName, string? modifier, string value)
+    {
+        Name = name;
+        ModifierName = modifierName;
+        Modifier = modifier;
+        Value = value;
+    }
+
+    public FhirSearchParam()
+    {
+
+    }
     public int Id { get; set; }
 
-    public string Name { get; set; } = name;
+    public string? Name { get; set; }
 
-    public string ModifierName { get; set; } = modifierName;
+    public string? ModifierName { get; set; } 
 
-    public string? Modifier { get; set; } = modifier;
+    public string? Modifier { get; set; }
 
-    public string Value { get; set; } = value;
+    public string? Value { get; set; }
 }
 

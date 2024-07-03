@@ -14,7 +14,7 @@ public static class SearchModifierValueSet
 {
     static SearchModifierValueSet()
     {
-        SearchModifiers.Add(new SearchModifier("Starts with", null));
+        SearchModifiers.Add(new SearchModifier("", null));
 
         var mapping = ModelInfo.ModelInspector.EnumMappings.SingleOrDefault(m => m.Canonical == "http://hl7.org/fhir/ValueSet/search-modifier-code");
 

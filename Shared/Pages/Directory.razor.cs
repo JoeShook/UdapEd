@@ -7,27 +7,21 @@
 // */
 #endregion
 
-using System;
 using System.Net;
-using System.Text.Json;
 using Hl7.Fhir.ElementModel;
-using Hl7.Fhir.FhirPath;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
-using Hl7.Fhir.Specification.Navigation;
 using Hl7.FhirPath;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using MudBlazor;
-using Udap.Model;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Discovery;
 using UdapEd.Shared.Search;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Shared;
-using static MudBlazor.CategoryTypes;
 using T = System.Threading.Tasks;
 
 namespace UdapEd.Shared.Pages;
@@ -39,6 +33,7 @@ public partial class Directory
     [Inject] private IJSRuntime Js { get; set; } = null!;
     [Inject] private IFhirService FhirService { get; set; } = null!;
     [Inject] IDiscoveryService MetadataService { get; set; } = null!;
+    [Inject] private CapabilityLookup CapabilityLookup { get; set; }
 
     private ErrorBoundary? _errorBoundary;
     private readonly FhirSearch _fhirSearch = new(){BaseUrl = "https://national-directory.fast.hl7.org/fhir"};
@@ -59,7 +54,19 @@ private readonly List<string> _supportedResources = new List<string>()
         "InsurancePlan", "Endpoint", "Location"
     };
 
-    
+
+    /// <summary>
+    /// Method invoked when the component is ready to start, having received its
+    /// initial parameters from its parent in the render tree.
+    /// Override this method if you will perform an asynchronous operation and
+    /// want the component to refresh when that operation is completed.
+    /// </summary>
+    /// <returns>A <see cref="T:System.Threading.Tasks.Task" /> representing any asynchronous operation.</returns>
+    protected override async T.Task OnInitializedAsync()
+    {
+        await CapabilityLookup.Build();
+        await base.OnInitializedAsync();
+    }
 
     protected override void OnParametersSet()
     {
@@ -68,11 +75,20 @@ private readonly List<string> _supportedResources = new List<string>()
 
     private async T.Task AddSearchParam()
     {
-        var searchParam = new FhirSearchParam("name", "Starts with", null, "FhirLabsOrg");
+        var searchParam = new FhirSearchParam();
+
+        if (_fhirSearch.ResourceName == "Organization")
+        {
+            searchParam = new FhirSearchParam("name", "", null, "FhirLabsOrg");
+        }
+        else if (_fhirSearch.ResourceName == "Endpoint")
+        {
+            searchParam = new FhirSearchParam("organization", "", null, "FhirLabsOrg");
+        }
 
         if (_fhirSearch.SearchParams.Any())
         {
-            var paramLookups = SearchParamLookup.Map
+            var paramLookups = CapabilityLookup.SearchParamMap
                 .Where(m => m.Resource == _fhirSearch.ResourceName)
                 .SelectMany(s => s.ParamDefinitions)
                 .ToList();
@@ -251,9 +267,7 @@ private readonly List<string> _supportedResources = new List<string>()
                     var resource = new FhirJsonParser().Parse(referenceContext) as DomainResource;
                     var orgEntry = new FhirHierarchyEntries()
                     {
-                        Name = nameMaybe.Value?.ToString() ?? resource?.Id ?? "Unknown", Id = resource?.Id ?? "Unknown",
-                        IconColor = Color.Primary,
-                        Icon = Icons.Material.TwoTone.List
+                        Name = nameMaybe.Value?.ToString() ?? resource?.Id ?? "Unknown", Id = resource?.Id ?? "Unknown"
                     };
                     _fhirResults.TreeViewStore.Add(orgEntry);
                 }
@@ -300,6 +314,14 @@ private readonly List<string> _supportedResources = new List<string>()
         {
             var endpointResource = new FhirJsonParser().Parse<Endpoint>(endpoint);
 
+            var endPointTreeItem = new FhirHierarchyEntries()
+            {
+                Id = endpointResource.Id,
+                Name = endpointResource.Name
+            };
+
+            treeStore.Add(endPointTreeItem);
+
             var dynamicEndpointTypes = endpointResource.ToTypedElement().Select(
                 $"extension.where($this.url in 'http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-dynamicRegistration').descendants().select($this.descendants().coding.code)");
 
@@ -312,7 +334,7 @@ private readonly List<string> _supportedResources = new List<string>()
                         await MetadataService.GetUdapMetadataVerificationModel(
                             $"{endpointResource.Address}", null, default);
 
-                    treeStore.Add(new FhirHierarchyEntries()
+                    endPointTreeItem.TreeItems.Add(new FhirHierarchyEntries()
                     {
                         Id = endpointResource.Id,
                         Name = endpointResource.Name,
@@ -331,7 +353,7 @@ private readonly List<string> _supportedResources = new List<string>()
                         await MetadataService.GetSmartMetadata(
                             $"{endpointResource.Address}/.well-known/smart-configuration", default);
 
-                    treeStore.Add(new FhirHierarchyEntries()
+                    endPointTreeItem.TreeItems.Add(new FhirHierarchyEntries()
                     {
                         Id = endpointResource.Id,
                         Name = endpointResource.Name,
@@ -349,14 +371,14 @@ private readonly List<string> _supportedResources = new List<string>()
 
             foreach (var nonDynamicEndpointType in nondynamicEndpointTypes)
             {
-                treeStore.Add(new FhirHierarchyEntries()
+                endPointTreeItem.TreeItems.Add(new FhirHierarchyEntries()
                 {
                     Id = endpointResource.Id,
                     Name = endpointResource.Name,
                     Link = endpointResource.Address,
                     Type = nonDynamicEndpointType.Value?.ToString(),
-                    IconColor = Color.Default,
-                    Icon = Icons.Material.TwoTone.Link
+                    // IconColor = Color.Default,
+                    // Icon = Icons.Material.TwoTone.Link
                 });
             }
         }
@@ -441,6 +463,4 @@ private readonly List<string> _supportedResources = new List<string>()
         }
 
     }
-
-    
 }

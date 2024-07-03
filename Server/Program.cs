@@ -111,7 +111,6 @@ builder.Services.AddHttpClient<FhirClientWithUrlProvider>((sp, httpClient) =>
     .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()));
 
 
-
 var url = builder.Configuration["FHIR_TERMINOLOGY_ROOT_URL"];
 
 var settings = new FhirClientSettings
