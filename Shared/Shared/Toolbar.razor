@@ -1,7 +1,8 @@
 ﻿@using UdapEd.Shared.Services
+@using UdapEd.Shared.Shared
+
 @inject IJSRuntime JSRuntime
 @inject IRegisterService RegisterService
-
 
 <MudAppBar Elevation="3" Style="background-image: linear-gradient( 109.6deg,  rgba(240,240,240,1) 11.2%, rgba(240,240,240,1) 91.1% );">
    <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Primary" Edge="Edge.Start"
@@ -9,9 +10,9 @@
 
     @if (AppState.LaunchContext != null)
     {
-        <MudIcon Color="Color.Secondary" Icon="@Icons.Material.Outlined.PersonPin" />
+        <MudIcon Color="Color.Secondary" Icon="@Icons.Material.TwoTone.PersonPin" />
         <MudText Color="Color.Primary" Class="overflow-hidden">@AppState.LaunchContext.Patient</MudText>
-        <MudIconButton Color="Color.Secondary" Icon="@Icons.Material.Outlined.Clear" OnClick="ClearLaunchContext" />
+        <MudIconButton Color="Color.Secondary" Icon="@Icons.Material.TwoTone.Clear" OnClick="ClearLaunchContext" />
     }
     <MudSpacer />
     
@@ -21,9 +22,13 @@
         <MudText Color="@(AppState.Status is {IsValid: false } ? Color.Error : Color.Success)">@AppState.Status.StatusMessage</MudText>
         @if (AppState.Status.IsValid)
         {
-            <MudIconButton Icon="@Icons.Material.Outlined.DeleteForever" OnClick="DeleteTokens"></MudIconButton>
+            <MudTooltip Text="Copy Access Token">
+            <MudIconButton Icon="@Icons.Material.TwoTone.DeleteForever" Color="Color.Dark" OnClick="DeleteTokens"></MudIconButton>
+            </MudTooltip>
+            <CopyToClipboard CopyText="@AppState.AccessTokens?.AccessToken" />
         }
     </div>
+   
    <MudImage 
        Class="cursor-pointer mud-ripple ma-2" 
        Src="_content/UdapEd.Shared/images/hl7/icon-fhir-32.png" 
@@ -65,8 +70,8 @@
 
 @code {
     
-    [CascadingParameter]
-    public CascadingAppState AppState { get; set; } = null!;
+    [CascadingParameter] CascadingAppState AppState { get; set; } = null!;
+    [Inject] IAccessService AccessService { get; set; } = null!;
     bool _drawerOpen = true;
 
     void DrawerToggle()
@@ -92,5 +97,7 @@
     private async Task DeleteTokens()
     {
         await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), null);
+        await AccessService.DeleteAccessToken();
+
     }
 }

@@ -199,4 +199,9 @@ internal class AccessService : IAccessService
 
         return tokenResponseModel;
     }
+
+    public Task<bool> DeleteAccessToken()
+    {
+        throw new NotImplementedException();
+    }
 }

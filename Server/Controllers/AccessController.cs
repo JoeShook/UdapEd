@@ -209,4 +209,12 @@ public class AccessController : Controller
 
         return Ok(tokenResponseModel);
     }
+
+    [HttpDelete]
+    public async Task DeleteAccessToken()
+    {
+        HttpContext.Session.Remove(UdapEdConstants.TOKEN);
+
+        await Task.FromResult(NoContent());
+    }
 }

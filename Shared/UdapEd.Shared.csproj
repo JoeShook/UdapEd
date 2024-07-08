@@ -33,10 +33,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- <SupportedPlatform Include="browser" /> -->
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
 

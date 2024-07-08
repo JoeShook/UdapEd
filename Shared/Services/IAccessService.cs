@@ -27,4 +27,5 @@ public interface IAccessService
 
     Task<TokenResponseModel?> RequestAccessTokenForClientCredentials(UdapClientCredentialsTokenRequestModel request);
     Task<TokenResponseModel?> RequestAccessTokenForAuthorizationCode(UdapAuthorizationCodeTokenRequestModel request);
+    Task<bool> DeleteAccessToken();
 }

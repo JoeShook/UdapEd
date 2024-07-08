@@ -39,6 +39,7 @@ builder.Services.AddScoped<IAccessService, AccessService>();
 builder.Services.AddScoped<IFhirService, FhirService>();
 builder.Services.AddScoped<IInfrastructure, Infrastructure>();
 builder.Services.AddSingleton<CapabilityLookup>();
+builder.Services.AddScoped<IClipboardService, ClipboardService>();
 
 // Add this so that the resolve() extension will be available when including in FhirPath
 Hl7.FhirPath.FhirPathCompiler.DefaultSymbolTable.AddFhirExtensions();
