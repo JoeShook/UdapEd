@@ -309,7 +309,7 @@ public class FhirController : ControllerBase
                 searchParams.Add(item[0], item[1]);
             }
 
-            var bundle = await fhirClient.SearchUsingPostAsync<Organization>(searchParams);
+            var bundle = await fhirClient.SearchUsingPostAsync(searchParams, searchForm.Resource);
             var bundleJson = await new FhirJsonSerializer().SerializeToStringAsync(bundle);
 
             return Ok(bundleJson);
