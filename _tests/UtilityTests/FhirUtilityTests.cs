@@ -1,3 +1,4 @@
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using Firely.Fhir.Packages;
 using Hl7.Fhir.Introspection;
@@ -99,5 +100,17 @@ public class FhirUtilityTests
 
         _testOutputHelper.WriteLine(string.Empty);
 
+    }
+
+    [Fact(Skip = "")]
+    public async T.Task mTLS_Call()
+    {
+        using var httpClientHandler = new HttpClientHandler();
+        var clientCert = new X509Certificate2("FhirLabs_mTLS_Client.pfx", "udap-test", X509KeyStorageFlags.Exportable);
+        httpClientHandler.ClientCertificates.Add(clientCert);
+        var httpClient = new HttpClient(httpClientHandler);
+        var weather = await httpClient.GetStringAsync("https://localhost:7057/weatherforecast");
+
+        _testOutputHelper.WriteLine(weather);
     }
 }

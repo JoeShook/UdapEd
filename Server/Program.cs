@@ -20,6 +20,7 @@ using Udap.Common.Certificates;
 using UdapEd.Server.Authentication;
 using UdapEd.Server.Extensions;
 using UdapEd.Server.Rest;
+using UdapEd.Server.Services;
 using FhirClientWithUrlProvider = UdapEd.Server.Services.FhirClientWithUrlProvider;
 using IBaseUrlProvider = UdapEd.Server.Services.IBaseUrlProvider;
 
@@ -110,6 +111,22 @@ builder.Services.AddHttpClient<FhirClientWithUrlProvider>((sp, httpClient) =>
     .AddHttpMessageHandler(sp => new AuthTokenHttpMessageHandler(sp.GetRequiredService<IAccessTokenProvider>()))
     .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()));
 
+builder.Services.AddSingleton<IClientCertificateProvider, ClientCertificateProvider>();
+
+builder.Services.AddHttpClient<FhirMTlsClientWithUrlProvider>((sp, httpClient) =>
+    {})
+    .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()))
+    .ConfigurePrimaryHttpMessageHandler((sp) =>
+    {
+        var certificateProvider = sp.GetRequiredService<IClientCertificateProvider>();
+        var httpClientHandler = new HttpClientHandler();
+        var certificate = certificateProvider.GetClientCertificate(default);
+        if (certificate != null)
+        {
+            httpClientHandler.ClientCertificates.Add(certificate);
+        }
+        return httpClientHandler;
+    });
 
 var url = builder.Configuration["FHIR_TERMINOLOGY_ROOT_URL"];
 
@@ -167,9 +184,7 @@ app.UseRateLimiter(); //after routing
 
 app.UseSession();
 app.MapRazorPages();
-app.MapControllers()
-    .RequireRateLimiting(RateLimitExtensions.Policy)
-    ;
+app.MapControllers().RequireRateLimiting(RateLimitExtensions.Policy);
 
 app.MapFallbackToFile("index.html");
 

@@ -14,3 +14,15 @@ public class FhirClientWithUrlProvider : FhirClient
         
     }
 }
+
+/// <summary>
+/// Specialize the FhirClient injecting a url resolver in the implementation of a IBaseUrlProvider
+/// </summary>
+public class FhirMTlsClientWithUrlProvider : FhirClient
+{
+    public FhirMTlsClientWithUrlProvider(IBaseUrlProvider baseUrlProvider, HttpClient httpClient, FhirClientSettings? settings = null, IStructureDefinitionSummaryProvider? provider = null)
+        : base(baseUrlProvider.GetBaseUrl(), httpClient, settings)
+    {
+        
+    }
+}

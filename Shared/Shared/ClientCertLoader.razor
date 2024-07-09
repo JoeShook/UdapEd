@@ -35,8 +35,9 @@
         OnClick="@LoadEmrTestCertificate" />
 
 
-@if (!string.IsNullOrEmpty(AppState.ClientCertificateInfo?.DistinguishedName) ||
-     !string.IsNullOrEmpty(AppState.ClientCertificateInfo?.Thumbprint))
+@if (AppState.ClientMode == ClientSecureMode.UDAP && (
+    !string.IsNullOrEmpty(AppState.ClientCertificateInfo?.DistinguishedName) ||
+     !string.IsNullOrEmpty(AppState.ClientCertificateInfo?.Thumbprint)))
 {   
         <MudText Typo="Typo.body2"><b>Subject:</b>@AppState.ClientCertificateInfo?.DistinguishedName</MudText>
     <MudText Typo="Typo.caption"> <b>Thumbprint (sha1)</b> </MudText>
@@ -147,6 +148,7 @@
         var certViewModel = await RegisterService.ValidateCertificate(result.Data?.ToString() ?? "");
         await SetCertLoadedColor(certViewModel?.CertLoaded);
         await AppState.SetPropertyAsync(this, nameof(AppState.ClientCertificateInfo), certViewModel);
+        await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
         await OnCertificateLoaded.InvokeAsync();
     }
 
@@ -155,6 +157,7 @@
         var certViewModel = await RegisterService.LoadTestCertificate("fhirlabs.net.client.pfx");
         await SetCertLoadedColor(certViewModel?.CertLoaded);
         await AppState.SetPropertyAsync(this, nameof(AppState.ClientCertificateInfo), certViewModel);
+        await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
         await OnCertificateLoaded.InvokeAsync();
     }
 
@@ -163,6 +166,7 @@
         var certViewModel = await RegisterService.LoadTestCertificate("udap-sandbox-surescripts-2.p12");
         await SetCertLoadedColor(certViewModel?.CertLoaded);
         await AppState.SetPropertyAsync(this, nameof(AppState.ClientCertificateInfo), certViewModel);
+        await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
         await OnCertificateLoaded.InvokeAsync();
     }
 

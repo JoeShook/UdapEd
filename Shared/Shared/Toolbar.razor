@@ -20,7 +20,7 @@
         <MudText 
             Color="Color.Primary">Token Status:</MudText>&nbsp;
         <MudText Color="@(AppState.Status is {IsValid: false } ? Color.Error : Color.Success)">@AppState.Status.StatusMessage</MudText>
-        @if (AppState.Status.IsValid)
+        @if (AppState.Status.IsValid && AppState.ClientMode == ClientSecureMode.UDAP)
         {
             <MudTooltip Text="Copy Access Token">
             <MudIconButton Icon="@Icons.Material.TwoTone.DeleteForever" Color="Color.Dark" OnClick="DeleteTokens"></MudIconButton>

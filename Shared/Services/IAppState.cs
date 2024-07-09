@@ -39,6 +39,8 @@ public interface IAppState
 
     TokenResponseModel? AccessTokens { get;  }
 
+    ClientSecureMode ClientMode { get; }
+
     LaunchContext? LaunchContext { get; }
 
     ClientStatus Status { get; }

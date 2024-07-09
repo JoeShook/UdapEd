@@ -15,19 +15,40 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using UdapEd.Server.Extensions;
+using UdapEd.Server.Services;
 using UdapEd.Shared.Model;
 using FhirClientWithUrlProvider = UdapEd.Server.Services.FhirClientWithUrlProvider;
 
 namespace UdapEd.Server.Controllers;
+
+
 [Route("[controller]")]
 [EnableRateLimiting(RateLimitExtensions.Policy)]
-public class FhirController : ControllerBase
+public class FhirController : FhirBaseController<FhirController>
 {
-    private readonly FhirClientWithUrlProvider _fhirClient;
-    private readonly FhirClient _fhirTerminologyClient;
-    private readonly ILogger<RegisterController> _logger;
 
-    public FhirController(FhirClientWithUrlProvider fhirClient, FhirClient fhirTerminologyClient, ILogger<RegisterController> logger)
+    public FhirController(FhirClientWithUrlProvider fhirClient, FhirClient fhirTerminologyClient, ILogger<FhirController> logger)
+        : base(fhirClient, fhirTerminologyClient, logger)
+    { }
+}
+
+
+[Route("[controller]")]
+[EnableRateLimiting(RateLimitExtensions.Policy)]
+public class FhirMtlsController : FhirBaseController<FhirMtlsController>
+{
+    public FhirMtlsController(FhirMTlsClientWithUrlProvider fhirClient, FhirClient fhirTerminologyClient, ILogger<FhirMtlsController> logger)
+        : base(fhirClient, fhirTerminologyClient, logger)
+    { }
+}
+
+public class FhirBaseController<T> : ControllerBase
+{
+    private readonly FhirClient _fhirClient;
+    private readonly FhirClient _fhirTerminologyClient;
+    private readonly ILogger<T> _logger;
+
+    public FhirBaseController(FhirClient fhirClient, FhirClient fhirTerminologyClient, ILogger<T> logger)
     {
         _fhirClient = fhirClient;
         _fhirTerminologyClient = fhirTerminologyClient;
@@ -55,7 +76,7 @@ public class FhirController : ControllerBase
 
             if (model.Bundle.IsNullOrEmpty())
             {
-                var bundle = await _fhirClient.SearchAsync<Patient>(BuildSearchParams(model).OrderBy("given"));
+                var bundle = await _fhirClient.SearchAsync<Patient>(SearchParamsExtensions.OrderBy(BuildSearchParams(model), "given"));
                 var bundleJson = await new FhirJsonSerializer().SerializeToStringAsync(bundle);
                 return Ok(bundleJson);
             }
@@ -122,7 +143,7 @@ public class FhirController : ControllerBase
         {
             searchParams.Add("birthdate", model.BirthDate.Value.ToString("yyyy-MM-dd"));
         }
-        
+
         searchParams.Add("_count", model.RowsPerPage.ToString());
         return searchParams;
     }
@@ -148,7 +169,7 @@ public class FhirController : ControllerBase
                 return Unauthorized();
             }
 
-            if(ex.Outcome != null)
+            if (ex.Outcome != null)
             {
                 var outcomeJson = await new FhirJsonSerializer().SerializeToStringAsync(ex.Outcome);
                 return NotFound(outcomeJson);
@@ -207,7 +228,6 @@ public class FhirController : ControllerBase
         }
     }
 
-
     [HttpGet("ValueSet")]
     public async Task<IActionResult> GetValueSet([FromQuery] string location)
     {
@@ -223,7 +243,7 @@ public class FhirController : ControllerBase
             // var p = new ExpandParameters().WithValueSet(url: location);
             // var valueSet = await termService.Expand(p) as ValueSet;
             // var valueSetJson = await new FhirJsonSerializer().SerializeToStringAsync(valueSet);
-            
+
             var valueSetJson = await System.IO.File.ReadAllTextAsync("hl7.fhir.us.identity-matching-2.0.0-draft-expanded.json");
 
             return Ok(valueSetJson);
@@ -254,18 +274,17 @@ public class FhirController : ControllerBase
         }
     }
 
-
     [HttpPost("GetSearch")]
     public async Task<IActionResult> GetSearch([FromBody] string fullSearch)
     {
         try
         {
             //Todo maybe inject in the future, so we don't exhaust underlying HttpClient
-            var fhirClient = new FhirClient(fullSearch, new FhirClientSettings(){ PreferredFormat = ResourceFormat.Json });
+            var fhirClient = new FhirClient(fullSearch, new FhirClientSettings() { PreferredFormat = ResourceFormat.Json });
             Console.WriteLine(fullSearch);
             var bundle = await fhirClient.GetAsync(fullSearch);
             var bundleJson = await new FhirJsonSerializer().SerializeToStringAsync(bundle);
-            
+
             return Ok(bundleJson);
         }
         catch (FhirOperationException ex)
@@ -339,5 +358,5 @@ public class FhirController : ControllerBase
             throw;
         }
     }
-
 }
+

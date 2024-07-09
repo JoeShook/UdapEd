@@ -11,9 +11,15 @@
 <MudCardContent>
 <MudGrid Justify="Justify.FlexStart">
     <MudItem md="4" sm="6" xs="12">
-        <MudText Color="Color.Primary">Access Token:</MudText>
-        <MudText Color="@(AppState.Status is {IsValid: false }
-                            ? Color.Error : Color.Success)">@AppState.AccessTokens?.AccessToken?.TrimForDisplay(30, "...")</MudText>
+        <MudText Color="Color.Primary">Client Secure Mode:</MudText>
+        @if (AppState.ClientMode == ClientSecureMode.UDAP)
+        {
+            <MudText Color="@(AppState.Status is {IsValid: false }? Color.Error : Color.Success)">@Enum.GetName(typeof(ClientSecureMode), AppState.ClientMode)</MudText>
+        }
+        else
+        {
+            <MudText Color="Color.Success">@Enum.GetName(typeof(ClientSecureMode), AppState.ClientMode)</MudText>
+        }
     </MudItem>
 
     <MudItem md="4" sm="6" xs="12">

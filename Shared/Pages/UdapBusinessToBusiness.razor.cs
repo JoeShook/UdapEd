@@ -423,6 +423,7 @@ public partial class UdapBusinessToBusiness
                         AppState.ClientCredentialsTokenRequest);
 
                 await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), tokenResponse);
+                await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
 
                 AccessToken = tokenResponse is { IsError: false }
                     ? tokenResponse.Raw 

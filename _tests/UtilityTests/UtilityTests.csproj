@@ -30,6 +30,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="FhirLabs_mTLS_Client.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="hl7.fhir.us.identity-matching-2.0.0-draft.tgz">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

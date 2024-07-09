@@ -15,7 +15,7 @@ namespace UdapEd.Shared.Pages;
 public partial class PatientSearch
 {
     private MudForm form = null!;
-    private MudTable<Patient> _table = null!;
+    private MudTable<Patient>? PatientTable { get; set; }
     public PatientSearchModel _model  = new();
     public FhirTablePager? _pager = null!;
     // private List<Patient>? _patients;
@@ -88,10 +88,10 @@ public partial class PatientSearch
         _selectedItemText = string.Empty;
         _currentBundle = null;
         _model.Bundle = null;
-        if (_table != null)
+        if (PatientTable != null)
         {
-            _table.CurrentPage = 0;
-            await _table.ReloadServerData();
+            PatientTable.CurrentPage = 0;
+            await PatientTable.ReloadServerData();
         }
     }
 

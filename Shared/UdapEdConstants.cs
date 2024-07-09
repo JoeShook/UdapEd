@@ -11,6 +11,9 @@ public static class UdapEdConstants
     public const string BASE_URL = "BaseUrl";
     public const string CLIENT_HEADERS = "ClientHeaders";
 
+    public const string MTLS_CLIENT_CERTIFICATE = "mtlsClientCertificate";
+    public const string MTLS_CLIENT_CERTIFICATE_WITH_KEY = "mtlsClientCertificateWithKey";
+
     /// <summary>
     /// See <a href="https://www.hl7.org/fhir/patient-operation-match.html">Patient-match</a>
     /// Canonical URL:: https://www.hl7.org/fhir/patient-operation-match.html
