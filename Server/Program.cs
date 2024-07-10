@@ -8,7 +8,9 @@
 #endregion
 
 using System.Net;
+using System.Net.Http;
 using Hl7.Fhir.Rest;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Serilog;
 using Serilog.Events;
@@ -111,22 +113,57 @@ builder.Services.AddHttpClient<FhirClientWithUrlProvider>((sp, httpClient) =>
     .AddHttpMessageHandler(sp => new AuthTokenHttpMessageHandler(sp.GetRequiredService<IAccessTokenProvider>()))
     .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()));
 
-builder.Services.AddSingleton<IClientCertificateProvider, ClientCertificateProvider>();
+builder.Services.AddTransient<IClientCertificateProvider, ClientCertificateProvider>();
 
-builder.Services.AddHttpClient<FhirMTlsClientWithUrlProvider>((sp, httpClient) =>
-    {})
-    .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()))
-    .ConfigurePrimaryHttpMessageHandler((sp) =>
+
+//
+// This does not allow you to let the client dynamically load new mTLS certificates.  The HttpHandler doesn't reenter.
+//
+
+// builder.Services.AddHttpClient<FhirMTlsClientWithUrlProvider>((sp, httpClient) =>
+//     {})
+//     .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()))
+//     .ConfigurePrimaryHttpMessageHandler((sp) =>
+//     {
+//         var certificateProvider = sp.GetRequiredService<IClientCertificateProvider>();
+//         var httpClientHandler = new HttpClientHandler();
+//         var certificate = certificateProvider.GetClientCertificate(default);
+//         if (certificate != null)
+//         {
+//             Log.Logger.Information($"mTLS Client: {certificate.Thumbprint}");
+//             httpClientHandler.ClientCertificates.Add(certificate);
+//         }
+//         return httpClientHandler;
+//     });
+
+//
+// Could take some effort to implement a pool based on thumbprint of the client certificate,
+// but we won't exhaust ports when it is just a client tool.  
+// I could cache Handlers.  After all there won't be a DNS issue because the IPs for this sort
+// of mTLS relationship is typically static.
+//
+//
+builder.Services.AddTransient<FhirMTlsClientWithUrlProvider>(sp =>
+{
+    var baeUrlProvider = sp.GetRequiredService<IBaseUrlProvider>();
+    var httpClientHandler = new HttpClientHandler();
+    var certificateProvider = sp.GetRequiredService<IClientCertificateProvider>();
+    var certificate = certificateProvider.GetClientCertificate(default);
+    if (certificate != null)
     {
-        var certificateProvider = sp.GetRequiredService<IClientCertificateProvider>();
-        var httpClientHandler = new HttpClientHandler();
-        var certificate = certificateProvider.GetClientCertificate(default);
-        if (certificate != null)
-        {
-            httpClientHandler.ClientCertificates.Add(certificate);
-        }
-        return httpClientHandler;
-    });
+        Log.Logger.Information($"mTLS Client: {certificate.Thumbprint}");
+        httpClientHandler.ClientCertificates.Add(certificate);
+    }
+
+    var fhirMTlsProvider = new FhirMTlsClientWithUrlProvider(
+        baeUrlProvider, 
+        new HttpClient(httpClientHandler), 
+        new FhirClientSettings(){PreferredFormat = ResourceFormat.Json});
+
+    return fhirMTlsProvider;
+});
+
+
 
 var url = builder.Configuration["FHIR_TERMINOLOGY_ROOT_URL"];
 
