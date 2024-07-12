@@ -3,6 +3,7 @@ using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.WebUtilities;
 using MudBlazor;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Smart;
@@ -27,12 +28,20 @@ public partial class PatientSearch
     private string _selectedItemText = string.Empty;
 
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
-
+    [Inject] NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IFhirService FhirService { get; set; } = null!;
     [Inject] private IDiscoveryService DiscoveryService { get; set; } = null!;
     private ErrorBoundary? ErrorBoundary { get; set; }
     private string? _baseUrlOverride = string.Empty;
-    
+
+    protected override Task OnInitializedAsync()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var queryParams = !string.IsNullOrEmpty(uri.Query) ? QueryHelpers.ParseQuery(uri.Query) : null;
+        _baseUrlOverride = queryParams?.GetValueOrDefault("BaseUrl") ?? AppState.BaseUrl;
+
+        return base.OnInitializedAsync();
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

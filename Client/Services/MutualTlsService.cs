@@ -18,8 +18,8 @@ public class MutualTlsService : IMutualTlsService
 
     public async Task UploadClientCertificate(string certBytes)
     {
-        var result = await _httpClient.PostAsJsonAsync("MutualTLS/UploadClientCertificate", certBytes);
-        result.EnsureSuccessStatusCode();
+        var response = await _httpClient.PostAsJsonAsync("MutualTLS/UploadClientCertificate", certBytes);
+        response.EnsureSuccessStatusCode();
     }
 
     public async Task<CertificateStatusViewModel?> LoadTestCertificate(string certificateName)
@@ -85,5 +85,23 @@ public class MutualTlsService : IMutualTlsService
         var response = await _httpClient.GetFromJsonAsync<CertificateStatusViewModel>("MutualTLS/IsAnchorCertificateLoaded");
 
         return response;
+    }
+
+    public async Task<List<string>?> VerifyMtlsTrust(string publicCertificate)
+    {
+        try
+        {
+            var udapMetadataUrl = $"MutualTLS/VerifyMtlsTrust";
+            var response = await _httpClient.PostAsJsonAsync(udapMetadataUrl, publicCertificate);
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<List<string>?>();
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Internal Error: Failed POST /MutualTLS");
+            return new List<string>(){ "Internal Error: Failed POST /MutualTLS" };
+        }
     }
 }

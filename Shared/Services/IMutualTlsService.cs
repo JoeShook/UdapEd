@@ -26,4 +26,6 @@ public interface IMutualTlsService
     Task<CertificateStatusViewModel?> LoadAnchor();
 
     Task<CertificateStatusViewModel?> AnchorCertificateLoadStatus();
+
+    Task<List<string>?> VerifyMtlsTrust(string publicCertificate);
 }

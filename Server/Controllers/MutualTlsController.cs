@@ -11,6 +11,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Udap.Common.Certificates;
 using Udap.Util.Extensions;
 using UdapEd.Server.Extensions;
 using UdapEd.Shared;
@@ -24,10 +25,12 @@ public class MutualTlsController : Controller
 {
     private readonly ILogger<RegisterController> _logger;
     private readonly HttpClient _httpClient;
+    private readonly TrustChainValidator _trustChainValidator;
 
-    public MutualTlsController(HttpClient httpClient, ILogger<RegisterController> logger)
+    public MutualTlsController(HttpClient httpClient, TrustChainValidator trustChainValidator, ILogger<RegisterController> logger)
     {
         _httpClient = httpClient;
+        _trustChainValidator = trustChainValidator;
         _logger = logger;
     }
 
@@ -43,19 +46,22 @@ public class MutualTlsController : Controller
         {
             var certificate = new X509Certificate2(testClientCert, "udap-test", X509KeyStorageFlags.Exportable);
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
-            HttpContext.Session.SetString(UdapEdConstants.MTLS_CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
+            HttpContext.Session.SetString(UdapEdConstants.MTLS_CLIENT_CERTIFICATE_WITH_KEY,
+                Convert.ToBase64String(clientCertWithKeyBytes));
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
 
             result.SubjectAltNames = certificate
                 .GetSubjectAltNames(n => n.TagNo == (int)X509Extensions.GeneralNameType.URI)
-            .Select(tuple => tuple.Item2)
+                .Select(tuple => tuple.Item2)
                 .ToList();
 
             result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(certificate);
 
-            result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
+            result.Issuer =
+                certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()
+                    ?.GetSingleElementValue() ?? string.Empty;
         }
         catch (Exception ex)
         {
@@ -115,7 +121,8 @@ public class MutualTlsController : Controller
             var certificate = new X509Certificate2(certBytes, password, X509KeyStorageFlags.Exportable);
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
-            HttpContext.Session.SetString(UdapEdConstants.MTLS_CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
+            HttpContext.Session.SetString(UdapEdConstants.MTLS_CLIENT_CERTIFICATE_WITH_KEY,
+                Convert.ToBase64String(clientCertWithKeyBytes));
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -284,5 +291,40 @@ public class MutualTlsController : Controller
 
             return Ok(result);
         }
+    }
+
+
+    [HttpPost("VerifyMtlsTrust")]
+    public IActionResult VerifyMtlsTrust([FromBody] string publicCertificate)
+    {
+        var clientCertBytes = Convert.FromBase64String(publicCertificate);
+        var clientCertificate = new X509Certificate2(clientCertBytes);
+
+        var base64String = HttpContext.Session.GetString(UdapEdConstants.MTLS_ANCHOR_CERTIFICATE);
+        
+        if (base64String == null)
+        {
+            return Ok(new List<string>() { "Anchor Certificate is not loaded" });
+        }
+           
+        var certBytes = Convert.FromBase64String(base64String);
+        var certificate = new X509Certificate2(certBytes);
+
+        var notifications = new List<string>();
+        _trustChainValidator.Problem += message => notifications.Add($"Validation Problem: {message}");
+        _trustChainValidator.Untrusted += message => notifications.Add($"Validation Untrusted: {message}");
+        _trustChainValidator.Error += (_, message) => notifications.Add($"Validation Error: {message}");
+
+        var trusted = _trustChainValidator.IsTrustedCertificate("UdapEd",
+            clientCertificate,
+            new X509Certificate2Collection(),
+            new X509Certificate2Collection(certificate));
+
+        if (!trusted && !notifications.Any())
+        {
+            notifications.Add("Failed validation for unknown reason");
+        }
+
+        return Ok(notifications);
     }
 }

@@ -2,6 +2,7 @@
 @using Hl7.Fhir.Model
 @using Hl7.Fhir.Serialization
 @using Microsoft.IdentityModel.Tokens
+@using UdapEd.Shared.Extensions
 @using UdapEd.Shared.Search
 
 
@@ -253,7 +254,7 @@
                                                                     <MudLink Style="justify-self: start;"
                                                                              Href="@($"{item.Link}/.well-known/udap")" Target="_blank">
                                                                         View Metadata
-                                                                                        
+                                                                        <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew"/>      
                                                                     </MudLink>
 
                                                                     @if (item.ErrorNotifications != null && item.ErrorNotifications.Any())
@@ -274,8 +275,9 @@
                                                                                  Color="Color.Primary"
                                                                                  ButtonType="ButtonType.Button"
                                                                                  Variant="Variant.Filled"
-                                                                                 Href="@($"/udapDiscovery?BaseUrl={item.Link}")" Target="_blank">Trouble Shoot</MudLink>
-                                                                                        
+                                                                                 Href="@($"/udapDiscovery?BaseUrl={item.Link}")" Target="_blank">Load UDAP Trust anchor and search again
+                                                                            <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew"/>
+                                                                        </MudLink>
                                                                     }
                                                                     else
                                                                     {
@@ -283,26 +285,56 @@
                                                                                  Color="Color.Primary"
                                                                                  ButtonType="ButtonType.Button"
                                                                                  Variant="Variant.Filled"
-                                                                                 OnClick="() => DynamicallyRegister(item)">Dynamically Register</MudLink>
-                                                                                        
+                                                                                 OnClick="() => DynamicallyRegister(item)">Dynamically Register
+                                                                            <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew"/>
+                                                                        </MudLink>
                                                                     }
-                                                                                
                                                                     break;
 
                                                                 case "smart":
-                                                                        <MudText Typo="Typo.h6" Color="Color.Tertiary"><b>SMART:</b> @($" {item.Name} (Endpoint/{item.Id})")</MudText>
+                                                                    <MudText Typo="Typo.h6" Color="Color.Tertiary"><b>SMART:</b> @($" {item.Name} (Endpoint/{item.Id})")</MudText>
                                                                     <MudLink Style="justify-self: start;"
-                                                                             Href="@($"{item.Link}/.well-known/smart-configuration")" Target="_blank">
-                                                                        View Metadata
+                                                                             Href="@($"{item.Link}/.well-known/smart-configuration")" Target="_blank">View Metadata
                                                                         <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew"/>
                                                                     </MudLink>
-                                                                                
+                                                                    break;
+
+                                                                case "x509-mtls-certificate":
+
+
+                                                                    <MudText Typo="Typo.h6" Color="Color.Tertiary"><b>mTLS:</b> @($" {item.Name} (Endpoint/{item.Id})")</MudText>
+                                                                        <MudText Typo="Typo.h6" Color="@item.IconColor"><b>@item.MtlsServerCertificate.TrimForDisplay(30, "...")</b></MudText>
+                                                                    <MudLink Style="justify-self: start;"
+                                                                             Href="@($"/patientSearch?BaseUrl={item.Link}")" Target="_blank">Search
+                                                                        <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew"/>
+                                                                    </MudLink>
+
+                                                                    @if (item.ErrorNotifications != null && item.ErrorNotifications.Any())
+                                                                    {
+                                                                                   
+                                                                        <MudAlert Severity="Severity.Error">
+                                                                            <MudStack Wrap="Wrap.Wrap">
+                                                                                @foreach (string note in item.ErrorNotifications)
+                                                                                {
+                                                                                    <MudText Class="overflow-auto">@note</MudText>
+                                                                                }
+                                                                            </MudStack>
+                                                                        </MudAlert>
+
+                                                                        <MudLink Class="mt-3" Style="justify-self: start;"
+                                                                                 Color="Color.Primary"
+                                                                                 ButtonType="ButtonType.Button"
+                                                                                 Variant="Variant.Filled"
+                                                                                 Href="@($"/mTlsClient")" Target="_blank">Load mTls Trust Anchor and then search again
+                                                                            <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew" />
+                                                                        </MudLink>
+                                                                    }
+
                                                                     break;
 
                                                                 default:
 
                                                                         <MudText Typo="Typo.h6" Color="Color.Tertiary"><b>@item.Type:</b> @($" {item.Name} (Endpoint/{item.Id})")</MudText>
-                                                                        <MudText Typo="Typo.h6" Color="Color.Tertiary"><b>@item.MtlsServerCertificate</b></MudText>
                                                                         
                                                                         break;
 

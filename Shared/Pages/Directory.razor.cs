@@ -34,6 +34,7 @@ public partial class Directory
     [Inject] private IJSRuntime Js { get; set; } = null!;
     [Inject] private IFhirService FhirService { get; set; } = null!;
     [Inject] IDiscoveryService MetadataService { get; set; } = null!;
+    [Inject] IMutualTlsService MtlsService { get; set; } = null!;
     [Inject] private CapabilityLookup CapabilityLookup { get; set; }
 
     private ErrorBoundary? _errorBoundary;
@@ -374,24 +375,19 @@ private readonly List<string> _supportedResources = new List<string>()
 
             foreach (var mTlsEndpointType in mTlsEndpointTypes)
             {
-                // var results =
-                //     await MetadataService.GetUdapMetadataVerificationModel(
-                //         $"{endpointResource.Address}", null, default);
-                // Console.WriteLine(new FhirJsonSerializer().SerializeToString(mTlsEndpointType)));
-                var exchangeCode = mTlsEndpointType.Select("extension.descendants().coding.code");
+                var notifications = await MtlsService.VerifyMtlsTrust(GetMtlsServerCertificate(mTlsEndpointType));
                 
-                    endPointTreeItem.TreeItems.Add(new FhirHierarchyEntries()
-                    {
-                        Id = endpointResource.Id,
-                        Name = endpointResource.Name,
-                        Link = endpointResource.Address,
-                        Type = mTlsEndpointType.Select("extension.descendants().coding.code").First().Value.ToString(),
-                        MtlsServerCertificate = GetMtlsServerCertificate(mTlsEndpointType),
-                        // UdapMetadata = "Hello mTLS",
-                        // ErrorNotifications = results.Notifications,
-                        // IconColor = results.Notifications.Any() ? Color.Error : Color.Success,
-                        Icon = Icons.Material.TwoTone.Security
-                    });
+                endPointTreeItem.TreeItems.Add(new FhirHierarchyEntries()
+                {
+                    Id = endpointResource.Id,
+                    Name = endpointResource.Name,
+                    Link = endpointResource.Address,
+                    Type = mTlsEndpointType.Select("extension.descendants().coding.code").First().Value.ToString(),
+                    MtlsServerCertificate = GetMtlsServerCertificate(mTlsEndpointType),
+                    ErrorNotifications = notifications,
+                    IconColor = notifications != null && notifications.Any() ? Color.Error : Color.Success,
+                    Icon = Icons.Material.TwoTone.Security
+                });
                 
             }
 
@@ -447,7 +443,7 @@ private readonly List<string> _supportedResources = new List<string>()
 
         public List<string>? ErrorNotifications { get; set; } = null;
         public MetadataVerificationModel? UdapMetadata { get; set; } = null;
-        public object? MtlsServerCertificate { get; set; }
+        public string? MtlsServerCertificate { get; set; }
     }
 
 
