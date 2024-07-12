@@ -9,6 +9,7 @@
 
 using System.Net;
 using System.Net.Http;
+using System.Security.Authentication;
 using Hl7.Fhir.Rest;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -23,6 +24,7 @@ using UdapEd.Server.Authentication;
 using UdapEd.Server.Extensions;
 using UdapEd.Server.Rest;
 using UdapEd.Server.Services;
+using UdapEd.Shared;
 using FhirClientWithUrlProvider = UdapEd.Server.Services.FhirClientWithUrlProvider;
 using IBaseUrlProvider = UdapEd.Server.Services.IBaseUrlProvider;
 
@@ -146,15 +148,22 @@ builder.Services.AddTransient<IClientCertificateProvider, ClientCertificateProvi
 builder.Services.AddTransient<FhirMTlsClientWithUrlProvider>(sp =>
 {
     var baeUrlProvider = sp.GetRequiredService<IBaseUrlProvider>();
-    var httpClientHandler = new HttpClientHandler();
+    var httpClientHandler = new System.Net.Http.HttpClientHandler();
     var certificateProvider = sp.GetRequiredService<IClientCertificateProvider>();
-    var certificate = certificateProvider.GetClientCertificate(default);
+    var certificate = certificateProvider.GetClientCertificate();
+    var anchorCertificate = certificateProvider.GetAnchorCertificates();
+
     if (certificate != null)
     {
         Log.Logger.Information($"mTLS Client: {certificate.Thumbprint}");
+        // httpClientHandler.CheckCertificateRevocationList = true;
+        // httpClientHandler.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
+        httpClientHandler.ServerCertificateCustomValidationCallback = 
+            HttpClientHandlerExtension.CreateCustomRootValidator(anchorCertificate);
+       
         httpClientHandler.ClientCertificates.Add(certificate);
     }
-
+    
     var fhirMTlsProvider = new FhirMTlsClientWithUrlProvider(
         baeUrlProvider, 
         new HttpClient(httpClientHandler), 

@@ -39,9 +39,8 @@
                     OnClick="@LoadFhirLabsTestCertificate"/>
         </MudCardActions>
         <MudCardContent>
-            @if (AppState.ClientMode == ClientSecureMode.mTLS && (
-                     !string.IsNullOrEmpty(AppState.MtlsClientCertificateInfo?.DistinguishedName) ||
-                     !string.IsNullOrEmpty(AppState.MtlsClientCertificateInfo?.Thumbprint)))
+            @if (!string.IsNullOrEmpty(AppState.MtlsClientCertificateInfo?.DistinguishedName) ||
+                 !string.IsNullOrEmpty(AppState.MtlsClientCertificateInfo?.Thumbprint))
             {
                 <MudText Typo="Typo.body2"><b>Subject:</b>@AppState.MtlsClientCertificateInfo?.DistinguishedName</MudText>
                 <MudText Typo="Typo.caption"> <b>Thumbprint (sha1)</b> </MudText>
@@ -89,9 +88,8 @@
                         OnClick="@LoadmTLSAnchor" />
             </MudCardActions>
             <MudCardContent>
-                @if (AppState.ClientMode == ClientSecureMode.mTLS && (
-                !string.IsNullOrEmpty(AppState.MtlsAnchorCertificateInfo?.DistinguishedName) ||
-                !string.IsNullOrEmpty(AppState.MtlsAnchorCertificateInfo?.Thumbprint)))
+                @if (!string.IsNullOrEmpty(AppState.MtlsAnchorCertificateInfo?.DistinguishedName) ||
+                     !string.IsNullOrEmpty(AppState.MtlsAnchorCertificateInfo?.Thumbprint))
                 {
                     <MudText Typo="Typo.body2"><b>Subject:</b>@AppState.MtlsAnchorCertificateInfo?.DistinguishedName</MudText>
                     <MudText Typo="Typo.caption"> <b>Thumbprint (sha1)</b> </MudText>

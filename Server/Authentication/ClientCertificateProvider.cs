@@ -6,6 +6,7 @@ namespace UdapEd.Server.Authentication;
 public interface IClientCertificateProvider
 {
     X509Certificate2? GetClientCertificate(CancellationToken token = default);
+    X509Certificate2Collection? GetAnchorCertificates(CancellationToken token = default);
 }
 
 public class ClientCertificateProvider : IClientCertificateProvider
@@ -30,6 +31,20 @@ public class ClientCertificateProvider : IClientCertificateProvider
             return clientCert;
         }
         
+        _logger.LogDebug($"Missing Client Certificate in Session: {UdapEdConstants.MTLS_CLIENT_CERTIFICATE_WITH_KEY}");
+        return null;
+    }
+
+    public X509Certificate2Collection? GetAnchorCertificates(CancellationToken token = default)
+    {
+        var anchorBytes = _httpContextAccessor.HttpContext?.Session.GetString(UdapEdConstants.MTLS_ANCHOR_CERTIFICATE);
+        if (anchorBytes != null)
+        {
+            var certBytes = Convert.FromBase64String(anchorBytes);
+            var anchorCerts = new X509Certificate2Collection() { new X509Certificate2(certBytes) };
+            return anchorCerts;
+        }
+
         _logger.LogDebug($"Missing Client Certificate in Session: {UdapEdConstants.MTLS_CLIENT_CERTIFICATE_WITH_KEY}");
         return null;
     }

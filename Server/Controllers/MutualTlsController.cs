@@ -311,7 +311,7 @@ public class MutualTlsController : Controller
         var certificate = new X509Certificate2(certBytes);
 
         var notifications = new List<string>();
-        _trustChainValidator.Problem += message => notifications.Add($"Validation Problem: {message}");
+        _trustChainValidator.Problem += element => notifications.Add($"Validation Problem: {element.ChainElementStatus.Summarize(TrustChainValidator.DefaultProblemFlags)}");
         _trustChainValidator.Untrusted += message => notifications.Add($"Validation Untrusted: {message}");
         _trustChainValidator.Error += (_, message) => notifications.Add($"Validation Error: {message}");
 

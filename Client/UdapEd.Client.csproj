@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Udap.Common" Version="0.3.48" />
+    <PackageReference Include="Udap.Common" Version="0.3.51" />
   </ItemGroup>
 
   <!-- From:: https://jonhilton.net/visual-studio-2022-blazor-css-intellisense/ -->
