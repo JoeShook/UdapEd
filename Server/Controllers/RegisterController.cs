@@ -66,7 +66,7 @@ public class RegisterController : Controller
             }
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
-            HttpContext.Session.SetString(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
+            HttpContext.Session.SetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -112,7 +112,7 @@ public class RegisterController : Controller
     [HttpPost("UploadClientCertificate")]
     public IActionResult UploadClientCertificate([FromBody] string base64String)
     {
-        HttpContext.Session.SetString(UdapEdConstants.CLIENT_CERTIFICATE, base64String);
+        HttpContext.Session.SetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE, base64String);
         
         return Ok();
     }
@@ -125,7 +125,7 @@ public class RegisterController : Controller
             CertLoaded = CertLoadedEnum.Negative
         };
 
-        var clientCertSession = HttpContext.Session.GetString(UdapEdConstants.CLIENT_CERTIFICATE);
+        var clientCertSession = HttpContext.Session.GetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE);
 
         if (clientCertSession == null)
         {
@@ -138,7 +138,7 @@ public class RegisterController : Controller
             var certificate = new X509Certificate2(certBytes, password, X509KeyStorageFlags.Exportable);
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
-            HttpContext.Session.SetString(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
+            HttpContext.Session.SetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -175,7 +175,7 @@ public class RegisterController : Controller
 
         try
         {
-            var clientCertSession = HttpContext.Session.GetString(UdapEdConstants.CLIENT_CERTIFICATE);
+            var clientCertSession = HttpContext.Session.GetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE);
 
             if (clientCertSession != null)
             {
@@ -186,7 +186,7 @@ public class RegisterController : Controller
                 result.CertLoaded = CertLoadedEnum.Negative;
             }
 
-            var certBytesWithKey = HttpContext.Session.GetString(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+            var certBytesWithKey = HttpContext.Session.GetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
             if (certBytesWithKey != null)
             {
@@ -224,7 +224,7 @@ public class RegisterController : Controller
         [FromBody] UdapDynamicClientRegistrationDocument request, 
         [FromQuery] string alg)
     {
-        var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -292,7 +292,7 @@ public class RegisterController : Controller
         [FromBody] UdapDynamicClientRegistrationDocument request, 
         [FromQuery] string alg)
     {
-        var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -362,7 +362,7 @@ public class RegisterController : Controller
         [FromBody] RawSoftwareStatementAndHeader request, 
         [FromQuery] string alg)
     {
-        var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
         
         if (clientCertWithKey == null)
         {
@@ -422,7 +422,7 @@ public class RegisterController : Controller
         [FromBody] RawSoftwareStatementAndHeader request, 
         [FromQuery] string alg)
     {
-        var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
     
         if (clientCertWithKey == null)
         {

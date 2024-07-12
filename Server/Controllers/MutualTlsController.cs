@@ -23,12 +23,12 @@ namespace UdapEd.Server.Controllers;
 public class MutualTlsController : Controller
 {
     private readonly ILogger<RegisterController> _logger;
-    private readonly IConfiguration _configuration;
+    private readonly HttpClient _httpClient;
 
-    public MutualTlsController( ILogger<RegisterController> logger, IConfiguration configuration)
+    public MutualTlsController(HttpClient httpClient, ILogger<RegisterController> logger)
     {
+        _httpClient = httpClient;
         _logger = logger;
-        _configuration = configuration;
     }
 
     [HttpPut("UploadTestClientCertificate")]
@@ -196,4 +196,93 @@ public class MutualTlsController : Controller
         }
     }
 
+
+    [HttpPost("UploadAnchorCertificate")]
+    public IActionResult UploadAnchorCertificate([FromBody] string base64String)
+    {
+        var result = new CertificateStatusViewModel { CertLoaded = CertLoadedEnum.Negative };
+
+        try
+        {
+            var certBytes = Convert.FromBase64String(base64String);
+            var certificate = new X509Certificate2(certBytes);
+            result.DistinguishedName = certificate.SubjectName.Name;
+            result.Thumbprint = certificate.Thumbprint;
+            result.CertLoaded = CertLoadedEnum.Positive;
+            HttpContext.Session.SetString(UdapEdConstants.MTLS_ANCHOR_CERTIFICATE, base64String);
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed loading certificate");
+            _logger.LogDebug(ex,
+                $"Failed loading certificate from {nameof(base64String)} {base64String}");
+
+            return BadRequest(result);
+        }
+    }
+
+    [HttpPut("LoadAnchor")]
+    public async Task<IActionResult> LoadUdapOrgAnchor([FromBody] string anchorCertificate)
+    {
+        var result = new CertificateStatusViewModel { CertLoaded = CertLoadedEnum.Negative };
+
+        try
+        {
+            var response = await _httpClient.GetAsync(new Uri(anchorCertificate));
+            response.EnsureSuccessStatusCode();
+            var certBytes = await response.Content.ReadAsByteArrayAsync();
+            var certificate = new X509Certificate2(certBytes);
+            result.DistinguishedName = certificate.SubjectName.Name;
+            result.Thumbprint = certificate.Thumbprint;
+            result.CertLoaded = CertLoadedEnum.Positive;
+            HttpContext.Session.SetString(UdapEdConstants.MTLS_ANCHOR_CERTIFICATE, Convert.ToBase64String(certBytes));
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed loading anchor from {anchorCertificate}", anchorCertificate);
+            _logger.LogDebug(ex,
+                $"Failed loading certificate from {nameof(anchorCertificate)} {anchorCertificate}");
+
+            return BadRequest(result);
+        }
+    }
+
+    [HttpGet("IsAnchorCertificateLoaded")]
+    public IActionResult IsAnchorCertificateLoaded()
+    {
+        var result = new CertificateStatusViewModel
+        {
+            CertLoaded = CertLoadedEnum.Negative
+        };
+
+        try
+        {
+            var base64String = HttpContext.Session.GetString(UdapEdConstants.MTLS_ANCHOR_CERTIFICATE);
+
+            if (base64String != null)
+            {
+                var certBytes = Convert.FromBase64String(base64String);
+                var certificate = new X509Certificate2(certBytes);
+                result.DistinguishedName = certificate.SubjectName.Name;
+                result.Thumbprint = certificate.Thumbprint;
+                result.CertLoaded = CertLoadedEnum.Positive;
+            }
+            else
+            {
+                result.CertLoaded = CertLoadedEnum.Negative;
+            }
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex.Message);
+
+            return Ok(result);
+        }
+    }
 }

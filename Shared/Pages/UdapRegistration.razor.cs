@@ -56,11 +56,11 @@ public partial class UdapRegistration
     {
         get
         {
-            if (_signingAlgorithm == null && AppState.ClientCertificateInfo?.PublicKeyAlgorithm == "RS")
+            if (_signingAlgorithm == null && AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "RS")
             {
                  _signingAlgorithm = UdapConstants.SupportedAlgorithm.RS256;
             }
-            if (_signingAlgorithm == null && AppState.ClientCertificateInfo?.PublicKeyAlgorithm == "ES")
+            if (_signingAlgorithm == null && AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "ES")
             {
                 _signingAlgorithm = UdapConstants.SupportedAlgorithm.ES256;
             }
@@ -548,9 +548,9 @@ public partial class UdapRegistration
     
     protected override Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && AppState.ClientCertificateInfo?.SubjectAltNames != null && AppState.ClientCertificateInfo.SubjectAltNames.Any())
+        if (firstRender && AppState.UdapClientCertificateInfo?.SubjectAltNames != null && AppState.UdapClientCertificateInfo.SubjectAltNames.Any())
         {
-            SubjectAltName = AppState.ClientCertificateInfo?.SubjectAltNames.First();
+            SubjectAltName = AppState.UdapClientCertificateInfo?.SubjectAltNames.First();
             StateHasChanged();
         }
 
@@ -598,8 +598,8 @@ public partial class UdapRegistration
         {
             return AppState.ClientRegistrations?.Registrations
                 .Where(r => r.Value != null &&
-                            AppState.ClientCertificateInfo != null &&
-                            AppState.ClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
+                            AppState.UdapClientCertificateInfo != null &&
+                            AppState.UdapClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
                             AppState.BaseUrl == r.Value.ResourceServer)
                 .Select(r => r.Value);
         }

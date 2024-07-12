@@ -76,7 +76,7 @@ internal class AccessService : IAccessService
 
     public async Task<UdapAuthorizationCodeTokenRequestModel?> BuildRequestAccessTokenForAuthCode(AuthorizationCodeTokenRequestModel tokenRequestModel, string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -102,7 +102,7 @@ internal class AccessService : IAccessService
     public async Task<UdapClientCredentialsTokenRequestModel?> BuildRequestAccessTokenForClientCredentials(ClientCredentialsTokenRequestModel tokenRequestModel,
         string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {

@@ -1,5 +1,4 @@
 ﻿@page "/udapBusinessToBusiness"
-@using System.Collections.Immutable
 @using Microsoft.IdentityModel.Tokens
 
 
@@ -65,12 +64,12 @@
                                        AdornmentIcon="@Icons.Material.Outlined.ArrowDropDown"
                                        AdornmentColor="Color.Primary"
                                        Variant="Variant.Outlined">
-                                @if (AppState.ClientCertificateInfo?.PublicKeyAlgorithm == "RS")
+                                @if (AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "RS")
                                 {
                                     <MudSelectItem Value="UdapConstants.SupportedAlgorithm.RS256">@UdapConstants.SupportedAlgorithm.RS256</MudSelectItem>
                                     <MudSelectItem Value="UdapConstants.SupportedAlgorithm.RS384">@UdapConstants.SupportedAlgorithm.RS384</MudSelectItem>
                                 }
-                                @if (AppState.ClientCertificateInfo?.PublicKeyAlgorithm == "ES")
+                                @if (AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "ES")
                                 {
                                     <MudSelectItem Value="UdapConstants.SupportedAlgorithm.ES256">@UdapConstants.SupportedAlgorithm.ES256</MudSelectItem>
                                     <MudSelectItem Value="UdapConstants.SupportedAlgorithm.ES384">@UdapConstants.SupportedAlgorithm.ES384</MudSelectItem>
@@ -290,12 +289,12 @@
                              AdornmentIcon="@Icons.Material.Outlined.ArrowDropDown"
                              AdornmentColor="Color.Primary"
                              Variant="Variant.Outlined">
-                      @if (AppState.ClientCertificateInfo?.PublicKeyAlgorithm == "RS")
+                      @if (AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "RS")
                       {
                           <MudSelectItem Value="UdapConstants.SupportedAlgorithm.RS256">@UdapConstants.SupportedAlgorithm.RS256</MudSelectItem>
                           <MudSelectItem Value="UdapConstants.SupportedAlgorithm.RS384">@UdapConstants.SupportedAlgorithm.RS384</MudSelectItem>
                       }
-                      @if (AppState.ClientCertificateInfo?.PublicKeyAlgorithm == "ES")
+                      @if (AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "ES")
                       {
                           <MudSelectItem Value="UdapConstants.SupportedAlgorithm.ES256">@UdapConstants.SupportedAlgorithm.ES256</MudSelectItem>
                           <MudSelectItem Value="UdapConstants.SupportedAlgorithm.ES384">@UdapConstants.SupportedAlgorithm.ES384</MudSelectItem>

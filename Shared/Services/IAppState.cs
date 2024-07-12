@@ -27,8 +27,14 @@ public interface IAppState
 
     UdapClientCredentialsTokenRequestModel? ClientCredentialsTokenRequest { get; }
 
-    CertificateStatusViewModel? ClientCertificateInfo { get; }
-    
+    CertificateStatusViewModel? UdapClientCertificateInfo { get; }
+
+    CertificateStatusViewModel? UdapAnchorCertificateInfo { get; }
+
+    CertificateStatusViewModel? MtlsClientCertificateInfo { get; }
+
+    CertificateStatusViewModel? MtlsAnchorCertificateInfo { get; }
+
     UdapAuthorizationCodeTokenRequestModel? AuthorizationCodeTokenRequest { get; }
 
     AccessCodeRequestResult? AccessCodeRequestResult { get;  }
@@ -44,6 +50,7 @@ public interface IAppState
     LaunchContext? LaunchContext { get; }
 
     ClientStatus Status { get; }
+
 
     AuthorizationCodeRequest?AuthorizationCodeRequest { get; }
 

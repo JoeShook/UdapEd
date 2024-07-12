@@ -41,13 +41,13 @@ internal class RegisterService : IRegisterService
 
     public async Task UploadClientCertificate(string certBytes)
     {
-        await SecureStorage.Default.SetAsync(UdapEdConstants.CLIENT_CERTIFICATE, certBytes);
+        await SecureStorage.Default.SetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE, certBytes);
     }
 
     public async Task<RawSoftwareStatementAndHeader?> BuildSoftwareStatementForClientCredentials(
         UdapDynamicClientRegistrationDocument request, string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -111,7 +111,7 @@ internal class RegisterService : IRegisterService
 
     public async Task<RawSoftwareStatementAndHeader?> BuildSoftwareStatementForAuthorizationCode(UdapDynamicClientRegistrationDocument request, string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -177,7 +177,7 @@ internal class RegisterService : IRegisterService
 
     public async Task<UdapRegisterRequest?> BuildRequestBodyForClientCredentials(RawSoftwareStatementAndHeader? request, string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -234,7 +234,7 @@ internal class RegisterService : IRegisterService
 
     public async Task<UdapRegisterRequest?> BuildRequestBodyForAuthorizationCode(RawSoftwareStatementAndHeader? request, string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -347,7 +347,7 @@ internal class RegisterService : IRegisterService
             CertLoaded = CertLoadedEnum.Negative
         };
 
-        var clientCertSession = await SecureStorage.Default.GetAsync(UdapEdConstants.CLIENT_CERTIFICATE);
+        var clientCertSession = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE);
 
         if (clientCertSession == null)
         {
@@ -363,7 +363,7 @@ internal class RegisterService : IRegisterService
             var certificate = new X509Certificate2(certBytes, password, X509KeyStorageFlags.Exportable);
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
-            await SecureStorage.Default.SetAsync(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
+            await SecureStorage.Default.SetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -397,7 +397,7 @@ internal class RegisterService : IRegisterService
 
         try
         {
-            var clientCertSession = await SecureStorage.Default.GetAsync(UdapEdConstants.CLIENT_CERTIFICATE);
+            var clientCertSession = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE);
 
             if (clientCertSession != null)
             {
@@ -408,7 +408,7 @@ internal class RegisterService : IRegisterService
                 result.CertLoaded = CertLoadedEnum.Negative;
             }
 
-            var certBytesWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+            var certBytesWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
             if (certBytesWithKey != null)
             {
@@ -455,7 +455,7 @@ internal class RegisterService : IRegisterService
 
             var certificate = new X509Certificate2(certBytes, "udap-test", X509KeyStorageFlags.Exportable);
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
-            await SecureStorage.Default.SetAsync(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
+            await SecureStorage.Default.SetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;

@@ -8,6 +8,7 @@
 #endregion
 
 using System.Net;
+using System.Text.Json;
 using Hl7.Fhir.ElementModel;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
@@ -366,22 +367,60 @@ private readonly List<string> _supportedResources = new List<string>()
                 }
             }
 
-            var nondynamicEndpointTypes = endpointResource.ToTypedElement().Select(
-                $"extension.where($this.url != 'http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-dynamicRegistration').descendants().select($this.descendants().coding.code)");
 
-            foreach (var nonDynamicEndpointType in nondynamicEndpointTypes)
+            var mTlsEndpointTypes = endpointResource.ToTypedElement().Select(
+                $"extension.where($this.url = 'http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-secureExchangeArtifacts').select($this.where($this.descendants().coding.code in 'x509-mtls-certificate'))");
+
+
+            foreach (var mTlsEndpointType in mTlsEndpointTypes)
             {
-                endPointTreeItem.TreeItems.Add(new FhirHierarchyEntries()
-                {
-                    Id = endpointResource.Id,
-                    Name = endpointResource.Name,
-                    Link = endpointResource.Address,
-                    Type = nonDynamicEndpointType.Value?.ToString(),
-                    // IconColor = Color.Default,
-                    // Icon = Icons.Material.TwoTone.Link
-                });
+                // var results =
+                //     await MetadataService.GetUdapMetadataVerificationModel(
+                //         $"{endpointResource.Address}", null, default);
+                // Console.WriteLine(new FhirJsonSerializer().SerializeToString(mTlsEndpointType)));
+                var exchangeCode = mTlsEndpointType.Select("extension.descendants().coding.code");
+                
+                    endPointTreeItem.TreeItems.Add(new FhirHierarchyEntries()
+                    {
+                        Id = endpointResource.Id,
+                        Name = endpointResource.Name,
+                        Link = endpointResource.Address,
+                        Type = mTlsEndpointType.Select("extension.descendants().coding.code").First().Value.ToString(),
+                        MtlsServerCertificate = GetMtlsServerCertificate(mTlsEndpointType),
+                        // UdapMetadata = "Hello mTLS",
+                        // ErrorNotifications = results.Notifications,
+                        // IconColor = results.Notifications.Any() ? Color.Error : Color.Success,
+                        Icon = Icons.Material.TwoTone.Security
+                    });
+                
             }
+
+
+            // var nondynamicEndpointTypes = endpointResource.ToTypedElement().Select(
+            //     $"extension.where($this.url != 'http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-dynamicRegistration').descendants().select($this.descendants().coding.code)");
+            //
+            // foreach (var nonDynamicEndpointType in nondynamicEndpointTypes)
+            // {
+            //     endPointTreeItem.TreeItems.Add(new FhirHierarchyEntries()
+            //     {
+            //         Id = endpointResource.Id,
+            //         Name = endpointResource.Name,
+            //         Link = endpointResource.Address,
+            //         Type = nonDynamicEndpointType.Value?.ToString(),
+            //         // IconColor = Color.Default,
+            //         // Icon = Icons.Material.TwoTone.Link
+            //     });
+            // }
         }
+    }
+
+    private static string? GetMtlsServerCertificate(ITypedElement mTlsEndpointType)
+    {
+        try
+        {
+            return mTlsEndpointType.Select("extension.where(url = 'certificate').value").FirstOrDefault().Value.ToString();
+        }
+        catch { return "Can't parse"; }
     }
 
     private void DynamicallyRegister(FhirHierarchyEntries item)
@@ -408,6 +447,7 @@ private readonly List<string> _supportedResources = new List<string>()
 
         public List<string>? ErrorNotifications { get; set; } = null;
         public MetadataVerificationModel? UdapMetadata { get; set; } = null;
+        public object? MtlsServerCertificate { get; set; }
     }
 
 

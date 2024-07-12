@@ -8,10 +8,12 @@ namespace UdapEd.Client.Services;
 public class MutualTlsService : IMutualTlsService
 {
     private readonly HttpClient _httpClient;
+    private readonly ILogger<MutualTlsService> _logger;
 
-    public MutualTlsService(HttpClient httpClientClient)
+    public MutualTlsService(HttpClient httpClientClient, ILogger<MutualTlsService> logger)
     {
         _httpClient = httpClientClient;
+        _logger = logger;
     }
 
     public async Task UploadClientCertificate(string certBytes)
@@ -54,6 +56,33 @@ public class MutualTlsService : IMutualTlsService
     public async Task<CertificateStatusViewModel?> ClientCertificateLoadStatus()
     {
         var response = await _httpClient.GetFromJsonAsync<CertificateStatusViewModel>("MutualTLS/IsClientCertificateLoaded");
+
+        return response;
+    }
+
+    public async Task<CertificateStatusViewModel?> UploadAnchorCertificate(string certBytes)
+    {
+        var result = await _httpClient.PostAsJsonAsync("MutualTLS/UploadAnchorCertificate", certBytes);
+        result.EnsureSuccessStatusCode();
+
+        return await result.Content.ReadFromJsonAsync<CertificateStatusViewModel>();
+    }
+
+    public async Task<CertificateStatusViewModel?> LoadAnchor()
+    {
+        var response = await _httpClient.PutAsJsonAsync("MutualTLS/LoadAnchor", "http://crl.fhircerts.net/certs/SureFhirmTLS_CA.cer");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogInformation(await response.Content.ReadAsStringAsync());
+        }
+
+        return await response.Content.ReadFromJsonAsync<CertificateStatusViewModel>();
+    }
+
+    public async Task<CertificateStatusViewModel?> AnchorCertificateLoadStatus()
+    {
+        var response = await _httpClient.GetFromJsonAsync<CertificateStatusViewModel>("MutualTLS/IsAnchorCertificateLoaded");
 
         return response;
     }

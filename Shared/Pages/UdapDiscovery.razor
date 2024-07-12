@@ -63,16 +63,16 @@
                                         OnClick="@LoadUdapOrgAnchor" />
                                 
                             </MudItem>
-                            @if (!string.IsNullOrEmpty(AppState.AnchorCertificateInfo?.DistinguishedName) ||
-                                 !string.IsNullOrEmpty(AppState.AnchorCertificateInfo?.Thumbprint))
+                            @if (!string.IsNullOrEmpty(AppState.UdapAnchorCertificateInfo?.DistinguishedName) ||
+                                 !string.IsNullOrEmpty(AppState.UdapAnchorCertificateInfo?.Thumbprint))
                             {
                                 <MudItem xs="12">
-                                    <MudText Typo="Typo.body2" style="float: right;">@AppState.AnchorCertificateInfo?.DistinguishedName</MudText>
+                                    <MudText Typo="Typo.body2" style="float: right;">@AppState.UdapAnchorCertificateInfo?.DistinguishedName</MudText>
                                 </MudItem>
 
                                 <MudItem xs="12">
                                     <MudText style="float: right;" Typo="Typo.caption"> Thumbprint (sha1) </MudText>
-                                    <MudText style="float: right;" Typo="Typo.body2">@AppState.AnchorCertificateInfo?.Thumbprint </MudText>
+                                    <MudText style="float: right;" Typo="Typo.body2">@AppState.UdapAnchorCertificateInfo?.Thumbprint </MudText>
                                 </MudItem>
 
                             }

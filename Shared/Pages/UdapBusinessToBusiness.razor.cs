@@ -50,11 +50,11 @@ public partial class UdapBusinessToBusiness
     {
         get
         {
-            if (_signingAlgorithm == null && AppState.ClientCertificateInfo?.PublicKeyAlgorithm == "RS")
+            if (_signingAlgorithm == null && AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "RS")
             {
                 _signingAlgorithm = UdapConstants.SupportedAlgorithm.RS256;
             }
-            if (_signingAlgorithm == null && AppState.ClientCertificateInfo?.PublicKeyAlgorithm == "ES")
+            if (_signingAlgorithm == null && AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "ES")
             {
                 _signingAlgorithm = UdapConstants.SupportedAlgorithm.ES256;
             }
@@ -496,8 +496,8 @@ public partial class UdapBusinessToBusiness
         return AppState.ClientRegistrations?.Registrations
             .Where(r => r.Value != null && 
                         !r.Value.UserFlowSelected.EndsWith("_consumer") &&
-                        AppState.ClientCertificateInfo != null &&
-                        AppState.ClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
+                        AppState.UdapClientCertificateInfo != null &&
+                        AppState.UdapClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
                         AppState.BaseUrl == r.Value.ResourceServer)
             .ToImmutableDictionary();
     }

@@ -20,4 +20,10 @@ public interface IMutualTlsService
     Task<CertificateStatusViewModel?> ValidateCertificate(string password);
 
     Task<CertificateStatusViewModel?> ClientCertificateLoadStatus();
+
+    Task<CertificateStatusViewModel?> UploadAnchorCertificate(string certBytes);
+
+    Task<CertificateStatusViewModel?> LoadAnchor();
+
+    Task<CertificateStatusViewModel?> AnchorCertificateLoadStatus();
 }

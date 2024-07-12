@@ -42,11 +42,11 @@ public partial class UdapTieredOAuth
     {
         get
         {
-            if (_signingAlgorithm == null && AppState.ClientCertificateInfo?.PublicKeyAlgorithm == "RS")
+            if (_signingAlgorithm == null && AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "RS")
             {
                 _signingAlgorithm = UdapConstants.SupportedAlgorithm.RS256;
             }
-            if (_signingAlgorithm == null && AppState.ClientCertificateInfo?.PublicKeyAlgorithm == "ES")
+            if (_signingAlgorithm == null && AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "ES")
             {
                 _signingAlgorithm = UdapConstants.SupportedAlgorithm.ES256;
             }
@@ -384,8 +384,8 @@ public partial class UdapTieredOAuth
                         r.Value.UserFlowSelected != "client_credentials" &&
                         r.Value.Scope != null &&
                         r.Value.Scope.Contains("udap") && 
-                        AppState.ClientCertificateInfo != null &&
-                        AppState.ClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
+                        AppState.UdapClientCertificateInfo != null &&
+                        AppState.UdapClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
                         AppState.BaseUrl == r.Value.ResourceServer)
             .ToImmutableDictionary();
     }

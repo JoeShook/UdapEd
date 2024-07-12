@@ -123,7 +123,7 @@ public partial class UdapDiscovery: IDisposable
         _baseUrl = queryParams?.GetValueOrDefault("BaseUrl") ?? AppState.BaseUrl;
         
         var anchorCertificateLoadStatus = await DiscoveryService.AnchorCertificateLoadStatus();
-        await AppState.SetPropertyAsync(this, nameof(AppState.AnchorCertificateInfo), anchorCertificateLoadStatus);
+        await AppState.SetPropertyAsync(this, nameof(AppState.UdapAnchorCertificateInfo), anchorCertificateLoadStatus);
         await SetCertLoadedColor(anchorCertificateLoadStatus?.CertLoaded);
 
         if (Bq.Events != null)
@@ -146,7 +146,7 @@ public partial class UdapDiscovery: IDisposable
     private async Task Events_OnFocus(FocusEventArgs obj)
     {
         var anchorCertificateLoadStatus = await DiscoveryService.AnchorCertificateLoadStatus();
-        await AppState.SetPropertyAsync(this, nameof(AppState.AnchorCertificateInfo), anchorCertificateLoadStatus);
+        await AppState.SetPropertyAsync(this, nameof(AppState.UdapAnchorCertificateInfo), anchorCertificateLoadStatus);
         await SetCertLoadedColor(anchorCertificateLoadStatus?.CertLoaded);
         _checkServerSession = true;
     }
@@ -318,7 +318,7 @@ public partial class UdapDiscovery: IDisposable
         var certBytes = ms.ToArray();
 
         var certViewModel = await DiscoveryService.UploadAnchorCertificate(Convert.ToBase64String(certBytes));
-        await AppState.SetPropertyAsync(this, nameof(AppState.AnchorCertificateInfo), certViewModel);
+        await AppState.SetPropertyAsync(this, nameof(AppState.UdapAnchorCertificateInfo), certViewModel);
         await SetCertLoadedColor(certViewModel?.CertLoaded);
     }
 
@@ -326,7 +326,7 @@ public partial class UdapDiscovery: IDisposable
     {
         var certViewModel = await DiscoveryService.LoadUdapOrgAnchor();
         await SetCertLoadedColor(certViewModel?.CertLoaded);
-        await AppState.SetPropertyAsync(this, nameof(AppState.AnchorCertificateInfo), certViewModel);
+        await AppState.SetPropertyAsync(this, nameof(AppState.UdapAnchorCertificateInfo), certViewModel);
     }
 
     private async Task SetCertLoadedColor(CertLoadedEnum? isCertLoaded)
@@ -361,7 +361,7 @@ public partial class UdapDiscovery: IDisposable
             if (_checkServerSession)
             {
                 var certViewModel = await DiscoveryService.AnchorCertificateLoadStatus();
-                await AppState.SetPropertyAsync(this, nameof(AppState.AnchorCertificateInfo), certViewModel);
+                await AppState.SetPropertyAsync(this, nameof(AppState.UdapAnchorCertificateInfo), certViewModel);
                 await SetCertLoadedColor(certViewModel?.CertLoaded);
             }
         }

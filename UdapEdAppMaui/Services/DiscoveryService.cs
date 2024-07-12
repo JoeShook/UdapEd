@@ -54,7 +54,7 @@ internal class DiscoveryService : IDiscoveryService
 
             if (loadedStatus != null && (loadedStatus.CertLoaded == CertLoadedEnum.Positive))
             {
-                var anchorString = await SecureStorage.Default.GetAsync(UdapEdConstants.ANCHOR_CERTIFICATE);
+                var anchorString = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE);
 
                 if (anchorString != null)
                 {
@@ -159,7 +159,7 @@ internal class DiscoveryService : IDiscoveryService
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
-            await SecureStorage.Default.SetAsync(UdapEdConstants.ANCHOR_CERTIFICATE, base64String);
+            await SecureStorage.Default.SetAsync(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE, base64String);
 
             return result;
         }
@@ -188,7 +188,7 @@ internal class DiscoveryService : IDiscoveryService
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
-            await SecureStorage.Default.SetAsync(UdapEdConstants.ANCHOR_CERTIFICATE, Convert.ToBase64String(certBytes));
+            await SecureStorage.Default.SetAsync(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE, Convert.ToBase64String(certBytes));
 
             return result;
         }
@@ -212,7 +212,7 @@ internal class DiscoveryService : IDiscoveryService
         try
         {
 
-            var base64String = await SecureStorage.Default.GetAsync(UdapEdConstants.ANCHOR_CERTIFICATE);
+            var base64String = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE);
             // var base64String = HttpContext.Session.GetString(UdapEdConstants.ANCHOR_CERTIFICATE);
 
             if (base64String != null)

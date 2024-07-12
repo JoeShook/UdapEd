@@ -53,7 +53,7 @@ public class MetadataController : Controller
     [HttpGet]
     public async Task<IActionResult> Get([FromQuery] string metadataUrl, [FromQuery] string community)
     {
-        var anchorString = HttpContext.Session.GetString(UdapEdConstants.ANCHOR_CERTIFICATE);
+        var anchorString = HttpContext.Session.GetString(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE);
 
         if (anchorString != null)
         {
@@ -171,7 +171,7 @@ public class MetadataController : Controller
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
-            HttpContext.Session.SetString(UdapEdConstants.ANCHOR_CERTIFICATE, base64String);
+            HttpContext.Session.SetString(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE, base64String);
 
             return Ok(result);
         }
@@ -199,7 +199,7 @@ public class MetadataController : Controller
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
-            HttpContext.Session.SetString(UdapEdConstants.ANCHOR_CERTIFICATE, Convert.ToBase64String(certBytes));
+            HttpContext.Session.SetString(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE, Convert.ToBase64String(certBytes));
 
             return Ok(result);
         }
@@ -223,7 +223,7 @@ public class MetadataController : Controller
 
         try
         {
-            var base64String = HttpContext.Session.GetString(UdapEdConstants.ANCHOR_CERTIFICATE);
+            var base64String = HttpContext.Session.GetString(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE);
 
             if (base64String != null)
             {

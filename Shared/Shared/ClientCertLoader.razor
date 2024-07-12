@@ -36,16 +36,16 @@
 
 
 @if (AppState.ClientMode == ClientSecureMode.UDAP && (
-    !string.IsNullOrEmpty(AppState.ClientCertificateInfo?.DistinguishedName) ||
-     !string.IsNullOrEmpty(AppState.ClientCertificateInfo?.Thumbprint)))
+    !string.IsNullOrEmpty(AppState.UdapClientCertificateInfo?.DistinguishedName) ||
+     !string.IsNullOrEmpty(AppState.UdapClientCertificateInfo?.Thumbprint)))
 {   
-        <MudText Typo="Typo.body2"><b>Subject:</b>@AppState.ClientCertificateInfo?.DistinguishedName</MudText>
+        <MudText Typo="Typo.body2"><b>Subject:</b>@AppState.UdapClientCertificateInfo?.DistinguishedName</MudText>
     <MudText Typo="Typo.caption"> <b>Thumbprint (sha1)</b> </MudText>
-        <MudText  Typo="Typo.body2">@AppState.ClientCertificateInfo?.Thumbprint </MudText>
-        <MudText Typo="Typo.body2"><b>Issuer:</b> @AppState.ClientCertificateInfo?.Issuer </MudText>
+        <MudText  Typo="Typo.body2">@AppState.UdapClientCertificateInfo?.Thumbprint </MudText>
+        <MudText Typo="Typo.body2"><b>Issuer:</b> @AppState.UdapClientCertificateInfo?.Issuer </MudText>
        
 
-    @if (AppState.ClientCertificateInfo.CertLoaded == CertLoadedEnum.Expired)
+    @if (AppState.UdapClientCertificateInfo.CertLoaded == CertLoadedEnum.Expired)
     {
         <MudAlert Severity="Severity.Error">Certificate Expired</MudAlert>
     }
@@ -63,7 +63,7 @@
     protected override async Task OnInitializedAsync()
     {
         var clientCertificateLoadStatus = await RegisterService.ClientCertificateLoadStatus();
-        await AppState.SetPropertyAsync(this, nameof(AppState.ClientCertificateInfo), clientCertificateLoadStatus);
+        await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), clientCertificateLoadStatus);
         await SetCertLoadedColor(clientCertificateLoadStatus?.CertLoaded);
         
         if (Bq.Events != null)
@@ -87,7 +87,7 @@
     private async Task Events_OnFocus(FocusEventArgs obj)
     {
         var clientCertificateLoadStatus = await RegisterService.ClientCertificateLoadStatus();
-        await AppState.SetPropertyAsync(this, nameof(AppState.ClientCertificateInfo), clientCertificateLoadStatus);
+        await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), clientCertificateLoadStatus);
         await SetCertLoadedColor(clientCertificateLoadStatus?.CertLoaded);
         _checkServerSession = true;
     }
@@ -147,7 +147,7 @@
         var result = await dialog.Result;
         var certViewModel = await RegisterService.ValidateCertificate(result.Data?.ToString() ?? "");
         await SetCertLoadedColor(certViewModel?.CertLoaded);
-        await AppState.SetPropertyAsync(this, nameof(AppState.ClientCertificateInfo), certViewModel);
+        await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), certViewModel);
         await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
         await OnCertificateLoaded.InvokeAsync();
     }
@@ -156,7 +156,7 @@
     {
         var certViewModel = await RegisterService.LoadTestCertificate("fhirlabs.net.client.pfx");
         await SetCertLoadedColor(certViewModel?.CertLoaded);
-        await AppState.SetPropertyAsync(this, nameof(AppState.ClientCertificateInfo), certViewModel);
+        await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), certViewModel);
         await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
         await OnCertificateLoaded.InvokeAsync();
     }
@@ -165,7 +165,7 @@
     {
         var certViewModel = await RegisterService.LoadTestCertificate("udap-sandbox-surescripts-2.p12");
         await SetCertLoadedColor(certViewModel?.CertLoaded);
-        await AppState.SetPropertyAsync(this, nameof(AppState.ClientCertificateInfo), certViewModel);
+        await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), certViewModel);
         await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
         await OnCertificateLoaded.InvokeAsync();
     }
@@ -177,7 +177,7 @@
             if (_checkServerSession)
             {
                 var certViewModel = await RegisterService.ClientCertificateLoadStatus();
-                await AppState.SetPropertyAsync(this, nameof(AppState.ClientCertificateInfo), certViewModel);
+                await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), certViewModel);
                 await SetCertLoadedColor(certViewModel?.CertLoaded);
             }
         }
