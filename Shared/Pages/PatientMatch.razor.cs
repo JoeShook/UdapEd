@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
 using MudBlazor;
+using UdapEd.Shared.Components;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
-using UdapEd.Shared.Shared;
 using Address = UdapEd.Shared.Model.Address;
 using Task = System.Threading.Tasks.Task;
 

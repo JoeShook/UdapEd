@@ -15,7 +15,7 @@ using Microsoft.IdentityModel.Tokens;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Services;
 
-namespace UdapEd.Shared.Shared;
+namespace UdapEd.Shared.Components;
 
 public partial class SignedJwtViewer
 {

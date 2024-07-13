@@ -5,10 +5,10 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.WebUtilities;
 using MudBlazor;
+using UdapEd.Shared.Components;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Smart;
 using UdapEd.Shared.Services;
-using UdapEd.Shared.Shared;
 using Task = System.Threading.Tasks.Task;
 
 namespace UdapEd.Shared.Pages;

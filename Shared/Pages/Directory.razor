@@ -165,45 +165,50 @@
                             </MudCardContent>
 
                         </MudCard>
-                        <MudTabs>
-                            <MudTabPanel Text="GET">
-                                <MudCard Elevation="3" Style="margin-top: 10px">
-                                    <MudCardContent>
-                                        <MudText Typo="Typo.h6">@($"GET {_fhirSearch.BaseUrl}/{_fhirSearch.ResourceName}")</MudText>
-                                        <MudTextField AutoGrow @bind-Value="_searchString" class=@ValidStyle TextChanged="BuildManualGetSearch" />
-                                    </MudCardContent>
+                        <MudPaper Class="mt-3">
+                            <MudTabs>
+                                <MudTabPanel Text="GET">
+                                    <MudCard Elevation="3" Style="margin-top: 10px">
+                                        <MudCardContent>
+                                            <MudText Typo="Typo.h6">@($"GET {_fhirSearch.BaseUrl}/{_fhirSearch.ResourceName}")</MudText>
+                                            <MudTextField AutoGrow @bind-Value="_searchString" class=@ValidStyle TextChanged="BuildManualGetSearch" />
+                                        </MudCardContent>
 
-                                    <MudCardActions>
-                                        <MudButton Class="mt-3"
-                                                   Color="Color.Primary"
-                                                   ButtonType="ButtonType.Button"
-                                                   Variant="Variant.Filled"
-                                                   OnClick="SearchGet">Search</MudButton>
-                                    </MudCardActions>
-                                </MudCard>
-                            </MudTabPanel>
-                            <MudTabPanel Text="POST">
-                                <MudCard Elevation="3" Style="margin-top: 10px">
-                                    <MudCardContent>
-                                        <MudText Typo="Typo.h6">@($"POST {_fhirSearch.BaseUrl}/{_fhirSearch.ResourceName}/_search")</MudText>
-                                        <MudTextField AutoGrow @bind-Value="_postSearchString" class=@ValidStyle TextChanged="BuildManualPostSearch" />
-                                    </MudCardContent>
+                                        <MudCardActions>
+                                            <MudButton Class="mt-3"
+                                                       Color="Color.Primary"
+                                                       ButtonType="ButtonType.Button"
+                                                       Variant="Variant.Filled"
+                                                       OnClick="SearchGet">Search</MudButton>
+                                        </MudCardActions>
+                                    </MudCard>
+                                </MudTabPanel>
+                                <MudTabPanel Text="POST">
+                                    <MudCard Elevation="3" Style="margin-top: 10px">
+                                        <MudCardContent>
+                                            <MudText Typo="Typo.h6">@($"POST {_fhirSearch.BaseUrl}/{_fhirSearch.ResourceName}/_search")</MudText>
+                                            <MudTextField AutoGrow @bind-Value="_postSearchString" class=@ValidStyle TextChanged="BuildManualPostSearch" />
+                                        </MudCardContent>
 
-                                    <MudCardActions>
-                                        <MudButton Class="mt-3"
-                                                   Color="Color.Primary"
-                                                   ButtonType="ButtonType.Button"
-                                                   Variant="Variant.Filled"
-                                                   OnClick="SearchPost">Search</MudButton>
-                                    </MudCardActions>
-                                </MudCard>
+                                        <MudCardActions>
+                                            <MudButton Class="mt-3"
+                                                       Color="Color.Primary"
+                                                       ButtonType="ButtonType.Button"
+                                                       Variant="Variant.Filled"
+                                                       OnClick="SearchPost">Search</MudButton>
+                                        </MudCardActions>
+                                    </MudCard>
                                 
-                            </MudTabPanel>
-                        </MudTabs>
+                                </MudTabPanel>
+                            </MudTabs>
+                        </MudPaper>
+
                     </MudTabPanel>
+
                     <MudTabPanel Text="Get">
                         Get
                     </MudTabPanel>
+
                 </MudTabs>
             </MudItem>
             <MudItem sm="12" lg="12" xl="6">
@@ -271,13 +276,13 @@
                                                                             
                                                                     @if (@item.ErrorNotifications != null && @item.ErrorNotifications.Any())
                                                                     {
-                                                                        <MudLink Class="mt-3" Style="justify-self: start;"
-                                                                                 Color="Color.Primary"
-                                                                                 ButtonType="ButtonType.Button"
-                                                                                 Variant="Variant.Filled"
-                                                                                 Href="@($"/udapDiscovery?BaseUrl={item.Link}")" Target="_blank">Load UDAP Trust anchor and search again
-                                                                            <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew"/>
-                                                                        </MudLink>
+                                                                        <MudButton Class="mt-3" Style="justify-self: start;"
+                                                                                   Color="Color.Primary"
+                                                                                   ButtonType="ButtonType.Button"
+                                                                                   Variant="Variant.Text"
+                                                                                   OnClick="OpenUdapAnchorDialogAsync"
+                                                                                   StartIcon="@Icons.Material.Filled.Upload">Load UDAP Trust anchor
+                                                                        </MudButton>
                                                                     }
                                                                     else
                                                                     {
@@ -304,11 +309,7 @@
 
                                                                     <MudText Typo="Typo.h6" Color="Color.Tertiary"><b>mTLS:</b> @($" {item.Name} (Endpoint/{item.Id})")</MudText>
                                                                         <MudText Typo="Typo.h6" Color="@item.IconColor"><b>@item.MtlsServerCertificate.TrimForDisplay(30, "...")</b></MudText>
-                                                                    <MudLink Style="justify-self: start;"
-                                                                             Href="@($"/patientSearch?BaseUrl={item.Link}")" Target="_blank">Search
-                                                                        <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew"/>
-                                                                    </MudLink>
-
+                                                                    
                                                                     @if (item.ErrorNotifications != null && item.ErrorNotifications.Any())
                                                                     {
                                                                                    
@@ -321,12 +322,19 @@
                                                                             </MudStack>
                                                                         </MudAlert>
 
-                                                                        <MudLink Class="mt-3" Style="justify-self: start;"
-                                                                                 Color="Color.Primary"
-                                                                                 ButtonType="ButtonType.Button"
-                                                                                 Variant="Variant.Filled"
-                                                                                 Href="@($"/mTlsClient")" Target="_blank">Load mTls Trust Anchor and then search again
-                                                                            <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew" />
+                                                                        <MudButton Class="mt-3" Style="justify-self: start;"
+                                                                                   Color="Color.Primary"
+                                                                                   ButtonType="ButtonType.Button"
+                                                                                   Variant="Variant.Text"
+                                                                                   OnClick="OpenMtlsAnchorDialogAsync"
+                                                                                   StartIcon="@Icons.Material.Filled.Upload">Load mTls Trust Anchor</MudButton>
+
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <MudLink Style="justify-self: start;"
+                                                                                 Href="@($"/patientSearch?BaseUrl={item.Link}")" Target="_blank">Search
+                                                                            <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew"/>
                                                                         </MudLink>
                                                                     }
 

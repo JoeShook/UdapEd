@@ -1,0 +1,15 @@
+﻿<MudDialog>
+    <DialogContent>
+        <UdapAnchorCertificate />
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = null!;
+
+    void Submit() => MudDialog.Close();
+}

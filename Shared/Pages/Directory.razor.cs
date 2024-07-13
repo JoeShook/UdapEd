@@ -18,12 +18,13 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using MudBlazor;
 using UdapEd.Shared.Extensions;
+using UdapEd.Shared.Components;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Discovery;
 using UdapEd.Shared.Search;
 using UdapEd.Shared.Services;
-using UdapEd.Shared.Shared;
 using T = System.Threading.Tasks;
+using static MudBlazor.CategoryTypes;
 
 namespace UdapEd.Shared.Pages;
 
@@ -35,7 +36,8 @@ public partial class Directory
     [Inject] private IFhirService FhirService { get; set; } = null!;
     [Inject] IDiscoveryService MetadataService { get; set; } = null!;
     [Inject] IMutualTlsService MtlsService { get; set; } = null!;
-    [Inject] private CapabilityLookup CapabilityLookup { get; set; }
+    [Inject] private CapabilityLookup CapabilityLookup { get; set; } = null!;
+    [Inject] public required IDialogService DialogService { get; set; }
 
     private ErrorBoundary? _errorBoundary;
     private readonly FhirSearch _fhirSearch = new(){BaseUrl = "https://national-directory.fast.hl7.org/fhir"};
@@ -426,7 +428,20 @@ private readonly List<string> _supportedResources = new List<string>()
         Js.InvokeVoidAsync("open", ($"/udapRegistration?BaseUrl={item.Link}"), "_blank");
     }
 
-    
+    private async T.Task OpenMtlsAnchorDialogAsync()
+    {
+        var dialog = await DialogService.ShowAsync<MtlsAnchorDialog>("Options Dialog");
+        await dialog.Result;
+        await SearchGet();
+    }
+
+    private async T.Task OpenUdapAnchorDialogAsync()
+    {
+        var dialog = await DialogService.ShowAsync<UdapAnchorDialog>("Options Dialog");
+        await dialog.Result;
+        await SearchGet();
+    }
+
     record FhirHierarchyEntries
     {
         public HashSet<FhirHierarchyEntries> TreeItems = new HashSet<FhirHierarchyEntries>();

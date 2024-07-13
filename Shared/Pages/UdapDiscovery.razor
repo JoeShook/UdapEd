@@ -1,117 +1,58 @@
 ﻿@page "/udapDiscovery"
-@using UdapEd.Shared
 
-<InputFile id="anchorFileInput" OnChange="UploadFilesAsync" hidden />
+
 <ErrorBoundary @ref="ErrorBoundary">
   <ChildContent>
-    <MudGrid Class="mt-4">
-        <MudItem xs="12" >
-            <MudText Typo="Typo.h4">Udap Metadata</MudText>
-        </MudItem>
-      <MudItem xs="12">
-        <MudCard Class="pa-2 ma-2" Elevation="3">
-            <MudCardActions>
-                
-                <MudGrid Spacing="2" Justify="Justify.FlexStart">
-                            <MudItem sm="3" xs="12">
-                        <MudGrid Spacing="2" Justify="Justify.FlexStart">
-                            <MudItem  >
-                                <MudButton Class="mt-3"
-                                           Color="Color.Primary"
-                                           ButtonType="ButtonType.Button"
-                                           Variant="Variant.Filled"
-                                           OnClick="GetMetadata">Query</MudButton>
-                            </MudItem>
-                            <MudItem >
-                                <MudButton Class="mt-3"
-                                           Color="Color.Primary"
-                                           ButtonType="ButtonType.Button"
-                                           Variant="Variant.Filled"
-                                           OnClick="RemoveBaseUrl">Remove Base Url</MudButton>
-                            </MudItem>
-                        </MudGrid>
-                    </MudItem>
+      <MudGrid Class="mt-4">
+          <MudItem sm="6" xs="12">
+              <MudText Typo="Typo.h4" >Udap Metadata</MudText>
+              <MudStack Wrap="Wrap.Wrap" Row="true">
+                  <MudButton Class="mt-3"
+                             Color="Color.Primary"
+                             ButtonType="ButtonType.Button"
+                             Variant="Variant.Filled"
+                             OnClick="GetMetadata">Query</MudButton>
 
-                    <MudSpacer/>
-
-                    <MudItem sm="8" xs="12">
-                        <MudGrid Spacing="2" Justify="Justify.FlexEnd" Class="bottom:0;right:0">
-                            <MudItem xs="12">
-                                <MudText style="float: right">Choose Trust Anchor Certificate.</MudText>
-                            </MudItem>
-
-                            <MudItem xs="12">
-
-                                <MudFab Class="ma-2 " style="float: right;"
-                                        HtmlTag="label"
-                                        Size="Size.Small"
-                                        Color="@CertLoadedColor"
-                                        StartIcon="@AppState.CertificateIcon"
-                                        Label="Upload"
-                                        Title="Upload Anchor Certificate"
-                                        IconSize="Size.Small"
-                                        for="anchorFileInput"/>
-
-                                <MudFab Class="ma-2 " style="float: right;"
-                                        HtmlTag="label"
-                                        Size="Size.Small"
-                                        Color="@CertLoadedColor"
-                                        StartIcon="@AppState.CertificateIcon"
-                                        Label="Load EMR Direct Test CA"
-                                        Title="Use UDAP Test Tool Anchor Certificate"
-                                        IconSize="Size.Small"
-                                        OnClick="@LoadUdapOrgAnchor" />
-                                
-                            </MudItem>
-                            @if (!string.IsNullOrEmpty(AppState.UdapAnchorCertificateInfo?.DistinguishedName) ||
-                                 !string.IsNullOrEmpty(AppState.UdapAnchorCertificateInfo?.Thumbprint))
-                            {
-                                <MudItem xs="12">
-                                    <MudText Typo="Typo.body2" style="float: right;">@AppState.UdapAnchorCertificateInfo?.DistinguishedName</MudText>
-                                </MudItem>
-
-                                <MudItem xs="12">
-                                    <MudText style="float: right;" Typo="Typo.caption"> Thumbprint (sha1) </MudText>
-                                    <MudText style="float: right;" Typo="Typo.body2">@AppState.UdapAnchorCertificateInfo?.Thumbprint </MudText>
-                                </MudItem>
-
-                            }
-
-                        </MudGrid>
-
-                    </MudItem>
-                </MudGrid>
-            </MudCardActions>
-            <MudCardContent>
-                <MudGrid Spacing="2" Justify="Justify.FlexStart">
-                    <MudItem xs="8">
-                        <MudAutocomplete T="string"
-                                         Label="Enter BaseUrl"
-                                         AutoFocus="true"
-                                         HelperText=@($"UDAP Metadata URL: {RequestUrl.GetWellKnownUdap(BaseUrl, Community)}")
-                                         @bind-Value="BaseUrl"
-                                         @bind-Text="BaseUrl"
-                                         SearchFuncWithCancel="@GetMetadata"
-                                         ResetValueOnEmptyText="true"/>
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudTextField @bind-Value="Community" Label="Community" Variant="Variant.Text"></MudTextField>
-                    </MudItem>
-                </MudGrid>
-                        @if (AppState.MetadataVerificationModel != null && AppState.MetadataVerificationModel.Notifications.Any())
-                {
-                            <MudAlert Severity="Severity.Error">
-                                @foreach (string note in AppState.MetadataVerificationModel.Notifications)
-                        {
-                                    <li>@note</li>
-                        }
-                    </MudAlert>
-                }
-            </MudCardContent>
-           
-        </MudCard>
-
-      </MudItem>
+                  <MudButton Class="mt-3"
+                             Color="Color.Primary"
+                             ButtonType="ButtonType.Button"
+                             Variant="Variant.Filled"
+                             OnClick="RemoveBaseUrl"
+                             Style="white-space: nowrap;">Remove Base Url</MudButton>
+              </MudStack>
+          </MudItem>
+          <MudSpacer/>
+            <MudItem sm="6" xs="12">
+              <MudGrid Spacing="2" Justify="Justify.FlexEnd" Class="bottom:0;right:0">
+                  <UdapAnchorCertificate/>
+              </MudGrid>
+          </MudItem>
+          <MudItem xs="12">
+              <MudGrid Spacing="2" Justify="Justify.FlexStart">
+                  <MudItem xs="8">
+                      <MudAutocomplete T="string"
+                                       Label="Enter BaseUrl"
+                                       AutoFocus="true"
+                                       HelperText=@($"UDAP Metadata URL: {RequestUrl.GetWellKnownUdap(BaseUrl, Community)}")
+                                                                                  @bind-Value="BaseUrl"
+                                       @bind-Text="BaseUrl"
+                                       SearchFuncWithCancel="@GetMetadata"
+                                       ResetValueOnEmptyText="true"/>
+                  </MudItem>
+                  <MudItem xs="4">
+                      <MudTextField @bind-Value="Community" Label="Community" Variant="Variant.Text"></MudTextField>
+                  </MudItem>
+              </MudGrid>
+              @if (AppState.MetadataVerificationModel != null && AppState.MetadataVerificationModel.Notifications.Any())
+              {
+                  <MudAlert Severity="Severity.Error">
+                      @foreach (string note in AppState.MetadataVerificationModel.Notifications)
+                      {
+                          <li>@note</li>
+                      }
+                  </MudAlert>
+              }
+          </MudItem>
       <MudGrid Spacing="1" Class="mt-8">
         <MudItem sm="6" xs="12">
           <MudPaper Class="udap-input" Elevation="3">

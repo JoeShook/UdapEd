@@ -1,11 +1,9 @@
-﻿using Microsoft.AspNetCore.Components;
-using MudBlazor.Utilities;
+﻿using Hl7.Fhir.Rest;
+using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using Hl7.Fhir.Model;
-using static MudBlazor.CategoryTypes;
-using Hl7.Fhir.Rest;
+using MudBlazor.Utilities;
 
-namespace UdapEd.Shared.Shared;
+namespace UdapEd.Shared.Components;
 
 public partial class FhirTablePager : MudComponentBase
 {

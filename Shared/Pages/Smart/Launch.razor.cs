@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
+using UdapEd.Shared.Components;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Smart;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Services.Http;
-using UdapEd.Shared.Shared;
 
 namespace UdapEd.Shared.Pages.Smart;
 

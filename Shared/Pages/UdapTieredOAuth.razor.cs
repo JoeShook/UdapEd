@@ -18,9 +18,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
 using Udap.Common.Extensions;
 using Udap.Model;
+using UdapEd.Shared.Components;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
-using UdapEd.Shared.Shared;
 
 namespace UdapEd.Shared.Pages;
 

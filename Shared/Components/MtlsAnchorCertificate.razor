@@ -1,0 +1,126 @@
+﻿@using UdapEd.Shared.Services
+@inject IMutualTlsService mTlsService
+@inject IDialogService DialogService
+
+<InputFile id="anchorCertInput" OnChange="UploadAnchorFilesAsync" hidden />
+
+<MudCard Class="pa-2 ma-2" Elevation="3">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6" Color="Color.Primary">Load mTLS Trust Anchor</MudText>
+
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudText>The anchor is used to validate public mTLS certificates published in a directory</MudText>
+    </MudCardContent>
+    <MudCardActions>
+        <MudStack Wrap="Wrap.Wrap" Row="true">
+        <MudFab Class="ma-2"
+                HtmlTag="label"
+                Size="Size.Small"
+                Color="@AnchorLoadedColor"
+                StartIcon="@AppState.CertificateIcon"
+                Label="Upload a Client Certificate"
+                Title="Upload Client Certificate"
+                IconSize="Size.Small"
+                for="anchorCertInput"
+                Style="white-space: nowrap;"/>
+        <MudFab HtmlTag="label"
+                Class="ma-2"
+                Size="Size.Small"
+                Color="@AnchorLoadedColor"
+                StartIcon="@AppState.CertificateIcon"
+                Label="FhirLabs mTLS Client Certificate"
+                Title="Use Test Client Certificate"
+                IconSize="Size.Small"
+                OnClick="@LoadMtlsAnchor"
+                Style="white-space: nowrap;"/>
+        </MudStack>
+    </MudCardActions>
+    <MudCardContent>
+        @if (!string.IsNullOrEmpty(AppState.MtlsAnchorCertificateInfo?.DistinguishedName) ||
+             !string.IsNullOrEmpty(AppState.MtlsAnchorCertificateInfo?.Thumbprint))
+        {
+            <MudText Typo="Typo.body2"><b>Subject:</b>@AppState.MtlsAnchorCertificateInfo?.DistinguishedName</MudText>
+            <MudText Typo="Typo.caption"> <b>Thumbprint (sha1)</b> </MudText>
+            <MudText Typo="Typo.body2">@AppState.MtlsAnchorCertificateInfo?.Thumbprint </MudText>
+            <MudText Typo="Typo.body2"><b>Issuer:</b> @AppState.MtlsAnchorCertificateInfo?.Issuer </MudText>
+
+
+            @if (AppState.MtlsAnchorCertificateInfo.CertLoaded == CertLoadedEnum.Expired)
+            {
+                <MudAlert Severity="Severity.Error">Certificate Expired</MudAlert>
+            }
+        }
+
+    </MudCardContent>
+</MudCard>
+
+@code {
+
+    [CascadingParameter] CascadingAppState AppState { get; set; } = null!;
+    
+    
+    public Color AnchorLoadedColor { get; set; } = Color.Error;
+
+   
+    protected override async Task OnInitializedAsync()
+    {        
+        var anchorCertificateLoadStatus = await mTlsService.AnchorCertificateLoadStatus();
+        await AppState.SetPropertyAsync(this, nameof(AppState.MtlsAnchorCertificateInfo), anchorCertificateLoadStatus);
+        await SetAnchorCertLoadedColor(anchorCertificateLoadStatus?.CertLoaded);
+    }
+
+
+    private async Task SetAnchorCertLoadedColor(CertLoadedEnum? isCertLoaded)
+    {
+        switch (isCertLoaded)
+        {
+            case CertLoadedEnum.Negative:
+                AnchorLoadedColor = Color.Error;
+                await AppState.SetPropertyAsync(this, nameof(AppState.AnchorLoaded), false);
+                break;
+            case CertLoadedEnum.Positive:
+                AnchorLoadedColor = Color.Success;
+                await AppState.SetPropertyAsync(this, nameof(AppState.AnchorLoaded), true);
+                break;
+            case CertLoadedEnum.InvalidPassword:
+                AnchorLoadedColor = Color.Warning;
+                await AppState.SetPropertyAsync(this, nameof(AppState.AnchorLoaded), false);
+                break;
+            case CertLoadedEnum.Expired:
+                AnchorLoadedColor = Color.Error;
+                await AppState.SetPropertyAsync(this, nameof(AppState.AnchorLoaded), false);
+                break;
+            default:
+                AnchorLoadedColor = Color.Error;
+                await AppState.SetPropertyAsync(this, nameof(AppState.AnchorLoaded), false);
+                break;
+        }
+
+        this.StateHasChanged();
+    }
+    
+    private async Task LoadMtlsAnchor()
+    {
+        var certViewModel = await mTlsService.LoadAnchor();
+        await SetAnchorCertLoadedColor(certViewModel?.CertLoaded);
+        await AppState.SetPropertyAsync(this, nameof(AppState.MtlsAnchorCertificateInfo), certViewModel);
+    }
+
+    private async Task UploadAnchorFilesAsync(InputFileChangeEventArgs e)
+    {
+        long maxFileSize = 1024 * 10;
+
+        var uploadStream = await new StreamContent(e.File.OpenReadStream(maxFileSize)).ReadAsStreamAsync();
+        var ms = new MemoryStream();
+        await uploadStream.CopyToAsync(ms);
+        var certBytes = ms.ToArray();
+
+        var certViewModel = await mTlsService.UploadAnchorCertificate(Convert.ToBase64String(certBytes));
+        await AppState.SetPropertyAsync(this, nameof(AppState.MtlsAnchorCertificateInfo), certViewModel);
+        await SetAnchorCertLoadedColor(certViewModel?.CertLoaded);
+    }
+
+}

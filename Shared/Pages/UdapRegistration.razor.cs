@@ -15,10 +15,10 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using Udap.Model;
 using Udap.Model.Registration;
+using UdapEd.Shared.Components;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Registration;
 using UdapEd.Shared.Services;
-using UdapEd.Shared.Shared;
 
 namespace UdapEd.Shared.Pages;
 
