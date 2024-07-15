@@ -19,5 +19,5 @@ public class CertificateStatusViewModel
     public string Thumbprint { get; set; } = string.Empty;
     public string PublicKeyAlgorithm { get; set; }
 
-    public string Issuer { get; set; }
+    public string Issuer { get; set; } = string.Empty;
 }

@@ -154,6 +154,7 @@ public class RegisterController : Controller
                 .ToList();
 
             result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(certificate);
+            result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
         }
         catch (Exception ex)
         {
@@ -207,6 +208,7 @@ public class RegisterController : Controller
                     .ToList();
 
                 result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(clientCert);
+                result.Issuer = clientCert.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
             }
 
             return Ok(result);

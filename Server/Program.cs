@@ -156,12 +156,15 @@ builder.Services.AddTransient<FhirMTlsClientWithUrlProvider>(sp =>
     if (certificate != null)
     {
         Log.Logger.Information($"mTLS Client: {certificate.Thumbprint}");
+        httpClientHandler.ClientCertificates.Add(certificate);
+    }
+
+    if (anchorCertificate != null)
+    {
         // httpClientHandler.CheckCertificateRevocationList = true;
         // httpClientHandler.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
-        httpClientHandler.ServerCertificateCustomValidationCallback = 
+        httpClientHandler.ServerCertificateCustomValidationCallback =
             HttpClientHandlerExtension.CreateCustomRootValidator(anchorCertificate);
-       
-        httpClientHandler.ClientCertificates.Add(certificate);
     }
     
     var fhirMTlsProvider = new FhirMTlsClientWithUrlProvider(
