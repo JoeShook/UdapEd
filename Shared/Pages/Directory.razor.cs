@@ -425,6 +425,7 @@ private readonly List<string> _supportedResources = new List<string>()
     {
         AppState.SetProperty(this, nameof(AppState.MetadataVerificationModel), item.UdapMetadata);
         AppState.SetProperty(this, nameof(AppState.BaseUrl), item.Link);
+        AppState.SetProperty(this, nameof(AppState.Community), string.Empty);
         Js.InvokeVoidAsync("open", ($"/udapRegistration?BaseUrl={item.Link}"), "_blank");
     }
 
