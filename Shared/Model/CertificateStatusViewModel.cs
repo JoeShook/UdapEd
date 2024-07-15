@@ -20,4 +20,6 @@ public class CertificateStatusViewModel
     public string PublicKeyAlgorithm { get; set; }
 
     public string Issuer { get; set; } = string.Empty;
+
+    public bool UserSuppliedCertificate { get; set; } = false;
 }

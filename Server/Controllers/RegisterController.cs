@@ -12,6 +12,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -49,7 +50,8 @@ public class RegisterController : Controller
     {
         var result = new CertificateStatusViewModel
         {
-            CertLoaded = CertLoadedEnum.Negative
+            CertLoaded = CertLoadedEnum.Negative,
+            UserSuppliedCertificate = false
         };
 
         try
@@ -67,6 +69,7 @@ public class RegisterController : Controller
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             HttpContext.Session.SetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
+            HttpContext.Session.SetInt32(UdapEdConstants.UDAP_CLIENT_UPLOADED_CERTIFICATE, 0);
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -113,16 +116,19 @@ public class RegisterController : Controller
     public IActionResult UploadClientCertificate([FromBody] string base64String)
     {
         HttpContext.Session.SetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE, base64String);
-        
+        HttpContext.Session.SetInt32(UdapEdConstants.UDAP_CLIENT_UPLOADED_CERTIFICATE, 1);
+
         return Ok();
     }
 
     [HttpPost("ValidateCertificate")]
     public IActionResult ValidateCertificate([FromBody] string password)
     {
+        Console.WriteLine(HttpContext.Session.GetInt32(UdapEdConstants.UDAP_CLIENT_UPLOADED_CERTIFICATE));
         var result = new CertificateStatusViewModel
         {
-            CertLoaded = CertLoadedEnum.Negative
+            CertLoaded = CertLoadedEnum.Negative,
+            UserSuppliedCertificate = (HttpContext.Session.GetInt32(UdapEdConstants.UDAP_CLIENT_UPLOADED_CERTIFICATE) ?? 0) != 0
         };
 
         var clientCertSession = HttpContext.Session.GetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE);
@@ -169,9 +175,11 @@ public class RegisterController : Controller
     [HttpGet("IsClientCertificateLoaded")]
     public IActionResult IsClientCertificateLoaded()
     {
+        Console.WriteLine(HttpContext.Session.GetInt32(UdapEdConstants.UDAP_CLIENT_UPLOADED_CERTIFICATE));
         var result = new CertificateStatusViewModel
         {
-            CertLoaded = CertLoadedEnum.Negative
+            CertLoaded = CertLoadedEnum.Negative,
+            UserSuppliedCertificate = (HttpContext.Session.GetInt32(UdapEdConstants.UDAP_CLIENT_UPLOADED_CERTIFICATE) ?? 0) != 0
         };
 
         try
