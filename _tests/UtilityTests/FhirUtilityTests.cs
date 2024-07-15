@@ -1,10 +1,12 @@
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using Firely.Fhir.Packages;
+using Hl7.Fhir.ElementModel;
 using Hl7.Fhir.Introspection;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Hl7.Fhir.Specification;
+using Hl7.Fhir.Specification.Navigation;
 using Hl7.Fhir.Specification.Source;
 using Hl7.Fhir.Specification.Terminology;
 using Xunit.Abstractions;
@@ -57,7 +59,8 @@ public class FhirUtilityTests
             .WithValueSet(url: "http://hl7.org/fhir/us/identity-matching/ValueSet/Identity-Identifier-vs");
         
         var idiValueSet = await termService.Expand(p, useGet:true) as ValueSet;
-        _testOutputHelper.WriteLine(await new FhirJsonSerializer().SerializeToStringAsync(idiValueSet));
+        //_testOutputHelper.WriteLine(await new FhirJsonSerializer().SerializeToStringAsync(idiValueSet));
+
     }
 
     
@@ -100,6 +103,103 @@ public class FhirUtilityTests
 
         _testOutputHelper.WriteLine(string.Empty);
 
+    }
+
+    [Fact(Skip = "")]
+    public async T.Task ExpandValueSets()
+    {
+        IAsyncResourceResolver coreSource = new FhirPackageSource(ModelInfo.ModelInspector, PACKAGESERVER, new string[] { "hl7.fhir.r4.expansions@4.0.1" });
+        var coreResolver = new CachedResolver(coreSource);
+
+        var localSource = new FhirPackageSource(ModelInfo.ModelInspector, @"hl7.fhir.us.ndh#1.0.0-ballot.tgz");
+        var resourceResolver = new CachedResolver(localSource);
+
+        var multiResourceResolver = new MultiResolver(coreResolver, resourceResolver);
+
+        var termService = new LocalTerminologyService(resolver: multiResourceResolver, new ValueSetExpanderSettings() { IncludeDesignations = true });
+        // var p = new ExpandParameters().WithValueSet(url: "http://hl7.org/fhir/us/ndh/ValueSet/TrustProfileVS");
+
+        // var idiValueSet = await termService.Expand(p, useGet: true) as ValueSet;
+        // _testOutputHelper.WriteLine(await new FhirJsonSerializer().SerializeToStringAsync(idiValueSet));
+
+
+        // foreach (var sd in localSource.ListArtifactNames()) //("http://hl7.org/fhir/us/ndh/StructureDefinition/ndh-Endpoint"))
+        // {
+        //     _testOutputHelper.WriteLine(sd);
+        // }
+
+        foreach (var uri in localSource.ListCanonicalUris().Where(l => l.StartsWith("http://hl7.org/fhir/us/ndh/StructureDefinition/ndh-End"))) //("http://hl7.org/fhir/us/ndh/StructureDefinition/ndh-Endpoint"))
+        {
+             _testOutputHelper.WriteLine(uri);
+            var sd = await localSource.FindStructureDefinitionAsync(uri);
+
+            // _testOutputHelper.WriteLine(await new FhirJsonSerializer().SerializeToStringAsync(sd));
+
+            var slices = sd.Snapshot.Element;
+            foreach (var endpointSlice in slices.Where(e => e.Path.StartsWith("Endpoint.extension") && !string.IsNullOrEmpty(e.SliceName)))
+            {
+                _testOutputHelper.WriteLine(endpointSlice.SliceName);
+                _testOutputHelper.WriteLine("\t" + endpointSlice.Type.First().Profile.First());
+
+                var resource = await multiResourceResolver.ResolveByCanonicalUriAsync(endpointSlice.Type.First().Profile.First());
+                _testOutputHelper.WriteLine("\t" + resource.TypeName);
+
+                foreach (var extensionSlice in resource.ToTypedElement().ToPoco<StructureDefinition>().Snapshot.Element.Where(e => e.Path.StartsWith("Extension.extension") && !string.IsNullOrEmpty(e.SliceName)))
+                {
+                    _testOutputHelper.WriteLine("\t\t" + extensionSlice.SliceName);
+
+                    var extensionValue = resource.ToTypedElement().ToPoco<StructureDefinition>().Snapshot.Element.SingleOrDefault(e => e.ElementId.StartsWith($"Extension.extension:{extensionSlice.SliceName}.value[x]"));
+
+                    var valueSetUrl = extensionValue?.Binding?.ValueSet;
+                    if (valueSetUrl != null)
+                    {
+                        _testOutputHelper.WriteLine("\t\t\t" + extensionValue?.Binding?.ValueSet);
+                        var p = new ExpandParameters().WithValueSet(url: extensionValue?.Binding?.ValueSet);
+                        var valueSet = await termService.Expand(p, useGet: true) as ValueSet;
+                        File.WriteAllText("", await new FhirJsonSerializer() { Settings = { Pretty = true } }.SerializeToStringAsync(valueSet));
+                        // _testOutputHelper.WriteLine(await new FhirJsonSerializer(){Settings = { Pretty = true}}.SerializeToStringAsync(valueSet));
+                    }
+
+                    // if (extensionSlice.Value() is CodeableConcept)
+                    // {
+                    //     _testOutputHelper.WriteLine("\t\t\t" + extensionSlice.Value().Code.First());
+                    // }
+                }
+            }
+            
+            Assert.NotNull(sd);
+            Assert.IsType<StructureDefinition>(sd);
+
+            // _testOutputHelper.WriteLine(new FhirJsonSerializer().SerializeToString(sd));
+            // foreach (var sdChild in sd.Children)
+            // {
+            //     _testOutputHelper.WriteLine(sdChild.TypeName);
+            // }
+
+            // var nav = ElementDefinitionNavigator.ForSnapshot(sd);
+            // var walker = new StructureDefinitionWalker(nav, localSource);
+            // nav.MoveToFirstChild();
+            
+            // var joe = nav.MoveToNextSlice();
+            // // walker.Child("Extension");
+            // _testOutputHelper.WriteLine(nav.Current.Path);
+            // nav.MoveToNextSlice();
+            // // walker.Child("Extension");
+            // _testOutputHelper.WriteLine(nav.Current.Path);
+
+            // foreach (var extension in sd.Extension)
+            // {
+            //     _testOutputHelper.WriteLine(extension.Url);
+            // }
+
+        }
+
+        // foreach (var sd in localSource.ListResourceUris()) //("http://hl7.org/fhir/us/ndh/StructureDefinition/ndh-Endpoint"))
+        // {
+        //     _testOutputHelper.WriteLine(sd);
+        // }
+
+        
     }
 
     [Fact(Skip = "")]

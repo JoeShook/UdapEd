@@ -36,6 +36,9 @@
     <None Update="hl7.fhir.us.identity-matching-2.0.0-draft.tgz">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="hl7.fhir.us.ndh#1.0.0-ballot.tgz">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

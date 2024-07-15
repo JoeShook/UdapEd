@@ -136,25 +136,39 @@ public class MetadataController : Controller
     [HttpGet("UnValidated")]
     public async Task<IActionResult> GetUnValidated([FromQuery] string metadataUrl, [FromQuery] string community)
     {
-        var baseUrl = metadataUrl.EnsureTrailingSlash() + UdapConstants.Discovery.DiscoveryEndpoint;
+        var baseUrl = metadataUrl;
+
+        if (!metadataUrl.Contains(UdapConstants.Discovery.DiscoveryEndpoint))
+        {
+             baseUrl = baseUrl.EnsureTrailingSlash() + UdapConstants.Discovery.DiscoveryEndpoint;
+        }
+        
         if (!string.IsNullOrEmpty(community))
         {
             baseUrl += $"?{UdapConstants.Community}={community}";
         }
 
-        _logger.LogDebug(baseUrl);
-        var response = await _httpClient.GetStringAsync(baseUrl);
-        var result = JsonSerializer.Deserialize<UdapMetadata>(response);
-        HttpContext.Session.SetString(UdapEdConstants.BASE_URL, baseUrl.GetBaseUrlFromMetadataUrl());
-
         var model = new MetadataVerificationModel
         {
-            UdapServerMetaData = result,
             Notifications = new List<string>
             {
                 "No anchor loaded.  Un-Validated resource server."
             }
         };
+
+        _logger.LogDebug(baseUrl);
+
+        try
+        {
+            var response = await _httpClient.GetStringAsync(baseUrl);
+            var result = JsonSerializer.Deserialize<UdapMetadata>(response);
+            model.UdapServerMetaData = result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex.Message);
+
+        }
 
         return Ok(model);
     }
