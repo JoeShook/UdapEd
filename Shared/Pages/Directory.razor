@@ -235,7 +235,7 @@
                                 
                                     <MudText Typo="Typo.h5" Color="Color.Primary" Style="justify-self: start;">@_fhirSearch.ResourceName List</MudText>
 
-                                    <MudTreeView Items="@_fhirResults.TreeViewStore"  Hover="true" Width="100%" >
+                                    <MudTreeView Items="@_fhirResults.TreeViewStore.Children"  Hover="true" Width="100%" >
                                         <ItemTemplate Context="item">
                                             @{
                                                 var presenter = item.Value!;

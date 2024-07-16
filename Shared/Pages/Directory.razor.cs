@@ -87,8 +87,9 @@ private readonly List<string> _supportedResources = new List<string>()
         }
         else if (_fhirSearch.ResourceName == "Endpoint")
         {
-            searchParam = new FhirSearchParam("organization", "", null, "FhirLabsOrg");
+            searchParam = new FhirSearchParam("dynamic-registration-trust-profile", "", null, "udap");
         }
+
 
         if (_fhirSearch.SearchParams.Any())
         {
@@ -270,8 +271,8 @@ private readonly List<string> _supportedResources = new List<string>()
                     var nameMaybe = domainResource.NamedChildren.FirstOrDefault(nc => nc.ElementName == "name");
                     var resource = new FhirJsonParser().Parse(referenceContext) as DomainResource;
                     var orgEntry = new TreeItemData(nameMaybe.Value?.ToString() ?? resource?.Id ?? "Unknown", resource?.Id ?? "Unknown", $"{resource?.TypeName}/{resource?.Id}");
-                    
-                    _fhirResults.TreeViewStore.Add(orgEntry);
+
+                    _fhirResults.TreeViewStore.Children?.Add(orgEntry);
                 }
                 
                 foreach (var referenceItem in references)
@@ -283,8 +284,8 @@ private readonly List<string> _supportedResources = new List<string>()
                     
                     foreach (var typedElement in parentReferencedId)
                     {
-                        
-                        var parentEntry = _fhirResults.TreeViewStore.FirstOrDefault(tv => tv.Value?.Id == typedElement.Value as string);
+
+                        var parentEntry = _fhirResults.TreeViewStore.Children?.FirstOrDefault(tv => tv.Value?.Id == typedElement.Value as string);
                 
                         // Get Endpoint addresses
                         var endpoints =
@@ -309,7 +310,8 @@ private readonly List<string> _supportedResources = new List<string>()
 
     private async T.Task BuildTreeviewForEndpoints(IEnumerable<ITypedElement> endpoints, TreeItemData<FhirHierarchyEntry>? parentEntry = null)
     {
-        var treeStore = parentEntry ?? _fhirResults.TreeViewStore.First();
+        var treeStore = parentEntry ??  _fhirResults.TreeViewStore;
+        
         foreach (var endpoint in endpoints)
         {
             var endpointResource = new FhirJsonParser().Parse<Endpoint>(endpoint);
@@ -498,7 +500,7 @@ private readonly List<string> _supportedResources = new List<string>()
         public string HttpStatus { get; set; }
         public string RawFhir { get; set; }
         public List<Hl7.Fhir.Model.Bundle.EntryComponent>? Entries { get; set; }
-        public List<TreeItemData<FhirHierarchyEntry>> TreeViewStore = new ();
+        public TreeItemData<FhirHierarchyEntry> TreeViewStore = new (){Children = [] };
     }
 
 
