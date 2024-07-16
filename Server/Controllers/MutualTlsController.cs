@@ -58,10 +58,8 @@ public class MutualTlsController : Controller
                 .ToList();
 
             result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(certificate);
+            result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
 
-            result.Issuer =
-                certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()
-                    ?.GetSingleElementValue() ?? string.Empty;
         }
         catch (Exception ex)
         {
@@ -138,6 +136,7 @@ public class MutualTlsController : Controller
                 .ToList();
 
             result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(certificate);
+            result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
         }
         catch (Exception ex)
         {
@@ -191,6 +190,7 @@ public class MutualTlsController : Controller
                     .ToList();
 
                 result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(clientCert);
+                result.Issuer = clientCert.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
             }
 
             return Ok(result);
@@ -216,6 +216,7 @@ public class MutualTlsController : Controller
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
+            result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
             HttpContext.Session.SetString(UdapEdConstants.MTLS_ANCHOR_CERTIFICATE, base64String);
 
             return Ok(result);
@@ -244,6 +245,7 @@ public class MutualTlsController : Controller
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
+            result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
             HttpContext.Session.SetString(UdapEdConstants.MTLS_ANCHOR_CERTIFICATE, Convert.ToBase64String(certBytes));
 
             return Ok(result);
@@ -277,6 +279,7 @@ public class MutualTlsController : Controller
                 result.DistinguishedName = certificate.SubjectName.Name;
                 result.Thumbprint = certificate.Thumbprint;
                 result.CertLoaded = CertLoadedEnum.Positive;
+                result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
             }
             else
             {
@@ -304,7 +307,7 @@ public class MutualTlsController : Controller
         
         if (base64String == null)
         {
-            return Ok(new List<string>() { "Anchor Certificate is not loaded" });
+            return Ok(new List<string>() { "mTLS anchor certificate is not loaded" });
         }
            
         var certBytes = Convert.FromBase64String(base64String);

@@ -118,7 +118,7 @@ public partial class PatientSearch
     }
 
     
-    private async Task<TableData<Patient>> Reload(TableState state)
+    private async Task<TableData<Patient>> Reload(TableState state, CancellationToken ct)
     {
         _selectedItemText = "";
 
@@ -134,7 +134,7 @@ public partial class PatientSearch
             _model.LaunchContext = AppState.LaunchContext;
             if (_pager != null) { _model.PageDirection = _pager.PageDirection; }
             
-            var result = await FhirService.SearchPatient(_model);
+            var result = await FhirService.SearchPatient(_model, ct);
 
             if (result.UnAuthorized)
             {

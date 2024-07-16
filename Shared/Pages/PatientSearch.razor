@@ -93,7 +93,7 @@
                     <MudTable @ref="PatientTable"
                               @bind-RowsPerPage="AppState.PatientSearchPref.RowsPerPage"
                               T="Patient"
-                              ServerData="@(new Func<TableState, Task<TableData<Patient>>>(Reload))"
+                              ServerData="Reload"
                               MultiSelection="false"
                               Dense="@false"
                               Hover="@true"

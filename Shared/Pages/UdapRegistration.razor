@@ -182,10 +182,10 @@
             </MudItem>
             <MudSpacer/>
             <MudItem>
-                <MudCard Outlined="true" Class="mud-border-primary">
+                <MudCard Outlined="true" Class="px-2 mud-border-primary">
                     <MudGrid >
                         <MudItem xs="12" Class="pt-2 mt-2" >
-                            <MudText Class="mr-4" Align="Align.Right" Color="Color.Primary" Typo="Typo.h6">Scope picker</MudText>
+                            <MudText Class="pt-2 mr-2" Align="Align.Right" Color="Color.Primary" Typo="Typo.h6">Scope picker</MudText>
                         </MudItem> 
 
               
@@ -195,7 +195,7 @@
                                 <MudTooltip Placement="Placement.Bottom" Delay="1000">
                                     <ChildContent>
                                         <MudItem Class="d-inline-flex">
-                                            <MudCheckBox @bind-Checked="TieredOauth"
+                                            <MudCheckBox @bind-Value="TieredOauth" T="bool"
                                                          Label="Tiered Oauth"/>
                                         </MudItem>
                                     </ChildContent>
@@ -209,7 +209,7 @@
                                 <MudTooltip Placement="Placement.Bottom" Delay="1000">
                                     <ChildContent>
                                         <MudItem Class="d-inline-flex">
-                                            <MudCheckBox @bind-Checked="OpenIdScope"
+                                            <MudCheckBox @bind-Value="OpenIdScope" T="bool"
                                                          Label="oidc"/>
                                         </MudItem>
                                     </ChildContent>
@@ -242,10 +242,9 @@
                                     <MudTooltip Placement="Placement.Bottom" Delay="1000">
                                         <ChildContent>
                                             <MudItem Class="d-inline-flex">
-                                                <MudCheckBox @bind-Checked="SmartLaunch"
+                                                <MudCheckBox @bind-Value="SmartLaunch" T="bool"
                                                              Label="SMART Launch"/>
                                             </MudItem>
-
                                         </ChildContent>
                                         <TooltipContent>
                                             <MudText Typo="Typo.h6">Add launch scope according to scope level selected</MudText>
@@ -256,12 +255,12 @@
                         }
 
                         <MudItem Class="d-inline-flex pa-2">
-                            <MudCheckBox @bind-Checked="SmartV1Scopes"
+                            <MudCheckBox @bind-Value="SmartV1Scopes" T="bool"
                                          Label="SMART V1"/>
                         </MudItem>
 
                         <MudItem Class="d-inline-flex pa-2">
-                            <MudCheckBox @bind-Checked="SmartV2Scopes"
+                                    <MudCheckBox @bind-Value="SmartV2Scopes" T="bool"
                                          Label="SMART V2"/>
                         </MudItem>
 

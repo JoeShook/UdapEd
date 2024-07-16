@@ -23,13 +23,13 @@
     <PackageReference Include="BlazorMonaco" Version="3.2.0" IncludeAssets="all" />
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="BQuery" Version="3.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.7" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
-    <PackageReference Include="MudBlazor" Version="6.20.0" />
+    <PackageReference Include="MudBlazor" Version="7.2.0" />
     <PackageReference Include="Udap.Smart.Model" Version="0.3.53" />
 
-    <PackageReference Include="Microsoft.AspNetCore.Components" Version="8.0.6" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="8.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.7" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,7 +37,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseMauiEssentials)' != 'false'">
-    <PackageReference Include="Microsoft.Maui.Essentials" Version="8.0.40" />
+    <PackageReference Include="Microsoft.Maui.Essentials" Version="8.0.70" />
   </ItemGroup>
 
   <ItemGroup>

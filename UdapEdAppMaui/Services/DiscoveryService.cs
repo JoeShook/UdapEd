@@ -111,7 +111,7 @@ internal class DiscoveryService : IDiscoveryService
                     UdapServerMetaData = unvalidatedResult,
                     Notifications = new List<string>
                         {
-                            "No anchor loaded.  Un-Validated resource server."
+                            "UDAP anchor certificate is not loaded."
                         }
                 };
 

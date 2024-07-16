@@ -218,7 +218,7 @@ public class RegisterService : IRegisterService
 
         if (smartLaunch && scopeLevel == "user")
         {
-            enrichScopes.Add($"launch");
+            enrichScopes.Add($"launch/{scopeLevel}");
         }
 
         if (published.Any() && !scopeLevel.IsNullOrEmpty())

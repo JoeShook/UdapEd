@@ -34,9 +34,8 @@
                                        Label="Enter BaseUrl"
                                        AutoFocus="true"
                                        HelperText=@($"UDAP Metadata URL: {RequestUrl.GetWellKnownUdap(BaseUrl, Community)}")
-                                                                                  @bind-Value="BaseUrl"
-                                       @bind-Text="BaseUrl"
-                                       SearchFuncWithCancel="@GetMetadata"
+                                       @bind-Value="BaseUrl"
+                                       SearchFunc="@GetMetadata"
                                        ResetValueOnEmptyText="true"/>
                   </MudItem>
                   <MudItem xs="4">

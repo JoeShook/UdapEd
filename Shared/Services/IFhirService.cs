@@ -15,7 +15,7 @@ namespace UdapEd.Shared.Services;
 
 public interface IFhirService
 {
-    Task<FhirResultModel<Hl7.Fhir.Model.Bundle>> SearchPatient(PatientSearchModel model);
+    Task<FhirResultModel<Hl7.Fhir.Model.Bundle>> SearchPatient(PatientSearchModel model, CancellationToken ct);
     Task<FhirResultModel<Hl7.Fhir.Model.Bundle>> MatchPatient(string parametersJson);
 
     Task<FhirResultModel<Hl7.Fhir.Model.CodeSystem>> GetCodeSystem(string location);

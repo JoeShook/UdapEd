@@ -174,7 +174,7 @@ public partial class UdapDiscovery
     //
     // Just validates that a url in the list view are valid
     //
-    private async Task<IEnumerable<string>?> GetMetadata(string? value, CancellationToken token)
+    private async Task<IEnumerable<string>> GetMetadata(string value, CancellationToken token)
     {
         await Task.Delay(5, token);
 

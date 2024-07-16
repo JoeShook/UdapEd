@@ -80,7 +80,6 @@ public class RegisterController : Controller
                 .ToList();
             
             result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(certificate);
-
             result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
         }
         catch (Exception ex)

@@ -8,7 +8,6 @@
 #endregion
 
 using System.Net;
-using System.Text.Json;
 using Hl7.Fhir.ElementModel;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
@@ -24,7 +23,6 @@ using UdapEd.Shared.Model.Discovery;
 using UdapEd.Shared.Search;
 using UdapEd.Shared.Services;
 using T = System.Threading.Tasks;
-using static MudBlazor.CategoryTypes;
 
 namespace UdapEd.Shared.Pages;
 
@@ -269,10 +267,8 @@ private readonly List<string> _supportedResources = new List<string>()
                     var domainResource = referenceContext.ToPoco<DomainResource>();
                     var nameMaybe = domainResource.NamedChildren.FirstOrDefault(nc => nc.ElementName == "name");
                     var resource = new FhirJsonParser().Parse(referenceContext) as DomainResource;
-                    var orgEntry = new FhirHierarchyEntries()
-                    {
-                        Name = nameMaybe.Value?.ToString() ?? resource?.Id ?? "Unknown", Id = resource?.Id ?? "Unknown"
-                    };
+                    var orgEntry = new TreeItemData(nameMaybe.Value?.ToString() ?? resource?.Id ?? "Unknown", resource?.Id ?? "Unknown");
+                    
                     _fhirResults.TreeViewStore.Add(orgEntry);
                 }
                 
@@ -286,7 +282,7 @@ private readonly List<string> _supportedResources = new List<string>()
                     foreach (var typedElement in parentReferencedId)
                     {
                         
-                        var parentEntry = _fhirResults.TreeViewStore.FirstOrDefault(tv => tv.Id == typedElement.Value as string);
+                        var parentEntry = _fhirResults.TreeViewStore.FirstOrDefault(tv => tv.Value?.Id == typedElement.Value as string);
 
                         // Get Endpoint addresses
                         var endpoints =
@@ -301,29 +297,22 @@ private readonly List<string> _supportedResources = new List<string>()
                     .Where(e => e.Resource != null)
                     .Select(e => e)
                     .ToList();
-                
             }
             else
             {
                 _fhirResults.RawFhir = string.Empty;
-
             }
         }
     }
 
-    private async T.Task BuildTreeviewForEndpoints(IEnumerable<ITypedElement> endpoints, FhirHierarchyEntries? parentEntry = null)
+    private async T.Task BuildTreeviewForEndpoints(IEnumerable<ITypedElement> endpoints, TreeItemData<FhirHierarchyEntry>? parentEntry = null)
     {
-        var treeStore = parentEntry?.TreeItems ?? _fhirResults.TreeViewStore;
+        var treeStore = parentEntry?.Children ?? _fhirResults.TreeViewStore;
         foreach (var endpoint in endpoints)
         {
             var endpointResource = new FhirJsonParser().Parse<Endpoint>(endpoint);
-
-            var endPointTreeItem = new FhirHierarchyEntries()
-            {
-                Id = endpointResource.Id,
-                Name = endpointResource.Name
-            };
-
+            var endPointTreeItem = new TreeItemData(endpointResource.Id, endpointResource.Name);
+            
             treeStore.Add(endPointTreeItem);
 
             var dynamicEndpointTypes = endpointResource.ToTypedElement().Select(
@@ -338,17 +327,16 @@ private readonly List<string> _supportedResources = new List<string>()
                         await MetadataService.GetUdapMetadataVerificationModel(
                             $"{endpointResource.Address}", null, default);
 
-                    endPointTreeItem.TreeItems.Add(new FhirHierarchyEntries()
-                    {
-                        Id = endpointResource.Id,
-                        Name = endpointResource.Name,
-                        Link = endpointResource.Address,
-                        Type = dynamicEndpointType.Value?.ToString(),
-                        UdapMetadata = results,
-                        ErrorNotifications = results.Notifications,
-                        IconColor = results.Notifications.Any() ? Color.Error : Color.Success,
-                        Icon = Icons.Material.TwoTone.DynamicForm
-                    });
+                    endPointTreeItem.Children ??= new List<TreeItemData<FhirHierarchyEntry>>();
+                    endPointTreeItem.Children.Add(new TreeItemData(
+                        endpointResource.Id, 
+                        endpointResource.Name,
+                        Icons.Material.TwoTone.DynamicForm,
+                        results.Notifications.Any() ? Color.Error : Color.Success,
+                        endpointResource.Address, 
+                        dynamicEndpointType.Value?.ToString(), 
+                        results,
+                        results.Notifications));
                 }
 
                 if (dynamicEndpointType.Value?.ToString() == "smart")
@@ -357,16 +345,14 @@ private readonly List<string> _supportedResources = new List<string>()
                         await MetadataService.GetSmartMetadata(
                             $"{endpointResource.Address}/.well-known/smart-configuration", default);
 
-                    endPointTreeItem.TreeItems.Add(new FhirHierarchyEntries()
-                    {
-                        Id = endpointResource.Id,
-                        Name = endpointResource.Name,
-                        Link = endpointResource.Address,
-                        Type = dynamicEndpointType.Value?.ToString(),
-                        Metadata = results.AsJson(),
-                        IconColor = results == null ? Color.Error : Color.Success,
-                        Icon = Icons.Material.TwoTone.SmartDisplay
-                    });
+                    endPointTreeItem.Children ??= new List<TreeItemData<FhirHierarchyEntry>>();
+                    endPointTreeItem.Children.Add(new TreeItemData(
+                        endpointResource.Id,
+                        endpointResource.Name,
+                        Icons.Material.TwoTone.SmartDisplay,
+                        results == null ? Color.Error : Color.Success,
+                        endpointResource.Address,
+                        dynamicEndpointType.Value?.ToString()));
                 }
             }
 
@@ -377,20 +363,21 @@ private readonly List<string> _supportedResources = new List<string>()
 
             foreach (var mTlsEndpointType in mTlsEndpointTypes)
             {
-                var notifications = await MtlsService.VerifyMtlsTrust(GetMtlsServerCertificate(mTlsEndpointType));
-                
-                endPointTreeItem.TreeItems.Add(new FhirHierarchyEntries()
-                {
-                    Id = endpointResource.Id,
-                    Name = endpointResource.Name,
-                    Link = endpointResource.Address,
-                    Type = mTlsEndpointType.Select("extension.descendants().coding.code").First().Value.ToString(),
-                    MtlsServerCertificate = GetMtlsServerCertificate(mTlsEndpointType),
-                    ErrorNotifications = notifications,
-                    IconColor = notifications != null && notifications.Any() ? Color.Error : Color.Success,
-                    Icon = Icons.Material.TwoTone.Security
-                });
-                
+                var mtlsEncodeCertificate = GetMtlsServerCertificate(mTlsEndpointType);
+                var notifications = await MtlsService.VerifyMtlsTrust(mtlsEncodeCertificate);
+
+                endPointTreeItem.Children ??= new List<TreeItemData<FhirHierarchyEntry>>();
+                endPointTreeItem.Children.Add(new TreeItemData(
+                    endpointResource.Id,
+                    endpointResource.Name,
+                    Icons.Material.TwoTone.DynamicForm,
+                    notifications != null && notifications.Any() ? Color.Error : Color.Success,
+                    endpointResource.Address,
+                    mTlsEndpointType.Select("extension.descendants().coding.code").First().Value?.ToString(),
+                    null,
+                    notifications,
+                    mtlsEncodeCertificate
+                    ));
             }
 
 
@@ -421,7 +408,7 @@ private readonly List<string> _supportedResources = new List<string>()
         catch { return "Can't parse"; }
     }
 
-    private void DynamicallyRegister(FhirHierarchyEntries item)
+    private void DynamicallyRegister(FhirHierarchyEntry item)
     {
         AppState.SetProperty(this, nameof(AppState.MetadataVerificationModel), item.UdapMetadata);
         AppState.SetProperty(this, nameof(AppState.BaseUrl), item.Link);
@@ -443,16 +430,34 @@ private readonly List<string> _supportedResources = new List<string>()
         await SearchGet();
     }
 
-    record FhirHierarchyEntries
+    public class TreeItemData : TreeItemData<FhirHierarchyEntry>
     {
-        public HashSet<FhirHierarchyEntries> TreeItems = new HashSet<FhirHierarchyEntries>();
+        public TreeItemData(string id, string name, string? icon = null, Color? iconColor = null,
+            string? link = null, string? type = null, 
+            MetadataVerificationModel? metadata = null, 
+            List<string>? errorNotifications = null,
+            string? mtlCertificate = null) : base(new FhirHierarchyEntry())
+        {
+            Value!.Id = id;
+            Value.Name = name;
+            Value.IconColor = iconColor ?? default;
+            Value.Icon = icon;
+            Value.Link = link;
+            Value.Type = type;
+            Value.UdapMetadata = metadata;
+            Value.ErrorNotifications = errorNotifications;
+            Value.MtlsServerCertificate = mtlCertificate;
+        }
+    }
 
+    public record FhirHierarchyEntry
+    {
         public string Id;
         public string Name;
         public string? Type;
         public string? Link;
 
-        public string Icon { get; set; }
+        public string? Icon { get; set; }
         public Color IconColor { get; set; } = Color.Warning;
 
         public string? Metadata { get; set; }
@@ -468,7 +473,7 @@ private readonly List<string> _supportedResources = new List<string>()
         public string HttpStatus { get; set; }
         public string RawFhir { get; set; }
         public List<Hl7.Fhir.Model.Bundle.EntryComponent>? Entries { get; set; }
-        public HashSet<FhirHierarchyEntries> TreeViewStore = new HashSet<FhirHierarchyEntries>();
+        public List<TreeItemData<FhirHierarchyEntry>> TreeViewStore = new ();
     }
 
 

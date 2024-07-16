@@ -32,10 +32,10 @@ public class FhirService : IFhirService
         _localStorageService = localStorageService;
     }
     
-    public async Task<FhirResultModel<Bundle>> SearchPatient(PatientSearchModel model)
+    public async Task<FhirResultModel<Bundle>> SearchPatient(PatientSearchModel model, CancellationToken ct)
     {
         var controller = await GetConrollerPath();
-        var response = await _httpClient.PostAsJsonAsync($"{controller}/SearchForPatient", model);
+        var response = await _httpClient.PostAsJsonAsync($"{controller}/SearchForPatient", model, cancellationToken: ct);
 
         if (response.IsSuccessStatusCode)
         {
