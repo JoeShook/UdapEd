@@ -16,6 +16,8 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using MudBlazor;
+using Udap.Common.Extensions;
+using Udap.Model;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Components;
 using UdapEd.Shared.Model;
@@ -267,7 +269,7 @@ private readonly List<string> _supportedResources = new List<string>()
                     var domainResource = referenceContext.ToPoco<DomainResource>();
                     var nameMaybe = domainResource.NamedChildren.FirstOrDefault(nc => nc.ElementName == "name");
                     var resource = new FhirJsonParser().Parse(referenceContext) as DomainResource;
-                    var orgEntry = new TreeItemData(nameMaybe.Value?.ToString() ?? resource?.Id ?? "Unknown", resource?.Id ?? "Unknown");
+                    var orgEntry = new TreeItemData(nameMaybe.Value?.ToString() ?? resource?.Id ?? "Unknown", resource?.Id ?? "Unknown", $"{resource?.TypeName}/{resource?.Id}");
                     
                     _fhirResults.TreeViewStore.Add(orgEntry);
                 }
@@ -283,7 +285,7 @@ private readonly List<string> _supportedResources = new List<string>()
                     {
                         
                         var parentEntry = _fhirResults.TreeViewStore.FirstOrDefault(tv => tv.Value?.Id == typedElement.Value as string);
-
+                
                         // Get Endpoint addresses
                         var endpoints =
                             scopeNode.Select(
@@ -307,13 +309,19 @@ private readonly List<string> _supportedResources = new List<string>()
 
     private async T.Task BuildTreeviewForEndpoints(IEnumerable<ITypedElement> endpoints, TreeItemData<FhirHierarchyEntry>? parentEntry = null)
     {
-        var treeStore = parentEntry?.Children ?? _fhirResults.TreeViewStore;
+        var treeStore = parentEntry ?? _fhirResults.TreeViewStore.First();
         foreach (var endpoint in endpoints)
         {
             var endpointResource = new FhirJsonParser().Parse<Endpoint>(endpoint);
-            var endPointTreeItem = new TreeItemData(endpointResource.Id, endpointResource.Name);
+            if (treeStore.Children != null && treeStore.Children.Any(ts => ts.Value?.Id == endpointResource.Id))
+            {
+                return;
+            }
             
-            treeStore.Add(endPointTreeItem);
+            var endPointTreeItem = new TreeItemData(endpointResource.Id, endpointResource.Name, $"{endpointResource?.TypeName}/{endpointResource?.Id}");
+            
+            treeStore.Children ??= new List<TreeItemData<FhirHierarchyEntry>>();
+            treeStore.Children?.Add(endPointTreeItem);
 
             var dynamicEndpointTypes = endpointResource.ToTypedElement().Select(
                 $"extension.where($this.url in 'http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-dynamicRegistration').descendants().select($this.descendants().coding.code)");
@@ -329,14 +337,15 @@ private readonly List<string> _supportedResources = new List<string>()
 
                     endPointTreeItem.Children ??= new List<TreeItemData<FhirHierarchyEntry>>();
                     endPointTreeItem.Children.Add(new TreeItemData(
-                        endpointResource.Id, 
-                        endpointResource.Name,
-                        Icons.Material.TwoTone.DynamicForm,
-                        results.Notifications.Any() ? Color.Error : Color.Success,
-                        endpointResource.Address, 
-                        dynamicEndpointType.Value?.ToString(), 
-                        results,
-                        results.Notifications));
+                        id: endpointResource.Id, 
+                        name: endpointResource.Name,
+                        resourceReference: $"{endpointResource?.TypeName}/{endpointResource?.Id}",
+                        icon: Icons.Material.TwoTone.DynamicForm,
+                        iconColor: results.Notifications.Any() ? Color.Error : Color.Success,
+                        link: AppendUdapWellKnown(endpointResource.Address), 
+                        type: dynamicEndpointType.Value?.ToString(), 
+                        metadata: results,
+                        errorNotifications: results.Notifications));
                 }
 
                 if (dynamicEndpointType.Value?.ToString() == "smart")
@@ -349,6 +358,7 @@ private readonly List<string> _supportedResources = new List<string>()
                     endPointTreeItem.Children.Add(new TreeItemData(
                         endpointResource.Id,
                         endpointResource.Name,
+                        $"{endpointResource?.TypeName}/{endpointResource?.Id}",
                         Icons.Material.TwoTone.SmartDisplay,
                         results == null ? Color.Error : Color.Success,
                         endpointResource.Address,
@@ -370,6 +380,7 @@ private readonly List<string> _supportedResources = new List<string>()
                 endPointTreeItem.Children.Add(new TreeItemData(
                     endpointResource.Id,
                     endpointResource.Name,
+                    $"{endpointResource?.TypeName}/{endpointResource?.Id}",
                     Icons.Material.TwoTone.DynamicForm,
                     notifications != null && notifications.Any() ? Color.Error : Color.Success,
                     endpointResource.Address,
@@ -397,6 +408,16 @@ private readonly List<string> _supportedResources = new List<string>()
             //     });
             // }
         }
+    }
+
+    private string? AppendUdapWellKnown(string endpointResourceAddress)
+    {
+        if (!endpointResourceAddress.Contains(UdapConstants.Discovery.DiscoveryEndpoint))
+        {
+            return endpointResourceAddress.EnsureTrailingSlash() + UdapConstants.Discovery.DiscoveryEndpoint;
+        }
+
+        return endpointResourceAddress;
     }
 
     private static string? GetMtlsServerCertificate(ITypedElement mTlsEndpointType)
@@ -432,7 +453,9 @@ private readonly List<string> _supportedResources = new List<string>()
 
     public class TreeItemData : TreeItemData<FhirHierarchyEntry>
     {
-        public TreeItemData(string id, string name, string? icon = null, Color? iconColor = null,
+        public TreeItemData(string id, string name, 
+            string resourceReference,
+            string? icon = null, Color? iconColor = null,
             string? link = null, string? type = null, 
             MetadataVerificationModel? metadata = null, 
             List<string>? errorNotifications = null,
@@ -440,6 +463,7 @@ private readonly List<string> _supportedResources = new List<string>()
         {
             Value!.Id = id;
             Value.Name = name;
+            Value.ResourceReference = resourceReference;
             Value.IconColor = iconColor ?? default;
             Value.Icon = icon;
             Value.Link = link;
@@ -454,6 +478,7 @@ private readonly List<string> _supportedResources = new List<string>()
     {
         public string Id;
         public string Name;
+        public string ResourceReference;
         public string? Type;
         public string? Link;
 

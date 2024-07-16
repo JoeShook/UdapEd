@@ -240,14 +240,14 @@
                                             @{
                                                 var presenter = item.Value!;
                                             }
-                                                <MudTreeViewItem Items="@item.Children" Icon="@presenter.Icon" IconColor="@presenter.IconColor" Expanded="true">
+                                                <MudTreeViewItem Items="@item.Children" Expanded="true" >
                                                 <BodyContent>
 
                                                     <MudStack Wrap="Wrap.Wrap">
 
                                                         @if (presenter.Link == null)
                                                         {
-                                                            <MudText Typo="Typo.h5" Color="Color.Primary" Style="justify-self: start;">@($"{presenter.Name} ({_fhirSearch.ResourceName}/{presenter.Id})")</MudText>
+                                                            <MudText Typo="Typo.h5" Color="Color.Primary" Style="justify-self: start;">@($"{presenter.Name} ({presenter.ResourceReference})")</MudText>
                                                         }
                                                         else
                                                         {
@@ -256,8 +256,16 @@
                                                             {
                                                                 case "udap":
 
+                                                                    <MudPaper Class="d-flex align-content-start flex-wrap flex-grow-1 gap-4" Elevation="0">
+                                                                        <MudPaper Elevation="0" >
+                                                                            <MudImage Class="cursor-pointer" src="_content/UdapEd.Shared/images/udap/UDAP_Ecosystem_Gears.png" 
+                                                                                      Alt="UDAP Icon" style="height: 36px; width: 36px; " />
+                                                                        </MudPaper>
+                                                                            <MudPaper Elevation="0">
+                                                                            <MudText  Color="Color.Tertiary"><b>UDAP: </b>@($" {presenter.Name} (Endpoint/{presenter.Id})")</MudText>
+                                                                        </MudPaper>
+                                                                    </MudPaper>
 
-                                                                    <MudText Typo="Typo.h6" Color="Color.Tertiary"><b>UDAP: </b>@($" {presenter.Name} (Endpoint/{presenter.Id})")</MudText>
 
                                                                     <MudLink Style="justify-self: start;"
                                                                              Href="@($"{presenter.Link}")" Target="_blank">
@@ -293,7 +301,7 @@
                                                                                  Color="Color.Primary"
                                                                                  ButtonType="ButtonType.Button"
                                                                                  Variant="Variant.Filled"
-                                                                                 OnClick="() => DynamicallyRegister(presenter)">Dynamically Register
+                                                                                 OnClick="() => DynamicallyRegister(presenter)">Dynamically register with UDAP
                                                                             <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew"/>
                                                                         </MudLink>
                                                                     }
@@ -301,7 +309,18 @@
                                                                     break;
 
                                                                 case "smart":
-                                                                    <MudText Typo="Typo.h6" Color="Color.Tertiary"><b>SMART:</b> @($" {presenter.Name} (Endpoint/{presenter.Id})")</MudText>
+
+                                                                    <MudPaper Class="d-flex align-content-start flex-wrap flex-grow-1 gap-4" Elevation="0">
+                                                                        <MudPaper Elevation="0" >
+                                                                                <MudImage Class="cursor-pointer" src="_content/UdapEd.Shared/images/smart/smart-logo.svg"
+                                                                                          Alt="UDAP Icon" style="height: 40px; width: 40px; " />
+                                                                        </MudPaper>
+                                                                        <MudPaper Elevation="0">
+                                                                                <MudText Typo="Typo.h6" Color="Color.Tertiary"><b>SMART:</b> @($" {presenter.Name} (Endpoint/{presenter.Id})")</MudText>
+                                                                        </MudPaper>
+                                                                    </MudPaper>
+
+                                                                    
                                                                     <MudLink Style="justify-self: start;"
                                                                              Href="@($"{presenter.Link}/.well-known/smart-configuration")" Target="_blank">View Metadata
                                                                         <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew"/>
@@ -311,7 +330,16 @@
                                                                 case "x509-mtls-certificate":
 
 
-                                                                    <MudText Typo="Typo.h6" Color="Color.Tertiary"><b>mTLS:</b> @($" {presenter.Name} (Endpoint/{presenter.Id})")</MudText>
+                                                                    <MudPaper Class="d-flex align-content-start flex-wrap flex-grow-1 gap-4" Elevation="0">
+                                                                        <MudPaper Elevation="0" >
+                                                                                <MudImage Class="cursor-pointer" src="_content/UdapEd.Shared/images/mTLS/mTLSSimpleLightMode.png"
+                                                                                      Alt="UDAP Icon" style="height: 40px; width: 60px; " />
+                                                                        </MudPaper>
+                                                                        <MudPaper Elevation="0">
+                                                                            <MudText Typo="Typo.h6" Color="Color.Tertiary"><b>mTLS:</b> @($" {presenter.Name} (Endpoint/{presenter.Id})")</MudText>
+                                                                        </MudPaper>
+                                                                    </MudPaper>
+                                                                    
                                                                     <MudText Typo="Typo.h6" Color="@presenter.IconColor"><b>@presenter.MtlsServerCertificate?.TrimForDisplay(30, "...")</b></MudText>
 
                                                                     @if (presenter.ErrorNotifications != null && presenter.ErrorNotifications.Any())
