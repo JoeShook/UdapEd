@@ -34,9 +34,11 @@
                                        Label="Enter BaseUrl"
                                        AutoFocus="true"
                                        HelperText=@($"UDAP Metadata URL: {RequestUrl.GetWellKnownUdap(BaseUrl, Community)}")
-                                       @bind-Value="BaseUrl"
+                                         @bind-Value="BaseUrl"
+                                         @bind-Text="BaseUrl"
                                        SearchFunc="@GetMetadata"
-                                       ResetValueOnEmptyText="true"/>
+                                       ResetValueOnEmptyText="true"
+                                       DebounceInterval="10000" />
                   </MudItem>
                   <MudItem xs="4">
                       <MudTextField @bind-Value="Community" Label="Community" Variant="Variant.Text"></MudTextField>
