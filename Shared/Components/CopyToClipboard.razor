@@ -1,5 +1,5 @@
 ﻿@using UdapEd.Shared.Services
-<MudTooltip Text="Copy Access Token">
+<MudTooltip Text="@HoverText">
     <MudIconButton Icon="@Icons.Material.TwoTone.CopyAll"
                    Color="Color.Dark"
                    Size="Size.Small"
@@ -10,6 +10,7 @@
 
     [Inject] IClipboardService clipboardService { get; set; } = null!;
 
+    [Parameter] public string HoverText { get; set; }
     [Parameter] public string CopyText { get; set; }
 
 
