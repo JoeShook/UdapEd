@@ -27,6 +27,11 @@ internal class FhirService : IFhirService
         throw new NotImplementedException();
     }
 
+    public Task<FhirResultModel<Bundle>> SearchPatient(PatientSearchModel model, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<FhirResultModel<Hl7.Fhir.Model.Bundle>> MatchPatient(string parametersJson)
     {
         throw new NotImplementedException();
