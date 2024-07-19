@@ -17,4 +17,9 @@ public class CertificateStatusViewModel
 
     public string DistinguishedName { get; set; } = string.Empty;
     public string Thumbprint { get; set; } = string.Empty;
+    public string PublicKeyAlgorithm { get; set; }
+
+    public string Issuer { get; set; } = string.Empty;
+
+    public bool UserSuppliedCertificate { get; set; } = false;
 }

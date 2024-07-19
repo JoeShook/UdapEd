@@ -76,7 +76,7 @@ internal class AccessService : IAccessService
 
     public async Task<UdapAuthorizationCodeTokenRequestModel?> BuildRequestAccessTokenForAuthCode(AuthorizationCodeTokenRequestModel tokenRequestModel, string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -91,10 +91,10 @@ internal class AccessService : IAccessService
             tokenRequestModel.ClientId,
             tokenRequestModel.TokenEndpointUrl,
             clientCert,
-            tokenRequestModel.RedirectUrl?.ToMauiAppScheme(),
+            tokenRequestModel.RedirectUrl?.ToPlatformScheme(),
             tokenRequestModel.Code);
 
-        var tokenRequest = tokenRequestBuilder.Build(tokenRequestModel.LegacyMode, signingAlgorithm);
+        var tokenRequest = tokenRequestBuilder.Build(signingAlgorithm);
 
         return await Task.FromResult(tokenRequest.ToModel());
     }
@@ -102,7 +102,7 @@ internal class AccessService : IAccessService
     public async Task<UdapClientCredentialsTokenRequestModel?> BuildRequestAccessTokenForClientCredentials(ClientCredentialsTokenRequestModel tokenRequestModel,
         string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -140,7 +140,7 @@ internal class AccessService : IAccessService
             tokenRequestBuilder.WithScope(tokenRequestModel.Scope);
         }
 
-        var tokenRequest = tokenRequestBuilder.Build(tokenRequestModel.LegacyMode, signingAlgorithm);
+        var tokenRequest = tokenRequestBuilder.Build(signingAlgorithm);
 
         return await Task.FromResult(tokenRequest.ToModel());
     }
@@ -198,5 +198,10 @@ internal class AccessService : IAccessService
         }
 
         return tokenResponseModel;
+    }
+
+    public Task<bool> DeleteAccessToken()
+    {
+        throw new NotImplementedException();
     }
 }

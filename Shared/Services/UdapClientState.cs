@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Components;
 using Udap.Model.Registration;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Discovery;
+using UdapEd.Shared.Model.Smart;
 
 namespace UdapEd.Shared.Services;
 
@@ -21,9 +22,7 @@ namespace UdapEd.Shared.Services;
 /// </summary>
 public class UdapClientState : IAppState
 {
-    public UdapClientState() {}
-
-    public string BaseUrl { get; set; } = "https://fhirlabs.net/fhir/r4/.well-known/udap";
+    public string BaseUrl { get; set; }
 
     public string Community { get; set; }
 
@@ -43,11 +42,19 @@ public class UdapClientState : IAppState
 
     public UdapAuthorizationCodeTokenRequestModel? AuthorizationCodeTokenRequest { get; set; }
 
-    public CertificateStatusViewModel? ClientCertificateInfo { get; set; }
+    public CertificateStatusViewModel? UdapClientCertificateInfo { get; set; }
+
+    public CertificateStatusViewModel? UdapAnchorCertificateInfo { get; set; }
+
+    public CertificateStatusViewModel? MtlsClientCertificateInfo { get; set; }
+
+    public CertificateStatusViewModel? MtlsAnchorCertificateInfo { get; set; }
 
     public AccessCodeRequestResult? AccessCodeRequestResult { get; set; }
    
     public LoginCallBackResult? LoginCallBackResult { get; set; }
+
+    public SmartSession? SmartSession { get; set; }
 
     public void UpdateAccessTokens(ComponentBase source, TokenResponseModel? tokenResponseModel)
     {
@@ -57,6 +64,10 @@ public class UdapClientState : IAppState
     }
 
     public TokenResponseModel? AccessTokens { get; set; }
+    
+    public ClientSecureMode ClientMode { get; set; }
+
+    public LaunchContext? LaunchContext { get; set; }
 
     public ClientStatus Status
     {

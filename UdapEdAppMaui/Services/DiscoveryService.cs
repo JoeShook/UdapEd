@@ -7,8 +7,11 @@
 // */
 #endregion
 
+using System.Net.Http.Json;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
+using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Udap.Client.Client;
@@ -17,11 +20,13 @@ using Udap.Common.Certificates;
 using Udap.Common.Extensions;
 using Udap.Common.Models;
 using Udap.Model;
+using Udap.Smart.Model;
 using Udap.Util.Extensions;
 using UdapEd.Shared;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Discovery;
 using UdapEd.Shared.Services;
+using Task = System.Threading.Tasks.Task;
 
 namespace UdapEdAppMaui.Services;
 internal class DiscoveryService : IDiscoveryService
@@ -40,7 +45,7 @@ internal class DiscoveryService : IDiscoveryService
     }
 
 
-    public async Task<MetadataVerificationModel?> GetMetadataVerificationModel(string metadataUrl, string? community,
+    public async Task<MetadataVerificationModel?> GetUdapMetadataVerificationModel(string metadataUrl, string? community,
         CancellationToken token)
     {
         try
@@ -49,7 +54,7 @@ internal class DiscoveryService : IDiscoveryService
 
             if (loadedStatus != null && (loadedStatus.CertLoaded == CertLoadedEnum.Positive))
             {
-                var anchorString = await SecureStorage.Default.GetAsync(UdapEdConstants.ANCHOR_CERTIFICATE);
+                var anchorString = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE);
 
                 if (anchorString != null)
                 {
@@ -106,7 +111,7 @@ internal class DiscoveryService : IDiscoveryService
                     UdapServerMetaData = unvalidatedResult,
                     Notifications = new List<string>
                         {
-                            "No anchor loaded.  Un-Validated resource server."
+                            "UDAP anchor certificate is not loaded."
                         }
                 };
 
@@ -121,6 +126,28 @@ internal class DiscoveryService : IDiscoveryService
         }
     }
 
+    public async Task<CapabilityStatement?> GetCapabilityStatement(string url, CancellationToken token)
+    {
+        try
+        {
+            //var response = await _httpClient.GetStringAsync($"Metadata/metadata?metadataUrl={url}");
+            var response = await _httpClient.GetStringAsync(url);
+            var statement = new FhirJsonParser().Parse<CapabilityStatement>(response);
+
+            return statement;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed GET /Metadata/metadata");
+            return null;
+        }
+    }
+
+    public async Task<SmartMetadata?> GetSmartMetadata(string metadataUrl, CancellationToken token)
+    {
+        return await _httpClient.GetFromJsonAsync<SmartMetadata>(metadataUrl, token);
+    }
+
     public async Task<CertificateStatusViewModel?> UploadAnchorCertificate(string base64String)
     {
         var result = new CertificateStatusViewModel { CertLoaded = CertLoadedEnum.Negative };
@@ -132,7 +159,7 @@ internal class DiscoveryService : IDiscoveryService
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
-            await SecureStorage.Default.SetAsync(UdapEdConstants.ANCHOR_CERTIFICATE, base64String);
+            await SecureStorage.Default.SetAsync(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE, base64String);
 
             return result;
         }
@@ -161,7 +188,7 @@ internal class DiscoveryService : IDiscoveryService
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
-            await SecureStorage.Default.SetAsync(UdapEdConstants.ANCHOR_CERTIFICATE, Convert.ToBase64String(certBytes));
+            await SecureStorage.Default.SetAsync(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE, Convert.ToBase64String(certBytes));
 
             return result;
         }
@@ -185,7 +212,7 @@ internal class DiscoveryService : IDiscoveryService
         try
         {
 
-            var base64String = await SecureStorage.Default.GetAsync(UdapEdConstants.ANCHOR_CERTIFICATE);
+            var base64String = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE);
             // var base64String = HttpContext.Session.GetString(UdapEdConstants.ANCHOR_CERTIFICATE);
 
             if (base64String != null)

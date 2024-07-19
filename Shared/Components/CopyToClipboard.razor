@@ -1,0 +1,21 @@
+﻿@using UdapEd.Shared.Services
+<MudTooltip Text="@HoverText">
+    <MudIconButton Icon="@Icons.Material.TwoTone.CopyAll"
+                   Color="Color.Dark"
+                   Size="Size.Small"
+                   OnClick="OnClick" />
+</MudTooltip>
+
+@code {
+
+    [Inject] IClipboardService clipboardService { get; set; } = null!;
+
+    [Parameter] public string HoverText { get; set; }
+    [Parameter] public string CopyText { get; set; }
+
+
+    private async Task OnClick()
+    {
+        await clipboardService.CopyToClipboard(CopyText);
+    }
+}

@@ -1,0 +1,26 @@
+﻿@page "/mTlsClient"
+@using UdapEd.Shared.Services
+@inject IMutualTlsService mTlsService
+@inject IDialogService DialogService
+
+<ErrorBoundary @ref="_errorBoundary">
+    <ChildContent>
+        <MtlsClientCertificate></MtlsClientCertificate>
+        <MtlsAnchorCertificate></MtlsAnchorCertificate>
+    </ChildContent>
+<ErrorContent Context="ex">
+    <pre class="blazor-error-boundary">
+            @ex.Message
+      </pre>
+</ErrorContent>
+</ErrorBoundary>
+
+@code {
+
+    private ErrorBoundary? _errorBoundary;
+    
+    protected override void OnParametersSet()
+    {
+        _errorBoundary?.Recover();
+    }
+}

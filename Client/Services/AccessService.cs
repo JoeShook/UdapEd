@@ -110,4 +110,18 @@ public class AccessService : IAccessService
 
         return tokenResponse;
     }
+
+    public async Task<bool> DeleteAccessToken()
+    {
+        var result = await _httpClient.DeleteAsync("Access");
+
+        if (!result.IsSuccessStatusCode)
+        {
+            Console.WriteLine(await result.Content.ReadAsStringAsync());
+
+            return false;
+        }
+        
+        return true;
+    }
 }

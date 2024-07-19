@@ -2,14 +2,19 @@
 
 public static class UdapEdConstants
 {
-    public const string CLIENT_CERTIFICATE_WITH_KEY = "clientCertificateWithKey";
-    public const string CLIENT_CERTIFICATE = "clientCertificate";
-    public const string ANCHOR_CERTIFICATE = "anchorCertificate";
+    public const string UDAP_CLIENT_CERTIFICATE_WITH_KEY = "udap_clientCertificateWithKey";
+    public const string UDAP_CLIENT_CERTIFICATE = "udap_clientCertificate";
+    public const string UDAP_CLIENT_UPLOADED_CERTIFICATE = "udap_client_upladed_cert";
+    public const string UDAP_ANCHOR_CERTIFICATE = "udap_anchorCertificate";
     public const string CLIENT_NAME = "FhirLabs UdapEd";
 
     public const string TOKEN = "Token";
     public const string BASE_URL = "BaseUrl";
     public const string CLIENT_HEADERS = "ClientHeaders";
+
+    public const string MTLS_CLIENT_CERTIFICATE = "mtls_ClientCertificate";
+    public const string MTLS_CLIENT_CERTIFICATE_WITH_KEY = "mtls_ClientCertificateWithKey";
+    public const string MTLS_ANCHOR_CERTIFICATE = "mtls_anchorCertificate";
 
     /// <summary>
     /// See <a href="https://www.hl7.org/fhir/patient-operation-match.html">Patient-match</a>

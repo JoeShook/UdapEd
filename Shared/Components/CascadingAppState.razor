@@ -5,6 +5,8 @@
 @using System.Collections.Specialized
 @using UdapEd.Shared.Model.Discovery
 @using UdapEd.Shared.Services
+@using UdapEd.Shared.Model.Smart;
+
 @implements UdapEd.Shared.Services.IAppState
 @inject ILocalStorageService LocalStorageService
 
@@ -84,13 +86,14 @@
     {
         "https://fhirlabs.net/fhir/r4",
         "https://stage.healthtogo.me:8181/fhir/r4/stage",
-        "https://mktac-restapis-stable.meditech.com/",
+        "https://dev-mtx-interop.meditech.com",
         "https://securefhir.zimt.work/udap-public",
         "https://identity-matching.fast.hl7.org/fhir",
-        "https://national-directory.meteorapp.com/",
+        "https://national-directory.fast.hl7.org/fhir",
         "https://udap.fhir.poolnook.me/evernorth"
     };
-    private string? _baseUrl = _certDefaultBaseUrLs.First();
+
+    private string? _baseUrl;
 
     public string? BaseUrl
     {
@@ -175,7 +178,13 @@
 
     public LoginCallBackResult? LoginCallBackResult { get; private set; }
 
+    public SmartSession? SmartSession { get; private set; }
+
     public TokenResponseModel? AccessTokens { get; private set; }
+
+    public ClientSecureMode ClientMode { get; private set; }
+
+    public LaunchContext? LaunchContext { get; private set; }
 
     public ClientStatus Status
     {
@@ -236,15 +245,19 @@
     /// </summary>
     public bool AnchorLoaded { get; set; }
 
-    public CertificateStatusViewModel? ClientCertificateInfo { get; set; }
+    public CertificateStatusViewModel? UdapClientCertificateInfo { get; private set; }
 
-    public CertificateStatusViewModel? AnchorCertificateInfo { get; set; }
+    public CertificateStatusViewModel? UdapAnchorCertificateInfo { get; private set; }
+
+    public CertificateStatusViewModel? MtlsClientCertificateInfo { get; private set; }
+
+    public CertificateStatusViewModel? MtlsAnchorCertificateInfo { get; private set; }
 
     public AuthorizationCodeRequest? AuthorizationCodeRequest { get; private set; }
 
     private ClientRegistrations? _clientRegistrations;
 
-    public ClientRegistrations? ClientRegistrations
+    public ClientRegistrations ClientRegistrations
     {
         get { return _clientRegistrations ??= new ClientRegistrations(); } 
         private set => _clientRegistrations = value;
@@ -275,6 +288,7 @@
 
     
     private const string UdapStateKeyName = "udapClientState";
+    
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

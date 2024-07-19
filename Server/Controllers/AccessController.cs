@@ -84,7 +84,7 @@ public class AccessController : Controller
         [FromBody] AuthorizationCodeTokenRequestModel tokenRequestModel,
         [FromQuery] string alg)
     {
-        var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -101,7 +101,7 @@ public class AccessController : Controller
             tokenRequestModel.RedirectUrl,
             tokenRequestModel.Code);
 
-        var tokenRequest = tokenRequestBuilder.Build(tokenRequestModel.LegacyMode, alg);
+        var tokenRequest = tokenRequestBuilder.Build(alg);
         
         return Task.FromResult<IActionResult>(Ok(tokenRequest));
     }
@@ -111,7 +111,7 @@ public class AccessController : Controller
         [FromBody] ClientCredentialsTokenRequestModel tokenRequestModel,
         [FromQuery] string alg)
     {
-        var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -148,7 +148,7 @@ public class AccessController : Controller
             tokenRequestBuilder.WithScope(tokenRequestModel.Scope);
         }
 
-        var tokenRequest = tokenRequestBuilder.Build(tokenRequestModel.LegacyMode, alg);
+        var tokenRequest = tokenRequestBuilder.Build(alg);
         
         return Task.FromResult<IActionResult>(Ok(tokenRequest));
     }
@@ -208,5 +208,13 @@ public class AccessController : Controller
         }
 
         return Ok(tokenResponseModel);
+    }
+
+    [HttpDelete]
+    public async Task DeleteAccessToken()
+    {
+        HttpContext.Session.Remove(UdapEdConstants.TOKEN);
+
+        await Task.FromResult(NoContent());
     }
 }

@@ -10,6 +10,7 @@
 using Hl7.Fhir.Model;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
+using CodeSystem = Hl7.Fhir.Model.CodeSystem;
 
 namespace UdapEdAppMaui.Services;
 internal class FhirService : IFhirService
@@ -21,12 +22,37 @@ internal class FhirService : IFhirService
         _httpClient = httpClient;
     }
 
-    public Task<FhirResultModel<List<Patient>>> SearchPatient(PatientSearchModel model)
+    public Task<FhirResultModel<Hl7.Fhir.Model.Bundle>> SearchPatient(PatientSearchModel model)
     {
         throw new NotImplementedException();
     }
 
-    public Task<FhirResultModel<Bundle>> MatchPatient(string parametersJson)
+    public Task<FhirResultModel<Bundle>> SearchPatient(PatientSearchModel model, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<FhirResultModel<Hl7.Fhir.Model.Bundle>> MatchPatient(string parametersJson)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<FhirResultModel<CodeSystem>> GetCodeSystem(string location)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<FhirResultModel<ValueSet>> GetValueSet(string location)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<FhirResultModel<Bundle>> SearchGet(string queryParameters)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<FhirResultModel<Bundle>> SearchPost(SearchForm searchForm)
     {
         throw new NotImplementedException();
     }

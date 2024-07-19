@@ -7,6 +7,7 @@
 // */
 #endregion
 
+#if ANDROID || IOS || MACCATALYST || WINDOWS
 using Microsoft.Maui.Authentication;
 
 namespace UdapEd.Shared.Services;
@@ -14,3 +15,4 @@ public interface IExternalWebAuthenticator
 {
     Task<WebAuthenticatorResult> AuthenticateAsync(string url, string callbackUrl);
 }
+#endif

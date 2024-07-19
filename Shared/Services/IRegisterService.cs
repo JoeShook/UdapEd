@@ -37,7 +37,7 @@ public interface IRegisterService
     Task<ResultModel<RegistrationDocument>?> Register(RegistrationRequest registrationRequest);
     Task<CertificateStatusViewModel?> ValidateCertificate(string password);
     Task<CertificateStatusViewModel?> ClientCertificateLoadStatus();
-    Task<CertificateStatusViewModel?> LoadTestCertificate();
+    Task<CertificateStatusViewModel?> LoadTestCertificate(string certificateName);
 
     /// <summary>
     /// This service currently gets all scopes from Metadata published supported scopes.
@@ -49,7 +49,7 @@ public interface IRegisterService
     /// <exception cref="NotImplementedException"></exception>
     string GetScopes(ICollection<string>? scopes);
 
-    string? GetScopesForClientCredentials(ICollection<string>? scopes);
-    string GetScopesForAuthorizationCodeB2B(ICollection<string>? scopes, bool tieredOauth = false);
-    string GetScopesForAuthorizationCodeConsumer(ICollection<string>? scopes, bool tieredOauth = false);
+    string? GetScopesForClientCredentials(ICollection<string>? scopes, bool smartV1Scopes = true, bool smartV2Scopes = true);
+    string GetScopesForAuthorizationCode(ICollection<string>? scopes, 
+        bool tieredOauth = false, bool oidcScope = true, string ? scopeLevel = null, bool smartLaunch = false, bool smartV1Scopes = true, bool smartV2Scopes = true);
 }

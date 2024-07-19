@@ -5,3 +5,6 @@ bin\**
 obj\**
 .vs\**
 launchSettings.json
+UdapEdAppMaui\**
+appsetting.json
+appsettings.Development.json

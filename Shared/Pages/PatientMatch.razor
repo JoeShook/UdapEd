@@ -1,113 +1,388 @@
 ﻿@page "/patientMatch"
-@using Hl7.Fhir.Model
-@using Hl7.Fhir.Serialization
 @using UdapEd.Shared.Extensions
 @using Task = System.Threading.Tasks.Task
-@using System.Net
-@using UdapEd.Shared
-@using UdapEd.Shared.Services
-@using UdapEd.Shared.Shared
+@using Hl7.Fhir.Model
+@using Microsoft.IdentityModel.Tokens
 
+<ErrorBoundary @ref="ErrorBoundary">
+<ChildContent>
 <MudCard Elevation="3" Style="margin-top: 10px">
-  <MudForm Model="_model" @ref="_form" />
-  <MudCardContent>
-    <MudGrid Justify="Justify.FlexStart">
-        <MudItem md="4" sm="6" xs="12">
-            <MudText Color="Color.Primary">Access Token:</MudText>
-            <MudText Color="@(AppState.Status is {IsValid: false }
-                                ? Color.Error : Color.Success)">@AppState.AccessTokens?.AccessToken.TrimForDisplay(30, "...")</MudText>
-        </MudItem>
+<MudForm Model="_model" @ref="_form" />
+<MudCardContent>
+<MudGrid Justify="Justify.FlexStart">
+    <MudItem md="4" sm="6" xs="12">
+        <MudText Color="Color.Primary">Client Secure Mode:</MudText>
+        @if (AppState.ClientMode == ClientSecureMode.UDAP)
+        {
+            <MudText Color="@(AppState.Status is {IsValid: false }? Color.Error : Color.Success)">@Enum.GetName(typeof(ClientSecureMode), AppState.ClientMode)</MudText>
+        }
+        else
+        {
+            <MudText Color="Color.Success">@Enum.GetName(typeof(ClientSecureMode), AppState.ClientMode)</MudText>
+        }
+    </MudItem>
 
-        <MudItem md="4" sm="6" xs="12">
-            <MudGrid>
-                <MudTextField Label="Base FHIR Url" T="string" @bind-Value="BaseUrlOverride"></MudTextField>
-                <MudFab StartIcon="@Icons.Material.Filled.Save" Size="Size.Small" OnClick="ChangeBaseUrl"></MudFab>
-            </MudGrid>
-        </MudItem>
+    <MudItem md="4" sm="6" xs="12">
+        <MudGrid>
+            <MudTextField Label="Base FHIR Url" T="string" @bind-Value="BaseUrlOverride"></MudTextField>
+            <MudFab StartIcon="@Icons.Material.TwoTone.Save" Size="Size.Small" OnClick="ChangeBaseUrl"></MudFab>
+        </MudGrid>
+    </MudItem>
 
-    </MudGrid>
-    <MudGrid>
-      <MudItem md="4" sm="6" xs="12">
-        <MudTextField @bind-Value="_model.Family"
-                      For="@(() => _model.Family)"
-                      Label="Family (last)" 
-                      TextChanged="BuildMatch" />
-      </MudItem>
-      <MudItem md="4" sm="6" xs="12">
-        <MudTextField @bind-Value="_model.Given"
-                      For="@(() => _model.Given)"
-                      Label="Given (first)"
-                      TextChanged="BuildMatch" />
-      </MudItem>
+</MudGrid>
+<MudGrid>
+<MudItem md="4" sm="6" xs="12">
+    <MudTextField @bind-Value="_model.Family"
+                  For="@(() => _model.Family)"
+                  Label="Family (last)" 
+                  TextChanged="BuildMatch" />
+</MudItem>
+<MudItem md="4" sm="6" xs="12">
+    <MudTextField @bind-Value="_model.Given"
+                  For="@(() => _model.Given)"
+                  Label="Given (first)"
+                  TextChanged="BuildMatch" />
+</MudItem>
 
-      <MudItem md="4" sm="6" xs="12">
-          <MudSelect Label="Gender"
-                   T="string"
-                   SelectedValuesChanged="OnSelectedGenderChanged"
-                   HelperText="AdministrativeGender"
-                   Clearable="true">
+<MudItem md="4" sm="6" xs="12">
+    <MudSelect Label="Gender"
+               T="string"
+               SelectedValuesChanged="OnSelectedGenderChanged"
+               HelperText="AdministrativeGender"
+               Clearable="true">
 
-                    @foreach (AdministrativeGender? item in Enum.GetValues(typeof(AdministrativeGender)))
-                    {
-                        <MudSelectItem Value="@item.ToString()">@item.ToString()</MudSelectItem>
-                    }
-        </MudSelect>
-      </MudItem>
+        @foreach (AdministrativeGender? item in Enum.GetValues(typeof(AdministrativeGender)))
+        {
+            <MudSelectItem Value="@item.ToString()">@item.ToString()</MudSelectItem>
+        }
+    </MudSelect>
+</MudItem>
 
-      <MudItem md="4" sm="6" xs="12">
-        <MudDatePicker @bind-Date="_model.BirthDate"
-                       Label="yyyy-MM-dd"
-                       Editable="true"
-                       Mask="@(new DateMask("0000-00-00"))"
-                       DateFormat="yyyy-MM-dd"
-                       Placeholder="ISO Date"
-                       Clearable="true"
-                       TextChanged="BuildMatch" />
-      </MudItem>
+<MudItem md="4" sm="6" xs="12">
+    <MudDatePicker @bind-Date="_model.BirthDate"
+                   Label="yyyy-MM-dd"
+                   Editable="true"
+                   Mask="@(new DateMask("0000-00-00"))"
+                   DateFormat="yyyy-MM-dd"
+                   Placeholder="ISO Date"
+                   Clearable="true"
+                   TextChanged="BuildMatch" />
+</MudItem>
 
-      <MudItem md="4" sm="6" xs="12">
-        <MudTextField @bind-Value="_model.Identifier"
-                      For="@(() => _model.Identifier)"
-                      Label="Fhir Identifier"
-                      TextChanged="BuildMatch" />
-      </MudItem>
+<MudItem md="4" sm="6" xs="12">
+    <MudTextField @bind-Value="_model.Identifier"
+                  For="@(() => _model.Identifier)"
+                  Label="Fhir Identifier"
+                  TextChanged="BuildMatch" />
+</MudItem>
+      
+      
+<MudItem md="4" sm="6" xs="12">
+    <MudSelect Label="IDI Profile" @bind-Value="IdiProfile">
+        @foreach (var idiProfile in IdiProfiles)
+        {
+            <MudSelectItem Value="@idiProfile.Value">@idiProfile.Key</MudSelectItem>
+        }
+    </MudSelect>
+</MudItem>
 
-      <MudItem md="4" sm="6" xs="12">
-        <MudTextField @bind-Value="_model.Identifier"
-                      For="@(() => _model.Identifier)"
-                      Label="Address Identifier" 
-                      TextChanged="BuildMatch" />
-      </MudItem>
+<MudItem xs="12">
+        
+    <MudCard>
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudGrid>
+                    <MudItem>
+                        <MudText Typo="Typo.h5">Addresses</MudText>
+                    </MudItem>
+                    <MudItem>
+                        <MudIconButton Icon="@Icons.Material.TwoTone.AddBox"
+                                       Color="Color.Inherit"
+                                       Size="Size.Small"
+                                       @onclick="AddAddress"
+                                       Label="Add"
+                                       Class="px-2 mx-2"/></MudItem>
+                </MudGrid>
 
-    </MudGrid>
-    <MudCardActions>
-      <MudButton Class="mt-3"
-                 Color="Color.Primary"
-                 ButtonType="ButtonType.Button"
-                 Variant="Variant.Text"
-                 OnClick="Cancel">Reset</MudButton>
-    </MudCardActions>
-  </MudCardContent>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent >
+            @if (_model.AddressList != null && _model.AddressList.Any())
+            {
+                <MudTable Dense="true"
+                          ReadOnly="false"
+                          Items="@_model.AddressList"
+                          Striped="true"
+                          CanCancelEdit="@true"
+                          RowEditCommit="AddressEditComplete"
+                          RowEditCancel=" AddressCancelComplete">
+                    <HeaderContent>
+                        <MudTh>Line 1</MudTh>
+                        <MudTh>City</MudTh>
+                        <MudTh>State</MudTh>
+                        <MudTh>Postal Code</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        @if (context.Id == 0)
+                        {
+                            <MudTd DataLabel="System" id="@($"AddressId:{context.Id}")">@context.Line1</MudTd>
+                        }
+                        else
+                        {
+                            <MudTd DataLabel="Address Line 1">@context.Line1</MudTd>
+                        }
+                        <MudTd DataLabel="City">@context.City</MudTd>
+                        <MudTd DataLabel="State">@context.State</MudTd>
+                        <MudTd DataLabel="Postal Code">@context.PostalCode</MudTd>
+                        <MudTd @onclick:stopPropagation="true" Style="">
+                            @if (context.Id != 0)
+                            {
+                                <MudIconButton HtmlTag="label"
+                                               Size="Size.Small"
+                                               Color="Color.Warning"
+                                               Icon="@Icons.Material.TwoTone.DeleteForever"
+                                               Label="Delete"
+                                               class="ma-2"
+                                               OnClick="@(() => DeleteAddress(context))"
+                                               Disabled="@_addressIsInEditMode"/>
+                            }
+                        </MudTd>
+                    </RowTemplate>
+                    <RowEditingTemplate>
+                        <MudTd DataLabel="Address Line 1">
+                            <MudTextField @bind-Value="@context.Line1"/>
+                        </MudTd>
+                        <MudTd DataLabel="City">
+                            <MudTextField @bind-Value="@context.City"/>
+                        </MudTd>
+                        <MudTd DataLabel="State">
+                            <MudTextField @bind-Value="@context.State" Required/>
+                        </MudTd>
+                        <MudTd DataLabel="Postal Code">
+                            <MudTextField @bind-Value="@context.PostalCode"/>
+                        </MudTd>
+                    </RowEditingTemplate>
+                </MudTable>
+            }
+        </MudCardContent>
+    </MudCard>
+</MudItem>
+
+      
+<MudItem xs="12">
+    <MudCard>
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudGrid>
+                    <MudItem>
+                        <MudText Typo="Typo.h5">Telecom</MudText>
+                    </MudItem>
+                    <MudItem>
+                        <MudIconButton Icon="@Icons.Material.TwoTone.AddBox"
+                                       Color="Color.Inherit"
+                                       Size="Size.Small"
+                                       @onclick="AddContactSystem"
+                                       Class="px-2 mx-2"/>
+                    </MudItem>
+                </MudGrid>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent >
+            @if (_model.ContactSystemList != null && _model.ContactSystemList.Any())
+            {
+                <MudTable Dense="true"
+                          ReadOnly="false"
+                          Items="@_model.ContactSystemList"
+                          Striped="true"
+                          CanCancelEdit="@true"
+                          RowEditCommit="ContactSystemEditComplete"
+                          RowEditCancel=" ContactSystemCancelComplete">
+                    <HeaderContent>
+                        <MudTh>System</MudTh>
+                        <MudTh>Use</MudTh>
+                        <MudTh>Value</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        @if (context.Id == 0)
+                        {
+                            <MudTd DataLabel="System" id="@($"ContactSystemId:{context.Id}")">@context.ContactPointSystem</MudTd>
+                        }
+                        else
+                        {
+                            <MudTd DataLabel="System">@context.ContactPointSystem</MudTd>
+                        }
+                        <MudTd DataLabel="Use">@context.ContactPointUse</MudTd>
+                        <MudTd DataLabel="Value">@context.Value</MudTd>
+                        <MudTd @onclick:stopPropagation="true" Style="">
+                            @if (context.Id != 0)
+                            {
+                                <MudIconButton HtmlTag="label"
+                                               Size="Size.Small"
+                                               Color="Color.Warning"
+                                               Icon="@Icons.Material.TwoTone.DeleteForever"
+                                               Label="Delete"
+                                               class="ma-2"
+                                               OnClick="@(() => DeleteContactSystem(context))"
+                                               Disabled="@_contactSystemIsInEditMode"/>
+                            }
+                        </MudTd>
+                    </RowTemplate>
+                    <RowEditingTemplate>
+                        <MudTd DataLabel="Contact System">
+                            <MudSelect Label="System"
+                                       HelperText="ContactPointSystem"
+                                       Clearable="true"
+                                       @bind-Value="context.ContactPointSystem">
+
+                                @foreach (ContactPoint.ContactPointSystem item in Enum.GetValues(typeof(ContactPoint.ContactPointSystem)))
+                                {
+                                    <MudSelectItem Value="@item">@item.ToString()</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudTd>
+                        <MudTd DataLabel="Use">
+                            <MudSelect Label="Use"
+                                       T="string"
+                                       HelperText="ContactPointUse"
+                                       Clearable="true">
+
+                                @foreach (ContactPoint.ContactPointUse item in Enum.GetValues(typeof(ContactPoint.ContactPointUse)))
+                                {
+                                    <MudSelectItem Value="@item.ToString()">@item.ToString()</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudTd>
+                        <MudTd DataLabel="Value">
+                            <MudTextField @bind-Value="@context.Value" Required/>
+                        </MudTd>
+                    </RowEditingTemplate>
+                </MudTable>
+            }
+        </MudCardContent>
+    </MudCard>
+</MudItem>
+
+<MudItem xs="12">
+    <MudCard>
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudGrid>
+                    <MudItem>
+                        <MudText Typo="Typo.h5">Identity Valueset</MudText>
+                    </MudItem>
+                    <MudItem>
+                        <MudIconButton Icon="@Icons.Material.TwoTone.AddBox"
+                                       Color="Color.Inherit"
+                                       Size="Size.Small"
+                                       @onclick="AddVIdentityValueSetValue"
+                                       Label="Add"
+                                       Class="px-2 mx-2"/>
+                    </MudItem>
+                </MudGrid>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            @if (_model.IdentityValueSetList != null && _model.IdentityValueSetList.Any())
+            {
+                <MudTable Dense="true"
+                          ReadOnly="false"
+                          Items="@_model.IdentityValueSetList"
+                          Striped="true"
+                          CanCancelEdit="@true"
+                          RowEditCommit="IdentityValueSetEditComplete"
+                          RowEditCancel=" IdentityValueSetCancelComplete">
+                    <HeaderContent>
+                        <MudTh>Code</MudTh>
+                        <MudTh>Value</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        @if (context.Id == 0)
+                        {
+                            <MudTd DataLabel="Code" id="@($"IdentityValueSet:{context.Id}")">@context.Code</MudTd>
+                        }
+                        else
+                        {
+                            <MudTd DataLabel="Code">@context.Code</MudTd>
+                        }
+                        <MudTd DataLabel="Value">@($"{context.Value}")</MudTd>
+                        <MudTd @onclick:stopPropagation="true" Style="">
+                            @if (context.Id != 0)
+                            {
+                                <MudIconButton HtmlTag="label"
+                                               Size="Size.Small"
+                                               Color="Color.Warning"
+                                               Icon="@Icons.Material.TwoTone.DeleteForever"
+                                               Label="Delete"
+                                               class="ma-2"
+                                               OnClick="@(() => DeleteIdentityValueSet(context))"
+                                               Disabled="@_v2IdentifierSystemIsInEditMode"/>
+                            }
+                        </MudTd>
+                    </RowTemplate>
+                    <RowEditingTemplate>
+                        <MudTd DataLabel="IdentityValueSet">
+                            <MudSelect Label="System"
+                                       HelperText="Identity ValueSet"
+                                       Clearable="true"
+                                       T="string"
+                                       @bind-Value="context.Code">
+
+                                @if (IdentityValueSet?.Expansion.Contains != null)
+                                {
+                                    foreach (var concept in IdentityValueSet.Expansion.Contains)
+                                    {
+                                        if (!concept.Display.IsNullOrEmpty())
+                                        {
+                                            <MudSelectItem Value="@concept.Code">@($"{concept.Code} ({concept.Display})")</MudSelectItem>
+                                        }
+                                        else
+                                        {
+                                            <MudSelectItem Value="@concept.Code">@($"{concept.Code}")</MudSelectItem>
+                                        }
+                                    }
+                                }
+                            </MudSelect>
+                        </MudTd>
+                        <MudTd DataLabel="Value">
+                            <MudTextField @bind-Value="@context.Value" Required/>
+                        </MudTd>
+                    </RowEditingTemplate>
+                </MudTable>
+            }
+        </MudCardContent>
+    </MudCard>
+</MudItem>
+</MudGrid>
+<MudCardActions>
+    <MudButton Class="mt-3"
+               Color="Color.Primary"
+               ButtonType="ButtonType.Button"
+               Variant="Variant.Text"
+               OnClick="Cancel">Reset</MudButton>
+</MudCardActions>
+</MudCardContent>
 </MudCard>
 
 @if (!string.IsNullOrEmpty(_parametersJson))
 {
     <MudCard Elevation="3" Style="margin-top: 10px">
-      <MudCardContent>
-        <pre>POST @($"{AppState.BaseUrl}/Patient/$match")</pre><br />
-        <InputTextArea Class="@ValidPatientResourceStyle"
-                   rows="@(_parametersJson.Count(s => s == '\n') + 1)"
-                   @bind-Value="_parametersJson"
-                   @onfocusout="PersistSoftwareStatement" />
-      </MudCardContent>
+        <MudCardContent>
+            <MudExpansionPanel Text="@($"POST {AppState.BaseUrl}/Patient/$match")">
+                @* <pre>POST @($"{AppState.BaseUrl}/Patient/$match")</pre><br/> *@
+                <InputTextArea Class="@ValidPatientResourceStyle"
+                               rows="@(_parametersJson.Count(s => s == '\n') + 1)"
+                               @bind-Value="_parametersJson"
+                               @onfocusout="PersistSoftwareStatement"/>
+            </MudExpansionPanel>
+        </MudCardContent>
 
-      <MudCardActions>
-        <MudButton Class="mt-3"
-               Color="Color.Primary"
-               ButtonType="ButtonType.Button"
-               Variant="Variant.Text"
-               OnClick="Match">Post Match</MudButton>
-      </MudCardActions>
+        <MudCardActions>
+            <MudButton Class="mt-3"
+                       Color="Color.Primary"
+                       ButtonType="ButtonType.Button"
+                       Variant="Variant.Text"
+                       OnClick="Match">Post Match</MudButton>
+        </MudCardActions>
     </MudCard>
 }
 
@@ -120,9 +395,9 @@
             <MudTabPanel Text="Patient List">
                 <MudCardContent>
                     <MudTable @ref="_table"
-                              T="Bundle.EntryComponent"
+                              T="Hl7.Fhir.Model.Bundle.EntryComponent"
                               Items="@_entries"
-                              MultiSelection="true"
+                              MultiSelection="false"
                               Dense="@false"
                               Hover="@true"
                               ReadOnly="@true"
@@ -140,8 +415,8 @@
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd DataLabel="Name">@(new MarkupString(string.Join("<br/> ", ((Patient)context.Resource).Name.Select(hn => $"{hn.Given.First()}, {hn.Family}"))))</MudTd>
-                            <MudTd DataLabel="BirthDate">@((Patient)context.Resource).BirthDate</MudTd>
-                            <MudTd DataLabel="Id">@((Patient)context.Resource).Id</MudTd>
+                            <MudTd DataLabel="BirthDate">@(((Patient)context.Resource).BirthDate)</MudTd>
+                            <MudTd DataLabel="Id">@(((Patient)context.Resource).Id)</MudTd>
                             <MudTd DataLabel="Identifier">@(new MarkupString(string.Join("<br/> ", ((Patient)context.Resource).Identifier.Select(identifier => $"{identifier.System}|{identifier.Value}"))))</MudTd>
                             <MudTd DataLabel="Score / Grade">@(FormatScoreAndGrade(context))</MudTd>
                         </RowTemplate>
@@ -181,206 +456,13 @@
     }
 }
 
-
-
-
-@code {
-
-    MudForm _form = null!;
-    private MudTable<Bundle.EntryComponent> _table = null!;
-    PatientMatchModel _model = new(); //starting point for building $match fields
-    List<Bundle.EntryComponent?>? _entries;
-    string? _matchResultRaw;
-    string? _outComeMessage;
-    private string _parametersJson = string.Empty;
-    private string _selectedItemText = string.Empty;
-    
-    [CascadingParameter]
-    public CascadingAppState AppState { get; set; } = null!;
-
-    [Inject] IFhirService FhirService { get; set; } = null!;
-    [Inject] IDiscoveryService DiscoveryService { get; set; } = null!;
-
-    private const string ValidStyle = "pre udap-indent-1";
-    private const string InvalidStyle = "pre udap-indent-1 jwt-invalid";
-    
-
-    private string? _baseUrlOverride = string.Empty;
-
-    private string? BaseUrlOverride
-    {
-        get
-        {
-            if (string.IsNullOrEmpty(_baseUrlOverride))
-            {
-                _baseUrlOverride = AppState.BaseUrl;
-            }
-            return _baseUrlOverride;
-        }
-
-        set => _baseUrlOverride = value;
+</ChildContent>
+<ErrorContent Context="ex">
+    @{
+        Console.Write(ex.Message);
     }
-    private async Task ChangeBaseUrl()
-    {
-        if (!string.IsNullOrEmpty(_baseUrlOverride))
-        {
-            await AppState.SetPropertyAsync(this, nameof(AppState.BaseUrl), _baseUrlOverride);
-            await DiscoveryService.SetBaseFhirUrl(_baseUrlOverride);
-        }
-    }
-
-    public string ValidPatientResourceStyle { get; set; } = ValidStyle;
-
-    private void PersistSoftwareStatement()
-    {
-        try
-        {
-            new FhirJsonParser().Parse<Parameters>(_parametersJson);
-            ValidPatientResourceStyle = ValidStyle;
-        }
-        catch
-        {
-            ValidPatientResourceStyle = InvalidStyle;
-        }
-    }
-
-    private void Cancel()
-    {
-        _model = new();
-    }
-
-    void OnRowClick(TableRowClickEventArgs<Bundle.EntryComponent> args)
-    {
-        if (args.Row.IsChecked)
-        {
-            _selectedItemText = new FhirJsonSerializer(new SerializerSettings { Pretty = true })
-                .SerializeToString(args.Item);
-        }
-        else
-        {
-            _selectedItemText = string.Empty;
-        }
-    }
-
-    private async Task BuildMatch()
-    {
-        var patient = new Patient();
-
-        if (!string.IsNullOrEmpty(_model.Identifier))
-        {
-            patient.Identifier.Add(new Identifier() { Value = _model.Identifier });
-        }
-
-        if (!string.IsNullOrEmpty(_model.Family) ||
-            !string.IsNullOrEmpty(_model.Given))
-        {
-            var humanName = new HumanName();
-
-            if (!string.IsNullOrEmpty(_model.Family))
-            {
-                humanName.Family = _model.Family;
-            }
-
-            if (!string.IsNullOrEmpty(_model.Given))
-            {
-                humanName.Given = new List<string> { _model.Given };
-            }
-
-            patient.Name.Add(humanName);
-        }
-
-        patient.Gender = _model.Gender;
-
-        if (_model.BirthDate.HasValue)
-        {
-            patient.BirthDate = _model.BirthDate.Value.ToString("yyyy-MM-dd");
-        }
-
-        var parameters = new Parameters();
-        parameters.Add(UdapEdConstants.PatientMatch.InParameterNames.RESOURCE, patient);
-
-        _parametersJson = await new FhirJsonSerializer(new SerializerSettings { Pretty = true })
-            .SerializeToStringAsync(parameters);
-    }
-    
-    private async Task OnSelectedGenderChanged(IEnumerable<string> obj)
-    {
-        var gender = obj.FirstOrDefault();
-        
-        if (gender != null)
-        {
-            _model.Gender = (AdministrativeGender)Enum.Parse(typeof(AdministrativeGender), gender);
-            await BuildMatch();
-        }
-    }
-
-    private async Task Match()
-    {
-        _selectedItemText = string.Empty;
-        _entries = null;
-        StateHasChanged();
-        await Task.Delay(100);
-
-        if (AppState.BaseUrl != null)
-        {
-            var result = await FhirService.MatchPatient(_parametersJson);
-
-            if (result.UnAuthorized)
-            {
-                _outComeMessage = HttpStatusCode.Unauthorized.ToString();
-            }
-            else if (result.HttpStatusCode == HttpStatusCode.PreconditionFailed)
-            {
-                await DiscoveryService.SetBaseFhirUrl(AppState.BaseUrl);
-                _outComeMessage = "BaseUrl was reset.  Try again";
-            }
-
-            else if (result.OperationOutCome != null)
-            {
-                _entries = null;
-                string? errorMessage = null;
-
-                foreach (var issue in result.OperationOutCome.Issue)
-                {
-                    errorMessage += $"Error:: Details: {issue.Details?.Text}.<br/>"
-                                    + $"Diagnostics: {issue.Diagnostics}.<br/>"
-                                    + $"IssueType: {issue.Code}.<br/>";
-                }
-
-                _outComeMessage = errorMessage;
-            }
-            else
-            {
-                _outComeMessage = null;
-
-                if (result.HttpStatusCode != null)
-                {
-                    _matchResultRaw = $"HTTP/{result.Version} {(int)result.HttpStatusCode} {result.HttpStatusCode}";
-                    _matchResultRaw += Environment.NewLine + Environment.NewLine;
-                }
-
-                _matchResultRaw += await new FhirJsonSerializer(new SerializerSettings { Pretty = true })
-                    .SerializeToStringAsync(result.Result);
-
-                // var joe = $"{((Bundle.SearchComponent)result.Result?.Entry.SingleOrDefault().Search).Score.Value}/" +
-                //               $"{((Code)((Bundle.SearchComponent)result.Result.Entry.SingleOrDefault().Search)
-                //                   .Extension.SingleOrDefault(e => e.Url == \"http://hl7.org/fhir/StructureDefinition/match-grade\").Value).Value}";
-
-                _entries = result.Result?.Entry
-                    .Where(e => e.Resource is Patient)
-                    .Select(e => e)
-                    .ToList();
-            }
-        }
-    }
-
-    private string FormatScoreAndGrade(Bundle.EntryComponent entry)
-    {
-        var searchResult = entry.Search;
-        var score = searchResult.Score ?? 0;
-        var code = searchResult.Extension.SingleOrDefault(e => e.Url == "http://hl7.org/fhir/StructureDefinition/match-grade")?.Value as Code;
-        var grade = code?.Value;
-
-        return $"{score} / {grade}";
-    }
-}
+    <pre class="blazor-error-boundary">
+            @ex.Message
+      </pre>
+</ErrorContent>
+</ErrorBoundary>

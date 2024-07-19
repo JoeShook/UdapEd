@@ -1,0 +1,48 @@
+﻿@page "/smart/launchLogica"
+@using UdapEd.Shared.Model.Smart
+@using Microsoft.IdentityModel.Tokens
+
+@if (string.IsNullOrEmpty(@AuthCode))
+{
+    <MudExpansionPanels MultiExpansion="true">
+        <MudExpansionPanel Text="SmartSession from CapabiliSmartSessionMetadataent">
+            <pre>@SmartSessionCapabilityStatement</pre>
+            <MudExpansionPanels MultiExpansion="true">
+                <MudExpansionPanel Text="CapabilityStatement" class="mud-info">
+                    <pre>@CapabilityStatement</pre>
+                </MudExpansionPanel>
+            </MudExpansionPanels>
+        </MudExpansionPanel>
+        <MudExpansionPanel Text="SmartSession from.well - known / smart - configuration">
+            <pre>@SmartSessionWellknownMetadata</pre>
+            <MudButton OnClick="SmartAuth">Continue to Authorize</MudButton>
+            <MudExpansionPanels MultiExpansion="true">
+                <MudExpansionPanel Text=".well - known / smart - configuration" class="mud-info">
+                    <pre>@SmartMetadata</pre>
+                </MudExpansionPanel>
+            </MudExpansionPanels>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+}
+else
+{
+    <MudCard Class="mud-typography-h5">
+        <MudCardHeader Class="bold">Smart Auth Code</MudCardHeader>
+        <MudCardContent>
+            <MudIcon Icon="@Icons.Material.Filled.Code" Class=""><MudSpacer /></MudIcon><MudText Class="d-inline">Code: @AuthCode</MudText>
+            <MudSpacer />
+            <MudIcon Icon="@Icons.Material.Filled.Key" Class=""><MudSpacer /></MudIcon><MudText Class="d-inline">State: @StateCode</MudText>
+        </MudCardContent>
+        <MudCardActions><MudButton OnClick="RequestToken">Request Token</MudButton> </MudCardActions>
+        
+        @if (!Token.IsNullOrEmpty())
+        {
+            <MudCardHeader Class="bold">Access Token</MudCardHeader>
+            <MudCardContent>
+                <MudIcon Icon="@Icons.Material.Filled.Token"><MudSpacer/></MudIcon><MudText Class="d-inline">Token:</MudText>
+                <MudSpacer/>
+                <pre>@Token</pre>
+            </MudCardContent>
+        }
+    </MudCard>
+}

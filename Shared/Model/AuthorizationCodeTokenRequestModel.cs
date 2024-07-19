@@ -18,5 +18,4 @@ public class AuthorizationCodeTokenRequestModel
 
     public string? RedirectUrl { get; set; }
 
-    public bool LegacyMode { get; set; } = false;
 }

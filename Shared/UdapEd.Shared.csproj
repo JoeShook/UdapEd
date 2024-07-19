@@ -9,30 +9,44 @@
     <!-- <TAG_NAME Condition="'$(TAG_NAME)' == ''">0.1</TAG_NAME> -->
     <!-- <Version>$(TAG_NAME)</Version> -->
 
-    <UseMauiEssentials>true</UseMauiEssentials>
-
+    <UseMauiEssentials Condition="'$(UseMauiEssentials)' != 'false'">true</UseMauiEssentials>
+    <SkipValidateMauiImplicitPackageReferences>true</SkipValidateMauiImplicitPackageReferences>
   </PropertyGroup>
 
-  <ItemGroup >
-    <PackageReference Include="Udap.Model" Version="0.3.*" />
-    <PackageReference Include="Udap.Common" Version="0.3.*" />
+  <ItemGroup>
+    <PackageReference Include="Udap.Model" Version="0.3.57" />
+    <PackageReference Include="Udap.Common" Version="0.3.57" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
+    <PackageReference Include="BlazorMonaco" Version="3.2.0" IncludeAssets="all" />
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="BQuery" Version="3.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Razor.Language" Version="6.0.26" />
-    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.7" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
-    <PackageReference Include="MudBlazor" Version="6.15.0" />
-  </ItemGroup>
+    <PackageReference Include="MudBlazor" Version="7.3.0" />
+    <PackageReference Include="Udap.Smart.Model" Version="0.3.57" />
 
-  <ItemGroup>
-    <SupportedPlatform Include="browser" />
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="8.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.7" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Properties\" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseMauiEssentials)' != 'false'">
+    <PackageReference Include="Microsoft.Maui.Essentials" Version="8.0.70" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="wwwroot\CapabilityStatement-national-directory-api-server.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\images\UdapEdLogobyDesigner.png">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 </Project>

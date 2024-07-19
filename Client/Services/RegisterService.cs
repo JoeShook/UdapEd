@@ -11,12 +11,14 @@ using System.Net.Http.Json;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
+using IdentityModel;
+using Microsoft.IdentityModel.Tokens;
 using Udap.Model;
 using Udap.Model.Registration;
 using Udap.Util.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
-using Task = System.Threading.Tasks.Task;
 
 namespace UdapEd.Client.Services;
 
@@ -38,7 +40,7 @@ public class RegisterService : IRegisterService
 
     public async Task<RawSoftwareStatementAndHeader?> BuildSoftwareStatementForClientCredentials(
         UdapDynamicClientRegistrationDocument request, 
-        string signingAlgorithm)
+        string? signingAlgorithm)
     {
         var result = await _httpClient.PostAsJsonAsync(
             $"Register/BuildSoftwareStatement/ClientCredentials?alg={signingAlgorithm}", 
@@ -139,9 +141,9 @@ public class RegisterService : IRegisterService
         return response;
     }
 
-    public async Task<CertificateStatusViewModel?> LoadTestCertificate()
+    public async Task<CertificateStatusViewModel?> LoadTestCertificate(string certificateName)
     {
-        var response = await _httpClient.PutAsJsonAsync("Register/UploadTestClientCertificate", "fhirlabs.net.client.pfx");
+        var response = await _httpClient.PutAsJsonAsync("Register/UploadTestClientCertificate", certificateName);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -150,6 +152,7 @@ public class RegisterService : IRegisterService
 
         return await response.Content.ReadFromJsonAsync<CertificateStatusViewModel>();
     }
+    
 
     /// <summary>
     /// This service currently gets all scopes from Metadata published supported scopes.
@@ -164,7 +167,9 @@ public class RegisterService : IRegisterService
         return scopes.ToSpaceSeparatedString();
     }
 
-    public string? GetScopesForClientCredentials(ICollection<string>? scopes)
+    public string? GetScopesForClientCredentials(ICollection<string>? scopes, 
+        bool smartV1Scopes = true, 
+        bool smartV2Scopes = true)
     {
         if (scopes != null)
         {
@@ -172,56 +177,88 @@ public class RegisterService : IRegisterService
                 .Where(s => !s.StartsWith("user") &&
                             !s.StartsWith("patient") &&
                             !s.StartsWith("openid"))
-                .Take(10).ToList()
+                .Where(s => KeepSmartVersion(s, smartV1Scopes, smartV2Scopes))
+                .ToList()
                 .ToSpaceSeparatedString();
         }
 
         return null;
     }
 
-    public string GetScopesForAuthorizationCodeB2B(ICollection<string>? scopes, bool tieredOauth = false)
+    public string GetScopesForAuthorizationCode(ICollection<string>? 
+        scopes, 
+        bool tieredOauth = false,
+        bool oidcScope = true,
+        string? scopeLevel = null, 
+        bool smartLaunch = false,
+        bool smartV1Scopes = true,
+        bool smartV2Scopes = true)
     {
-        var enrichScopes = scopes == null ? new List<string>() : scopes.ToList();
+        var published = scopes == null ? new List<string>() : 
+            scopes
+                .Where(s => KeepSmartVersion(s, smartV1Scopes, smartV2Scopes))
+                .ToList();
+
+        var enrichScopes = new List<string>();
 
         if (tieredOauth)
         {
-            if (!enrichScopes.Contains(UdapConstants.StandardScopes.Udap))
-            {
-                enrichScopes.Insert(0, UdapConstants.StandardScopes.Udap);
-            }
+            enrichScopes.Add(UdapConstants.StandardScopes.Udap);
         }
 
-        if (enrichScopes.Any())
+        if (oidcScope)
         {
-            return enrichScopes
-                .Where(s => !s.StartsWith("system") && !s.StartsWith("user"))
-                .Take(10).ToList()
-                .ToSpaceSeparatedString();
+            enrichScopes.Add(OidcConstants.StandardScopes.OpenId);
         }
 
-        return "openid";
+        if (smartLaunch && scopeLevel == "patient")
+        { 
+            enrichScopes.Add($"launch/{scopeLevel}");
+        }
+
+        if (smartLaunch && scopeLevel == "user")
+        {
+            enrichScopes.Add($"launch/{scopeLevel}");
+        }
+
+        if (published.Any() && !scopeLevel.IsNullOrEmpty())
+        {
+            var selectedScopes = published
+                .Where(s => s.StartsWith(scopeLevel))
+                .Take(10).ToList();
+
+            enrichScopes.AddRange(selectedScopes);
+        }
+        else if (!scopeLevel.IsNullOrEmpty())
+        {
+            enrichScopes.Add($"{scopeLevel}/*.read");
+        }
+        
+        return enrichScopes.ToSpaceSeparatedString();
     }
 
-    public string GetScopesForAuthorizationCodeConsumer(ICollection<string>? scopes, bool tieredOauth = false)
+    private static bool KeepSmartVersion(string scope, bool smartV1Scopes, bool smartV2Scopes)
     {
-        var enrichScopes = scopes == null ? new List<string>() : scopes.ToList();
-
-        if (tieredOauth)
+        if (!smartV1Scopes)
         {
-            if (!enrichScopes.Contains(UdapConstants.StandardScopes.Udap))
+            var smartV1Regex = new Regex(@"^(system|user|patient)[\/].*\.(read|write)$");
+            var match = smartV1Regex.Match(scope);
+            if (match.Success)
             {
-                enrichScopes.Insert(0, UdapConstants.StandardScopes.Udap);
+                return false;
             }
         }
 
-        if (enrichScopes.Any())
+        if (!smartV2Scopes)
         {
-            return enrichScopes
-                .Where(s => !s.StartsWith("system") && !s.StartsWith("patient"))
-                .Take(10).ToList()
-                .ToSpaceSeparatedString();
+            var smartV2Regex = new Regex(@"^(system|user|patient)[\/].*\.[cruds]+$");
+            var match = smartV2Regex.Match(scope);
+            if (match.Success)
+            {
+                return false;
+            }
         }
 
-        return "openid";
+        return true;
     }
 }

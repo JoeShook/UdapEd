@@ -7,7 +7,11 @@
 // */
 #endregion
 
-using Microsoft.AspNetCore.Mvc.Filters;
+using System.Net;
+using System.Net.Http;
+using System.Security.Authentication;
+using Hl7.Fhir.Rest;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Serilog;
 using Serilog.Events;
@@ -15,12 +19,14 @@ using Serilog.Sinks.SystemConsole.Themes;
 using Udap.Client.Authentication;
 using Udap.Client.Client;
 using Udap.Client.Configuration;
-using Udap.Client.Rest;
 using Udap.Common.Certificates;
-
 using UdapEd.Server.Authentication;
 using UdapEd.Server.Extensions;
 using UdapEd.Server.Rest;
+using UdapEd.Server.Services;
+using UdapEd.Shared;
+using FhirClientWithUrlProvider = UdapEd.Server.Services.FhirClientWithUrlProvider;
+using IBaseUrlProvider = UdapEd.Server.Services.IBaseUrlProvider;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,9 +44,14 @@ builder.Host.UseSerilog((ctx, lc) => lc
         "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}",
         theme: AnsiConsoleTheme.Code));
 
+// Mount Cloud Secrets
+builder.Configuration.AddJsonFile("/secret/udapEdAppsettings", true, false);
+
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(60);
+    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.Cookie.Name = ".FhirLabs.UdapEd";
     options.Cookie.IsEssential = true;
 });
@@ -104,6 +115,91 @@ builder.Services.AddHttpClient<FhirClientWithUrlProvider>((sp, httpClient) =>
     .AddHttpMessageHandler(sp => new AuthTokenHttpMessageHandler(sp.GetRequiredService<IAccessTokenProvider>()))
     .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()));
 
+builder.Services.AddTransient<IClientCertificateProvider, ClientCertificateProvider>();
+
+
+//
+// This does not allow you to let the client dynamically load new mTLS certificates.  The HttpHandler doesn't reenter.
+//
+
+// builder.Services.AddHttpClient<FhirMTlsClientWithUrlProvider>((sp, httpClient) =>
+//     {})
+//     .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()))
+//     .ConfigurePrimaryHttpMessageHandler((sp) =>
+//     {
+//         var certificateProvider = sp.GetRequiredService<IClientCertificateProvider>();
+//         var httpClientHandler = new HttpClientHandler();
+//         var certificate = certificateProvider.GetClientCertificate(default);
+//         if (certificate != null)
+//         {
+//             Log.Logger.Information($"mTLS Client: {certificate.Thumbprint}");
+//             httpClientHandler.ClientCertificates.Add(certificate);
+//         }
+//         return httpClientHandler;
+//     });
+
+//
+// Could take some effort to implement a pool based on thumbprint of the client certificate,
+// but we won't exhaust ports when it is just a client tool.  
+// I could cache Handlers.  After all there won't be a DNS issue because the IPs for this sort
+// of mTLS relationship is typically static.
+//
+//
+builder.Services.AddTransient<FhirMTlsClientWithUrlProvider>(sp =>
+{
+    var baeUrlProvider = sp.GetRequiredService<IBaseUrlProvider>();
+    var httpClientHandler = new System.Net.Http.HttpClientHandler();
+    var certificateProvider = sp.GetRequiredService<IClientCertificateProvider>();
+    var certificate = certificateProvider.GetClientCertificate();
+    var anchorCertificate = certificateProvider.GetAnchorCertificates();
+
+    if (certificate != null)
+    {
+        Log.Logger.Information($"mTLS Client: {certificate.Thumbprint}");
+        httpClientHandler.ClientCertificates.Add(certificate);
+    }
+
+    if (anchorCertificate != null)
+    {
+        // httpClientHandler.CheckCertificateRevocationList = true;
+        // httpClientHandler.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
+        httpClientHandler.ServerCertificateCustomValidationCallback =
+            HttpClientHandlerExtension.CreateCustomRootValidator(anchorCertificate);
+    }
+    
+    var fhirMTlsProvider = new FhirMTlsClientWithUrlProvider(
+        baeUrlProvider, 
+        new HttpClient(httpClientHandler), 
+        new FhirClientSettings(){PreferredFormat = ResourceFormat.Json});
+
+    return fhirMTlsProvider;
+});
+
+
+
+var url = builder.Configuration["FHIR_TERMINOLOGY_ROOT_URL"];
+
+var settings = new FhirClientSettings
+{
+    PreferredFormat = ResourceFormat.Json,
+    VerifyFhirVersion = false
+};
+
+
+builder.Services.AddHttpClient("FhirTerminologyClient")
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
+    {
+        AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
+    });
+
+builder.Services.AddTransient(ctx => {
+
+    var httpClient = ctx.GetRequiredService<IHttpClientFactory>().CreateClient("FhirTerminologyClient");
+    return new FhirClient(url, httpClient, settings);
+});
+
+
+
 builder.Services.AddHttpContextAccessor();
 
 builder.AddRateLimiting();
@@ -126,9 +222,8 @@ else
     app.UseExceptionHandler("/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
+    app.UseHttpsRedirection();
 }
-
-// app.UseHttpsRedirection();
 
 app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
@@ -138,9 +233,7 @@ app.UseRateLimiter(); //after routing
 
 app.UseSession();
 app.MapRazorPages();
-app.MapControllers()
-    .RequireRateLimiting(RateLimitExtensions.Policy)
-    ;
+app.MapControllers().RequireRateLimiting(RateLimitExtensions.Policy);
 
 app.MapFallbackToFile("index.html");
 

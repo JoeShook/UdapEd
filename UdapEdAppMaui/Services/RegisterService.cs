@@ -23,6 +23,8 @@ using UdapEd.Shared.Services;
 using Udap.Model.Statement;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model.Registration;
+using IdentityModel;
+using System.Text.RegularExpressions;
 
 namespace UdapEdAppMaui.Services;
 internal class RegisterService : IRegisterService
@@ -39,13 +41,13 @@ internal class RegisterService : IRegisterService
 
     public async Task UploadClientCertificate(string certBytes)
     {
-        await SecureStorage.Default.SetAsync(UdapEdConstants.CLIENT_CERTIFICATE, certBytes);
+        await SecureStorage.Default.SetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE, certBytes);
     }
 
     public async Task<RawSoftwareStatementAndHeader?> BuildSoftwareStatementForClientCredentials(
         UdapDynamicClientRegistrationDocument request, string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -109,7 +111,7 @@ internal class RegisterService : IRegisterService
 
     public async Task<RawSoftwareStatementAndHeader?> BuildSoftwareStatementForAuthorizationCode(UdapDynamicClientRegistrationDocument request, string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -145,8 +147,8 @@ internal class RegisterService : IRegisterService
             .WithTokenEndpointAuthMethod(UdapConstants.RegistrationDocumentValues.TokenEndpointAuthMethodValue)
             .WithScope(request.Scope ?? string.Empty)
             .WithResponseTypes(request.ResponseTypes)
-            .WithRedirectUrls(request.RedirectUris?.ToMauiAppSchemes())
-            .WithLogoUri(request.LogoUri ?? "https://udaped.fhirlabs.net/images/hl7/icon-fhir-32.png")
+            .WithRedirectUrls(request.RedirectUris?.ToPlatformSchemes())
+            .WithLogoUri(request.LogoUri ?? "https://udaped.fhirlabs.net/images/UdapEdLogobyDesigner.png") 
             .Build();
 
         var signedSoftwareStatement =
@@ -175,7 +177,7 @@ internal class RegisterService : IRegisterService
 
     public async Task<UdapRegisterRequest?> BuildRequestBodyForClientCredentials(RawSoftwareStatementAndHeader? request, string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -206,6 +208,7 @@ internal class RegisterService : IRegisterService
         dcrBuilder.Document.Subject = document.Subject;
 
         dcrBuilder.WithAudience(document.Audience)
+            .WithIssuedAt(document.IssuedAt)
             .WithExpiration(document.Expiration)
             .WithJwtId(document.JwtId)
             .WithClientName(document.ClientName!)
@@ -231,7 +234,7 @@ internal class RegisterService : IRegisterService
 
     public async Task<UdapRegisterRequest?> BuildRequestBodyForAuthorizationCode(RawSoftwareStatementAndHeader? request, string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -263,6 +266,7 @@ internal class RegisterService : IRegisterService
         dcrBuilder.Document.Subject = document.Subject;
 
         dcrBuilder.WithAudience(document.Audience)
+            .WithIssuedAt(document.IssuedAt)
             .WithExpiration(document.Expiration)
             .WithJwtId(document.JwtId)
             .WithClientName(document.ClientName!)
@@ -343,7 +347,7 @@ internal class RegisterService : IRegisterService
             CertLoaded = CertLoadedEnum.Negative
         };
 
-        var clientCertSession = await SecureStorage.Default.GetAsync(UdapEdConstants.CLIENT_CERTIFICATE);
+        var clientCertSession = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE);
 
         if (clientCertSession == null)
         {
@@ -359,7 +363,7 @@ internal class RegisterService : IRegisterService
             var certificate = new X509Certificate2(certBytes, password, X509KeyStorageFlags.Exportable);
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
-            await SecureStorage.Default.SetAsync(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
+            await SecureStorage.Default.SetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -393,7 +397,7 @@ internal class RegisterService : IRegisterService
 
         try
         {
-            var clientCertSession = await SecureStorage.Default.GetAsync(UdapEdConstants.CLIENT_CERTIFICATE);
+            var clientCertSession = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE);
 
             if (clientCertSession != null)
             {
@@ -404,7 +408,7 @@ internal class RegisterService : IRegisterService
                 result.CertLoaded = CertLoadedEnum.Negative;
             }
 
-            var certBytesWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY);
+            var certBytesWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
             if (certBytesWithKey != null)
             {
@@ -435,7 +439,7 @@ internal class RegisterService : IRegisterService
         }
     }
 
-    public async Task<CertificateStatusViewModel?> LoadTestCertificate()
+    public async Task<CertificateStatusViewModel?> LoadTestCertificate(string certificateName)
     {
         var result = new CertificateStatusViewModel
         {
@@ -444,14 +448,14 @@ internal class RegisterService : IRegisterService
 
         try
         {
-            await using var fileStream = await FileSystem.Current.OpenAppPackageFileAsync("fhirlabs.net.client.pfx");
+            await using var fileStream = await FileSystem.Current.OpenAppPackageFileAsync(certificateName);
             var certBytes = new byte[fileStream.Length];
 
             await fileStream.ReadAsync(certBytes, 0, certBytes.Length);
 
             var certificate = new X509Certificate2(certBytes, "udap-test", X509KeyStorageFlags.Exportable);
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
-            await SecureStorage.Default.SetAsync(UdapEdConstants.CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
+            await SecureStorage.Default.SetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -484,14 +488,17 @@ internal class RegisterService : IRegisterService
         return scopes.ToSpaceSeparatedString();
     }
 
-    public string? GetScopesForClientCredentials(ICollection<string>? scopes)
+    public string? GetScopesForClientCredentials(ICollection<string>? scopes,
+        bool smartV1Scopes = true,
+        bool smartV2Scopes = true)
     {
         if (scopes != null)
         {
             return scopes
                 .Where(s => !s.StartsWith("user") &&
                             !s.StartsWith("patient") &&
-                            !s.StartsWith("openid"))
+                            !s.StartsWith("openid") &&
+                            KeepSmartVersion(s, smartV1Scopes, smartV2Scopes))
                 .Take(10).ToList()
                 .ToSpaceSeparatedString();
         }
@@ -499,49 +506,80 @@ internal class RegisterService : IRegisterService
         return null;
     }
 
-    public string GetScopesForAuthorizationCodeB2B(ICollection<string>? scopes, bool tieredOauth = false)
+    public string GetScopesForAuthorizationCode(ICollection<string>?
+            scopes,
+        bool tieredOauth = false,
+        bool oidcScope = true,
+        string? scopeLevel = null,
+        bool smartLaunch = false,
+        bool smartV1Scopes = true,
+        bool smartV2Scopes = true)
     {
-        var enrichScopes = scopes == null ? new List<string>() : scopes.ToList();
+        var published = scopes == null ? new List<string>() :
+            scopes
+                .Where(s => KeepSmartVersion(s, smartV1Scopes, smartV2Scopes))
+                .ToList();
+
+        var enrichScopes = new List<string>();
 
         if (tieredOauth)
         {
-            if (!enrichScopes.Contains(UdapConstants.StandardScopes.Udap))
-            {
-                enrichScopes.Insert(0, UdapConstants.StandardScopes.Udap);
-            }
+            enrichScopes.Add(UdapConstants.StandardScopes.Udap);
         }
 
-        if (enrichScopes.Any())
+        if (oidcScope)
         {
-            return enrichScopes
-                .Where(s => !s.StartsWith("system") && !s.StartsWith("user"))
-                .Take(10).ToList()
-                .ToSpaceSeparatedString();
+            enrichScopes.Add(OidcConstants.StandardScopes.OpenId);
         }
 
-        return "openid";
+        if (smartLaunch && scopeLevel == "patient")
+        {
+            enrichScopes.Add($"launch/{scopeLevel}");
+        }
+
+        if (smartLaunch && scopeLevel == "user")
+        {
+            enrichScopes.Add($"launch");
+        }
+
+        if (published.Any() && !scopeLevel.IsNullOrEmpty())
+        {
+            var selectedScopes = published
+                .Where(s => s.StartsWith(scopeLevel))
+                .Take(10).ToList();
+
+            enrichScopes.AddRange(selectedScopes);
+        }
+        else if (!scopeLevel.IsNullOrEmpty())
+        {
+            enrichScopes.Add($"{scopeLevel}/*.read");
+        }
+
+        return enrichScopes.ToSpaceSeparatedString();
     }
 
-    public string GetScopesForAuthorizationCodeConsumer(ICollection<string>? scopes, bool tieredOauth = false)
+    private static bool KeepSmartVersion(string scope, bool smartV1Scopes, bool smartV2Scopes)
     {
-        var enrichScopes = scopes == null ? new List<string>() : scopes.ToList();
-
-        if (tieredOauth)
+        if (!smartV1Scopes)
         {
-            if (!enrichScopes.Contains(UdapConstants.StandardScopes.Udap))
+            var smartV1Regex = new Regex(@"^(system|user|patient)[\/].*\.(read|write)$");
+            var match = smartV1Regex.Match(scope);
+            if (match.Success)
             {
-                enrichScopes.Insert(0, UdapConstants.StandardScopes.Udap);
+                return false;
             }
         }
 
-        if (enrichScopes.Any())
+        if (!smartV2Scopes)
         {
-            return enrichScopes
-                .Where(s => !s.StartsWith("system") && !s.StartsWith("patient"))
-                .Take(10).ToList()
-                .ToSpaceSeparatedString();
+            var smartV2Regex = new Regex(@"^(system|user|patient)[\/].*\.[cruds]+$");
+            var match = smartV2Regex.Match(scope);
+            if (match.Success)
+            {
+                return false;
+            }
         }
 
-        return "openid";
+        return true;
     }
 }

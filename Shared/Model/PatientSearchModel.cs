@@ -8,6 +8,8 @@
 #endregion
 
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Rest;
+using UdapEd.Shared.Model.Smart;
 
 namespace UdapEd.Shared.Model;
 
@@ -23,7 +25,14 @@ public class PatientSearchModel
     public string? Identifier { get; set; }
 
     public int RowsPerPage { get; set; }
-    
+
+    // public Uri? NextLink { get; set; }
+    public PageDirection PageDirection { get; set; }
+    public int Page { get; set; }
+
+    public string? Bundle { get; set; }
+
+    public LaunchContext? LaunchContext { get; set; }
 }
 
 public class PatientMatchModel
@@ -35,4 +44,39 @@ public class PatientMatchModel
 
     public string? Identifier { get; set; }
 
+    public List<Address>? AddressList { get; set; }
+
+    public List<ContactSystem>? ContactSystemList { get; set; }
+
+    public List<IdentityValueSetValue>? IdentityValueSetList{ get; set; }
+}
+
+public class Address
+{
+    public int Id { get; set; }
+    public string? Line1 { get; set; }
+
+    public string? City { get; set; }
+
+    public string? State {get; set; }
+
+    public string? PostalCode { get; set; }
+}
+
+public class ContactSystem
+{
+    public int Id { get; set; }
+    public ContactPoint.ContactPointSystem ContactPointSystem { get; set; }
+    public ContactPoint.ContactPointUse ContactPointUse { get; set; }
+    public string? Value { get; set; }
+}
+
+
+public class IdentityValueSetValue
+{
+    public int Id { get; set; }
+    public string Code { get; set; }
+    public string System { get; set; }
+    public string? CodeDisplay { get; set; }
+    public string? Value { get; set; }
 }

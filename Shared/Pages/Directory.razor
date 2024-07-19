@@ -1,19 +1,416 @@
-﻿@page "/directory"
+﻿@page "/ndh"
+@using Hl7.Fhir.Model
+@using Hl7.Fhir.Serialization
+@using Microsoft.IdentityModel.Tokens
+@using UdapEd.Shared.Extensions
+@using UdapEd.Shared.Search
 
 
-<MudCard Elevation="3" Style="margin-top: 10px">
+<ErrorBoundary @ref="_errorBoundary">
+    <ChildContent>
     
-    <MudCardContent>
         <MudGrid Justify="Justify.FlexStart">
-            <MudItem  xs="12">
-                <MudIcon  Color="Color.Primary" Size="Size.Large" Icon="@Icons.Material.Filled.CoffeeMaker"></MudIcon>
-                <MudText Class="d-inline mud-typography-h5" >Working on something cool</MudText>
+            <MudItem lg="12" xl="6">
+                <MudTabs>
+                    <MudTabPanel Text="Search" >
+                        <MudCard Elevation="3" Style="margin-top: 10px">
+                            <MudCardContent>
+                                <MudTextField @bind-Value="_fhirSearch.BaseUrl" Label="Directory Base Url" Variant="Variant.Outlined" />
+                                <MudGrid>
+                                    <MudItem xs="12">
+                                        <MudSelect Label="Resource" @bind-Value="_fhirSearch.ResourceName" Variant="Variant.Outlined" @bind-Value:after="@(() => { _fhirSearch.ResetParameters(); BuildSearch(); })">
+                                            @foreach (var resource in _supportedResources)
+                                            {
+                                                <MudSelectItem Value="@resource">@resource</MudSelectItem>
+                                            }
+                                        </MudSelect>
+                                    </MudItem>
+                                    <MudItem xs="12">
+                                        <MudCard>
+                                            <MudCardHeader>
+                                                <CardHeaderContent>
+                                                    <MudGrid>
+                                                        <MudItem>
+                                                            <MudText Typo="Typo.h6" Color="Color.Primary">Search parameter</MudText>
+                                                        </MudItem>
+                                                        <MudItem>
+                                                        
+
+                                                            <MudIconButton Icon="@Icons.Material.TwoTone.AddBox"
+                                                                           Color="Color.Inherit"
+                                                                           Size="Size.Small"
+                                                                           @onclick="AddSearchParam"
+                                                                           Label="Add"
+                                                                           Class="px-2 mx-2"/>
+                                                        
+
+                                                        </MudItem>
+                                                    </MudGrid>
+
+                                                </CardHeaderContent>
+                                            </MudCardHeader>
+                                            <MudCardContent>
+                                                @if (_fhirSearch.SearchParams.Any())
+                                                {
+                                                    <MudTable Dense="true"
+                                                              ReadOnly="true"
+                                                              Items="@_fhirSearch.SearchParams"
+                                                              Striped="true">
+                                                        <HeaderContent>
+                                                            <MudTh>Search Parameter</MudTh>
+                                                            <MudTh>Modifier</MudTh>
+                                                            <MudTh>Value</MudTh>
+                                                        </HeaderContent>
+                                                        <RowTemplate>
+
+                                                            <MudTd DataLabel="Name" >
+                                                                <MudSelect Dense="true" T="string"
+                                                                           Clearable="true"
+                                                                           SelectedValuesChanged="BuildSearch"
+                                                                           @bind-Value="context.Name"
+                                                                           Variant="Variant.Outlined">
+
+
+                                                                    @{
+                                                                        var paramDefs = CapabilityLookup.SearchParamMap.SingleOrDefault(m => m.Resource == _fhirSearch.ResourceName)?.ParamDefinitions;
+                                                                    }
+                                                                    @if (paramDefs != null)
+                                                                    {
+                                                                        foreach (var paramDef in paramDefs)
+                                                                        {
+                                                                            <MudSelectItem Value="@paramDef.Code">@paramDef.Code</MudSelectItem>
+                                                                        }
+                                                                    }
+                                                                </MudSelect>
+                                                            </MudTd>
+                                                        
+                                                            <MudTd DataLabel="Operator">
+                                                                @if (@context.Name != "active" && @context.Name != "partof")
+                                                                {
+                                                                    <MudSelect Dense="true" T="string"
+                                                                               Clearable="true"
+                                                                               SelectedValuesChanged="BuildSearch"
+                                                                               @bind-Value="context.ModifierName"
+                                                                               Variant="Variant.Outlined">
+
+                                                                        @foreach (SearchModifier item in SearchModifierValueSet.SearchModifiers)
+                                                                        {
+                                                                            <MudSelectItem Value="@item.Name">@item.Name</MudSelectItem>
+                                                                        }
+                                                                    </MudSelect>
+                                                                }
+                                                            </MudTd>
+                                                            <MudTd DataLabel="Value">
+                                                                @if (context.ModifierName != "Missing")
+                                                                {
+                                                                    @if (@context.Name != "active")
+                                                                    {
+                                                                        <MudTextField @bind-Value="@context.Value" Required Variant="Variant.Outlined" TextChanged="BuildSearch"/>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <MudSwitch @bind-Value="@context.Value" @bind-Value:after="BuildSearch"
+                                                                                   Converter="@(new ObjectToFhirBoolConverter())">@(@context.Value)</MudSwitch>
+                                                                    }
+                                                                }
+                                                            </MudTd>
+                                                            <MudTd @onclick:stopPropagation="true" Style="">
+                                                            
+                                                                <MudIconButton HtmlTag="label"
+                                                                               Size="Size.Small"
+                                                                               Color="Color.Warning"
+                                                                               Icon="@Icons.Material.TwoTone.DeleteForever"
+                                                                               Label="Delete"
+                                                                               class="ma-2"
+                                                                               OnClick="@(() => DeleteParam(context))"/>
+                                                            
+                                                            </MudTd>
+                                                        </RowTemplate>
+                                                    </MudTable>
+                                                }
+                                            </MudCardContent>
+                                        </MudCard>
+                                    </MudItem>
+                                    <MudItem sm="12" md="6">
+                                        <MudExpansionPanels>
+                                            <MudExpansionPanel Text="Includes" Typo="Typo.h6" Color="Color.Primary" IsInitiallyExpanded="false">
+                                                @foreach (var include in CapabilityLookup.IncludeMap.Where(m => m.Key == _fhirSearch.ResourceName).SelectMany(m => m.Value))
+                                                {
+                                                    if (!_fhirSearch.Includes.ContainsKey(include))
+                                                    {
+                                                        _fhirSearch.Includes.Add(include, false);
+                                                    }
+
+                                                    <MudCheckBox @bind-Value="@_fhirSearch.Includes[include]" Label="@include" @bind-Value:after="BuildSearch"></MudCheckBox>
+                                                }
+                                            </MudExpansionPanel>
+                                        </MudExpansionPanels>
+                                    </MudItem>
+                                    <MudItem sm="12" md="6">
+                                        <MudExpansionPanels >
+                                            <MudExpansionPanel Text="Reverse Includes" Typo="Typo.h6" Color="Color.Primary" IsInitiallyExpanded="false">
+                                                @foreach (var revInclude in CapabilityLookup.ReverseIncludeMap.Where(m => m.Key == _fhirSearch.ResourceName).SelectMany(m => m.Value))
+                                                {
+                                                    if (!_fhirSearch.RevIncludes.ContainsKey(revInclude))
+                                                    {
+                                                        _fhirSearch.RevIncludes.Add(revInclude, false);
+                                                    }
+
+                                                    <MudCheckBox @bind-Value="@_fhirSearch.RevIncludes[revInclude]" Label="@revInclude" @bind-Value:after="BuildSearch"></MudCheckBox>
+                                                }
+                                            </MudExpansionPanel>
+                                        </MudExpansionPanels>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudCardContent>
+
+                        </MudCard>
+                        <MudPaper Class="mt-3">
+                            <MudTabs>
+                                <MudTabPanel Text="GET">
+                                    <MudCard Elevation="3" Style="margin-top: 10px">
+                                        <MudCardContent>
+                                            <MudText Typo="Typo.h6">@($"GET {_fhirSearch.BaseUrl}/{_fhirSearch.ResourceName}")</MudText>
+                                            <MudTextField AutoGrow @bind-Value="_searchString" class=@ValidStyle TextChanged="BuildManualGetSearch" />
+                                        </MudCardContent>
+
+                                        <MudCardActions>
+                                            <MudButton Class="mt-3"
+                                                       Color="Color.Primary"
+                                                       ButtonType="ButtonType.Button"
+                                                       Variant="Variant.Filled"
+                                                       OnClick="SearchGet">Search</MudButton>
+                                        </MudCardActions>
+                                    </MudCard>
+                                </MudTabPanel>
+                                <MudTabPanel Text="POST">
+                                    <MudCard Elevation="3" Style="margin-top: 10px">
+                                        <MudCardContent>
+                                            <MudText Typo="Typo.h6">@($"POST {_fhirSearch.BaseUrl}/{_fhirSearch.ResourceName}/_search")</MudText>
+                                            <MudTextField AutoGrow @bind-Value="_postSearchString" class=@ValidStyle TextChanged="BuildManualPostSearch" />
+                                        </MudCardContent>
+
+                                        <MudCardActions>
+                                            <MudButton Class="mt-3"
+                                                       Color="Color.Primary"
+                                                       ButtonType="ButtonType.Button"
+                                                       Variant="Variant.Filled"
+                                                       OnClick="SearchPost">Search</MudButton>
+                                        </MudCardActions>
+                                    </MudCard>
+                                
+                                </MudTabPanel>
+                            </MudTabs>
+                        </MudPaper>
+
+                    </MudTabPanel>
+
+                    <MudTabPanel Text="Get">
+                        Get
+                    </MudTabPanel>
+
+                </MudTabs>
+            </MudItem>
+            <MudItem sm="12" lg="12" xl="6">
+                <MudCard Elevation="3" Style="margin-top: 10px">
+                    <MudCardContent>
+                        @if (_outComeMessage != null)
+                        {
+                            <MudAlert Severity="Severity.Error">@(new MarkupString(_outComeMessage))</MudAlert>
+                        }
+                        @if (!_fhirResults.RawFhir.IsNullOrEmpty())
+                        {
+                        <MudTabs>
+                            <MudTabPanel Text="Results">
+                                <MudExpansionPanels>
+                                    @* @if (_fhirResults.Entries != null) *@
+                                    @* { *@
+                                    @*     @foreach (var entry in _fhirResults.Entries) *@
+                                    @*     { *@
+                                    @*         <MudExpansionPanel Text="@($"{entry.Resource.TypeName}/{entry.Resource.Id}")" Dense="true"> *@
+                                    @*             <pre>@_fhirJsonSerializer.SerializeToString(entry)</pre> *@
+                                    @*         </MudExpansionPanel> *@
+                                    @*     } *@
+                                    @* } *@
+                                
+                                    <MudText Typo="Typo.h5" Color="Color.Primary" Style="justify-self: start;">@_fhirSearch.ResourceName List</MudText>
+
+                                    <MudTreeView Items="@_fhirResults.TreeViewStore.Children"  Hover="true" Width="100%" >
+                                        <ItemTemplate Context="item">
+                                            @{
+                                                var presenter = item.Value!;
+                                            }
+                                                <MudTreeViewItem Items="@item.Children" Expanded="true" >
+                                                <BodyContent>
+
+                                                    <MudStack Wrap="Wrap.Wrap">
+
+                                                        @if (presenter.Link == null)
+                                                        {
+                                                            <MudText Typo="Typo.h5" Color="Color.Primary" Style="justify-self: start;">@($"{presenter.Name} ({presenter.ResourceReference})")</MudText>
+                                                        }
+                                                        else
+                                                        {
+
+                                                            @switch (presenter.Type)
+                                                            {
+                                                                case "udap":
+
+                                                                    <MudPaper Class="d-flex align-content-start flex-wrap flex-grow-1 gap-4" Elevation="0">
+                                                                        <MudPaper Elevation="0" >
+                                                                            <MudImage Class="cursor-pointer" src="_content/UdapEd.Shared/images/udap/UDAP_Ecosystem_Gears.png" 
+                                                                                      Alt="UDAP Icon" style="height: 36px; width: 36px; " />
+                                                                        </MudPaper>
+                                                                            <MudPaper Elevation="0">
+                                                                            <MudText  Color="Color.Tertiary"><b>UDAP: </b>@($" {presenter.Name} (Endpoint/{presenter.Id})")</MudText>
+                                                                        </MudPaper>
+                                                                    </MudPaper>
+
+
+                                                                    <MudLink Style="justify-self: start;"
+                                                                             Href="@($"{presenter.Link}")" Target="_blank">
+                                                                        View Metadata
+                                                                        <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew"/>
+                                                                    </MudLink>
+
+                                                                    @if (presenter.ErrorNotifications != null && presenter.ErrorNotifications.Any())
+                                                                    {
+
+                                                                        <MudAlert Severity="Severity.Error">
+                                                                            @foreach (string note in presenter.ErrorNotifications)
+                                                                            {
+                                                                                <li>@note</li>
+                                                                            }
+                                                                        </MudAlert>
+
+                                                                    }
+
+                                                                    @if (@presenter.ErrorNotifications != null && @presenter.ErrorNotifications.Any())
+                                                                    {
+                                                                        <MudButton Class="mt-3" Style="justify-self: start;"
+                                                                                   Color="Color.Primary"
+                                                                                   ButtonType="ButtonType.Button"
+                                                                                   Variant="Variant.Text"
+                                                                                   OnClick="OpenUdapAnchorDialogAsync"
+                                                                                   StartIcon="@Icons.Material.Filled.Upload">Load UDAP Trust anchor
+                                                                        </MudButton>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <MudLink Class="mt-3" Style="justify-self: start;"
+                                                                                 Color="Color.Primary"
+                                                                                 ButtonType="ButtonType.Button"
+                                                                                 Variant="Variant.Filled"
+                                                                                 OnClick="() => DynamicallyRegister(presenter)">Dynamically register with UDAP
+                                                                            <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew"/>
+                                                                        </MudLink>
+                                                                    }
+
+                                                                    break;
+
+                                                                case "smart":
+
+                                                                    <MudPaper Class="d-flex align-content-start flex-wrap flex-grow-1 gap-4" Elevation="0">
+                                                                        <MudPaper Elevation="0" >
+                                                                                <MudImage Class="cursor-pointer" src="_content/UdapEd.Shared/images/smart/smart-logo.svg"
+                                                                                          Alt="UDAP Icon" style="height: 40px; width: 40px; " />
+                                                                        </MudPaper>
+                                                                        <MudPaper Elevation="0">
+                                                                                <MudText Typo="Typo.h6" Color="Color.Tertiary"><b>SMART:</b> @($" {presenter.Name} (Endpoint/{presenter.Id})")</MudText>
+                                                                        </MudPaper>
+                                                                    </MudPaper>
+
+                                                                    
+                                                                    <MudLink Style="justify-self: start;"
+                                                                             Href="@($"{presenter.Link}/.well-known/smart-configuration")" Target="_blank">View Metadata
+                                                                        <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew"/>
+                                                                    </MudLink>
+                                                                    break;
+
+                                                                case "x509-mtls-certificate":
+
+
+                                                                    <MudPaper Class="d-flex align-content-start flex-wrap flex-grow-1 gap-4" Elevation="0">
+                                                                        <MudPaper Elevation="0" >
+                                                                                <MudImage Class="cursor-pointer" src="_content/UdapEd.Shared/images/mTLS/mTLSSimpleLightMode.png"
+                                                                                      Alt="UDAP Icon" style="height: 40px; width: 60px; " />
+                                                                        </MudPaper>
+                                                                        <MudPaper Elevation="0">
+                                                                            <MudText Typo="Typo.h6" Color="Color.Tertiary"><b>mTLS:</b> @($" {presenter.Name} (Endpoint/{presenter.Id})")</MudText>
+                                                                        </MudPaper>
+                                                                    </MudPaper>
+                                                                    
+                                                                    <MudText Typo="Typo.h6" Color="@presenter.IconColor"><b>@presenter.MtlsServerCertificate?.TrimForDisplay(30, "...")</b></MudText>
+
+                                                                    @if (presenter.ErrorNotifications != null && presenter.ErrorNotifications.Any())
+                                                                    {
+
+                                                                        <MudAlert Severity="Severity.Error">
+                                                                            <MudStack Wrap="Wrap.Wrap">
+                                                                                @foreach (string note in presenter.ErrorNotifications)
+                                                                                {
+                                                                                    <MudText Class="overflow-auto">@note</MudText>
+                                                                                }
+                                                                            </MudStack>
+                                                                        </MudAlert>
+
+                                                                        <MudButton Class="mt-3" Style="justify-self: start;"
+                                                                                   Color="Color.Primary"
+                                                                                   ButtonType="ButtonType.Button"
+                                                                                   Variant="Variant.Text"
+                                                                                   OnClick="OpenMtlsAnchorDialogAsync"
+                                                                                   StartIcon="@Icons.Material.Filled.Upload">Load mTls Trust Anchor</MudButton>
+
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <MudLink Style="justify-self: start;"
+                                                                                 Href="@($"/patientSearch?BaseUrl={presenter.Link}")" Target="_blank">Search
+                                                                            <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew"/>
+                                                                        </MudLink>
+                                                                    }
+
+                                                                    break;
+
+                                                                default:
+
+                                                                    <MudText Typo="Typo.h6" Color="Color.Tertiary"><b>@presenter.Type:</b> @($" {presenter.Name} (Endpoint/{presenter.Id})")</MudText>
+
+                                                                    break;
+
+                                                            }
+                                                        }
+                                                        <MudSpacer/>
+                                                    </MudStack>
+                                                </BodyContent>
+
+                                            </MudTreeViewItem>
+                                        </ItemTemplate>
+                                    </MudTreeView>
+                                </MudExpansionPanels>
+                            </MudTabPanel>
+                            <MudTabPanel Text="FHIR">
+                                <FhirEditor
+                                    Language="json"
+                                    EditorContent="@_fhirResults.RawFhir"
+                                    DarkMode="false"
+                                />
+                                @* DarkMode="@(NavTracker?.IsDarkMode ?? true)" *@
+
+                            </MudTabPanel>
+                        </MudTabs>
+                        }
+                    </MudCardContent>
+                </MudCard>
             </MudItem>
 
         </MudGrid>
-    </MudCardContent>
-</MudCard>
-
-@code {
-
-}
+       
+        <a href="_content/UdapEd.Shared/CapabilityStatement-national-directory-api-server.json"></a>
+        </ChildContent>
+    <ErrorContent Context="ex">
+        <pre class="blazor-error-boundary">
+            @ex.Message
+      </pre>
+    </ErrorContent>
+</ErrorBoundary>

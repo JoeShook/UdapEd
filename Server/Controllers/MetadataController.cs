@@ -7,8 +7,13 @@
 // */
 #endregion
 
+using System;
+using System.Net.Http.Json;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
+using Hl7.Fhir.Model;
+using Hl7.Fhir.Rest;
+using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
@@ -18,6 +23,7 @@ using Udap.Common.Certificates;
 using Udap.Common.Extensions;
 using Udap.Common.Models;
 using Udap.Model;
+using Udap.Smart.Model;
 using Udap.Util.Extensions;
 using UdapEd.Server.Extensions;
 using UdapEd.Shared;
@@ -47,7 +53,7 @@ public class MetadataController : Controller
     [HttpGet]
     public async Task<IActionResult> Get([FromQuery] string metadataUrl, [FromQuery] string community)
     {
-        var anchorString = HttpContext.Session.GetString(UdapEdConstants.ANCHOR_CERTIFICATE);
+        var anchorString = HttpContext.Session.GetString(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE);
 
         if (anchorString != null)
         {
@@ -83,29 +89,86 @@ public class MetadataController : Controller
         return BadRequest("Missing anchor");
     }
 
+    /// <summary>
+    /// This is run from the WASM client instead via DirectoryService.cs
+    /// Leaving here for experimentation.
+    /// </summary>
+    /// <param name="metadataUrl"></param>
+    /// <returns></returns>
+    [HttpGet("metadata")]
+    public async Task<IActionResult> Get([FromQuery] string metadataUrl)
+    {
+        try
+        {
+            var client = new FhirClient(metadataUrl);
+            var result = await client.CapabilityStatementAsync();
+
+            if (result == null)
+            {
+                return NotFound();
+            }
+            
+            return Ok(await result.ToJsonAsync());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed loading metadata from {metadataUrl}", metadataUrl);
+            return BadRequest();
+        }
+    }
+
+    [HttpGet("Smart")]
+    public async Task<IActionResult> GetSmartMetadata([FromQuery] string metadataUrl)
+    {
+        try
+        {
+            var httpClient = new HttpClient();
+            return Ok(await httpClient.GetFromJsonAsync<SmartMetadata>(metadataUrl));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed loading metadata from {metadataUrl}", metadataUrl);
+            throw;
+        }
+    }
+
     // get metadata from .well-known/udap  that is not validated and trust is not validated
     [HttpGet("UnValidated")]
     public async Task<IActionResult> GetUnValidated([FromQuery] string metadataUrl, [FromQuery] string community)
     {
-        var baseUrl = metadataUrl.EnsureTrailingSlash() + UdapConstants.Discovery.DiscoveryEndpoint;
+        var baseUrl = metadataUrl;
+
+        if (!metadataUrl.Contains(UdapConstants.Discovery.DiscoveryEndpoint))
+        {
+             baseUrl = baseUrl.EnsureTrailingSlash() + UdapConstants.Discovery.DiscoveryEndpoint;
+        }
+        
         if (!string.IsNullOrEmpty(community))
         {
             baseUrl += $"?{UdapConstants.Community}={community}";
         }
 
-        _logger.LogDebug(baseUrl);
-        var response = await _httpClient.GetStringAsync(baseUrl);
-        var result = JsonSerializer.Deserialize<UdapMetadata>(response);
-        HttpContext.Session.SetString(UdapEdConstants.BASE_URL, baseUrl.GetBaseUrlFromMetadataUrl());
-
         var model = new MetadataVerificationModel
         {
-            UdapServerMetaData = result,
             Notifications = new List<string>
             {
-                "No anchor loaded.  Un-Validated resource server."
+                "UDAP anchor certificate is not loaded."
             }
         };
+
+        _logger.LogDebug(baseUrl);
+
+        try
+        {
+            var response = await _httpClient.GetStringAsync(baseUrl);
+            var result = JsonSerializer.Deserialize<UdapMetadata>(response);
+            model.UdapServerMetaData = result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex.Message);
+
+        }
 
         return Ok(model);
     }
@@ -122,7 +185,7 @@ public class MetadataController : Controller
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
-            HttpContext.Session.SetString(UdapEdConstants.ANCHOR_CERTIFICATE, base64String);
+            HttpContext.Session.SetString(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE, base64String);
 
             return Ok(result);
         }
@@ -150,7 +213,7 @@ public class MetadataController : Controller
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
-            HttpContext.Session.SetString(UdapEdConstants.ANCHOR_CERTIFICATE, Convert.ToBase64String(certBytes));
+            HttpContext.Session.SetString(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE, Convert.ToBase64String(certBytes));
 
             return Ok(result);
         }
@@ -174,7 +237,7 @@ public class MetadataController : Controller
 
         try
         {
-            var base64String = HttpContext.Session.GetString(UdapEdConstants.ANCHOR_CERTIFICATE);
+            var base64String = HttpContext.Session.GetString(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE);
 
             if (base64String != null)
             {
@@ -200,8 +263,13 @@ public class MetadataController : Controller
     }
 
     [HttpPut]
-    public IActionResult SetBaseFhirUrl([FromBody] string baseFhirUrl, [FromQuery] bool resetToken)
+    public IActionResult SetBaseFhirUrl([FromBody] string? baseFhirUrl, [FromQuery] bool resetToken)
     {
+        if (baseFhirUrl == null)
+        {
+            return new NoContentResult();
+        }
+
         HttpContext.Session.SetString(UdapEdConstants.BASE_URL, baseFhirUrl);
 
         if (resetToken)
@@ -211,6 +279,17 @@ public class MetadataController : Controller
 
         return Ok();
     }
+
+    // TODO: If I start building public and confidential base clients this should not exist?
+    // Well confidential should not need this but public would.
+    [HttpPut("Token")]
+    public IActionResult SetToken([FromBody] string token)
+    {
+        HttpContext.Session.SetString(UdapEdConstants.TOKEN, token);
+
+        return Ok();
+    }
+
 
     [HttpGet("MyIp")]
     public IActionResult Get()

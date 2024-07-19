@@ -7,6 +7,7 @@
 // */
 #endregion
 
+using System.Collections.Immutable;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using IdentityModel;
@@ -17,9 +18,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
 using Udap.Common.Extensions;
 using Udap.Model;
+using UdapEd.Shared.Components;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
-using UdapEd.Shared.Shared;
 
 namespace UdapEd.Shared.Pages;
 
@@ -35,11 +36,31 @@ public partial class UdapTieredOAuth
     
     [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
 
-    private string _signingAlgorithm = UdapConstants.SupportedAlgorithm.RS256;
+    private string? _signingAlgorithm;
+
+    public string SigningAlgorithm
+    {
+        get
+        {
+            if (_signingAlgorithm == null && AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "RS")
+            {
+                _signingAlgorithm = UdapConstants.SupportedAlgorithm.RS256;
+            }
+            if (_signingAlgorithm == null && AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "ES")
+            {
+                _signingAlgorithm = UdapConstants.SupportedAlgorithm.ES256;
+            }
+
+            return _signingAlgorithm ?? "Unknown";
+        }
+        set
+        {
+            Console.WriteLine(value);
+            _signingAlgorithm = value;
+        }
+    }
 
     private string LoginRedirectLinkText { get; set; } = "Login Redirect";
-
-    public bool LegacyMode { get; set; } = false;
 
     
     private string? TokenRequest1 { get; set; }
@@ -73,7 +94,12 @@ public partial class UdapTieredOAuth
         set => _accessToken = value;
     }
 
-   
+
+    private void Reset()
+    {
+        _signingAlgorithm = null;
+        StateHasChanged();
+    }
 
     /// <summary>
     /// Method invoked when the component is ready to start, having received its
@@ -252,8 +278,6 @@ public partial class UdapTieredOAuth
             tokenRequestModel.Code = AppState.LoginCallBackResult?.Code!;
         }
 
-        tokenRequestModel.LegacyMode = LegacyMode;
-
         var requestToken = await AccessService
             .BuildRequestAccessTokenForAuthCode(tokenRequestModel, _signingAlgorithm);
         
@@ -322,7 +346,8 @@ public partial class UdapTieredOAuth
                 .RequestAccessTokenForAuthorizationCode(
                     AppState.AuthorizationCodeTokenRequest);
 
-            AppState.SetProperty(this, nameof(AppState.AccessTokens), tokenResponse);
+            await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), tokenResponse);
+            await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
 
             AccessToken = tokenResponse is { IsError: false } ? tokenResponse.Raw : tokenResponse?.Error;
             
@@ -350,5 +375,18 @@ public partial class UdapTieredOAuth
 
         var jwt = new JwtSecurityToken(tokenString);
         return JsonExtensions.FormatJson(Base64UrlEncoder.Decode(jwt.EncodedHeader));
+    }
+
+    private IDictionary<string, ClientRegistration?>? FilterRegistrations()
+    {
+        return AppState.ClientRegistrations?.Registrations
+            .Where(r => r.Value != null &&
+                        r.Value.UserFlowSelected != "client_credentials" &&
+                        r.Value.Scope != null &&
+                        r.Value.Scope.Contains("udap") && 
+                        AppState.UdapClientCertificateInfo != null &&
+                        AppState.UdapClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
+                        AppState.BaseUrl == r.Value.ResourceServer)
+            .ToImmutableDictionary();
     }
 }

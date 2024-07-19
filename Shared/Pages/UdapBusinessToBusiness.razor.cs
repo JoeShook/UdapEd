@@ -7,6 +7,7 @@
 // */
 #endregion
 
+using System.Collections.Immutable;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using IdentityModel;
@@ -15,13 +16,12 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
-using Microsoft.Maui.Authentication;
 using Udap.Common.Extensions;
 using Udap.Model;
+using UdapEd.Shared.Components;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
-using UdapEd.Shared.Shared;
 
 namespace UdapEd.Shared.Pages;
 
@@ -29,6 +29,9 @@ public partial class UdapBusinessToBusiness
 {
     [CascadingParameter]
     public CascadingAppState AppState { get; set; } = null!;
+
+    private ClientRegistration? ClientSelectedInUi { get; set; }
+    public string ScopeOverride { get; set; } = String.Empty;
 
     private ErrorBoundary? ErrorBoundary { get; set; }
 
@@ -41,12 +44,31 @@ public partial class UdapBusinessToBusiness
     
     [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
 
-    private string _signingAlgorithm = UdapConstants.SupportedAlgorithm.RS256;
+    private string? _signingAlgorithm;
+
+    public string SigningAlgorithm
+    {
+        get
+        {
+            if (_signingAlgorithm == null && AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "RS")
+            {
+                _signingAlgorithm = UdapConstants.SupportedAlgorithm.RS256;
+            }
+            if (_signingAlgorithm == null && AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "ES")
+            {
+                _signingAlgorithm = UdapConstants.SupportedAlgorithm.ES256;
+            }
+
+            return _signingAlgorithm ?? "Unknown";
+        }
+        set
+        {
+            _signingAlgorithm = value;
+        }
+    }
 
     private string LoginRedirectLinkText { get; set; } = "Login Redirect";
-
-    public bool LegacyMode { get; set; } = false;
-
+    
     private string? TokenRequest1 { get; set; }
     private string? TokenRequest2 { get; set; }
     private string? TokenRequest3 { get; set; }
@@ -78,7 +100,11 @@ public partial class UdapBusinessToBusiness
         set => _accessToken = value;
     }
 
-   
+    private void Reset()
+    {
+        _signingAlgorithm = null;
+        StateHasChanged();
+    }
 
     /// <summary>
     /// Method invoked when the component is ready to start, having received its
@@ -87,11 +113,11 @@ public partial class UdapBusinessToBusiness
     /// want the component to refresh when that operation is completed.
     /// </summary>
     /// <returns>A <see cref="T:System.Threading.Tasks.Task" /> representing any asynchronous operation.</returns>
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        ResetSoftwareStatement();
+        await ResetSoftwareStatement();
         
-        return base.OnInitializedAsync();
+        await base.OnInitializedAsync();
     }
 
     protected override void OnParametersSet()
@@ -112,13 +138,13 @@ public partial class UdapBusinessToBusiness
     private async Task BuildAuthCodeRequest()
     {
         AccessToken = string.Empty;
-        AppState.SetProperty(this, nameof(AppState.AccessTokens), string.Empty, true, false);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), null, true, false);
         AuthorizationCodeRequest = new AuthorizationCodeRequest
         {
             RedirectUri = "Loading..."
         };
 
-        AppState.SetProperty(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
         await Task.Delay(250);
 
         AuthorizationCodeRequest = new AuthorizationCodeRequest
@@ -126,12 +152,12 @@ public partial class UdapBusinessToBusiness
             ResponseType = "response_type=code",
             State = $"state={CryptoRandom.CreateUniqueId()}",
             ClientId = $"client_id={AppState.ClientRegistrations?.SelectedRegistration?.ClientId}",
-            Scope = $"scope={AppState.ClientRegistrations?.SelectedRegistration?.Scope}",
-            RedirectUri = $"redirect_uri={NavManager.Uri.RemoveQueryParameters().ToMauiAppScheme()}",
+            Scope = $"scope={AppState.ClientRegistrations?.SelectedRegistration?.Scope?.Replace("udap", "").Replace("  ", " ")}",
+            RedirectUri = $"redirect_uri={NavManager.Uri.RemoveQueryParameters().ToPlatformScheme()}",
             Aud = $"aud={AppState.BaseUrl}"
         };
 
-        AppState.SetProperty(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
 
         BuildAuthorizeLink();
     }
@@ -173,7 +199,6 @@ public partial class UdapBusinessToBusiness
             AppState.AuthorizationCodeRequest?.RedirectUri,
             AppState.AuthorizationCodeRequest?.Aud);
 
-        Console.WriteLine(accessCodeRequestUrl);
         //
         // Builds an anchor href link the user clicks to initiate a user login page at the authorization server
         //
@@ -182,7 +207,7 @@ public partial class UdapBusinessToBusiness
         AppState.SetProperty(this, nameof(AppState.AccessCodeRequestResult), loginLink);
         LoginRedirectLinkText = "Login Redirect";
     }
-
+    
     public string LoginCallback(bool reset = false)
     {
         if (reset)
@@ -211,20 +236,37 @@ public partial class UdapBusinessToBusiness
         return uri.Query.Replace("&", "&\r\n");
     }
 
-    private void ResetSoftwareStatement()
+    private bool _callBackEntryScrolled = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {   
+        var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
+        if (!_callBackEntryScrolled && !string.IsNullOrEmpty(uri.Query))
+        {
+            var queryParams = QueryHelpers.ParseQuery(uri.Query);
+            if (!queryParams.GetValueOrDefault("code").ToString().IsNullOrEmpty())
+            {
+                var success = await JSRuntime.InvokeAsync<bool>("UdapEd.scrollTo", "CallBackEntry");
+                _callBackEntryScrolled = success;
+            }
+        }
+        
+    }
+
+    private async Task ResetSoftwareStatement()
     {
         TokenRequest1 = string.Empty;
         TokenRequest2 = string.Empty;
         TokenRequest3 = string.Empty;
         TokenRequest4 = string.Empty;
-        AppState.SetProperty(this, nameof(AppState.AuthorizationCodeRequest), null);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeRequest), null);
         LoginCallback(true);
         StateHasChanged();
     }
 
     private async Task BuildAccessTokenRequest ()
     {
-        ResetSoftwareStatement();
+        await ResetSoftwareStatement();
         TokenRequest1 = "Loading ...";
         await Task.Delay(50);
 
@@ -243,6 +285,7 @@ public partial class UdapBusinessToBusiness
 
         if (AppState.Oauth2Flow == Oauth2FlowEnum.authorization_code_b2b)
         {
+            Console.WriteLine("Why");
             var tokenRequestModel = new AuthorizationCodeTokenRequestModel
             {
                 ClientId = AppState.ClientRegistrations?.SelectedRegistration?.ClientId,
@@ -256,13 +299,11 @@ public partial class UdapBusinessToBusiness
             {
                 tokenRequestModel.Code = AppState.LoginCallBackResult?.Code!;
             }
-
-            tokenRequestModel.LegacyMode = LegacyMode;
-
+            
             var requestToken = await AccessService
                 .BuildRequestAccessTokenForAuthCode(tokenRequestModel, _signingAlgorithm);
             
-            AppState.SetProperty(this, nameof(AppState.AuthorizationCodeTokenRequest), requestToken);
+            await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeTokenRequest), requestToken);
 
             if (AppState.AuthorizationCodeTokenRequest == null)
             {
@@ -282,14 +323,13 @@ public partial class UdapBusinessToBusiness
             {
                 ClientId = AppState.ClientRegistrations?.SelectedRegistration?.ClientId,
                 TokenEndpointUrl = AppState.MetadataVerificationModel?.UdapServerMetaData?.TokenEndpoint,
-                LegacyMode = LegacyMode,
-                Scope = AppState.ClientRegistrations?.SelectedRegistration?.Scope
+                Scope = ScopeOverride.IsNullOrEmpty() ? TokenRequestScope?.Replace("scope=", "").TrimEnd('&').Trim() : ScopeOverride
             };
 
             var requestToken = await AccessService
                 .BuildRequestAccessTokenForClientCredentials(tokenRequestModel, _signingAlgorithm);
 
-            AppState.SetProperty(this, nameof(AppState.ClientCredentialsTokenRequest), requestToken);
+            await AppState.SetPropertyAsync(this, nameof(AppState.ClientCredentialsTokenRequest), requestToken);
 
             BuildAccessTokenRequestVisualForClientCredentials();
         }
@@ -311,11 +351,10 @@ public partial class UdapBusinessToBusiness
         TokenRequest2 = sb.ToString();
 
         TokenRequest3 = $"client_assertion={AppState.ClientCredentialsTokenRequest?.ClientAssertion?.Value}&";
-        TokenRequestScope = $"scope={AppState.ClientCredentialsTokenRequest?.Scope}&";
+        TokenRequestScope = $"scope={(ScopeOverride.IsNullOrEmpty() ? AppState.ClientCredentialsTokenRequest?.Scope : ScopeOverride)}&";
         sb = new StringBuilder();
         sb.Append($"udap={UdapConstants.UdapVersionsSupportedValue}&\r\n");
         TokenRequest4 = sb.ToString();
-        
     }
 
     private void BuildAccessTokenRequestVisualForAuthorizationCode()
@@ -367,7 +406,7 @@ public partial class UdapBusinessToBusiness
                     .RequestAccessTokenForAuthorizationCode(
                         AppState.AuthorizationCodeTokenRequest);
 
-                AppState.SetProperty(this, nameof(AppState.AccessTokens), tokenResponse);
+                await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), tokenResponse);
 
                 AccessToken = tokenResponse is { IsError: false } ? tokenResponse.Raw : tokenResponse?.Error;
             }
@@ -383,7 +422,8 @@ public partial class UdapBusinessToBusiness
                     .RequestAccessTokenForClientCredentials(
                         AppState.ClientCredentialsTokenRequest);
 
-                AppState.SetProperty(this, nameof(AppState.AccessTokens), tokenResponse);
+                await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), tokenResponse);
+                await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
 
                 AccessToken = tokenResponse is { IsError: false }
                     ? tokenResponse.Raw 
@@ -403,7 +443,7 @@ public partial class UdapBusinessToBusiness
       
 #if ANDROID || IOS || MACCATALYST || WINDOWS
 
-        var result = await ExternalWebAuthenticator.AuthenticateAsync(AuthCodeRequestLink, NavManager.Uri.RemoveQueryParameters().ToMauiAppScheme());
+        var result = await ExternalWebAuthenticator.AuthenticateAsync(AuthCodeRequestLink, NavManager.Uri.RemoveQueryParameters().ToPlatformScheme());
 
         var loginCallbackResult = new LoginCallBackResult
         {
@@ -449,5 +489,16 @@ public partial class UdapBusinessToBusiness
 
         var jwt = new JwtSecurityToken(tokenString);
         return JsonExtensions.FormatJson(Base64UrlEncoder.Decode(jwt.EncodedHeader));
+    }
+
+    private IDictionary<string, ClientRegistration?>? FilterRegistrations()
+    {
+        return AppState.ClientRegistrations?.Registrations
+            .Where(r => r.Value != null && 
+                        !r.Value.UserFlowSelected.EndsWith("_consumer") &&
+                        AppState.UdapClientCertificateInfo != null &&
+                        AppState.UdapClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
+                        AppState.BaseUrl == r.Value.ResourceServer)
+            .ToImmutableDictionary();
     }
 }

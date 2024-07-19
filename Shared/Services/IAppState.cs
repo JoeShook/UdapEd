@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using Udap.Model.Registration;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Discovery;
+using UdapEd.Shared.Model.Smart;
 
 namespace UdapEd.Shared.Services;
 
@@ -26,17 +27,30 @@ public interface IAppState
 
     UdapClientCredentialsTokenRequestModel? ClientCredentialsTokenRequest { get; }
 
-    CertificateStatusViewModel? ClientCertificateInfo { get; }
-    
+    CertificateStatusViewModel? UdapClientCertificateInfo { get; }
+
+    CertificateStatusViewModel? UdapAnchorCertificateInfo { get; }
+
+    CertificateStatusViewModel? MtlsClientCertificateInfo { get; }
+
+    CertificateStatusViewModel? MtlsAnchorCertificateInfo { get; }
+
     UdapAuthorizationCodeTokenRequestModel? AuthorizationCodeTokenRequest { get; }
 
     AccessCodeRequestResult? AccessCodeRequestResult { get;  }
 
     LoginCallBackResult? LoginCallBackResult { get;  }
 
+    SmartSession? SmartSession { get; }
+
     TokenResponseModel? AccessTokens { get;  }
 
+    ClientSecureMode ClientMode { get; }
+
+    LaunchContext? LaunchContext { get; }
+
     ClientStatus Status { get; }
+
 
     AuthorizationCodeRequest?AuthorizationCodeRequest { get; }
 

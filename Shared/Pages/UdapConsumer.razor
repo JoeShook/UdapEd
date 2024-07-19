@@ -1,5 +1,6 @@
 ﻿@page "/udapConsumer"
 @using System.Collections.Immutable
+@using UdapEd.Shared.Components
 
 
 <ErrorBoundary @ref="ErrorBoundary">
@@ -16,7 +17,7 @@
                         <MudGrid Spacing="1" Justify="Justify.FlexStart" Class="mb-2">
 
                             <MudItem md="8" xs="12">
-                                <ClientIdSelection ClientRegistrations="@AppState.ClientRegistrations.Registrations.Where(r => r.Value.UserFlowSelected.EndsWith("_consumer")).ToImmutableDictionary()"
+                                <ClientIdSelection ClientRegistrations="@FilterRegistrations()"
                                                    SelectedRegistration="@AppState.ClientRegistrations?.SelectedRegistration"
                                                    ClientIdSelected="(registration) =>
 {
@@ -28,7 +29,7 @@
                             </MudItem>
 
                             <MudItem md="4" xs="12">
-                                <ClientCertLoader />
+                                <ClientCertLoader OnCertificateLoaded="@Reset" />
                             </MudItem>
                         </MudGrid>
                     </MudCardContent>
@@ -178,23 +179,24 @@
                                        OnClick="BuildAccessTokenRequest">Build Access Token Request</MudButton>
                         </MudItem>
                         <MudItem md="3" sm="6" xs="12">
-                            <MudSelect @bind-Value="_signingAlgorithm"
+                            <MudSelect @bind-Value="SigningAlgorithm"
                                        Label="Select Signing Algorithm"
                                        T="string"
                                        Clearable="true"
                                        AdornmentIcon="@Icons.Material.Outlined.ArrowDropDown"
                                        AdornmentColor="Color.Primary"
                                        Variant="Variant.Outlined">
-                                <MudSelectItem Value="UdapConstants.SupportedAlgorithm.RS256">@UdapConstants.SupportedAlgorithm.RS256</MudSelectItem>
-                                <MudSelectItem Value="UdapConstants.SupportedAlgorithm.RS384">@UdapConstants.SupportedAlgorithm.RS384</MudSelectItem>
-                                <MudSelectItem Value="UdapConstants.SupportedAlgorithm.ES256">@UdapConstants.SupportedAlgorithm.ES256</MudSelectItem>
-                                <MudSelectItem Value="UdapConstants.SupportedAlgorithm.ES384">@UdapConstants.SupportedAlgorithm.ES384</MudSelectItem>
+                                @if (AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "RS")
+                                {
+                                    <MudSelectItem Value="UdapConstants.SupportedAlgorithm.RS256">@UdapConstants.SupportedAlgorithm.RS256</MudSelectItem>
+                                    <MudSelectItem Value="UdapConstants.SupportedAlgorithm.RS384">@UdapConstants.SupportedAlgorithm.RS384</MudSelectItem>
+                                }
+                                @if (AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "ES")
+                                {
+                                    <MudSelectItem Value="UdapConstants.SupportedAlgorithm.ES256">@UdapConstants.SupportedAlgorithm.ES256</MudSelectItem>
+                                    <MudSelectItem Value="UdapConstants.SupportedAlgorithm.ES384">@UdapConstants.SupportedAlgorithm.ES384</MudSelectItem>
+                                }
                             </MudSelect>
-                        </MudItem>
-                        <MudItem md="3" sm="6" xs="12">
-                            <MudSwitch Label="@(LegacyMode ? "udap.org Mode (sub==iss==SubjectAltName)" : "HL7 FHIR Mode (sub==iss==client_id)")"
-                                       T="bool"
-                                       @bind-Checked="@LegacyMode" />
                         </MudItem>
                     </MudGrid>
                 </MudCardActions>
@@ -241,17 +243,27 @@
           <MudGrid Spacing="1">
               <MudItem sm="6" xs="12">
                   <MudPaper Class="pa-4 ma-2" Elevation="3">
-                      <MudText Align="Align.Right" Color="Color.Tertiary">7.1 Success</MudText>
+                            <MudText Align="Align.Right" Color="Color.Tertiary">OpenID Connect/OAuth 2 Response</MudText>
                       <pre>@AccessToken</pre>
                   </MudPaper>
               </MudItem>
               <MudItem sm="6" xs="12">
+                  <MudPaper Class="udap-knowledge" Elevation="3">
+                      <MudText Align="Align.Left" Color="Color.Tertiary">See <a href="https://build.fhir.org/ig/HL7/fhir-identity-matching-ig/digital-identity.html#requirements-for-digital-identifiers-for-individuals">Requirements for Digital Identifiers for Individuals</a>
+                          to understand more about the Identity Token. During Tiered OAuth the hl7_identifier is used in this tool as the context</MudText>
+                  </MudPaper>
                   <MudPaper Class="udap-analyzed">
-                      <MudText Align="Align.Right" Color="Color.Tertiary">TODO: Links to Identity IG</MudText>
-                           
-                      <IdentityViewer Title="<b>Decoded Identity Token::</b>"
-                                      IdentityToken="@AppState.AccessTokens?.IdentityToken" />
-
+                      <MudText Align="Align.Right" Color="Color.Tertiary">Decoded</MudText>
+                      <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+                          <MudTabPanel Text="Identity Token">
+                              <IdentityViewer Title="<h3>Decoded Identity Token::</h3>"
+                                              IdentityToken="@AppState.AccessTokens?.IdentityToken"/>
+                          </MudTabPanel>
+                          <MudTabPanel Text="Access Token">
+                              <SignedJwtViewer Title="<h3>Decoded Access Token::</h3>"
+                                               SignedSoftwareStatement="@AppState.AccessTokens?.AccessToken"/>
+                          </MudTabPanel>
+                      </MudTabs>
                   </MudPaper>
               </MudItem>
           </MudGrid>

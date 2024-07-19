@@ -15,16 +15,17 @@ using BQuery;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
 using MudBlazor;
+using UdapEd.Shared.Components;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
-using UdapEd.Shared.Shared;
 
 namespace UdapEd.Shared.Pages;
 
-public partial class UdapDiscovery: IDisposable
+public partial class UdapDiscovery
 {
     [CascadingParameter]
     public CascadingAppState AppState { get; set; } = null!;
@@ -38,10 +39,6 @@ public partial class UdapDiscovery: IDisposable
     [Inject] private IDiscoveryService DiscoveryService { get; set; } = null!;
 
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
-
-    readonly PeriodicTimer _periodicTimer = new PeriodicTimer(TimeSpan.FromMinutes(5));
-    
-    private bool _checkServerSession;
 
     private string? _result;
 
@@ -113,43 +110,12 @@ public partial class UdapDiscovery: IDisposable
         }
     }
 
-    public Color CertLoadedColor { get; set; } = Color.Error;
-
+    
     protected override async Task OnInitializedAsync()
     {
-        _baseUrl = AppState.BaseUrl;
-        var anchorCertificateLoadStatus = await DiscoveryService.AnchorCertificateLoadStatus();
-        await AppState.SetPropertyAsync(this, nameof(AppState.AnchorCertificateInfo), anchorCertificateLoadStatus);
-        await SetCertLoadedColor(anchorCertificateLoadStatus?.CertLoaded);
-
-        if (Bq.Events != null)
-        {
-            //No background tasks in Maui.  FYI IOS doesn't allow it.
-            RunTimer();
-        }
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (Bq.Events != null && firstRender)
-        {
-            Bq.Events.OnBlur += Events_OnBlur;
-            Bq.Events.OnFocusAsync += Events_OnFocus;
-        }
-        await base.OnAfterRenderAsync(firstRender);
-    }
-
-    private async Task Events_OnFocus(FocusEventArgs obj)
-    {
-        var anchorCertificateLoadStatus = await DiscoveryService.AnchorCertificateLoadStatus();
-        await AppState.SetPropertyAsync(this, nameof(AppState.AnchorCertificateInfo), anchorCertificateLoadStatus);
-        await SetCertLoadedColor(anchorCertificateLoadStatus?.CertLoaded);
-        _checkServerSession = true;
-    }
-
-    private void Events_OnBlur(FocusEventArgs obj)
-    {
-        _checkServerSession = false;
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var queryParams = !string.IsNullOrEmpty(uri.Query) ? QueryHelpers.ParseQuery(uri.Query) : null;
+        _baseUrl = queryParams?.GetValueOrDefault("BaseUrl") ?? AppState.BaseUrl;
     }
 
     private void Reset()
@@ -180,7 +146,7 @@ public partial class UdapDiscovery: IDisposable
         {
             if (BaseUrl != null)
             {
-                var model = await MetadataService.GetMetadataVerificationModel(BaseUrl, Community, default);
+                var model = await MetadataService.GetUdapMetadataVerificationModel(BaseUrl, Community, default);
                 await AppState.SetPropertyAsync(this, nameof(AppState.MetadataVerificationModel), model);
             }
 
@@ -208,7 +174,7 @@ public partial class UdapDiscovery: IDisposable
     //
     // Just validates that a url in the list view are valid
     //
-    private async Task<IEnumerable<string>?> GetMetadata(string value, CancellationToken token)
+    private async Task<IEnumerable<string>> GetMetadata(string value, CancellationToken token)
     {
         await Task.Delay(5, token);
 
@@ -217,7 +183,8 @@ public partial class UdapDiscovery: IDisposable
             await AppState.SetPropertyAsync(this, nameof(AppState.BaseUrls), new OrderedDictionary(), true, false);
         }
 
-        if (AppState.BaseUrls!.Contains(value))
+        if ((value == null && AppState.BaseUrls != null) 
+            || (value != null && AppState.BaseUrls != null && AppState.BaseUrls!.Contains(value)))
         {
             return AppState.BaseUrls.Cast<DictionaryEntry>().Select(e => (string)e.Key);
         }
@@ -226,7 +193,7 @@ public partial class UdapDiscovery: IDisposable
         {
             if (BaseUrl != null)
             {
-                var result = await MetadataService.GetMetadataVerificationModel(BaseUrl, Community, token);
+                var result = await MetadataService.GetUdapMetadataVerificationModel(BaseUrl, Community, token);
 
                 if (result != null)
                 {
@@ -302,70 +269,4 @@ public partial class UdapDiscovery: IDisposable
         var jwt = new JwtSecurityToken(jwtEncodedString);
         return UdapEd.Shared.JsonExtensions.FormatJson(Base64UrlEncoder.Decode(jwt.EncodedHeader));
     }
-
-    private async Task UploadFilesAsync(InputFileChangeEventArgs e)
-    {
-        long maxFileSize = 1024 * 10;
-
-        var uploadStream = await new StreamContent(e.File.OpenReadStream(maxFileSize)).ReadAsStreamAsync();
-        var ms = new MemoryStream();
-        await uploadStream.CopyToAsync(ms);
-        var certBytes = ms.ToArray();
-
-        var certViewModel = await DiscoveryService.UploadAnchorCertificate(Convert.ToBase64String(certBytes));
-        await AppState.SetPropertyAsync(this, nameof(AppState.AnchorCertificateInfo), certViewModel);
-        await SetCertLoadedColor(certViewModel?.CertLoaded);
-    }
-
-    private async Task LoadUdapOrgAnchor()
-    {
-        var certViewModel = await DiscoveryService.LoadUdapOrgAnchor();
-        await SetCertLoadedColor(certViewModel?.CertLoaded);
-        await AppState.SetPropertyAsync(this, nameof(AppState.AnchorCertificateInfo), certViewModel);
-    }
-
-    private async Task SetCertLoadedColor(CertLoadedEnum? isCertLoaded)
-    {
-        switch (isCertLoaded)
-        {
-            case CertLoadedEnum.Negative:
-                CertLoadedColor = Color.Error;
-                await AppState.SetPropertyAsync(this, nameof(AppState.AnchorLoaded), false);
-                break;
-            case CertLoadedEnum.Positive:
-                CertLoadedColor = Color.Success;
-                await AppState.SetPropertyAsync(this, nameof(AppState.AnchorLoaded), true);
-                break;
-            case CertLoadedEnum.InvalidPassword:
-                CertLoadedColor = Color.Warning;
-                await AppState.SetPropertyAsync(this, nameof(AppState.AnchorLoaded), false);
-                break;
-            default:
-                CertLoadedColor = Color.Error;
-                await AppState.SetPropertyAsync(this, nameof(AppState.AnchorLoaded), false);
-                break;
-        }
-
-        this.StateHasChanged();
-    }
-
-    async void RunTimer()
-    {
-        while (await _periodicTimer.WaitForNextTickAsync())
-        {
-            if (_checkServerSession)
-            {
-                var certViewModel = await DiscoveryService.AnchorCertificateLoadStatus();
-                await AppState.SetPropertyAsync(this, nameof(AppState.AnchorCertificateInfo), certViewModel);
-                await SetCertLoadedColor(certViewModel?.CertLoaded);
-            }
-        }
-    }
-
-    public void Dispose()
-    {
-        _periodicTimer.Dispose();
-    }
-
-    
 }
