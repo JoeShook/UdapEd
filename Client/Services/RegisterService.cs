@@ -184,9 +184,7 @@ public class RegisterService : IRegisterService
         if (scopes != null)
         {
             return scopes
-                .Where(s => !s.StartsWith("user") &&
-                            !s.StartsWith("patient") &&
-                            !s.StartsWith("openid"))
+                .Where(s => s.StartsWith("system"))
                 .Where(s => KeepSmartVersion(s, smartV1Scopes, smartV2Scopes))
                 .ToList()
                 .ToSpaceSeparatedString();
