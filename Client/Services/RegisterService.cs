@@ -104,11 +104,21 @@ public class RegisterService : IRegisterService
 
         if (resultModel != null && resultModel.ErrorMessage != null)
         {
-            var dcrResponseError =
-                JsonSerializer.Deserialize<UdapDynamicClientRegistrationErrorResponse>(resultModel.ErrorMessage);
+            try
+            {
+                var dcrResponseError =
+                    JsonSerializer.Deserialize<UdapDynamicClientRegistrationErrorResponse>(resultModel.ErrorMessage);
 
-            resultModel.ErrorMessage =
-                JsonSerializer.Serialize(dcrResponseError, new JsonSerializerOptions { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping});
+                resultModel.ErrorMessage =
+                    JsonSerializer.Serialize(dcrResponseError,
+                        new JsonSerializerOptions
+                            { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+            }
+            catch (Exception ex)
+            {
+                // EverNorth server is returning a 500 when I send invalid scopes for registration and this absorbs that
+                Console.WriteLine(ex.Message);
+            }
         }
 
         return resultModel;

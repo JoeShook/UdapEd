@@ -26,7 +26,7 @@ public class UdapDcrBuilderForAuthorizationCodeUnchecked : UdapDcrBuilderForAuth
 
     protected UdapDcrBuilderForAuthorizationCodeUnchecked(X509Certificate2 certificate, bool cancelRegistration) : base(cancelRegistration)
     {
-        this.WithCertificate(certificate);
+        base.WithCertificate(certificate);
     }
 
     protected UdapDcrBuilderForAuthorizationCodeUnchecked(bool cancelRegistration) : base(cancelRegistration)
@@ -52,12 +52,5 @@ public class UdapDcrBuilderForAuthorizationCodeUnchecked : UdapDcrBuilderForAuth
     public new static UdapDcrBuilderForAuthorizationCodeUnchecked Cancel()
     {
         return new UdapDcrBuilderForAuthorizationCodeUnchecked(true);
-    }
-
-    public new UdapDcrBuilderForAuthorizationCode WithCertificate(X509Certificate2 certificate)
-    {
-        base.Certificate = certificate;
-
-        return this;
     }
 }
