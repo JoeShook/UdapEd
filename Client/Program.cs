@@ -32,7 +32,7 @@ builder.Services.AddSingleton(sp => new HttpClient
 builder.Services.AddMudServices();
 builder.Services.AddBlazoredLocalStorage();
 
-
+builder.Services.AddSingleton<AppSharedState>();
 builder.Services.AddScoped<IRegisterService, RegisterService>();
 builder.Services.AddScoped<IDiscoveryService, DiscoveryService>();
 builder.Services.AddScoped<IAccessService, AccessService>();

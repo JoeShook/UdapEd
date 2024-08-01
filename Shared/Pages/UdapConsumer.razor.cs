@@ -34,7 +34,7 @@ public partial class UdapConsumer
     [Inject] IAccessService AccessService { get; set; } = null!;
     [Inject] NavigationManager NavManager { get; set; } = null!;
     
-    [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
+    [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
 
     private string? _signingAlgorithm;
 
@@ -65,7 +65,6 @@ public partial class UdapConsumer
     private string? TokenRequest1 { get; set; }
     private string? TokenRequest2 { get; set; }
     private string? TokenRequest3 { get; set; }
-    private string? TokenRequestScope { get; set; }
     private string? TokenRequest4 { get; set; }
     
     private AuthorizationCodeRequest? _authorizationCodeRequest;
@@ -122,35 +121,35 @@ public partial class UdapConsumer
     /// GET /authorize?
     ///     response_type=code&
     ///     state=client_random_state&
-    ///     client_id=clientIDforResourceHolder&
+    ///     client_id=client_id_for_Resource_Holder&
     ///     scope= resource_scope1+resource_scope2&
     ///     redirect_uri=https://client.example.net/clientredirect HTTP/1.1
-    /// Host: resourceholder.example.com
+    /// Host: resource_holder.example.com
     /// </summary>
     /// <exception cref="NotImplementedException"></exception>
     private async Task BuildAuthCodeRequest()
     {
         AccessToken = string.Empty;
-        AppState.SetProperty(this, nameof(AppState.AccessTokens), string.Empty, true, false);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), string.Empty, true, false);
         AuthorizationCodeRequest = new AuthorizationCodeRequest
         {
             RedirectUri = "Loading..."
         };
 
-        AppState.SetProperty(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
         await Task.Delay(250);
 
         AuthorizationCodeRequest = new AuthorizationCodeRequest
         {
             ResponseType = "response_type=code",
             State = $"state={CryptoRandom.CreateUniqueId()}",
-            ClientId = $"client_id={AppState.ClientRegistrations?.SelectedRegistration?.ClientId}",
-            Scope = $"scope={AppState.ClientRegistrations?.SelectedRegistration?.Scope}",
+            ClientId = $"client_id={AppState.ClientRegistrations.SelectedRegistration?.ClientId}",
+            Scope = $"scope={AppState.ClientRegistrations.SelectedRegistration?.Scope}",
             RedirectUri = $"redirect_uri={NavManager.Uri.RemoveQueryParameters()}",
             Aud = $"aud={AppState.BaseUrl}"
         };
 
-        AppState.SetProperty(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
 
         BuildAuthorizeLink();
     }
@@ -160,15 +159,15 @@ public partial class UdapConsumer
     private void BuildAuthorizeLink()
     {
         var sb = new StringBuilder();
-        sb.Append(@AppState.MetadataVerificationModel?.UdapServerMetaData?.AuthorizationEndpoint);
-        if (@AppState.AuthorizationCodeRequest != null)
+        sb.Append(AppState.MetadataVerificationModel?.UdapServerMetaData?.AuthorizationEndpoint);
+        if (AppState.AuthorizationCodeRequest != null)
         {
-            sb.Append("?").Append(@AppState.AuthorizationCodeRequest.ResponseType);
-            sb.Append("&").Append(@AppState.AuthorizationCodeRequest.State);
-            sb.Append("&").Append(@AppState.AuthorizationCodeRequest.ClientId);
-            sb.Append("&").Append(@AppState.AuthorizationCodeRequest.Scope);
-            sb.Append("&").Append(@AppState.AuthorizationCodeRequest.RedirectUri);
-            sb.Append("&").Append(@AppState.AuthorizationCodeRequest.Aud);
+            sb.Append("?").Append(AppState.AuthorizationCodeRequest.ResponseType);
+            sb.Append("&").Append(AppState.AuthorizationCodeRequest.State);
+            sb.Append("&").Append(AppState.AuthorizationCodeRequest.ClientId);
+            sb.Append("&").Append(AppState.AuthorizationCodeRequest.Scope);
+            sb.Append("&").Append(AppState.AuthorizationCodeRequest.RedirectUri);
+            sb.Append("&").Append(AppState.AuthorizationCodeRequest.Aud);
         }
 
         AuthCodeRequestLink = sb.ToString();
@@ -178,10 +177,10 @@ public partial class UdapConsumer
     private async Task GetAccessCode()
     {
         LoginRedirectLinkText = "Loading...";
-        AppState.SetProperty(this, nameof(AppState.AccessCodeRequestResult), null);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AccessCodeRequestResult), null);
 
         //UI has been changing properties so save it but don't rebind
-        AppState.SetProperty(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
         var url = new RequestUrl(AppState.MetadataVerificationModel?.UdapServerMetaData?.AuthorizationEndpoint!);
 
         var accessCodeRequestUrl = url.AppendParams(
@@ -197,12 +196,12 @@ public partial class UdapConsumer
         // Builds an anchor href link the user clicks to initiate a user login page at the authorization server
         //
         var loginLink = await AccessService.Get(accessCodeRequestUrl);
-        
-        AppState.SetProperty(this, nameof(AppState.AccessCodeRequestResult), loginLink);
+
+        await AppState.SetPropertyAsync(this, nameof(AppState.AccessCodeRequestResult), loginLink);
         LoginRedirectLinkText = "Login Redirect";
     }
 
-    public string LoginCallback(bool reset = false)
+    private string LoginCallback(bool reset = false)
     {
         if (reset)
         {
@@ -248,7 +247,7 @@ public partial class UdapConsumer
         await Task.Delay(50);
 
         
-        if (string.IsNullOrEmpty(AppState.ClientRegistrations?.SelectedRegistration?.ClientId))
+        if (string.IsNullOrEmpty(AppState.ClientRegistrations.SelectedRegistration?.ClientId))
         {
             TokenRequest1 = "Missing ClientId";
             return;
@@ -259,78 +258,36 @@ public partial class UdapConsumer
             TokenRequest1 = "Missing TokenEndpoint";
             return;
         }
-
-        if (AppState.Oauth2Flow == Oauth2FlowEnum.authorization_code_consumer)
-        {
-            var tokenRequestModel = new AuthorizationCodeTokenRequestModel
-            {
-                ClientId = AppState.ClientRegistrations?.SelectedRegistration?.ClientId,
-                TokenEndpointUrl = AppState.MetadataVerificationModel?.UdapServerMetaData?.TokenEndpoint,
-            };
-
-            tokenRequestModel.RedirectUrl = NavManager.Uri.RemoveQueryParameters();
-
-            if (AppState.LoginCallBackResult?.Code != null)
-            {
-                tokenRequestModel.Code = AppState.LoginCallBackResult?.Code!;
-            }
-            
-            var requestToken = await AccessService
-                .BuildRequestAccessTokenForAuthCode(tokenRequestModel, _signingAlgorithm);
-            
-            AppState.SetProperty(this, nameof(AppState.AuthorizationCodeTokenRequest), requestToken);
-
-            if (AppState.AuthorizationCodeTokenRequest == null)
-            {
-                TokenRequest1 = "Could not build an access token request";
-                TokenRequest2 = string.Empty;
-                TokenRequest3 = string.Empty;
-                TokenRequest4 = string.Empty;
-
-                return;
-            }
-
-            BuildAccessTokenRequestVisualForAuthorizationCode();
-        }
-        else  //client_credentials
-        {
-            var tokenRequestModel = new ClientCredentialsTokenRequestModel
-            {
-                ClientId = AppState.ClientRegistrations?.SelectedRegistration?.ClientId,
-                TokenEndpointUrl = AppState.MetadataVerificationModel?.UdapServerMetaData?.TokenEndpoint,
-                Scope = AppState.ClientRegistrations?.SelectedRegistration?.Scope
-            };
-
-            var requestToken = await AccessService
-                .BuildRequestAccessTokenForClientCredentials(tokenRequestModel, _signingAlgorithm);
-
-            AppState.SetProperty(this, nameof(AppState.ClientCredentialsTokenRequest), requestToken);
-
-            BuildAccessTokenRequestVisualForClientCredentials();
-        }
-    }
-
-    private void BuildAccessTokenRequestVisualForClientCredentials()
-    {
-        var sb = new StringBuilder();
-        sb.AppendLine("POST /token HTTP/1.1");
-        sb.AppendLine("Content-Type: application/x-www-form-urlencoded");
-        sb.AppendLine($"Host: {AppState.MetadataVerificationModel?.UdapServerMetaData?.AuthorizationEndpoint}");
-        sb.AppendLine("Content-type: application/x-www-form-urlencoded");
-        sb.AppendLine();
-        sb.AppendLine("grant_type=client_credentials&");
-        TokenRequest1 = sb.ToString();
-
-        sb = new StringBuilder();
-        sb.AppendLine($"client_assertion_type={OidcConstants.ClientAssertionTypes.JwtBearer}&");
-        TokenRequest2 = sb.ToString();
-
-        TokenRequest3 = $"client_assertion={AppState.ClientCredentialsTokenRequest?.ClientAssertion?.Value}&";
-        TokenRequestScope = $"scope={AppState.ClientCredentialsTokenRequest?.Scope}&";
-        sb = new StringBuilder();
-        sb.Append($"udap={UdapConstants.UdapVersionsSupportedValue}&\r\n");
-        TokenRequest4 = sb.ToString();
         
+        var tokenRequestModel = new AuthorizationCodeTokenRequestModel
+        {
+            ClientId = AppState.ClientRegistrations.SelectedRegistration?.ClientId,
+            TokenEndpointUrl = AppState.MetadataVerificationModel?.UdapServerMetaData?.TokenEndpoint,
+        };
+
+        tokenRequestModel.RedirectUrl = NavManager.Uri.RemoveQueryParameters();
+
+        if (AppState.LoginCallBackResult?.Code != null)
+        {
+            tokenRequestModel.Code = AppState.LoginCallBackResult?.Code!;
+        }
+        
+        var requestToken = await AccessService
+            .BuildRequestAccessTokenForAuthCode(tokenRequestModel, SigningAlgorithm);
+
+        await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeTokenRequest), requestToken);
+
+        if (AppState.AuthorizationCodeTokenRequest == null)
+        {
+            TokenRequest1 = "Could not build an access token request";
+            TokenRequest2 = string.Empty;
+            TokenRequest3 = string.Empty;
+            TokenRequest4 = string.Empty;
+
+            return;
+        }
+
+        BuildAccessTokenRequestVisualForAuthorizationCode();
     }
 
     private void BuildAccessTokenRequestVisualForAuthorizationCode()
@@ -370,43 +327,21 @@ public partial class UdapConsumer
         {
             AccessToken = "Loading ...";
             await Task.Delay(150);
-
-            if (AppState.Oauth2Flow == Oauth2FlowEnum.authorization_code_consumer)
+            
+            if (AppState.AuthorizationCodeTokenRequest == null)
             {
-                if (AppState.AuthorizationCodeTokenRequest == null)
-                {
-                    AccessToken = "Missing prerequisites.";
-                    return;
-                }
-
-                var tokenResponse = await AccessService
-                    .RequestAccessTokenForAuthorizationCode(
-                        AppState.AuthorizationCodeTokenRequest);
-
-                await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), tokenResponse);
-                await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
-
-                AccessToken = tokenResponse is { IsError: false } ? tokenResponse.Raw : tokenResponse?.Error;
+                AccessToken = "Missing prerequisites.";
+                return;
             }
-            else //client_credentials
-            {
-                if (AppState.ClientCredentialsTokenRequest == null)
-                {
-                    AccessToken = "Missing prerequisites.";
-                    return;
-                }
 
-                var tokenResponse = await AccessService
-                    .RequestAccessTokenForClientCredentials(
-                        AppState.ClientCredentialsTokenRequest);
+            var tokenResponse = await AccessService
+                .RequestAccessTokenForAuthorizationCode(
+                    AppState.AuthorizationCodeTokenRequest);
 
-                await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), tokenResponse);
-                await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
+            await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), tokenResponse);
+            await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
 
-                AccessToken = tokenResponse is { IsError: false }
-                    ? tokenResponse.Raw 
-                    : $"Failed:\r\n\r\n{tokenResponse?.Error}\r\n{tokenResponse?.Headers}";
-            }
+            AccessToken = tokenResponse is { IsError: false } ? tokenResponse.Raw : tokenResponse?.Error;
         }
         catch (Exception ex)
         {
@@ -419,10 +354,10 @@ public partial class UdapConsumer
     {
         BuildAuthorizeLink();
 
-        await JSRuntime.InvokeVoidAsync("open", @AuthCodeRequestLink, "_self");
+        await JsRuntime.InvokeVoidAsync("open", @AuthCodeRequestLink, "_self");
     }
 
-    private string? GetJwtHeader(string? tokenString)
+    private string GetJwtHeader(string? tokenString)
     {
         if (string.IsNullOrEmpty(tokenString))
         {
@@ -433,11 +368,11 @@ public partial class UdapConsumer
         return JsonExtensions.FormatJson(Base64UrlEncoder.Decode(jwt.EncodedHeader));
     }
 
-    private IDictionary<string, ClientRegistration?>? FilterRegistrations()
+    private IDictionary<string, ClientRegistration?> FilterRegistrations()
     {
-        return AppState.ClientRegistrations?.Registrations
+        return AppState.ClientRegistrations.Registrations
             .Where(r => r.Value != null &&
-                        r.Value.UserFlowSelected.EndsWith("_consumer") &&
+                        r.Value.UserFlowSelected.Equals("authorization_code") &&
                         AppState.UdapClientCertificateInfo != null &&
                         AppState.UdapClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
                         AppState.BaseUrl == r.Value.ResourceServer)

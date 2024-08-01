@@ -29,13 +29,18 @@ public partial class UdapRegistration
 
     private bool TieredOauth
     {
-        get => _tieredOauth;
+        get => AppSharedState.TieredOAuth;
         set
         {
-            _tieredOauth = value;
+            AppSharedState.TieredOAuth = value;
             if (value)
             {
                 OpenIdScope = true;
+                RedirectUrls[$"{NavigationManager.BaseUri}udapTieredOAuth"] = true;
+            }
+            else
+            {
+                RedirectUrls[$"{NavigationManager.BaseUri}udapTieredOAuth"] = false;
             }
         }
     }
@@ -50,7 +55,7 @@ public partial class UdapRegistration
     private bool _cancelRegistration;
     private UdapDynamicClientRegistrationDocument? _udapDcrDocument;
     private string _localRegisteredClients = string.Empty;
-    private string? ScopeLevel { get; set; }
+
     
     public string SigningAlgorithm
     {
@@ -76,6 +81,9 @@ public partial class UdapRegistration
     [CascadingParameter]
     public CascadingAppState AppState { get; set; } = null!;
 
+    [Inject] 
+    public AppSharedState AppSharedState { get; set; } = null!;
+    
     [CascadingParameter] 
     public MainLayout Layout { get; set; } = null!;
 
@@ -199,7 +207,7 @@ public partial class UdapRegistration
     }
 
     private string? _registrationResult;
-    private bool _tieredOauth;
+    
 
     private string RegistrationResult
     {
@@ -271,7 +279,7 @@ public partial class UdapRegistration
                     AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported, 
                     TieredOauth, 
                     OpenIdScope,
-                    ScopeLevel, 
+                    AppSharedState.ScopeLevelSelected, 
                     SmartLaunch,
                     SmartV1Scopes,
                     SmartV2Scopes));
@@ -350,11 +358,11 @@ public partial class UdapRegistration
                 UdapDcrBuilderForAuthorizationCodeUnchecked.Cancel() : 
                 UdapDcrBuilderForAuthorizationCodeUnchecked.Create();
 
-            var redirectUrl = Oauth2Flow == Oauth2FlowEnum.authorization_code_b2b ?  "udapBusinessToBusiness" : "udapConsumer";
-            var redirectUrls = new List<string> { $"{NavigationManager.BaseUri}{redirectUrl}" };
-            if (TieredOauth)
+            var redirectUrls = new List<string>();
+
+            foreach (var url in RedirectUrls.Where(r => r.Value).Select(r => r.Key))
             {
-                redirectUrls.Add($"{NavigationManager.BaseUri}udapTieredOAuth");
+                redirectUrls.Add(url);
             }
 
             dcrBuilder.WithAudience(AppState.MetadataVerificationModel?.UdapServerMetaData?.RegistrationEndpoint)
@@ -604,7 +612,7 @@ public partial class UdapRegistration
                 .Select(r => r.Value);
         }
     }
-
+    
     private async Task SaveScopesToClient()
     {
         if (AppState.ClientRegistrations.SelectedRegistration != null)
@@ -619,4 +627,51 @@ public partial class UdapRegistration
             await AppState.SetPropertyAsync(this, nameof(AppState.ClientRegistrations), AppState.ClientRegistrations);
         }
     }
+
+    private Dictionary<string, bool>? _redirectUrls;
+
+    public Dictionary<string, bool> RedirectUrls
+    {
+        get
+        {
+            if (_redirectUrls == null)
+            {
+                _redirectUrls = CreateRedirectUrls();
+            }
+            return _redirectUrls;
+        }
+        set => _redirectUrls = value;
+    }
+
+    private Dictionary<string, bool> CreateRedirectUrls()
+    {
+        var redirectUrls = new Dictionary<string, bool>
+        {
+            { $"{NavigationManager.BaseUri}udapBusinessToBusiness", false },
+            { $"{NavigationManager.BaseUri}udapConsumer", false },
+            { $"{NavigationManager.BaseUri}udapTieredOAuth", false }
+        };
+        
+        return redirectUrls;
+    }
+
+    public void SetRedirectUrl()
+    {
+        if (AppSharedState.ScopeLevelSelected == "patient")
+        {
+            RedirectUrls[$"{NavigationManager.BaseUri}udapConsumer"] = true;
+            RedirectUrls[$"{NavigationManager.BaseUri}udapBusinessToBusiness"] = false;
+        }
+        else if(AppSharedState.ScopeLevelSelected == "user")
+        {
+            RedirectUrls[$"{NavigationManager.BaseUri}udapConsumer"] = false;
+            RedirectUrls[$"{NavigationManager.BaseUri}udapBusinessToBusiness"] = true;
+        }
+        else
+        {
+            RedirectUrls[$"{NavigationManager.BaseUri}udapConsumer"] = false;
+            RedirectUrls[$"{NavigationManager.BaseUri}udapBusinessToBusiness"] = false;
+        }
+    }
+
 }

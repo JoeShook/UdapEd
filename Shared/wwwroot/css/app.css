@@ -153,3 +153,22 @@ pre {
   padding: 8px;
   margin: 8px;
 }
+
+@keyframes blink {
+  0% {
+    background-color: transparent;
+  }
+
+  50% {
+    background-color: yellow;
+    tex
+  }
+
+  100% {
+    background-color: transparent;
+  }
+}
+
+.blink {
+  animation: blink 1s linear 5;
+}

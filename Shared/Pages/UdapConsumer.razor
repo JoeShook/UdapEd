@@ -37,9 +37,7 @@
       </MudItem>
 
   </MudGrid>
-        @if (AppState.Oauth2Flow == Oauth2FlowEnum.authorization_code_consumer)
-        {
-            <MudCard Class="pa-2 ma-2" Elevation="3">
+        <MudCard Class="pa-2 ma-2" Elevation="3">
                 <MudCardActions>
                     <MudGrid Justify="Justify.FlexStart">
                         <MudItem sm="6" xs="12">
@@ -169,68 +167,67 @@
             </MudCard>
 
 
-            <MudCard Class="pa-2 ma-2" Elevation="3">
-                <MudCardActions>
-                    <MudGrid Justify="Justify.FlexStart">
-                        <MudItem md="3" sm="6" xs="12">
-                            <MudButton ButtonType="ButtonType.Button"
-                                       Color="Color.Primary"
-                                       Variant="Variant.Filled"
-                                       OnClick="BuildAccessTokenRequest">Build Access Token Request</MudButton>
-                        </MudItem>
-                        <MudItem md="3" sm="6" xs="12">
-                            <MudSelect @bind-Value="SigningAlgorithm"
-                                       Label="Select Signing Algorithm"
-                                       T="string"
-                                       Clearable="true"
-                                       AdornmentIcon="@Icons.Material.Outlined.ArrowDropDown"
-                                       AdornmentColor="Color.Primary"
-                                       Variant="Variant.Outlined">
-                                @if (AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "RS")
-                                {
-                                    <MudSelectItem Value="UdapConstants.SupportedAlgorithm.RS256">@UdapConstants.SupportedAlgorithm.RS256</MudSelectItem>
-                                    <MudSelectItem Value="UdapConstants.SupportedAlgorithm.RS384">@UdapConstants.SupportedAlgorithm.RS384</MudSelectItem>
-                                }
-                                @if (AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "ES")
-                                {
-                                    <MudSelectItem Value="UdapConstants.SupportedAlgorithm.ES256">@UdapConstants.SupportedAlgorithm.ES256</MudSelectItem>
-                                    <MudSelectItem Value="UdapConstants.SupportedAlgorithm.ES384">@UdapConstants.SupportedAlgorithm.ES384</MudSelectItem>
-                                }
-                            </MudSelect>
-                        </MudItem>
-                    </MudGrid>
-                </MudCardActions>
-                <MudCardContent>
-                    <MudGrid Spacing="1">
-                        <MudItem sm="6" xs="12">
-                            <MudPaper Class="udap-input">
-                                <MudText Align="Align.Right" Color="Color.Tertiary">5.1 Authorization Code Flow</MudText>
-                                <MudText Align="Align.Right" Color="Color.Tertiary">Cash Code in for Access Token</MudText>
-                                <pre>@TokenRequest1</pre>
-                                <pre style="padding-left: 10px">@TokenRequest2</pre>
-                                <pre style="padding-left:10px; background-color:lightyellow">@TokenRequest3</pre>
-                                <pre style="padding-left:10px">@TokenRequest4</pre>
-                            </MudPaper>
-                        </MudItem>
-                        <MudItem sm="6" xs="12">
-                            <MudPaper Class="udap-analyzed">
-                                <MudText Align="Align.Right" Color="Color.Tertiary">Client Assertion Decoded</MudText>
-                                <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
-                                    <MudTabPanel Text="Client Assertion">
-                                        <SignedJwtViewer Title="<b>Decoded client_assertion::</b>"
-                                                         SignedSoftwareStatement="@AppState.AuthorizationCodeTokenRequest?.ClientAssertion?.Value" />
-                                    </MudTabPanel>
-                                    <MudTabPanel Text="Certificates">
-                                        <CertificateViewer JwtHeaderWithx5c="@GetJwtHeader(AppState.AuthorizationCodeTokenRequest?.ClientAssertion?.Value)" />
-                                    </MudTabPanel>
-                                </MudTabs>
-                            </MudPaper>
-                        </MudItem>
-                    </MudGrid>
-                </MudCardContent>
-            </MudCard>
-
-        }
+  <MudCard Class="pa-2 ma-2" Elevation="3">
+      <MudCardActions>
+          <MudGrid Justify="Justify.FlexStart">
+              <MudItem md="3" sm="6" xs="12">
+                  <MudButton ButtonType="ButtonType.Button"
+                             Color="Color.Primary"
+                             Variant="Variant.Filled"
+                             OnClick="BuildAccessTokenRequest">Build Access Token Request</MudButton>
+              </MudItem>
+              <MudItem md="3" sm="6" xs="12">
+                  <MudSelect @bind-Value="SigningAlgorithm"
+                             Label="Select Signing Algorithm"
+                             T="string"
+                             Clearable="true"
+                             AdornmentIcon="@Icons.Material.Outlined.ArrowDropDown"
+                             AdornmentColor="Color.Primary"
+                             Variant="Variant.Outlined">
+                      @if (AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "RS")
+                      {
+                          <MudSelectItem Value="UdapConstants.SupportedAlgorithm.RS256">@UdapConstants.SupportedAlgorithm.RS256</MudSelectItem>
+                          <MudSelectItem Value="UdapConstants.SupportedAlgorithm.RS384">@UdapConstants.SupportedAlgorithm.RS384</MudSelectItem>
+                      }
+                      @if (AppState.UdapClientCertificateInfo?.PublicKeyAlgorithm == "ES")
+                      {
+                          <MudSelectItem Value="UdapConstants.SupportedAlgorithm.ES256">@UdapConstants.SupportedAlgorithm.ES256</MudSelectItem>
+                          <MudSelectItem Value="UdapConstants.SupportedAlgorithm.ES384">@UdapConstants.SupportedAlgorithm.ES384</MudSelectItem>
+                      }
+                  </MudSelect>
+              </MudItem>
+          </MudGrid>
+      </MudCardActions>
+      <MudCardContent>
+          <MudGrid Spacing="1">
+              <MudItem sm="6" xs="12">
+                  <MudPaper Class="udap-input">
+                      <MudText Align="Align.Right" Color="Color.Tertiary">5.1 Authorization Code Flow</MudText>
+                      <MudText Align="Align.Right" Color="Color.Tertiary">Cash Code in for Access Token</MudText>
+                      <pre>@TokenRequest1</pre>
+                      <pre style="padding-left: 10px">@TokenRequest2</pre>
+                      <pre style="padding-left:10px; background-color:lightyellow">@TokenRequest3</pre>
+                      <pre style="padding-left:10px">@TokenRequest4</pre>
+                  </MudPaper>
+              </MudItem>
+              <MudItem sm="6" xs="12">
+                  <MudPaper Class="udap-analyzed">
+                      <MudText Align="Align.Right" Color="Color.Tertiary">Client Assertion Decoded</MudText>
+                      <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+                          <MudTabPanel Text="Client Assertion">
+                              <SignedJwtViewer Title="<b>Decoded client_assertion::</b>"
+                                               SignedSoftwareStatement="@AppState.AuthorizationCodeTokenRequest?.ClientAssertion?.Value" />
+                          </MudTabPanel>
+                          <MudTabPanel Text="Certificates">
+                              <CertificateViewer JwtHeaderWithx5c="@GetJwtHeader(AppState.AuthorizationCodeTokenRequest?.ClientAssertion?.Value)" />
+                          </MudTabPanel>
+                      </MudTabs>
+                  </MudPaper>
+              </MudItem>
+          </MudGrid>
+      </MudCardContent>
+  </MudCard>
+  
   <MudCard Class="pa-2 ma-2" Elevation="3">
       <MudCardActions>
           <MudButton Class="mt-3"

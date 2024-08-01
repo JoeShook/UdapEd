@@ -6,9 +6,9 @@
         <MudNavGroup Title="UDAP" Expanded="true">
             <MudNavLink Href="udapDiscovery" Icon="@Icons.Material.Filled.RocketLaunch" IconColor="Color.Inherit">Discovery</MudNavLink>
             <MudNavLink Href="udapRegistration" Icon="@Icons.Material.Filled.AppRegistration" IconColor="Color.Inherit">Registration</MudNavLink>
-            <MudNavLink Href="udapBusinessToBusiness" Icon="@Icons.Material.Filled.PrivateConnectivity" IconColor="Color.Inherit">B2B</MudNavLink>
-            <MudNavLink Href="udapConsumer" Icon="@Icons.Material.Filled.Person" IconColor="Color.Inherit">Consumer</MudNavLink>
-            <MudNavLink Href="udapTieredOAuth" Icon="@Icons.Material.Filled.PermIdentity" IconColor="Color.Inherit">Tiered OAuth</MudNavLink>
+            <MudNavLink Href="udapBusinessToBusiness" Icon="@Icons.Material.Filled.PrivateConnectivity" IconColor="Color.Inherit" Class="@BlinkMe("b2b")">B2B</MudNavLink>
+            <MudNavLink Href="udapConsumer" Icon="@Icons.Material.Filled.Person" IconColor="Color.Inherit" Class="@BlinkMe("consumer")">Consumer</MudNavLink>
+            <MudNavLink Href="udapTieredOAuth" Icon="@Icons.Material.Filled.PermIdentity" IconColor="Color.Inherit" Class="@BlinkMe("tiered")" >Tiered OAuth</MudNavLink>
         </MudNavGroup>
         
         <MudNavGroup Title="SMART" Expanded="true">
@@ -46,3 +46,56 @@
     </MudTooltip>
     
 </MudPaper>
+
+
+@implements IDisposable
+
+@code
+{
+    [Inject] AppSharedState AppSharedState { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        AppSharedState.OnChange += AppSharedStateChanged;
+    }
+
+    private string BlinkMe(string sourceLink)
+    {
+        if (sourceLink == "b2b")
+        {
+            if (AppSharedState.ScopeLevelSelected == "user")
+            {
+                return $"blink";
+            }
+        }
+
+        if (sourceLink == "consumer")
+        {
+            if (AppSharedState.ScopeLevelSelected == "patient")
+            {
+                return $"blink";
+            }
+        }
+
+        if (sourceLink == "tiered")
+        {
+            if (AppSharedState.TieredOAuth)
+            {
+                return $"blink";
+            }
+        }
+        
+        return "";
+    }
+
+    private void AppSharedStateChanged()
+    {
+        
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        AppSharedState.OnChange -= AppSharedStateChanged;
+    }
+}

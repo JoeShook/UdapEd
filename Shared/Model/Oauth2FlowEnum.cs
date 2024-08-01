@@ -9,7 +9,7 @@
 
 namespace UdapEd.Shared.Model;
 
-public enum Oauth2FlowEnum { client_credentials, authorization_code_b2b, authorization_code_consumer }
+public enum Oauth2FlowEnum { client_credentials, authorization_code }
 
 
 public static class Auth2FlowChoice
@@ -25,18 +25,10 @@ public static class Auth2FlowChoice
             }
         },
         {
-            Oauth2FlowEnum.authorization_code_b2b,
+            Oauth2FlowEnum.authorization_code,
             new GrantTypeWithScopeFilter
             {
-                Name = "authorization_code (B2B)",
-                GrantType = "authorization_code"
-            }
-        },
-        {
-            Oauth2FlowEnum.authorization_code_consumer,
-            new GrantTypeWithScopeFilter
-            {
-                Name = "authorization_code  (Consumer)",
+                Name = "authorization_code",
                 GrantType = "authorization_code"
             }
         }
