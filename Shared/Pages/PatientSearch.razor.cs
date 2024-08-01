@@ -97,6 +97,8 @@ public partial class PatientSearch
         _selectedItemText = string.Empty;
         _currentBundle = null;
         _model.Bundle = null;
+        _model.GetResource = false;
+
         if (PatientTable != null)
         {
             PatientTable.CurrentPage = 0;
@@ -165,8 +167,8 @@ public partial class PatientSearch
                 _model.Page = state.Page;
 
                 var patients = _currentBundle?.Entry.Select(entry => entry.Resource).Cast<Patient>().ToList();
-
-                return new TableData<Patient>() { TotalItems = _currentBundle.Total.Value, Items = patients };
+                
+                return new TableData<Patient>() { TotalItems = _currentBundle?.Total ?? 0, Items = patients };
             }
         }
 

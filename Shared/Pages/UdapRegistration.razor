@@ -220,7 +220,8 @@
                             </MudItem>
 
                             <MudItem Class="d-inline-flex pa-2">
-                                <MudSelect @bind-Value="ScopeLevel"
+                                <MudSelect @bind-Value="AppSharedState.ScopeLevelSelected"
+                                           @bind-Value:after="@(() => SetRedirectUrl())"
                                            T="string"
                                            Label="Level"
                                            Clearable="true"
@@ -229,14 +230,15 @@
                                            Variant="Variant.Outlined"
                                            Dense="true"
                                            FullWidth="false"
-                                                   Class="mb-2">
-                                    <MudSelectItem T="string" Value=@("patient") Class="flex-grow-0"/>
-                                    <MudSelectItem T="string" Value=@("user") Class="flex-grow-0"/>
+                                           Class="mb - 2">
+
+                                    <MudSelectItem T="string" Value=@("patient") Class="flex - grow - 0"/>
+                                    <MudSelectItem T="string" Value=@("user") Class="flex - grow - 0"/>
                                 </MudSelect>
 
                             </MudItem>
 
-                            @if (ScopeLevel != null)
+                            @if (AppSharedState.ScopeLevelSelected != null)
                             {
                                 <MudItem Class="d-inline-flex pa-2">
                                     <MudTooltip Placement="Placement.Bottom" Delay="1000">
@@ -260,7 +262,7 @@
                         </MudItem>
 
                         <MudItem Class="d-inline-flex pa-2">
-                                    <MudCheckBox @bind-Value="SmartV2Scopes" T="bool"
+                            <MudCheckBox @bind-Value="SmartV2Scopes" T="bool"
                                          Label="SMART V2"/>
                         </MudItem>
 
@@ -272,6 +274,24 @@
                         }
                     </MudGrid>
                 </MudCard>
+            @if (AppState.Oauth2Flow != Oauth2FlowEnum.client_credentials)
+            {
+                <MudCard Outlined="true" Class="mt-2 px-2 mud-border-primary">
+                    <MudGrid >
+                        <MudItem xs="12" Class="pt-2 mt-2">
+                            <MudText Class="pt-2 mr-2" Align="Align.Right" Color="Color.Primary" Typo="Typo.h6">Redirect Urls</MudText>
+                        </MudItem>
+                        
+                        <MudItem Class="pa-2">
+                            @foreach (var url in RedirectUrls)
+                            {
+                                <MudCheckBox @bind-Value="@RedirectUrls[url.Key]" Label="@url.Key"></MudCheckBox>
+                            }
+                        </MudItem>
+
+                    </MudGrid>
+                </MudCard>
+            }
             </MudItem>
         </MudGrid>
     </MudCardActions>
@@ -349,15 +369,16 @@
     <MudCardContent>
         <MudGrid Spacing="1" Class="mt-8">
             <MudItem sm="6" xs="12">
-                <MudPaper Class="udap-input" Elevation="3">
+                
+                <MudPaper Class="udap - input" Elevation="3">
                     <MudText Align="Align.Right" Color="Color.Tertiary">Registration Response</MudText>
                     <pre>@((MarkupString)RegistrationResult.HighlightScope())</pre>
                 </MudPaper>
 
                 @if (AppState.ClientRegistrations.SelectedRegistration?.Scope == null)
                 {
-                    <MudPaper Class="udap-input" Elevation="3">
-                        <MudText Align="Align.Left" Color="Color.Primary">Null scope response.  
+                    <MudPaper Class="udap - input" Elevation="3">
+                        <MudText Align="Align.Left" Color="Color.Primary">Null scope response.
                             Some registration servers do not indicated the scopes granted in the response document.
                             Click the Save Scopes button to save requested scopes for this client.</MudText>
                         <MudButton StartIcon="@Icons.Material.Filled.Save" OnClick="SaveScopesToClient">Save Scopes</MudButton>

@@ -283,7 +283,7 @@ public partial class UdapBusinessToBusiness
             return;
         }
 
-        if (AppState.Oauth2Flow == Oauth2FlowEnum.authorization_code_b2b)
+        if (AppState.Oauth2Flow == Oauth2FlowEnum.authorization_code)
         {
             Console.WriteLine("Why");
             var tokenRequestModel = new AuthorizationCodeTokenRequestModel
@@ -394,7 +394,7 @@ public partial class UdapBusinessToBusiness
             AccessToken = "Loading ...";
             await Task.Delay(150);
 
-            if (AppState.Oauth2Flow == Oauth2FlowEnum.authorization_code_b2b)
+            if (AppState.Oauth2Flow == Oauth2FlowEnum.authorization_code)
             {
                 if (AppState.AuthorizationCodeTokenRequest == null)
                 {
@@ -407,6 +407,7 @@ public partial class UdapBusinessToBusiness
                         AppState.AuthorizationCodeTokenRequest);
 
                 await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), tokenResponse);
+                await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
 
                 AccessToken = tokenResponse is { IsError: false } ? tokenResponse.Raw : tokenResponse?.Error;
             }
@@ -491,11 +492,10 @@ public partial class UdapBusinessToBusiness
         return JsonExtensions.FormatJson(Base64UrlEncoder.Decode(jwt.EncodedHeader));
     }
 
-    private IDictionary<string, ClientRegistration?>? FilterRegistrations()
+    private IDictionary<string, ClientRegistration?> FilterRegistrations()
     {
-        return AppState.ClientRegistrations?.Registrations
+        return AppState.ClientRegistrations.Registrations
             .Where(r => r.Value != null && 
-                        !r.Value.UserFlowSelected.EndsWith("_consumer") &&
                         AppState.UdapClientCertificateInfo != null &&
                         AppState.UdapClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
                         AppState.BaseUrl == r.Value.ResourceServer)

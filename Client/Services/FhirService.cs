@@ -34,7 +34,7 @@ public class FhirService : IFhirService
     
     public async Task<FhirResultModel<Bundle>> SearchPatient(PatientSearchModel model, CancellationToken ct)
     {
-        var controller = await GetConrollerPath();
+        var controller = await GetControllerPath();
         var response = await _httpClient.PostAsJsonAsync($"{controller}/SearchForPatient", model, cancellationToken: ct);
 
         if (response.IsSuccessStatusCode)
@@ -75,7 +75,7 @@ public class FhirService : IFhirService
         var json = await new FhirJsonSerializer().SerializeToStringAsync(parameters); // removing line feeds
         var jsonMessage = JsonSerializer.Serialize(json); // needs to be json
         var content = new StringContent(jsonMessage, Encoding.UTF8, new MediaTypeHeaderValue("application/json"));
-        var controller = await GetConrollerPath();
+        var controller = await GetControllerPath();
         var response = await _httpClient.PostAsync($"{controller}/MatchPatient", content);
 
         if (response.IsSuccessStatusCode)
@@ -143,7 +143,7 @@ public class FhirService : IFhirService
 
     public async Task<FhirResultModel<CodeSystem>> GetCodeSystem(string location)
     {
-        var controller = await GetConrollerPath();
+        var controller = await GetControllerPath();
         var response = await _httpClient.GetAsync($"{controller}/CodeSystem?location={location}");
 
         if (response.IsSuccessStatusCode)
@@ -206,7 +206,7 @@ public class FhirService : IFhirService
 
     public async Task<FhirResultModel<ValueSet>> GetValueSet(string location)
     {
-        var controller = await GetConrollerPath();
+        var controller = await GetControllerPath();
         var response = await _httpClient.GetAsync($"{controller}/ValueSet?location={location}");
 
         if (response.IsSuccessStatusCode)
@@ -269,7 +269,7 @@ public class FhirService : IFhirService
 
     public async Task<FhirResultModel<Bundle>> SearchGet(string queryParameters)
     {
-        var controller = await GetConrollerPath();
+        var controller = await GetControllerPath();
         var response = await _httpClient.PostAsJsonAsync($"{controller}/GetSearch", queryParameters);
 
         return await SearchHandler(response);
@@ -277,7 +277,7 @@ public class FhirService : IFhirService
 
     public async Task<FhirResultModel<Bundle>> SearchPost(SearchForm searchForm)
     {
-        var controller = await GetConrollerPath();
+        var controller = await GetControllerPath();
         var response = await _httpClient.PostAsJsonAsync($"{controller}/PostSearch", searchForm);
 
         return await SearchHandler(response);
@@ -381,7 +381,7 @@ public class FhirService : IFhirService
         }
     }
 
-    private async Task<string> GetConrollerPath()
+    private async Task<string> GetControllerPath()
     {
         var json = await _localStorageService.GetItemAsStringAsync("udapClientState");
         if (json == null)
