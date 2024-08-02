@@ -10,6 +10,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Authentication;
 using System.Text;
 using System.Text.Json;
 using Blazored.LocalStorage;
@@ -328,6 +329,23 @@ public class FhirService : IFhirService
                 };
 
                 return new FhirResultModel<Bundle>(operationOutCome, HttpStatusCode.PreconditionFailed, response.Version);
+            }
+
+            if (result.Contains(nameof(AuthenticationException)))
+            {
+                var operationOutCome = new OperationOutcome()
+                {
+                    ResourceBase = null,
+                    Issue =
+                    [
+                        new OperationOutcome.IssueComponent
+                        {
+                            Diagnostics = result
+                        }
+                    ]
+                };
+
+                return new FhirResultModel<Bundle>(operationOutCome, HttpStatusCode.Unauthorized, response.Version);
             }
         }
         

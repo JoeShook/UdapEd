@@ -62,7 +62,7 @@ public static class HttpClientHandlerExtension
             chainBuilder.ChainPolicy.CustomTrustStore.AddRange(roots);
             var certificate = serverCert as X509Certificate2;
 
-            return chainBuilder.Build(certificate!); // I don't think this is ever null at this point.
+            return chainBuilder.Build(certificate!); // I don't think this is never null at this point.
         };
     }
 }

@@ -18,11 +18,7 @@ namespace UdapEd.Shared.Model.Registration;
 /// </summary>
 public class UdapDcrBuilderForClientCredentialsUnchecked : UdapDcrBuilderForClientCredentials
 {
-    public new UdapDynamicClientRegistrationDocument Document
-    {
-        get => base.Document;
-        set => base.Document = value;
-    }
+    public new UdapDynamicClientRegistrationDocument Document => base.Document;
 
     protected UdapDcrBuilderForClientCredentialsUnchecked(X509Certificate2 certificate, bool cancelRegistration) : base(cancelRegistration)
     {

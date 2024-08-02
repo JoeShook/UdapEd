@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
 using MudBlazor;
 using UdapEd.Shared.Components;
+using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 using Address = UdapEd.Shared.Model.Address;

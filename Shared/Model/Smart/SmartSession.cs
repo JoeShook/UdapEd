@@ -13,7 +13,7 @@ public class SmartSession
     }
 
     public string ServiceUri { get; set; }
-    public CapabilityStatement? CapabilityStatement { get; set; }
+    public string? CapabilityStatement { get; set; }
     public string RedirectUri { get; set; }
     public string? TokenUri { get; set; }
     public string AuthCodeUrlWithQueryString { get; set; }

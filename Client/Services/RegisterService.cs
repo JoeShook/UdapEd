@@ -13,12 +13,13 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using IdentityModel;
-using Microsoft.IdentityModel.Tokens;
 using Udap.Model;
 using Udap.Model.Registration;
 using Udap.Util.Extensions;
+using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
+
 
 namespace UdapEd.Client.Services;
 

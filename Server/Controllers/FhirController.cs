@@ -13,9 +13,9 @@ using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.IdentityModel.Tokens;
 using UdapEd.Server.Extensions;
 using UdapEd.Server.Services;
+using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using FhirClientWithUrlProvider = UdapEd.Server.Services.FhirClientWithUrlProvider;
 
@@ -106,6 +106,12 @@ public class FhirBaseController<T> : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex.Message);
+            // hacky but mTLS is tougher to error handle
+            if (ex.InnerException != null && ex.InnerException.Message.Contains("The decryption operation failed"))
+            {
+                return NotFound("Resource Server Error: Cannot create a successful mTLS connection.  Check logs.");
+            }
+
             throw;
         }
     }
