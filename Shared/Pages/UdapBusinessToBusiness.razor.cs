@@ -163,7 +163,20 @@ public partial class UdapBusinessToBusiness
     }
 
     private string AuthCodeRequestLink { get; set; } = string.Empty;
-    
+
+    private JwtSecurityToken? JwtSecurityToken
+    {
+        get
+        {
+            if (AppState.AccessTokens?.IdentityToken != null)
+            {
+                return new(AppState.AccessTokens?.IdentityToken);
+            }
+
+            return null;
+        }
+    }
+
     private void BuildAuthorizeLink()
     {
         var sb = new StringBuilder();

@@ -4,13 +4,13 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.IdentityModel.Tokens;
 
-namespace UdapEd.Shared.Pages;
+namespace UdapEd.Shared.Components;
 
 public partial class IdentityViewer
 {
 
     [Parameter]
-    public string? IdentityToken { get; set; }
+    public JwtSecurityToken? IdentityToken { get; set; }
 
     [Parameter]
     public string? Title { get; set; }
@@ -31,22 +31,22 @@ public partial class IdentityViewer
 
     private void DecodeIdentityToken()
     {
+        Console.WriteLine("DecodeIdentityToken()");
         if (IdentityToken == null)
         {
             _decodedJwt = string.Empty;
             return;
         }
-
+        Console.WriteLine("After DecodeIdentityToken()");
         try
         {
-            var jwt = new JwtSecurityToken(IdentityToken);
-            using var jsonDocument = JsonDocument.Parse(jwt.Payload.SerializeToJson());
+            using var jsonDocument = JsonDocument.Parse(IdentityToken.Payload.SerializeToJson());
             var formattedStatement = JsonSerializer.Serialize(
                 jsonDocument,
                 new JsonSerializerOptions { WriteIndented = true }
             );
 
-            var formattedHeader = UdapEd.Shared.JsonExtensions.FormatJson(Base64UrlEncoder.Decode(jwt.EncodedHeader));
+            var formattedHeader = UdapEd.Shared.JsonExtensions.FormatJson(Base64UrlEncoder.Decode(IdentityToken.EncodedHeader));
 
             var sb = new StringBuilder();
             sb.AppendLine("<p class=\"text-line\">HEADER: <span>Algorithm & TOKEN TYPE</span></p>");

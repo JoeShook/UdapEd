@@ -20,6 +20,7 @@ using Udap.Common.Extensions;
 using Udap.Model;
 using UdapEd.Shared.Components;
 using UdapEd.Shared.Model;
+using UdapEd.Shared.Model.Smart;
 using UdapEd.Shared.Services;
 
 namespace UdapEd.Shared.Pages;
@@ -159,8 +160,21 @@ public partial class UdapTieredOAuth
     }
 
         private string AuthCodeRequestLink { get; set; } = string.Empty;
-    
-    private void BuildAuthorizeLink()
+
+        private JwtSecurityToken? JwtSecurityToken
+        {
+            get
+            {
+                if (AppState.AccessTokens?.IdentityToken != null)
+                {
+                    return new(AppState.AccessTokens?.IdentityToken);
+                }
+
+                return null;
+            }
+        }
+
+        private void BuildAuthorizeLink()
     {
         var sb = new StringBuilder();
         sb.Append(@AppState.MetadataVerificationModel?.UdapServerMetaData?.AuthorizationEndpoint);
@@ -350,7 +364,9 @@ public partial class UdapTieredOAuth
             await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
 
             AccessToken = tokenResponse is { IsError: false } ? tokenResponse.Raw : tokenResponse?.Error;
-            
+            await SetLaunchContext(JwtSecurityToken);
+
+
         }
         catch (Exception ex)
         {
@@ -388,5 +404,25 @@ public partial class UdapTieredOAuth
                         AppState.UdapClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
                         AppState.BaseUrl == r.Value.ResourceServer)
             .ToImmutableDictionary();
+    }
+
+    private async Task SetLaunchContext(JwtSecurityToken? jwt)
+    {
+        if (jwt == null)
+        {
+            return;
+        }
+
+        var patientId = jwt.Claims.FirstOrDefault(c => c.Type == UdapConstants.JwtClaimTypes.Hl7Identifier)?.Value;
+
+        if (patientId != null)
+        {
+            var launchContext = new LaunchContext
+            {
+                Patient = patientId
+            };
+
+            await AppState.SetPropertyAsync(this, nameof(AppState.LaunchContext), launchContext);
+        }
     }
 }
