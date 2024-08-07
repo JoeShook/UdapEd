@@ -77,9 +77,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <MauiAsset Include="fhirlabs.net.client.pfx" />
-      <MauiAsset Include="udap-sandbox-surescripts-2.p12" />
-      <MauiAsset Include="FhirLabs_mTLS_Client.pfx" />
+      <MauiAsset Include="fhirlabs.net.client.pfx" Condition="Exists('fhirlabs.net.client.pfx')" />
+      <MauiAsset Include="udap-sandbox-surescripts-2.p12" Condition="Exists('udap-sandbox-surescripts-2.p12')" />
+      <MauiAsset Include="FhirLabs_mTLS_Client.pfx" Condition="Exists('FhirLabs_mTLS_Client.pfx')" />
     </ItemGroup>
 
     
