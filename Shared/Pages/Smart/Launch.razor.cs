@@ -43,12 +43,12 @@ public partial class Launch
             var metadataUrl = $"{iss}/metadata";
             var launch = queryParams.GetValueOrDefault("launch");
 
-            if (iss.IsNullOrEmpty())
+            if (iss.IsEmpty())
             {
                 throw new MissingFieldException("Missing iis parameter");
             }
 
-            if (launch.IsNullOrEmpty())
+            if (launch.IsEmpty())
             {
                 throw new MissingFieldException("Missing launch parameter");
             }
@@ -92,7 +92,7 @@ public partial class Launch
                 ServiceUri = iss,
                 RedirectUri = redirectUri,
                 TokenUri = oAuthUris.Token,
-                CapabilityStatement = capabilityStatement,
+                CapabilityStatement = capabilityStatement.AsJson(),
                 AuthCodeUrlWithQueryString = builder.Build()
             };
 

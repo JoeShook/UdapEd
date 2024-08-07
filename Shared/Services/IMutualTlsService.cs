@@ -21,7 +21,7 @@ public interface IMutualTlsService
 
     Task<CertificateStatusViewModel?> ClientCertificateLoadStatus();
 
-    Task<CertificateStatusViewModel?> UploadAnchorCertificate(string certBytes);
+    Task<CertificateStatusViewModel?> UploadAnchorCertificate(string base64String);
 
     Task<CertificateStatusViewModel?> LoadAnchor();
 

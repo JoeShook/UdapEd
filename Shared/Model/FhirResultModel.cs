@@ -13,11 +13,21 @@ using Hl7.Fhir.Model;
 namespace UdapEd.Shared.Model;
 public class FhirResultModel<T>
 {
+    public FhirResultModel(T? result)
+    {
+        Result = result;
+    }
+
     public FhirResultModel(T result, HttpStatusCode httpStatusCode, Version version)
     {
         Result = result;
         this.HttpStatusCode = httpStatusCode;
         this.Version = version;
+    }
+
+    public FhirResultModel(OperationOutcome? operationOutCome)
+    {
+        this.OperationOutCome = operationOutCome;
     }
 
     public FhirResultModel(OperationOutcome? operationOutCome, HttpStatusCode httpStatusCode, Version version)

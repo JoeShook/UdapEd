@@ -24,6 +24,7 @@ using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Discovery;
 using UdapEd.Shared.Search;
 using UdapEd.Shared.Services;
+using UdapEd.Shared.Services.Search;
 using T = System.Threading.Tasks;
 
 namespace UdapEd.Shared.Pages;
@@ -36,7 +37,7 @@ public partial class Directory
     [Inject] private IFhirService FhirService { get; set; } = null!;
     [Inject] IDiscoveryService MetadataService { get; set; } = null!;
     [Inject] IMutualTlsService MtlsService { get; set; } = null!;
-    [Inject] private CapabilityLookup CapabilityLookup { get; set; } = null!;
+    [Inject] private ICapabilityLookup CapabilityLookup { get; set; } = null!;
     [Inject] public required IDialogService DialogService { get; set; }
 
     private ErrorBoundary? _errorBoundary;

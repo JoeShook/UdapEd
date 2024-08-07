@@ -7,35 +7,36 @@
 // */
 #endregion
 
+using System.IO;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Logging;
 using Udap.Common.Certificates;
 using Udap.Util.Extensions;
-using UdapEd.Server.Extensions;
 using UdapEd.Shared;
 using UdapEd.Shared.Model;
+using UdapEd.Shared.Services;
 
-namespace UdapEd.Server.Controllers;
-
-[Route("[controller]")]
-[EnableRateLimiting(RateLimitExtensions.Policy)]
-public class MutualTlsController : Controller
+namespace UdapEdAppMaui.Services;
+public class MutualTlsService : IMutualTlsService
 {
-    private readonly ILogger<RegisterController> _logger;
     private readonly HttpClient _httpClient;
+    private readonly ILogger<MutualTlsService> _logger;
     private readonly TrustChainValidator _trustChainValidator;
 
-    public MutualTlsController(HttpClient httpClient, TrustChainValidator trustChainValidator, ILogger<RegisterController> logger)
+    public MutualTlsService(HttpClient httpClientClient, TrustChainValidator trustChainValidator, ILogger<MutualTlsService> logger)
     {
-        _httpClient = httpClient;
+        _httpClient = httpClientClient;
         _trustChainValidator = trustChainValidator;
         _logger = logger;
     }
 
-    [HttpPut("UploadTestClientCertificate")]
-    public IActionResult UploadTestClientCertificate([FromBody] string testClientCert)
+    public async Task UploadClientCertificate(string certBytes)
+    {
+        await SecureStorage.Default.SetAsync(UdapEdConstants.MTLS_CLIENT_CERTIFICATE, certBytes);
+    }
+
+    public async Task<CertificateStatusViewModel?> LoadTestCertificate(string certificateName)
     {
         var result = new CertificateStatusViewModel
         {
@@ -44,9 +45,14 @@ public class MutualTlsController : Controller
 
         try
         {
-            var certificate = new X509Certificate2(testClientCert, "udap-test", X509KeyStorageFlags.Exportable);
+            // Get the path to the certificate file in the app's assets
+            await using var fileStream = await FileSystem.Current.OpenAppPackageFileAsync(certificateName);
+            var certBytes = new byte[fileStream.Length];
+            await fileStream.ReadAsync(certBytes, 0, certBytes.Length);
+
+            var certificate = new X509Certificate2(certBytes, "udap-test", X509KeyStorageFlags.Exportable);
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
-            HttpContext.Session.SetString(UdapEdConstants.MTLS_CLIENT_CERTIFICATE_WITH_KEY,
+            await SecureStorage.Default.SetAsync(UdapEdConstants.MTLS_CLIENT_CERTIFICATE_WITH_KEY,
                 Convert.ToBase64String(clientCertWithKeyBytes));
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
@@ -66,10 +72,10 @@ public class MutualTlsController : Controller
             _logger.LogWarning(ex.Message);
             result.CertLoaded = CertLoadedEnum.InvalidPassword;
 
-            return Ok(result);
+            return result;
         }
 
-        return Ok(result);
+        return result;
     }
 
     private string GetPublicKeyAlgorithm(X509Certificate2 certificate)
@@ -90,27 +96,21 @@ public class MutualTlsController : Controller
         return "";
     }
 
-    [HttpPost("UploadClientCertificate")]
-    public IActionResult UploadClientCertificate([FromBody] string base64String)
-    {
-        HttpContext.Session.SetString(UdapEdConstants.MTLS_CLIENT_CERTIFICATE, base64String);
-
-        return Ok();
-    }
-
-    [HttpPost("ValidateCertificate")]
-    public IActionResult ValidateCertificate([FromBody] string password)
+    public async Task<CertificateStatusViewModel?> ValidateCertificate(string password)
     {
         var result = new CertificateStatusViewModel
         {
             CertLoaded = CertLoadedEnum.Negative
         };
 
-        var clientCertSession = HttpContext.Session.GetString(UdapEdConstants.MTLS_CLIENT_CERTIFICATE);
+        var clientCertSession = await SecureStorage.Default.GetAsync(UdapEdConstants.MTLS_CLIENT_CERTIFICATE);
 
         if (clientCertSession == null)
         {
-            return Ok(CertLoadedEnum.Negative);
+            return new CertificateStatusViewModel
+            {
+                CertLoaded = CertLoadedEnum.Negative
+            };
         }
 
         var certBytes = Convert.FromBase64String(clientCertSession);
@@ -119,8 +119,7 @@ public class MutualTlsController : Controller
             var certificate = new X509Certificate2(certBytes, password, X509KeyStorageFlags.Exportable);
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
-            HttpContext.Session.SetString(UdapEdConstants.MTLS_CLIENT_CERTIFICATE_WITH_KEY,
-                Convert.ToBase64String(clientCertWithKeyBytes));
+            await SecureStorage.Default.SetAsync(UdapEdConstants.MTLS_CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -134,22 +133,18 @@ public class MutualTlsController : Controller
                 .GetSubjectAltNames()
                 .Select(tuple => tuple.Item2)
                 .ToList();
-
-            result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(certificate);
-            result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex.Message);
             result.CertLoaded = CertLoadedEnum.InvalidPassword;
-            return Ok(result);
+            return result;
         }
 
-        return Ok(result);
+        return result;
     }
 
-    [HttpGet("IsClientCertificateLoaded")]
-    public IActionResult IsClientCertificateLoaded()
+    public async Task<CertificateStatusViewModel?> ClientCertificateLoadStatus()
     {
         var result = new CertificateStatusViewModel
         {
@@ -158,7 +153,7 @@ public class MutualTlsController : Controller
 
         try
         {
-            var clientCertSession = HttpContext.Session.GetString(UdapEdConstants.MTLS_CLIENT_CERTIFICATE);
+            var clientCertSession = await SecureStorage.Default.GetAsync(UdapEdConstants.MTLS_CLIENT_CERTIFICATE);
 
             if (clientCertSession != null)
             {
@@ -169,7 +164,7 @@ public class MutualTlsController : Controller
                 result.CertLoaded = CertLoadedEnum.Negative;
             }
 
-            var certBytesWithKey = HttpContext.Session.GetString(UdapEdConstants.MTLS_CLIENT_CERTIFICATE_WITH_KEY);
+            var certBytesWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.MTLS_CLIENT_CERTIFICATE_WITH_KEY);
 
             if (certBytesWithKey != null)
             {
@@ -188,24 +183,19 @@ public class MutualTlsController : Controller
                     .GetSubjectAltNames()
                     .Select(tuple => tuple.Item2)
                     .ToList();
-
-                result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(clientCert);
-                result.Issuer = clientCert.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
             }
 
-            return Ok(result);
+            return result;
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex.Message);
 
-            return Ok(result);
+            return result;
         }
     }
 
-
-    [HttpPost("UploadAnchorCertificate")]
-    public IActionResult UploadAnchorCertificate([FromBody] string base64String)
+    public async Task<CertificateStatusViewModel?> UploadAnchorCertificate(string base64String)
     {
         var result = new CertificateStatusViewModel { CertLoaded = CertLoadedEnum.Negative };
 
@@ -216,10 +206,9 @@ public class MutualTlsController : Controller
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
-            result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
-            HttpContext.Session.SetString(UdapEdConstants.MTLS_ANCHOR_CERTIFICATE, base64String);
+            await SecureStorage.Default.SetAsync(UdapEdConstants.MTLS_ANCHOR_CERTIFICATE, base64String);
 
-            return Ok(result);
+            return result;
         }
         catch (Exception ex)
         {
@@ -227,13 +216,14 @@ public class MutualTlsController : Controller
             _logger.LogDebug(ex,
                 $"Failed loading certificate from {nameof(base64String)} {base64String}");
 
-            return BadRequest(result);
+            return result;
         }
     }
 
-    [HttpPut("LoadAnchor")]
-    public async Task<IActionResult> LoadUdapOrgAnchor([FromBody] string anchorCertificate)
+    public async Task<CertificateStatusViewModel?> LoadAnchor()
     {
+        var anchorCertificate = "http://crl.fhircerts.net/certs/SureFhirmTLS_CA.cer";
+
         var result = new CertificateStatusViewModel { CertLoaded = CertLoadedEnum.Negative };
 
         try
@@ -245,10 +235,9 @@ public class MutualTlsController : Controller
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
-            result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
-            HttpContext.Session.SetString(UdapEdConstants.MTLS_ANCHOR_CERTIFICATE, Convert.ToBase64String(certBytes));
+            await SecureStorage.Default.SetAsync(UdapEdConstants.MTLS_ANCHOR_CERTIFICATE, Convert.ToBase64String(certBytes));
 
-            return Ok(result);
+            return result;
         }
         catch (Exception ex)
         {
@@ -256,12 +245,11 @@ public class MutualTlsController : Controller
             _logger.LogDebug(ex,
                 $"Failed loading certificate from {nameof(anchorCertificate)} {anchorCertificate}");
 
-            return BadRequest(result);
+            return result;
         }
     }
 
-    [HttpGet("IsAnchorCertificateLoaded")]
-    public IActionResult IsAnchorCertificateLoaded()
+    public async Task<CertificateStatusViewModel?> AnchorCertificateLoadStatus()
     {
         var result = new CertificateStatusViewModel
         {
@@ -270,8 +258,8 @@ public class MutualTlsController : Controller
 
         try
         {
-            var base64String = HttpContext.Session.GetString(UdapEdConstants.MTLS_ANCHOR_CERTIFICATE);
-
+            var base64String = await SecureStorage.Default.GetAsync(UdapEdConstants.MTLS_ANCHOR_CERTIFICATE);
+            
             if (base64String != null)
             {
                 var certBytes = Convert.FromBase64String(base64String);
@@ -279,37 +267,34 @@ public class MutualTlsController : Controller
                 result.DistinguishedName = certificate.SubjectName.Name;
                 result.Thumbprint = certificate.Thumbprint;
                 result.CertLoaded = CertLoadedEnum.Positive;
-                result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
             }
             else
             {
                 result.CertLoaded = CertLoadedEnum.Negative;
             }
 
-            return Ok(result);
+            return result;
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex.Message);
 
-            return Ok(result);
+            return result;
         }
     }
 
-
-    [HttpPost("VerifyMtlsTrust")]
-    public IActionResult VerifyMtlsTrust([FromBody] string publicCertificate)
+    public async Task<List<string>?> VerifyMtlsTrust(string publicCertificate)
     {
         var clientCertBytes = Convert.FromBase64String(publicCertificate);
         var clientCertificate = new X509Certificate2(clientCertBytes);
 
-        var base64String = HttpContext.Session.GetString(UdapEdConstants.MTLS_ANCHOR_CERTIFICATE);
-        
+        var base64String = await SecureStorage.Default.GetAsync(UdapEdConstants.MTLS_ANCHOR_CERTIFICATE);
+
         if (base64String == null)
         {
-            return Ok(new List<string>() { "mTLS anchor certificate is not loaded" });
+            return new List<string>() { "mTLS anchor certificate is not loaded" };
         }
-           
+
         var certBytes = Convert.FromBase64String(base64String);
         var certificate = new X509Certificate2(certBytes);
 
@@ -328,6 +313,6 @@ public class MutualTlsController : Controller
             notifications.Add("Failed validation for unknown reason");
         }
 
-        return Ok(notifications);
+        return notifications;
     }
 }

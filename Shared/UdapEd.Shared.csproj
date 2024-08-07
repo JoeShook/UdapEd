@@ -14,8 +14,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Udap.Model" Version="0.3.57" />
-    <PackageReference Include="Udap.Common" Version="0.3.57" />
+    <PackageReference Include="Udap.Model" Version="0.3.59" />
+    <PackageReference Include="Udap.Common" Version="0.3.59" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,8 +25,8 @@
     <PackageReference Include="BQuery" Version="3.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.7" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
-    <PackageReference Include="MudBlazor" Version="7.3.0" />
-    <PackageReference Include="Udap.Smart.Model" Version="0.3.57" />
+    <PackageReference Include="MudBlazor" Version="7.5.0" />
+    <PackageReference Include="Udap.Smart.Model" Version="0.3.59" />
 
     <PackageReference Include="Microsoft.AspNetCore.Components" Version="8.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.7" />
@@ -37,12 +37,12 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseMauiEssentials)' != 'false'">
-    <PackageReference Include="Microsoft.Maui.Essentials" Version="8.0.70" />
+    <PackageReference Include="Microsoft.Maui.Essentials" Version="8.0.71" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Update="wwwroot\CapabilityStatement-national-directory-api-server.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Update="wwwroot\images\UdapEdLogobyDesigner.png">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>

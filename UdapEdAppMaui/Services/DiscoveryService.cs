@@ -213,8 +213,7 @@ internal class DiscoveryService : IDiscoveryService
         {
 
             var base64String = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE);
-            // var base64String = HttpContext.Session.GetString(UdapEdConstants.ANCHOR_CERTIFICATE);
-
+            
             if (base64String != null)
             {
                 var certBytes = Convert.FromBase64String(base64String);

@@ -58,13 +58,13 @@ public partial class LaunchBP
         var launch = queryParams.GetValueOrDefault("launch");
         var code = queryParams.GetValueOrDefault("code");
 
-        if (!launch.IsNullOrEmpty())
+        if (!launch.IsEmpty())
         {
             SmartSessionCapabilityStatement = await GetFhirMetadata();
             SmartSessionWellknownMetadata = await GetSmartWellknownMetadata();
         }
 
-        if (!code.IsNullOrEmpty())
+        if (!code.IsEmpty())
         {
             AuthCode = code;
             StateCode = queryParams.GetValueOrDefault("state");
@@ -85,12 +85,12 @@ public partial class LaunchBP
             var metadataUrl = $"{iss}/metadata";
             var launch = queryParams.GetValueOrDefault("launch");
 
-            if (iss.IsNullOrEmpty())
+            if (iss.IsEmpty())
             {
                 throw new MissingFieldException("Missing iis parameter");
             }
 
-            if (launch.IsNullOrEmpty())
+            if (launch.IsEmpty())
             {
                 throw new MissingFieldException("Missing launch parameter");
             }
@@ -168,7 +168,7 @@ public partial class LaunchBP
                 throw new MissingFieldException("Missing iis parameter");
             }
 
-            if (launch.IsNullOrEmpty())
+            if (launch.IsEmpty())
             {
                 throw new MissingFieldException("Missing launch parameter");
             }

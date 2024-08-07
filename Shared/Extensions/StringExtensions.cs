@@ -9,6 +9,7 @@
 
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Primitives;
 
 namespace UdapEd.Shared.Extensions;
 public static class StringExtensions
@@ -87,5 +88,15 @@ public static class StringExtensions
         }
 
         return prefix + input;
+    }
+
+    public static bool IsNullOrEmpty(this string? input)
+    {
+        return string.IsNullOrEmpty(input);
+    }
+
+    public static bool IsEmpty(this StringValues input)
+    {
+        return input.Count == 0 || input.ToString() == string.Empty;
     }
 }
