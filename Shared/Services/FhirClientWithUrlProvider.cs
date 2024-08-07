@@ -15,9 +15,8 @@ public class FhirClientWithUrlProvider : FhirClient
     {
         _httpClient = httpClient;
     }
-
-    public HttpClient HttpClient => _httpClient;
 }
+
 
 /// <summary>
 /// Specialize the FhirClient injecting a url resolver in the implementation of a IBaseUrlProvider

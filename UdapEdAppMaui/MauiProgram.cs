@@ -114,27 +114,25 @@ public static class MauiProgram
 
         builder.Services.AddSingleton<AppSharedState>();
         builder.Services.AddSingleton<UdapClientState>(); //Singleton in Blazor wasm and Scoped in Blazor Server
-        builder.Services.AddSingleton<IRegisterService, RegisterService>();
-        builder.Services.AddSingleton<IDiscoveryService, DiscoveryService>();
-        builder.Services.AddSingleton<IAccessService, AccessService>();
-        builder.Services.AddSingleton<IFhirService, FhirService>();
-        builder.Services.AddSingleton<IInfrastructure, Infrastructure>();
+        builder.Services.AddScoped<IRegisterService, RegisterService>();
+        builder.Services.AddScoped<IDiscoveryService, DiscoveryService>();
+        builder.Services.AddScoped<IAccessService, AccessService>();
+        builder.Services.AddTransient<IFhirService, FhirService>();
+        builder.Services.AddScoped<IInfrastructure, Infrastructure>();
 
 
-        builder.Services.AddSingleton<TrustChainValidator>();
-        builder.Services.AddSingleton<UdapClientDiscoveryValidator>();
+        builder.Services.AddScoped<TrustChainValidator>();
+        builder.Services.AddScoped<UdapClientDiscoveryValidator>();
         builder.Services.AddHttpClient<IUdapClient, UdapClient>()
             .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()));
         builder.Services.AddSingleton<ICapabilityLookup, CapabilityLookup>();
-        builder.Services.AddSingleton<IClipboardService, ClipboardService>();
-        builder.Services.AddSingleton<IMutualTlsService, MutualTlsService>();
+        builder.Services.AddScoped<IClipboardService, ClipboardService>();
+        builder.Services.AddScoped<IMutualTlsService, MutualTlsService>();
 
-        builder.Services.AddScoped<IBaseUrlProvider, BaseUrlProvider>();
+        builder.Services.AddTransient<IBaseUrlProvider, BaseUrlProvider>();
         builder.Services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
-
-        builder.Services.AddTransient<PatientSearch>(); //Weird
         builder.Services.AddTransient<HttpResponseHandler>();
-
+        
         builder.Services.AddHttpClient<FhirClientWithUrlProvider>((sp, httpClient) =>
                 { })
             .AddHttpMessageHandler(sp => new AuthTokenHttpMessageHandler(sp.GetRequiredService<IAccessTokenProvider>()))

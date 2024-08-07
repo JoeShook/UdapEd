@@ -202,6 +202,7 @@ internal class AccessService : IAccessService
 
     public Task<bool> DeleteAccessToken()
     {
-        throw new NotImplementedException();
+        SecureStorage.Default.Remove(UdapEdConstants.TOKEN);
+        return Task.FromResult(true);
     }
 }
