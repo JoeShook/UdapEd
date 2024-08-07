@@ -23,8 +23,10 @@ using Udap.Client.Client;
 using Udap.Client.Configuration;
 using Udap.Common.Certificates;
 using UdapEd.Shared.Pages;
+using UdapEd.Shared.Search;
 using UdapEd.Shared.Services;
-
+using UdapEd.Shared.Services.Authentication;
+using UdapEd.Shared.Services.Search;
 /* Unmerged change from project 'UdapEdAppMaui (net8.0-windows10.0.19041.0)'
 Before:
 using UdapEdAppMaui.Services;
@@ -41,6 +43,7 @@ using UdapEdAppMaui.Services.Authentication;
 */
 using UdapEdAppMaui.Services;
 using UdapEdAppMaui.Services.Authentication;
+using UdapEdAppMaui.Services.Search;
 
 
 #if WINDOWS
@@ -105,31 +108,26 @@ public static class MauiProgram
 #endif
 
         builder.Services.AddMauiBlazorWebView();
-
-        builder.Services.AddScoped(sp => new HttpClient
-        {
-            BaseAddress = new Uri("http://localhost")
-        });
-
+        builder.Services.AddScoped(sp => new HttpClient());
         builder.Services.AddMudServices();
         builder.Services.AddBlazoredLocalStorage();
 
         builder.Services.AddSingleton<AppSharedState>();
         builder.Services.AddSingleton<UdapClientState>(); //Singleton in Blazor wasm and Scoped in Blazor Server
-        builder.Services.AddScoped<IRegisterService, RegisterService>();
-        builder.Services.AddScoped<IDiscoveryService, DiscoveryService>();
-        builder.Services.AddScoped<IAccessService, AccessService>();
-        builder.Services.AddScoped<IFhirService, FhirService>();
-        builder.Services.AddScoped<IInfrastructure, Infrastructure>();
+        builder.Services.AddSingleton<IRegisterService, RegisterService>();
+        builder.Services.AddSingleton<IDiscoveryService, DiscoveryService>();
+        builder.Services.AddSingleton<IAccessService, AccessService>();
+        builder.Services.AddSingleton<IFhirService, FhirService>();
+        builder.Services.AddSingleton<IInfrastructure, Infrastructure>();
 
 
-        builder.Services.AddScoped<TrustChainValidator>();
-        builder.Services.AddScoped<UdapClientDiscoveryValidator>();
+        builder.Services.AddSingleton<TrustChainValidator>();
+        builder.Services.AddSingleton<UdapClientDiscoveryValidator>();
         builder.Services.AddHttpClient<IUdapClient, UdapClient>()
             .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()));
-        
-        builder.Services.AddScoped<IClipboardService, ClipboardService>();
-        builder.Services.AddScoped<IMutualTlsService, MutualTlsService>();
+        builder.Services.AddSingleton<ICapabilityLookup, CapabilityLookup>();
+        builder.Services.AddSingleton<IClipboardService, ClipboardService>();
+        builder.Services.AddSingleton<IMutualTlsService, MutualTlsService>();
 
         builder.Services.AddScoped<IBaseUrlProvider, BaseUrlProvider>();
         builder.Services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
@@ -145,6 +143,35 @@ public static class MauiProgram
 
         builder.Services.AddTransient<IClientCertificateProvider, ClientCertificateProvider>();
 
+        builder.Services.AddTransient<FhirMTlsClientWithUrlProvider>(sp =>
+        {
+            var baeUrlProvider = sp.GetRequiredService<IBaseUrlProvider>();
+            var httpClientHandler = new System.Net.Http.HttpClientHandler();
+            var certificateProvider = sp.GetRequiredService<IClientCertificateProvider>();
+            var certificate = certificateProvider.GetClientCertificate();
+            var anchorCertificate = certificateProvider.GetAnchorCertificates();
+
+            if (certificate != null)
+            {
+                Log.Logger.Information($"mTLS Client: {certificate.Thumbprint}");
+                httpClientHandler.ClientCertificates.Add(certificate);
+            }
+
+            if (anchorCertificate != null)
+            {
+                // httpClientHandler.CheckCertificateRevocationList = true;
+                // httpClientHandler.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
+                httpClientHandler.ServerCertificateCustomValidationCallback =
+                    HttpClientHandlerExtension.CreateCustomRootValidator(anchorCertificate);
+            }
+
+            var fhirMTlsProvider = new FhirMTlsClientWithUrlProvider(
+                baeUrlProvider,
+                new HttpClient(httpClientHandler),
+                new FhirClientSettings() { PreferredFormat = ResourceFormat.Json });
+
+            return fhirMTlsProvider;
+        });
 
         var url = builder.Configuration["FHIR_TERMINOLOGY_ROOT_URL"];
 

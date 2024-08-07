@@ -6,12 +6,12 @@
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 
-namespace UdapEd.Server.Services.Authentication;
+namespace UdapEd.Shared.Services.Authentication;
 
 
 public static class HttpClientHandlerExtension
 {
-    public static Func<HttpRequestMessage, X509Certificate2, X509Chain, SslPolicyErrors, bool> 
+    public static Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool>?
         CreateCustomRootValidator(
             X509Certificate2Collection? trustedRoots, 
             X509Certificate2Collection? intermediates = null)

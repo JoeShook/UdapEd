@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 using UdapEd.Client.Services;
+using UdapEd.Client.Services.Search;
 using UdapEd.Shared;
 using UdapEd.Shared.Search;
 using UdapEd.Shared.Services;

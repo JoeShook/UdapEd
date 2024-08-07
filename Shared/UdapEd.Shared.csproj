@@ -42,7 +42,7 @@
 
   <ItemGroup>
     <Content Update="wwwroot\CapabilityStatement-national-directory-api-server.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Update="wwwroot\images\UdapEdLogobyDesigner.png">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>

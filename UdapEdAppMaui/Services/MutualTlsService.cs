@@ -27,7 +27,7 @@ public class MutualTlsService : IMutualTlsService
     public MutualTlsService(HttpClient httpClientClient, TrustChainValidator trustChainValidator, ILogger<MutualTlsService> logger)
     {
         _httpClient = httpClientClient;
-        trustChainValidator = trustChainValidator;
+        _trustChainValidator = trustChainValidator;
         _logger = logger;
     }
 
@@ -222,7 +222,7 @@ public class MutualTlsService : IMutualTlsService
 
     public async Task<CertificateStatusViewModel?> LoadAnchor()
     {
-        var anchorCertificate = "http://certs.emrdirect.com/certs/EMRDirectTestCA.crt";
+        var anchorCertificate = "http://crl.fhircerts.net/certs/SureFhirmTLS_CA.cer";
 
         var result = new CertificateStatusViewModel { CertLoaded = CertLoadedEnum.Negative };
 

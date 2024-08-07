@@ -25,6 +25,7 @@ using UdapEd.Server.Rest;
 using UdapEd.Server.Services.Authentication;
 using UdapEd.Shared;
 using UdapEd.Shared.Services;
+using UdapEd.Shared.Services.Authentication;
 using FhirClientWithUrlProvider = UdapEd.Shared.Services.FhirClientWithUrlProvider;
 using IBaseUrlProvider = UdapEd.Shared.Services.IBaseUrlProvider;
 

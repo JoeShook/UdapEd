@@ -13,7 +13,7 @@ using Hl7.Fhir.Model;
 namespace UdapEd.Shared.Model;
 public class FhirResultModel<T>
 {
-    public FhirResultModel(T result)
+    public FhirResultModel(T? result)
     {
         Result = result;
     }
