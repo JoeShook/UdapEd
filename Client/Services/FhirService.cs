@@ -183,13 +183,13 @@ public class FhirService : IFhirService
                 var operationOutCome = new OperationOutcome()
                 {
                     ResourceBase = null,
-                    Issue = new List<OperationOutcome.IssueComponent>
-                    {
+                    Issue =
+                    [
                         new OperationOutcome.IssueComponent
                         {
                             Diagnostics = result
                         }
-                    }
+                    ]
                 };
 
                 return new FhirResultModel<CodeSystem>(operationOutCome, HttpStatusCode.InternalServerError,

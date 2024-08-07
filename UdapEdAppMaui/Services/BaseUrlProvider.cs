@@ -1,4 +1,4 @@
-﻿#region (c) 2023 Joseph Shook. All rights reserved.
+﻿#region (c) 2024 Joseph Shook. All rights reserved.
 // /*
 //  Authors:
 //     Joseph Shook   Joseph.Shook@Surescripts.com
@@ -11,22 +11,16 @@ using Hl7.Fhir.Utility;
 using UdapEd.Shared;
 using UdapEd.Shared.Services;
 
-namespace UdapEd.Server.Rest;
+namespace UdapEdAppMaui.Services;
 
 public class BaseUrlProvider : IBaseUrlProvider
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public BaseUrlProvider(IHttpContextAccessor httpContextAccessor)
-    {
-        _httpContextAccessor = httpContextAccessor;
-    }
-    
     public Uri GetBaseUrl()
     {
-        var baseUrl = _httpContextAccessor.HttpContext?.Session.GetString(UdapEdConstants.BASE_URL);
+        // I did this on purpose
+        var baseUrl = Task.Run(() => SecureStorage.Default.GetAsync(UdapEdConstants.BASE_URL)).Result;
 
-        if (string.IsNullOrEmpty(baseUrl))
+        if (baseUrl == null)
         {
             baseUrl = "https://fhirlabs.net/fhir/r4";
         }
@@ -34,3 +28,4 @@ public class BaseUrlProvider : IBaseUrlProvider
         return new Uri(baseUrl.EnsureEndsWith("/"));
     }
 }
+

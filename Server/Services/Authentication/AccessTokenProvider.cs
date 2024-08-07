@@ -10,7 +10,7 @@
 using Udap.Client.Authentication;
 using UdapEd.Shared;
 
-namespace UdapEd.Server.Authentication;
+namespace UdapEd.Server.Services.Authentication;
 
 public class AccessTokenProvider : IAccessTokenProvider
 {

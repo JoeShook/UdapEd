@@ -24,7 +24,7 @@ namespace UdapEd.Shared.Pages;
 
 public partial class UdapRegistration
 {
-    private string? SubjectAltName { get; set; }
+    private string SubjectAltName { get; set; }
     private string? _signingAlgorithm;
 
     private bool TieredOauth

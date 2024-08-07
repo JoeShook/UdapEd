@@ -20,13 +20,13 @@ using Udap.Client.Authentication;
 using Udap.Client.Client;
 using Udap.Client.Configuration;
 using Udap.Common.Certificates;
-using UdapEd.Server.Authentication;
 using UdapEd.Server.Extensions;
 using UdapEd.Server.Rest;
-using UdapEd.Server.Services;
+using UdapEd.Server.Services.Authentication;
 using UdapEd.Shared;
-using FhirClientWithUrlProvider = UdapEd.Server.Services.FhirClientWithUrlProvider;
-using IBaseUrlProvider = UdapEd.Server.Services.IBaseUrlProvider;
+using UdapEd.Shared.Services;
+using FhirClientWithUrlProvider = UdapEd.Shared.Services.FhirClientWithUrlProvider;
+using IBaseUrlProvider = UdapEd.Shared.Services.IBaseUrlProvider;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -102,9 +102,6 @@ builder.Services.AddRazorPages();
 builder.Services.AddScoped<TrustChainValidator>();
 builder.Services.AddScoped<UdapClientDiscoveryValidator>();
 builder.Services.AddHttpClient<IUdapClient, UdapClient>()
-    .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()));
-
-builder.Services.AddHttpClient(Options.DefaultName, c => { })
     .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()));
 
 builder.Services.AddScoped<IBaseUrlProvider, BaseUrlProvider>();

@@ -7,7 +7,7 @@
 // */
 #endregion
 
-namespace UdapEd.Server.Services;
+namespace UdapEd.Shared.Services;
 
 public interface IBaseUrlProvider
 {

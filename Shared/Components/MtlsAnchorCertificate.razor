@@ -40,10 +40,16 @@
         @if (!string.IsNullOrEmpty(AppState.MtlsAnchorCertificateInfo?.DistinguishedName) ||
              !string.IsNullOrEmpty(AppState.MtlsAnchorCertificateInfo?.Thumbprint))
         {
-            <MudText Typo="Typo.body2"><b>Subject:</b>@AppState.MtlsAnchorCertificateInfo?.DistinguishedName</MudText>
+            <MudText Typo="Typo.body2"><b>Subject: </b>@AppState.MtlsAnchorCertificateInfo?.DistinguishedName</MudText>
+            <MudText Typo="Typo.body2"><b>Subject Alt Names: </b>
+                @if (AppState.MtlsAnchorCertificateInfo?.SubjectAltNames != null)
+                {
+                    @string.Join(" | ", AppState.MtlsAnchorCertificateInfo?.SubjectAltNames)
+                }
+            </MudText>
             <MudText Typo="Typo.caption"> <b>Thumbprint (sha1)</b> </MudText>
             <MudText Typo="Typo.body2">@AppState.MtlsAnchorCertificateInfo?.Thumbprint </MudText>
-            <MudText Typo="Typo.body2"><b>Issuer:</b> @AppState.MtlsAnchorCertificateInfo?.Issuer </MudText>
+            <MudText Typo="Typo.body2"><b>Issuer: </b> @AppState.MtlsAnchorCertificateInfo?.Issuer </MudText>
 
 
             @if (AppState.MtlsAnchorCertificateInfo.CertLoaded == CertLoadedEnum.Expired)

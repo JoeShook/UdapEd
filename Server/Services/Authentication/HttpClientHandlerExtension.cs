@@ -6,7 +6,7 @@
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 
-namespace UdapEd.Server.Authentication;
+namespace UdapEd.Server.Services.Authentication;
 
 
 public static class HttpClientHandlerExtension

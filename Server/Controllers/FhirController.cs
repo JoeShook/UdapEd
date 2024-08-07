@@ -14,10 +14,10 @@ using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using UdapEd.Server.Extensions;
-using UdapEd.Server.Services;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
-using FhirClientWithUrlProvider = UdapEd.Server.Services.FhirClientWithUrlProvider;
+using UdapEd.Shared.Services;
+using FhirClientWithUrlProvider = UdapEd.Shared.Services.FhirClientWithUrlProvider;
 
 namespace UdapEd.Server.Controllers;
 

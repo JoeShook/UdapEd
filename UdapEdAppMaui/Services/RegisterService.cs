@@ -25,18 +25,20 @@ using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model.Registration;
 using IdentityModel;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Configuration;
 
 namespace UdapEdAppMaui.Services;
 internal class RegisterService : IRegisterService
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<RegisterService> _logger;
+    private readonly IConfiguration _configuration;
 
-
-    public RegisterService(HttpClient httpClient, ILogger<RegisterService> logger)
+    public RegisterService(HttpClient httpClient, ILogger<RegisterService> logger, IConfiguration configuration)
     {
         _httpClient = httpClient;
         _logger = logger;
+        _configuration = configuration;
     }
 
     public async Task UploadClientCertificate(string certBytes)
@@ -450,10 +452,20 @@ internal class RegisterService : IRegisterService
         {
             await using var fileStream = await FileSystem.Current.OpenAppPackageFileAsync(certificateName);
             var certBytes = new byte[fileStream.Length];
-
             await fileStream.ReadAsync(certBytes, 0, certBytes.Length);
 
-            var certificate = new X509Certificate2(certBytes, "udap-test", X509KeyStorageFlags.Exportable);
+
+            X509Certificate2 certificate;
+
+            try
+            {
+                certificate = new X509Certificate2(certBytes, "udap-test", X509KeyStorageFlags.Exportable);
+            }
+            catch
+            {
+                certificate = new X509Certificate2(certBytes, _configuration["sampleKeyC"], X509KeyStorageFlags.Exportable);
+            }
+
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             await SecureStorage.Default.SetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
             result.DistinguishedName = certificate.SubjectName.Name;

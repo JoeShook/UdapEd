@@ -37,6 +37,7 @@
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
         <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
+        <UserSecretsId>b678e5df-a635-4894-8a62-136392d8dbc5</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
@@ -58,6 +59,32 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Content Remove="appsettings.json" />
+      <Content Remove="hl7.fhir.us.identity-matching-2.0.0-draft-expanded.json" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="fhirlabs.net.client.pfx" />
+      <None Remove="udap-sandbox-surescripts-2.p12" />
+      <None Remove="FhirLabs_mTLS_Client.pfx" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="appsettings.json" />
+      <EmbeddedResource Include="hl7.fhir.us.identity-matching-2.0.0-draft-expanded.json">
+        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <MauiAsset Include="fhirlabs.net.client.pfx" />
+      <MauiAsset Include="udap-sandbox-surescripts-2.p12" />
+      <MauiAsset Include="FhirLabs_mTLS_Client.pfx" />
+    </ItemGroup>
+
+    
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />
         <PackageReference Include="Microsoft.Maui.Controls" Version="8.0.71" />
         <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="8.0.71" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="8.0.71" />
