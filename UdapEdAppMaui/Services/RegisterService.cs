@@ -8,6 +8,7 @@
 #endregion
 
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using Microsoft.Extensions.Logging;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
@@ -379,6 +380,10 @@ internal class RegisterService : IRegisterService
                 .GetSubjectAltNames(n => n.TagNo == (int)X509Extensions.GeneralNameType.URI)
                 .Select(tuple => tuple.Item2)
                 .ToList();
+
+            result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(certificate);
+            result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
+
         }
         catch (Exception ex)
         {
@@ -429,6 +434,10 @@ internal class RegisterService : IRegisterService
                     .GetSubjectAltNames(n => n.TagNo == (int)X509Extensions.GeneralNameType.URI)
                     .Select(tuple => tuple.Item2)
                     .ToList();
+
+                result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(clientCert);
+                result.Issuer = clientCert.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
+
             }
 
             return result;
@@ -475,6 +484,9 @@ internal class RegisterService : IRegisterService
                 .GetSubjectAltNames(n => n.TagNo == (int)X509Extensions.GeneralNameType.URI)
                 .Select(tuple => tuple.Item2)
                 .ToList();
+
+            result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(certificate);
+            result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
         }
         catch (Exception ex)
         {
@@ -593,5 +605,23 @@ internal class RegisterService : IRegisterService
         }
 
         return true;
+    }
+
+    private string GetPublicKeyAlgorithm(X509Certificate2 certificate)
+    {
+        string keyAlgOid = certificate.GetKeyAlgorithm();
+        var oid = new Oid(keyAlgOid);
+
+        if (oid.Value == "1.2.840.113549.1.1.1")
+        {
+            return "RS";
+        }
+
+        if (oid.Value == "1.2.840.10045.2.1")
+        {
+            return "ES";
+        }
+
+        return "";
     }
 }
