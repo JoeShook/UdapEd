@@ -4,7 +4,7 @@
 <ErrorBoundary @ref="ErrorBoundary">
   <ChildContent>
       <MudGrid Class="mt-4">
-          <MudItem sm="6" xs="12">
+          <MudItem sm="4" xs="12">
               <MudText Typo="Typo.h4" >Udap Metadata</MudText>
               <MudStack Wrap="Wrap.Wrap" Row="true">
                   <MudButton Class="mt-3"
@@ -22,7 +22,7 @@
               </MudStack>
           </MudItem>
           <MudSpacer/>
-            <MudItem sm="6" xs="12">
+            <MudItem sm="8" xs="12">
               <MudGrid Spacing="2" Justify="Justify.FlexEnd" Class="bottom:0;right:0">
                   <UdapAnchorCertificate/>
               </MudGrid>
@@ -32,7 +32,6 @@
                   <MudItem xs="8">
                       <MudAutocomplete T="string"
                                        Label="Enter BaseUrl"
-                                       AutoFocus="true"
                                        HelperText=@($"UDAP Metadata URL: {RequestUrl.GetWellKnownUdap(BaseUrl, Community)}")
                                          @bind-Value="BaseUrl"
                                          @bind-Text="BaseUrl"

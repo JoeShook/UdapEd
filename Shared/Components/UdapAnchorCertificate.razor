@@ -9,35 +9,35 @@
         </CardHeaderContent>
     </MudCardHeader>
     <MudCardActions style="float: right">
-
-        <MudFab Class="ma-2 " style="float: right;"
-                HtmlTag="label"
-                Size="Size.Small"
-                Color="@AnchorLoadedColor"
-                StartIcon="@AppState.CertificateIcon"
-                Label="Upload"
-                Title="Upload Anchor Certificate"
-                IconSize="Size.Small"
-                for="anchorFileInput"/>
+        <MudStack Wrap="Wrap.Wrap" Row="true">
+            <MudFab Class="ma-2 " style="float: right;"
+                    HtmlTag="label"
+                    Size="Size.Small"
+                    Color="@AnchorLoadedColor"
+                    StartIcon="@AppState.CertificateIcon"
+                    Label="Upload"
+                    Title="Upload Anchor Certificate"
+                    IconSize="Size.Small"
+                    for="anchorFileInput"/>
                 
-        <MudFab Class="ma-2 " Style="float: right; white-space: nowrap;"
-                HtmlTag="label"
-                Size="Size.Small"
-                Color="@FhirLabsAnchorLoadedColor"
-                StartIcon="@AppState.CertificateIcon"
-                Label="Load FhirLabs Test CA"
-                IconSize="Size.Small"
-                OnClick="@LoadFhirLabsAnchor" />
+            <MudFab Class="ma-2 " Style="float: right; white-space: nowrap;"
+                    HtmlTag="label"
+                    Size="Size.Small"
+                    Color="@FhirLabsAnchorLoadedColor"
+                    StartIcon="@AppState.CertificateIcon"
+                    Label="Load FhirLabs Test CA"
+                    IconSize="Size.Small"
+                    OnClick="@LoadFhirLabsAnchor" />
 
-        <MudFab Class="ma-2 " Style="float: right; white-space: nowrap;"
-                HtmlTag="label"
-                Size="Size.Small"
-                Color="@EmrDirectAnchorLoadedColor"
-                StartIcon="@AppState.CertificateIcon"
-                Label="Load EMR Direct Test CA"
-                IconSize="Size.Small"
-                OnClick="@LoadUdapOrgAnchor" />
-
+            <MudFab Class="ma-2 " Style="float: right; white-space: nowrap;"
+                    HtmlTag="label"
+                    Size="Size.Small"
+                    Color="@EmrDirectAnchorLoadedColor"
+                    StartIcon="@AppState.CertificateIcon"
+                    Label="Load EMR Direct Test CA"
+                    IconSize="Size.Small"
+                    OnClick="@LoadUdapOrgAnchor" />
+        </MudStack>
     </MudCardActions>
     <MudCardContent style="float: left">
         @if (!string.IsNullOrEmpty(AppState.UdapAnchorCertificateInfo?.DistinguishedName) ||
