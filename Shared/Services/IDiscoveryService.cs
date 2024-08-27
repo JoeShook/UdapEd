@@ -19,6 +19,7 @@ public interface IDiscoveryService
     Task<CapabilityStatement?> GetCapabilityStatement(string url, CancellationToken token);
     Task<SmartMetadata?> GetSmartMetadata(string metadataUrl, CancellationToken token);
     Task<CertificateStatusViewModel?> UploadAnchorCertificate(string certBytes);
+    Task<CertificateStatusViewModel?> LoadFhirLabsAnchor();
     Task<CertificateStatusViewModel?> LoadUdapOrgAnchor();
     Task<CertificateStatusViewModel?> AnchorCertificateLoadStatus();
     Task<bool> SetBaseFhirUrl(string? baseFhirUrl, bool resetToken = false);

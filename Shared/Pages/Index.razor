@@ -59,7 +59,7 @@
 
                     <MudSpacer/>
                     <MudTooltip Text="Add">
-                        <MudFab Icon="@Icons.Material.Filled.Add"
+                        <MudFab StartIcon="@Icons.Material.Filled.Add"
                                 Color="Color.Success"
                                 @onclick="AddRow"
                                 Size="Size.Small"/>
@@ -78,7 +78,7 @@
                             <MudFab HtmlTag="label"
                                     Size="Size.Small"
                                     Color="Color.Warning"
-                                    Icon="@Icons.Material.Filled.DeleteForever"
+                                    StartIcon="@Icons.Material.Filled.DeleteForever"
                                     class="ma-2"
                                     OnClick="() => RemoveClientHeader(clientHeader)"
                                     Disabled="@_rowInEditMode"/>
@@ -149,8 +149,8 @@
                             </MudText>
 
                             <MudText Typo="Typo.subtitle2">
-                                            For all other communities load the UDAP .NET Reference Implementation <a href="https://storage.googleapis.com/crl.fhircerts.net/certs/SureFhirLabs_CA.cer">Trust Anchor (SureFhir-CA)</a>
-                                through the .
+                                For all other communities listed, load the UDAP .NET Reference Implementation 
+                                <a href="https://storage.googleapis.com/crl.fhircerts.net/certs/SureFhirLabs_CA.cer">Trust Anchor (SureFhir-CA)</a>
                             </MudText>
                         </MudCardContent>
                     </MudCard>
@@ -189,6 +189,25 @@
                             <a href="https://storage.googleapis.com/cert_client_downloads/fhirlabs.net.untrusted.client.pfx">fhirlabs.net.untrusted.client.pfx</a><br/>
                         </MudCardContent>
                     </MudCard>
+                    
+                    <MudCard Class="mb-4">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.body1" Color="Color.Primary">Test client certificates.</MudText>
+                                <MudText Typo="Typo.body2">Use these client certificates to experiment with various success and failure scenarios. The p12 files all use the same password of, "udap-test".</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <a href="https://storage.googleapis.com/cert_client_downloads/fhirlabs.net.client.pfx">fhirlabs.net.client.pfx</a><br/>
+                            <a href="https://storage.googleapis.com/cert_client_downloads/fhirlabs.net.ecdsa.client.pfx">fhirlabs.net.ecdsa.client.pfx</a><br/>
+                            <a href="https://storage.googleapis.com/cert_client_downloads/fhirlabs.net.expired.client.pfx">fhirlabs.net.expired.client.pfx</a><br/>
+                            <a href="https://storage.googleapis.com/cert_client_downloads/fhirlabs.net.mismatchBaseUrl.client.pfx">fhirlabs.net.mismatchBaseUrl.client.pfx</a><br/>
+                            <a href="https://storage.googleapis.com/cert_client_downloads/fhirlabs.net.mismatchSan.client.pfx">fhirlabs.net.mismatchSan.client.pfx</a><br/>
+                            <a href="https://storage.googleapis.com/cert_client_downloads/fhirlabs.net.revoked.client.pfx">fhirlabs.net.revoked.client.pfx</a><br/>
+                            <a href="https://storage.googleapis.com/cert_client_downloads/fhirlabs.net.untrusted.client.pfx">fhirlabs.net.untrusted.client.pfx</a><br/>
+                        </MudCardContent>
+                    </MudCard>
+
                 </MudItem>
                 <MudItem xs="12" sm="8" md="8">
                     <MudCard>

@@ -13,20 +13,28 @@
         <MudFab Class="ma-2 " style="float: right;"
                 HtmlTag="label"
                 Size="Size.Small"
-                Color="@CertLoadedColor"
+                Color="@AnchorLoadedColor"
                 StartIcon="@AppState.CertificateIcon"
                 Label="Upload"
                 Title="Upload Anchor Certificate"
                 IconSize="Size.Small"
                 for="anchorFileInput"/>
+                
+        <MudFab Class="ma-2 " Style="float: right; white-space: nowrap;"
+                HtmlTag="label"
+                Size="Size.Small"
+                Color="@FhirLabsAnchorLoadedColor"
+                StartIcon="@AppState.CertificateIcon"
+                Label="Load FhirLabs Test CA"
+                IconSize="Size.Small"
+                OnClick="@LoadFhirLabsAnchor" />
 
         <MudFab Class="ma-2 " Style="float: right; white-space: nowrap;"
                 HtmlTag="label"
                 Size="Size.Small"
-                Color="@CertLoadedColor"
+                Color="@EmrDirectAnchorLoadedColor"
                 StartIcon="@AppState.CertificateIcon"
                 Label="Load EMR Direct Test CA"
-                Title="Use UDAP Test Tool Anchor Certificate"
                 IconSize="Size.Small"
                 OnClick="@LoadUdapOrgAnchor" />
 
@@ -55,14 +63,30 @@
     private bool _checkServerSession;
 
 
-    public Color CertLoadedColor { get; set; } = Color.Error;
+    public Color AnchorLoadedColor;
+    public Color EmrDirectAnchorLoadedColor;
+    public Color FhirLabsAnchorLoadedColor;
 
-    
+
     protected override async Task OnInitializedAsync()
     {
         var anchorCertificateLoadStatus = await DiscoveryService.AnchorCertificateLoadStatus();
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapAnchorCertificateInfo), anchorCertificateLoadStatus);
-        await SetCertLoadedColor(anchorCertificateLoadStatus?.CertLoaded);
+
+
+        if (anchorCertificateLoadStatus != null && anchorCertificateLoadStatus.Issuer.StartsWith("EMR Direct Test CA"))
+        {
+            SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref EmrDirectAnchorLoadedColor);
+        }
+        else if (anchorCertificateLoadStatus is { UserSuppliedCertificate: true })
+        {
+            SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref AnchorLoadedColor);
+        }
+        else if (anchorCertificateLoadStatus != null && anchorCertificateLoadStatus.Issuer.StartsWith("SureFhir-CA"))
+        {
+            SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref FhirLabsAnchorLoadedColor);
+        }
+
 
         if (Bq.Events != null)
         {
@@ -85,7 +109,21 @@
     {
         var anchorCertificateLoadStatus = await DiscoveryService.AnchorCertificateLoadStatus();
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapAnchorCertificateInfo), anchorCertificateLoadStatus);
-        await SetCertLoadedColor(anchorCertificateLoadStatus?.CertLoaded);
+
+
+        if (anchorCertificateLoadStatus != null && anchorCertificateLoadStatus.Issuer.StartsWith("EMR Direct Test CA"))
+        {
+            SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref EmrDirectAnchorLoadedColor);
+        }
+        else if (anchorCertificateLoadStatus is { UserSuppliedCertificate: true })
+        {
+            SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref AnchorLoadedColor);
+        }
+        else if (anchorCertificateLoadStatus != null && anchorCertificateLoadStatus.Issuer.StartsWith("SureFhir-CA"))
+        {
+            SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref FhirLabsAnchorLoadedColor);
+        }
+
         _checkServerSession = true;
     }
 
@@ -95,32 +133,43 @@
     }
 
 
-    private async Task LoadUdapOrgAnchor()
+    private async Task LoadFhirLabsAnchor()
     {
-        var certViewModel = await DiscoveryService.LoadUdapOrgAnchor();
-        await SetCertLoadedColor(certViewModel?.CertLoaded);
+        var certViewModel = await DiscoveryService.LoadFhirLabsAnchor();
+        SetCertLoadedColor(certViewModel?.CertLoaded, ref FhirLabsAnchorLoadedColor);
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapAnchorCertificateInfo), certViewModel);
     }
 
-    private async Task SetCertLoadedColor(CertLoadedEnum? isCertLoaded)
+    private async Task LoadUdapOrgAnchor()
     {
+        var certViewModel = await DiscoveryService.LoadUdapOrgAnchor();
+        SetCertLoadedColor(certViewModel?.CertLoaded, ref EmrDirectAnchorLoadedColor);
+        await AppState.SetPropertyAsync(this, nameof(AppState.UdapAnchorCertificateInfo), certViewModel);
+    }
+
+    private void SetCertLoadedColor(CertLoadedEnum? isCertLoaded, ref Color anchorColor)
+    {
+        AnchorLoadedColor = Color.Default;
+        EmrDirectAnchorLoadedColor = Color.Default;
+        FhirLabsAnchorLoadedColor = Color.Default;
+
         switch (isCertLoaded)
         {
             case CertLoadedEnum.Negative:
-                CertLoadedColor = Color.Error;
-                await AppState.SetPropertyAsync(this, nameof(AppState.AnchorLoaded), false);
+                anchorColor = Color.Error;
+                AppState.SetProperty(this, nameof(AppState.AnchorLoaded), false);
                 break;
             case CertLoadedEnum.Positive:
-                CertLoadedColor = Color.Success;
-                await AppState.SetPropertyAsync(this, nameof(AppState.AnchorLoaded), true);
+                anchorColor = Color.Success;
+                AppState.SetProperty(this, nameof(AppState.AnchorLoaded), true);
                 break;
             case CertLoadedEnum.InvalidPassword:
-                CertLoadedColor = Color.Warning;
-                await AppState.SetPropertyAsync(this, nameof(AppState.AnchorLoaded), false);
+                anchorColor = Color.Warning;
+                AppState.SetProperty(this, nameof(AppState.AnchorLoaded), false);
                 break;
             default:
-                CertLoadedColor = Color.Error;
-                await AppState.SetPropertyAsync(this, nameof(AppState.AnchorLoaded), false);
+                anchorColor = Color.Error;
+                AppState.SetProperty(this, nameof(AppState.AnchorLoaded), false);
                 break;
         }
 
@@ -135,7 +184,7 @@
             {
                 var certViewModel = await DiscoveryService.AnchorCertificateLoadStatus();
                 await AppState.SetPropertyAsync(this, nameof(AppState.UdapAnchorCertificateInfo), certViewModel);
-                await SetCertLoadedColor(certViewModel?.CertLoaded);
+                SetCertLoadedColor(certViewModel?.CertLoaded, ref AnchorLoadedColor);
             }
         }
     }
@@ -151,7 +200,7 @@
 
         var certViewModel = await DiscoveryService.UploadAnchorCertificate(Convert.ToBase64String(certBytes));
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapAnchorCertificateInfo), certViewModel);
-        await SetCertLoadedColor(certViewModel?.CertLoaded);
+        SetCertLoadedColor(certViewModel?.CertLoaded, ref AnchorLoadedColor);
     }
 
     public void Dispose()
