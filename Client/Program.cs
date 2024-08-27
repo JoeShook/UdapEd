@@ -16,8 +16,8 @@ using MudBlazor.Services;
 using UdapEd.Client.Services;
 using UdapEd.Client.Services.Search;
 using UdapEd.Shared;
-using UdapEd.Shared.Search;
 using UdapEd.Shared.Services;
+using UdapEd.Shared.Services.Search;
 
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -39,7 +39,7 @@ builder.Services.AddScoped<IDiscoveryService, DiscoveryService>();
 builder.Services.AddScoped<IAccessService, AccessService>();
 builder.Services.AddScoped<IFhirService, FhirService>();
 builder.Services.AddScoped<IInfrastructure, Infrastructure>();
-builder.Services.AddSingleton<CapabilityLookup>();
+builder.Services.AddSingleton<ICapabilityLookup, CapabilityLookup>();
 builder.Services.AddScoped<IClipboardService, ClipboardService>();
 builder.Services.AddScoped<IMutualTlsService, MutualTlsService>();
 
