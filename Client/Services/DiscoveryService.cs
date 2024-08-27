@@ -103,6 +103,18 @@ public class DiscoveryService : IDiscoveryService
 
         return await result.Content.ReadFromJsonAsync<CertificateStatusViewModel>();
     }
+    
+    public async Task<CertificateStatusViewModel?> LoadFhirLabsAnchor()
+    {
+        var response = await _httpClient.PutAsJsonAsync("Metadata/LoadUdapOrgAnchor", "https://storage.googleapis.com/crl.fhircerts.net/certs/SureFhirLabs_CA.cer");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogInformation(await response.Content.ReadAsStringAsync());
+        }
+
+        return await response.Content.ReadFromJsonAsync<CertificateStatusViewModel>();
+    }
 
     public async Task<CertificateStatusViewModel?> LoadUdapOrgAnchor()
     {
