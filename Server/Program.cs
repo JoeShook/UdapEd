@@ -20,6 +20,7 @@ using Udap.Client.Authentication;
 using Udap.Client.Client;
 using Udap.Client.Configuration;
 using Udap.Common.Certificates;
+using UdapEd.Client.Services;
 using UdapEd.Server.Extensions;
 using UdapEd.Server.Rest;
 using UdapEd.Server.Services.Authentication;
@@ -28,7 +29,6 @@ using UdapEd.Shared.Services;
 using UdapEd.Shared.Services.Authentication;
 using FhirClientWithUrlProvider = UdapEd.Shared.Services.FhirClientWithUrlProvider;
 using IBaseUrlProvider = UdapEd.Shared.Services.IBaseUrlProvider;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -114,7 +114,7 @@ builder.Services.AddHttpClient<FhirClientWithUrlProvider>((sp, httpClient) =>
     .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()));
 
 builder.Services.AddTransient<IClientCertificateProvider, ClientCertificateProvider>();
-
+builder.Services.AddScoped<IInfrastructure, UdapEd.Shared.Services.Infrastructure>();
 
 //
 // This does not allow you to let the client dynamically load new mTLS certificates.  The HttpHandler doesn't reenter.

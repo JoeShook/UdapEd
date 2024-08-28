@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using MudBlazor.Utilities;
+using HorizontalAlignment = MudBlazor.HorizontalAlignment;
 
 namespace UdapEd.Shared.Components;
 

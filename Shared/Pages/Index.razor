@@ -1,5 +1,9 @@
 ﻿@page "/"
-@using UdapEd.Shared.Services
+
+#if ANDROID || IOS || MACCATALYST || WINDOWS
+@using CommunityToolkit.Maui.Storage
+#endif
+
 @inject IInfrastructure Infrastructure
 @inject IJSRuntime JSRuntime
 @inject IDiscoveryService DiscoveryService
@@ -103,7 +107,8 @@
 
 
 <MudItem >
-    <MudText Typo="Typo.subtitle2">This is a tool to experiment with the Security IG constrained on the UDAP profiles. See FHIR link in top right corner. Notice if you upload a client certificate (P12 format) it will be stored in the server’s session service. The session lifetime is set for one hour. The tool will ask for a password to access the private key, allowing it to generate a software statement used for registration and authorization requests. <MudText Typo="Typo.button" Color="Color.Primary">Do not use your production client certificates.</MudText> But if you are using a cert from EMR Direct for testing only you might consider Using this tool. If you are not comfortable with loading your certificate, then you can use the test client certificate button above which will load a test client already hosted in the back end. I will add more test certs for other scenarios including failure conditions as this tool evolves. Another idea may be to load one of my EMR Direct issued client certificates that one can use to test registration. </MudText>
+    <MudText Typo="Typo.subtitle2">This is a tool to experiment with the Security IG constrained on the UDAP profiles. See FHIR link in top right corner. Notice if you upload a client certificate (P12 format) it will be stored in the server’s session service. The session lifetime is set for one hour. The tool will ask for a password to access the private key, allowing it to generate a software statement used for registration and authorization requests. <MudText Typo="Typo.button" Color="Color.Primary">Do not use your production client certificates.</MudText> 
+        But if you are using a cert from EMR Direct or the Fhirlabs anchor for testing, you should consider using this tool. If you are not comfortable loading your certificate, then you can use the test client certificate button above which will load a test client already hosted in the back end. I will add more test certs for other scenarios including failure conditions as this tool evolves. Another idea may be to load one of my EMR Direct issued client certificates that one can use to test registration. </MudText>
 </MudItem>
 
 <MudItem>
@@ -188,26 +193,35 @@
                             <a href="https://storage.googleapis.com/cert_client_downloads/fhirlabs.net.revoked.client.pfx">fhirlabs.net.revoked.client.pfx</a><br/>
                             <a href="https://storage.googleapis.com/cert_client_downloads/fhirlabs.net.untrusted.client.pfx">fhirlabs.net.untrusted.client.pfx</a><br/>
                         </MudCardContent>
-                    </MudCard>
-                    
-                    <MudCard Class="mb-4">
                         <MudCardHeader>
-                            <CardHeaderContent>
-                                <MudText Typo="Typo.body1" Color="Color.Primary">Test client certificates.</MudText>
-                                <MudText Typo="Typo.body2">Use these client certificates to experiment with various success and failure scenarios. The p12 files all use the same password of, "udap-test".</MudText>
-                            </CardHeaderContent>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.body1" Color="Color.Primary">Build and download your personal UDAP certificates</MudText>
+                            <MudText Typo="Typo.body2">Click the button below to get your own personal zip package of UDAP test certificates
+                                from the Fhirlabs community.  Select up to 10 subject alternative names.  The pack will include one RSA one ECDSA certificate.</MudText>
+                        </CardHeaderContent>
                         </MudCardHeader>
-                        <MudCardContent>
-                            <a href="https://storage.googleapis.com/cert_client_downloads/fhirlabs.net.client.pfx">fhirlabs.net.client.pfx</a><br/>
-                            <a href="https://storage.googleapis.com/cert_client_downloads/fhirlabs.net.ecdsa.client.pfx">fhirlabs.net.ecdsa.client.pfx</a><br/>
-                            <a href="https://storage.googleapis.com/cert_client_downloads/fhirlabs.net.expired.client.pfx">fhirlabs.net.expired.client.pfx</a><br/>
-                            <a href="https://storage.googleapis.com/cert_client_downloads/fhirlabs.net.mismatchBaseUrl.client.pfx">fhirlabs.net.mismatchBaseUrl.client.pfx</a><br/>
-                            <a href="https://storage.googleapis.com/cert_client_downloads/fhirlabs.net.mismatchSan.client.pfx">fhirlabs.net.mismatchSan.client.pfx</a><br/>
-                            <a href="https://storage.googleapis.com/cert_client_downloads/fhirlabs.net.revoked.client.pfx">fhirlabs.net.revoked.client.pfx</a><br/>
-                            <a href="https://storage.googleapis.com/cert_client_downloads/fhirlabs.net.untrusted.client.pfx">fhirlabs.net.untrusted.client.pfx</a><br/>
+                        <MudCardContent>   
+                            <MudList T="string">
+                                @foreach (var item in SubjectAltNames)
+                                {
+                                    <MudListItem OnClick="@(() => RemoveSubjectAltName(item))" Text=@item Icon="@Icons.Material.Filled.Remove"/>
+                                }
+                            </MudList>
+                                <MudTextField @bind-Value="subjectAltName" Variant="Variant.Outlined"/>
+                                <MudButton OnClick="@(() => AddSubjectAltName())" Color="Color.Error">Add Subject Alt Name</MudButton>
+                            
+                            <MudFab HtmlTag="label"
+                                    Class="ma-2"
+                                    Size="Size.Small"
+                                    Color="Color.Primary"
+                                    StartIcon="@Icons.Material.Filled.FolderZip"
+                                    Label="Download My UDAP Certificate Pack"
+                                    IconSize="Size.Small"
+                                                Disabled="@(!SubjectAltNames.Any())"
+                                    OnClick="@BuildMyTestCertificatePackage"/>
                         </MudCardContent>
                     </MudCard>
-
+                    
                 </MudItem>
                 <MudItem xs="12" sm="8" md="8">
                     <MudCard>
@@ -288,14 +302,14 @@
 
     private List<ClientHeader> Headers { get; set; }
 
-    
+
     private void AddRow()
     {
         Headers.Add(new ClientHeader());
         _rowInEditMode = true;
     }
 
-    
+
     private async Task RemoveClientHeader(ClientHeader clientHeader)
     {
         var header = Headers.FirstOrDefault(h => h.Name == clientHeader.Name);
@@ -335,5 +349,51 @@
     //     public string Key { get; set; }
     // }
 
-    
+    private string subjectAltName = "";
+    private List<string> SubjectAltNames { get; set; } = new List<string>();
+
+    private void AddSubjectAltName()
+    {
+        if (!SubjectAltNames.Contains(subjectAltName) && SubjectAltNames.Count < 10)
+        {
+            if (Uri.TryCreate(subjectAltName, UriKind.Absolute, out var uri))
+            {
+                SubjectAltNames.Add(uri.AbsoluteUri);
+                subjectAltName = "";
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void RemoveSubjectAltName(string item)
+    {
+        SubjectAltNames.Remove(item);
+        StateHasChanged();
+    }
+
+    private async Task CommitSubjectAltNames()
+    {
+        // Save the updated SubjectAltNames list to the AppState or any other storage
+        // await AppState.SetPropertyAsync(this, nameof(AppState.SubjectAltNames), SubjectAltNames);
+        await Task.Delay(1);
+    }
+
+    private async Task BuildMyTestCertificatePackage()
+    {
+        byte[] zipFile = await Infrastructure.BuildMyTestCertificatePackage(SubjectAltNames);
+        
+        
+#if ANDROID || IOS || MACCATALYST || WINDOWS
+            using var stream = new MemoryStream(zipFile);
+            await FileSaver.Default.SaveAsync("UdapEdCertificatePack.zip", stream);
+#else
+        await JSRuntime.InvokeVoidAsync("downloadFileFromBytes", zipFile, "application/zip", "UdapEdCertificatePack.zip");
+#endif
+
+    }
+
+    private void Callback(string obj)
+    {
+        throw new NotImplementedException();
+    }
 }

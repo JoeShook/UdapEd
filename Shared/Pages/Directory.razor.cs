@@ -25,6 +25,7 @@ using UdapEd.Shared.Model.Discovery;
 using UdapEd.Shared.Search;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Services.Search;
+using Color = MudBlazor.Color;
 using T = System.Threading.Tasks;
 
 namespace UdapEd.Shared.Pages;

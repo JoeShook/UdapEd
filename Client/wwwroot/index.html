@@ -33,13 +33,14 @@
   <script src="_content/MudBlazor/MudBlazor.min.js"></script>
   <script src="_content/BQuery/bQuery.min.js"></script>
   <script src="_content/UdapEd.Shared/scripts/AutoFocus.js"></script>
+  <script src="_content/UdapEd.Shared/scripts/UdapEdUtility.js"></script>
 
   <script src="_content/BlazorMonaco/jsInterop.js"></script>
   <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
   <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
-  
-<!-- todo package in RCL -->
-    <script type="text/javascript">
+
+  <!-- todo package in RCL -->
+  <script type="text/javascript">
     function setMonacoEditorResize(id) {
       window.onresize = () => { blazorMonaco.editor.layout(id, 0); }
     }
