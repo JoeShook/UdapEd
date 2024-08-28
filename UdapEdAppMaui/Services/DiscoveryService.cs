@@ -150,7 +150,7 @@ internal class DiscoveryService : IDiscoveryService
 
     public async Task<CertificateStatusViewModel?> UploadAnchorCertificate(string base64String)
     {
-        var result = new CertificateStatusViewModel { CertLoaded = CertLoadedEnum.Negative };
+        var result = new CertificateStatusViewModel { CertLoaded = CertLoadedEnum.Negative, UserSuppliedCertificate = true };
 
         try
         {
@@ -188,6 +188,7 @@ internal class DiscoveryService : IDiscoveryService
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
+            result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
             await SecureStorage.Default.SetAsync(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE, Convert.ToBase64String(certBytes));
 
             return result;
@@ -217,6 +218,7 @@ internal class DiscoveryService : IDiscoveryService
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
+            result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
             await SecureStorage.Default.SetAsync(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE, Convert.ToBase64String(certBytes));
 
             return result;
@@ -250,6 +252,7 @@ internal class DiscoveryService : IDiscoveryService
                 result.DistinguishedName = certificate.SubjectName.Name;
                 result.Thumbprint = certificate.Thumbprint;
                 result.CertLoaded = CertLoadedEnum.Positive;
+                result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
             }
             else
             {

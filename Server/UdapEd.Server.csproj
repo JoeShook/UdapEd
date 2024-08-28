@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <PackageReference Include="Firely.Fhir.Packages" Version="4.7.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.8" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.9.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.2" />
@@ -25,7 +25,7 @@
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.9.0" />
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.9.0" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.9.0" />
-    <PackageReference Include="Udap.Smart.Model" Version="0.3.59" />
+    <PackageReference Include="Udap.Smart.Model" Version="0.3.61" />
 
   </ItemGroup>
 
@@ -35,9 +35,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Udap.Client" Version="0.3.59" />
-    <PackageReference Include="Udap.Model" Version="0.3.59" />
-    <PackageReference Include="Udap.Common" Version="0.3.59" />
+    <PackageReference Include="Udap.Client" Version="0.3.61" />
+    <PackageReference Include="Udap.Model" Version="0.3.61" />
+    <PackageReference Include="Udap.Common" Version="0.3.61" />
   </ItemGroup>
 
   <ItemGroup>
