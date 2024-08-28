@@ -70,17 +70,24 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var userSuppliedCertificate = AppState.UdapAnchorCertificateInfo?.UserSuppliedCertificate;
+
         var anchorCertificateLoadStatus = await DiscoveryService.AnchorCertificateLoadStatus();
+
+        if (anchorCertificateLoadStatus != null)
+        {
+            anchorCertificateLoadStatus.UserSuppliedCertificate = userSuppliedCertificate ?? false;
+        }
+
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapAnchorCertificateInfo), anchorCertificateLoadStatus);
 
-
-        if (anchorCertificateLoadStatus != null && anchorCertificateLoadStatus.Issuer.StartsWith("EMR Direct Test CA"))
-        {
-            SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref EmrDirectAnchorLoadedColor);
-        }
-        else if (anchorCertificateLoadStatus is { UserSuppliedCertificate: true })
+        if (anchorCertificateLoadStatus is { UserSuppliedCertificate: true })
         {
             SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref AnchorLoadedColor);
+        }
+        else if (anchorCertificateLoadStatus != null && anchorCertificateLoadStatus.Issuer.StartsWith("EMR Direct Test CA"))
+        {
+            SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref EmrDirectAnchorLoadedColor);
         }
         else if (anchorCertificateLoadStatus != null && anchorCertificateLoadStatus.Issuer.StartsWith("SureFhir-CA"))
         {
