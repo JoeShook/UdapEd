@@ -12,6 +12,7 @@ using System.Collections.Specialized;
 using Microsoft.AspNetCore.Components;
 using Udap.Model.Registration;
 using UdapEd.Shared.Model;
+using UdapEd.Shared.Model.AuthExtObjects;
 using UdapEd.Shared.Model.Discovery;
 using UdapEd.Shared.Model.Smart;
 
@@ -123,6 +124,7 @@ public class UdapClientState : IAppState
     public ClientHeaders? ClientHeaders { get; set; }
 
     public PatientSearchPref? PatientSearchPref { get; set; }
+    public Dictionary<string, AuthExtModel> AuthorizationExtObjects { get; set; }
 
     public Task SetPropertyAsync(ComponentBase caller, string propertyName, object? propertyValue, bool saveChanges = true,
         bool fhirStateHasChanged = true)

@@ -116,7 +116,7 @@ public partial class UdapBusinessToBusiness
     protected override async Task OnInitializedAsync()
     {
         await ResetSoftwareStatement();
-        
+
         await base.OnInitializedAsync();
     }
 
@@ -501,4 +501,8 @@ public partial class UdapBusinessToBusiness
                         AppState.BaseUrl == r.Value.ResourceServer)
             .ToImmutableDictionary();
     }
+
+    
+
 }
+

@@ -1,0 +1,41 @@
+﻿@using Udap.Model.UdapAuthenticationExtensions
+<MudForm @ref="form" Model="@hl7B2BModel">
+    <MudTextField @bind-Value="hl7B2BModel.Version" Label="Version" Required="true" />
+    <MudTextField @bind-Value="hl7B2BModel.SubjectName" Label="Subject Name" />
+    <MudTextField @bind-Value="hl7B2BModel.SubjectId" Label="Subject ID" />
+    <MudTextField @bind-Value="hl7B2BModel.SubjectRole" Label="Subject Role" />
+    <MudTextField @bind-Value="hl7B2BModel.OrganizationName" Label="Organization Name" />
+    <MudTextField @bind-Value="hl7B2BModel.OrganizationId" Label="Organization ID" Required="true" />
+    <MudTextField @bind-Value="newPurposeOfUse" Label="New Purpose of Use" />
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddPurposeOfUse">Add Purpose of Use</MudButton>
+    <MudChipSet T="string">
+        @foreach (var purpose in hl7B2BModel.PurposeOfUse)
+        {
+            <MudChip T="string" OnClose="() => RemovePurposeOfUse(purpose)" Closeable="true">@purpose</MudChip>
+        }
+    </MudChipSet>
+    <MudTextField @bind-Value="newConsentPolicy" Label="New Consent Policy" />
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddConsentPolicy">Add Consent Policy</MudButton>
+    <MudChipSet T="string">
+        @foreach (var policy in hl7B2BModel.ConsentPolicy)
+        {
+            <MudChip T="string" OnClose="() => RemoveConsentPolicy(policy)" Closeable="true">@policy</MudChip>
+        }
+    </MudChipSet>
+
+    <MudTextField @bind-Value="newConsentReference" Label="New Consent Reference" />
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddConsentReference">Add Consent Reference</MudButton>
+    <MudChipSet T="string">
+        @foreach (var reference in hl7B2BModel.ConsentReference)
+        {
+            <MudChip T="string" OnClose="() => RemoveConsentReference(reference)" Closeable="true">@reference</MudChip>
+        }
+    </MudChipSet>
+
+    <MudGrid Justify="Justify.FlexEnd">
+        <MudItem>
+            <MudButton OnClick="HandleRemove" Variant="Variant.Filled" Color="Color.Primary" Class="ma-2">&lt;= Remove</MudButton>
+            <MudButton OnClick="HandleInclude" Variant="Variant.Filled" Color="Color.Primary" Class="ma-2">Include =></MudButton>
+        </MudItem>
+    </MudGrid>
+</MudForm>
