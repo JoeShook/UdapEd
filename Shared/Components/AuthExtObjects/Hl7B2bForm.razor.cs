@@ -88,6 +88,7 @@ public partial class Hl7B2bForm
         await form.Validate();
         if (form.IsValid)
         {
+            Console.WriteLine(JsonSerializer.Serialize(hl7B2BModel, _jsonSerializerOptions));
             var b2bAuthExtensions = UpdateAppState("hl7-b2b", hl7B2BModel, true);
             await OnInclude.InvokeAsync(b2bAuthExtensions);
         }

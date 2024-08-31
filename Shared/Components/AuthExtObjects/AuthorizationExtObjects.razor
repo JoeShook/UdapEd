@@ -28,7 +28,9 @@
             </MudItem>
             <MudItem lg="6" md="12">
                 <MudText Align="Align.Right" Color="Color.Tertiary">Encoded</MudText>
-                <StandaloneCodeEditor @ref="_editor" Id="authExtObjectEditor" ConstructionOptions="EditorOptions" />
+                <StandaloneCodeEditor @ref="_editor" Id="authExtObjectEditor" 
+                                      ConstructionOptions="EditorOptions"
+                                      OnDidInit="EditorOnDidInit" />
             </MudItem>
         </MudGrid>
     </MudCardContent>

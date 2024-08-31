@@ -22,27 +22,30 @@ public partial class AuthorizationExtObjects
     public CascadingAppState AppState { get; set; } = null!;
     private StandaloneCodeEditor? _editor = null;
     private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions { WriteIndented = true };
-    private int _isEditorInitialized = 0;
+    private bool _isEditorInitialized;
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
     }
-    
-    protected override void OnAfterRender(bool firstRender)
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // Hacky, but can't figure out the lifecylce issue yet.
-        // Specifically if you reload the browser from a different page and 
-        // then navigate here.
-        if (_isEditorInitialized < 2 && AppState.AuthorizationExtObjects.Any())
+        if (_isEditorInitialized && AppState.AuthorizationExtObjects.Any())
         {
-            SetEditorValue();
+            await SetEditorValue();
         }
     }
 
-    private void SetEditorValue()
+    private async Task EditorOnDidInit()
+    {
+        Console.WriteLine(AppState.AuthorizationExtObjects.Any());
+        _isEditorInitialized = true;
+    }
+
+    private async Task SetEditorValue()
     {
         var b2bAuthExtensions = new Dictionary<string, B2BAuthorizationExtension>();
-        Console.WriteLine(AppState.AuthorizationExtObjects.Count);
+        
         foreach (var keyValuePair in AppState.AuthorizationExtObjects.Where(a => a.Value.Use))
         {
             if (!string.IsNullOrEmpty(keyValuePair.Value.Json))
@@ -56,9 +59,10 @@ public partial class AuthorizationExtObjects
         }
 
         var jsonExtObjects = JsonSerializer.Serialize(b2bAuthExtensions, _jsonSerializerOptions);
-        
-        _editor?.SetValue(jsonExtObjects);
-        _isEditorInitialized++;
+        if (_editor != null)
+        {
+            await InvokeAsync(() => _editor.SetValue(jsonExtObjects));
+        }
     }
 
     private StandaloneEditorConstructionOptions EditorOptions(StandaloneCodeEditor editor)
