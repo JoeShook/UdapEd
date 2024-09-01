@@ -11,7 +11,8 @@ public partial class Hl7B2bForm
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
     [Parameter] public EventCallback<Dictionary<string, B2BAuthorizationExtension>> OnInclude { get; set; }
     [Parameter] public EventCallback<Dictionary<string, B2BAuthorizationExtension>> OnRemove { get; set; }
-    
+    [Parameter] public string? Id { get; set; }
+
     private MudForm form;
     private B2BAuthorizationExtension hl7B2BModel = new B2BAuthorizationExtension();
     private string selectedPurposeOfUse;
@@ -20,7 +21,11 @@ public partial class Hl7B2bForm
     private string selectedConsentReference;
     private string newConsentPolicy;
     private string newConsentReference;
-    private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions { WriteIndented = true };
+    private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
+    {
+        WriteIndented = true,
+        Converters = { new B2BAuthorizationExtensionConverter() }
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -31,6 +36,9 @@ public partial class Hl7B2bForm
             hl7B2BModel = JsonSerializer.Deserialize<B2BAuthorizationExtension>(authExtObj.Value.Json) ??
                           new B2BAuthorizationExtension();
             Console.WriteLine("hl7B2BModel: " + JsonSerializer.Serialize(hl7B2BModel));
+            await Task.Delay(100);
+            StateHasChanged();
+            await Task.Delay(100);
         }
         else
         {
@@ -39,7 +47,7 @@ public partial class Hl7B2bForm
                 "{\"version\":\"1\",\"subject_id\":\"urn:oid:2.16.840.1.113883.4.6#1234567890\",\"organization_id\":\"https://fhirlabs.net/fhir/r4\",\"organization_name\":\"FhirLabs\",\"purpose_of_use\":[\"urn:oid:2.16.840.1.113883.5.8#TREAT\"]}");
         }
     }
-
+    
     private void AddPurposeOfUse()
     {
         if (!string.IsNullOrWhiteSpace(newPurposeOfUse) && !hl7B2BModel.PurposeOfUse.Contains(newPurposeOfUse))

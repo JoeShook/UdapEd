@@ -10,6 +10,7 @@
 using System.Text.Json;
 using BlazorMonaco.Editor;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using MudBlazor;
 using Udap.Model.UdapAuthenticationExtensions;
 using UdapEd.Shared.Model.AuthExtObjects;
@@ -18,10 +19,16 @@ namespace UdapEd.Shared.Components.AuthExtObjects;
 
 public partial class AuthorizationExtObjects
 {
+    [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
     [CascadingParameter]
     public CascadingAppState AppState { get; set; } = null!;
+    private MudTabs _tabs;
     private StandaloneCodeEditor? _editor = null;
-    private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions { WriteIndented = true };
+    private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
+    {
+        WriteIndented = true,
+        Converters = { new B2BAuthorizationExtensionConverter() }
+    };
     private bool _isEditorInitialized;
     protected override async Task OnInitializedAsync()
     {
@@ -38,7 +45,7 @@ public partial class AuthorizationExtObjects
 
     private async Task EditorOnDidInit()
     {
-        Console.WriteLine(AppState.AuthorizationExtObjects.Any());
+        await JsRuntime.InvokeVoidAsync("setMonacoEditorResize", _editor.Id);
         _isEditorInitialized = true;
     }
 
