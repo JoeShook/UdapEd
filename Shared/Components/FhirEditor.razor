@@ -96,6 +96,7 @@
         }
 
         await UpdateTheme();
+        await _editor.Layout(new Dimension() { Height = 600, Width = 200 });
         await JS.InvokeVoidAsync("setMonacoEditorResize", _editor.Id);
         await _editor.SetValue(_editorContent ?? string.Empty);
     }

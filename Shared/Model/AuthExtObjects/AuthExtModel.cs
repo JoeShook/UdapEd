@@ -11,5 +11,5 @@ namespace UdapEd.Shared.Model.AuthExtObjects;
 public class AuthExtModel
 {
     public bool Use { get; set; }
-    public string? Json { get; set; }
+    public string Json { get; set; }
 }

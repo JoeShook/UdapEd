@@ -45,6 +45,7 @@ public partial class AuthorizationExtObjects
 
     private async Task EditorOnDidInit()
     {
+        await _editor.Layout(new Dimension() { Height = 600, Width = 200});
         await JsRuntime.InvokeVoidAsync("setMonacoEditorResize", _editor.Id);
         _isEditorInitialized = true;
     }
@@ -87,6 +88,16 @@ public partial class AuthorizationExtObjects
     }
 
     private void HandleRemove(Dictionary<string, B2BAuthorizationExtension> b2bAuthExtensions)
+    {
+        _editor?.SetValue(JsonSerializer.Serialize(AppState.AuthorizationExtObjects, _jsonSerializerOptions));
+    }
+
+    private void HandleInclude(Dictionary<string, B2BUserAuthorizationExtension> b2bAuthExtensions)
+    {
+        _editor?.SetValue(JsonSerializer.Serialize(b2bAuthExtensions, _jsonSerializerOptions));
+    }
+
+    private void HandleRemove(Dictionary<string, B2BUserAuthorizationExtension> b2bAuthExtensions)
     {
         _editor?.SetValue(JsonSerializer.Serialize(AppState.AuthorizationExtObjects, _jsonSerializerOptions));
     }

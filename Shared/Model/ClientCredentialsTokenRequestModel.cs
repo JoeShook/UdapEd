@@ -14,4 +14,6 @@ public class ClientCredentialsTokenRequestModel
     public string? TokenEndpointUrl { get; set; }
 
     public string? Scope { get; set; }
+
+    public Dictionary<string, object> Extensions { get; set; }
 }
