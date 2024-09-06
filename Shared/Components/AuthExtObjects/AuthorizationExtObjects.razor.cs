@@ -27,7 +27,7 @@ public partial class AuthorizationExtObjects
     private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
     {
         WriteIndented = true,
-        Converters = { new B2BAuthorizationExtensionConverter() }
+        Converters = { new HL7B2BAuthorizationExtensionConverter() }
     };
     private bool _isEditorInitialized;
     protected override async Task OnInitializedAsync()
@@ -52,13 +52,13 @@ public partial class AuthorizationExtObjects
 
     private async Task SetEditorValue()
     {
-        var b2bAuthExtensions = new Dictionary<string, B2BAuthorizationExtension>();
+        var b2bAuthExtensions = new Dictionary<string, HL7B2BAuthorizationExtension>();
         
         foreach (var keyValuePair in AppState.AuthorizationExtObjects.Where(a => a.Value.Use))
         {
             if (!string.IsNullOrEmpty(keyValuePair.Value.Json))
             {
-                var b2bAuthExtension = JsonSerializer.Deserialize<B2BAuthorizationExtension>(keyValuePair.Value.Json, _jsonSerializerOptions);
+                var b2bAuthExtension = JsonSerializer.Deserialize<HL7B2BAuthorizationExtension>(keyValuePair.Value.Json, _jsonSerializerOptions);
                 if (b2bAuthExtension != null)
                 {
                     b2bAuthExtensions[keyValuePair.Key] = b2bAuthExtension;
@@ -82,22 +82,32 @@ public partial class AuthorizationExtObjects
         };
     }
 
-    private void HandleInclude(Dictionary<string, B2BAuthorizationExtension> b2bAuthExtensions)
+    private void HandleInclude(Dictionary<string, HL7B2BAuthorizationExtension> b2bAuthExtensions)
     {
         _editor?.SetValue(JsonSerializer.Serialize(b2bAuthExtensions, _jsonSerializerOptions));
     }
 
-    private void HandleRemove(Dictionary<string, B2BAuthorizationExtension> b2bAuthExtensions)
+    private void HandleRemove(Dictionary<string, HL7B2BAuthorizationExtension> b2bAuthExtensions)
     {
         _editor?.SetValue(JsonSerializer.Serialize(AppState.AuthorizationExtObjects, _jsonSerializerOptions));
     }
 
-    private void HandleInclude(Dictionary<string, B2BUserAuthorizationExtension> b2bAuthExtensions)
+    private void HandleInclude(Dictionary<string, HL7B2BUserAuthorizationExtension> b2bAuthExtensions)
     {
         _editor?.SetValue(JsonSerializer.Serialize(b2bAuthExtensions, _jsonSerializerOptions));
     }
 
-    private void HandleRemove(Dictionary<string, B2BUserAuthorizationExtension> b2bAuthExtensions)
+    private void HandleRemove(Dictionary<string, HL7B2BUserAuthorizationExtension> b2bAuthExtensions)
+    {
+        _editor?.SetValue(JsonSerializer.Serialize(AppState.AuthorizationExtObjects, _jsonSerializerOptions));
+    }
+
+    private void HandleInclude(Dictionary<string, TEFCAIASAuthorizationExtension> b2bAuthExtensions)
+    {
+        _editor?.SetValue(JsonSerializer.Serialize(b2bAuthExtensions, _jsonSerializerOptions));
+    }
+
+    private void HandleRemove(Dictionary<string, TEFCAIASAuthorizationExtension> b2bAuthExtensions)
     {
         _editor?.SetValue(JsonSerializer.Serialize(AppState.AuthorizationExtObjects, _jsonSerializerOptions));
     }

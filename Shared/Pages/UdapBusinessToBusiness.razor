@@ -28,9 +28,8 @@
                                   AppState.SetProperty(this, nameof(AppState.ClientRegistrations), AppState.ClientRegistrations, true, true);
                                   ClientSelectedInUi = registration; 
 
-                                  if (ScopeOverride.IsNullOrEmpty()) { ScopeOverride = registration.Scope; }
+                                  if (ScopeOverride.IsNullOrEmpty()) { ScopeOverride = registration?.Scope; }
                               }"/>
-
                       </MudItem>
 
                       <MudItem md="4" xs="12">
@@ -44,14 +43,15 @@
   <MudCard Class="pa-2 ma-2" Elevation="3">
             
       <MudExpansionPanels>
-          <MudExpansionPanel Text="Authorization Extension Objects" Typo="Typo.h5" Color="Color.Tertiary" IsInitiallyExpanded="false">
-                  
-              <AuthorizationExtObjects/>
-
-
+          <MudExpansionPanel IsInitiallyExpanded="false">
+              <TitleContent>
+                  <MudText Typo="Typo.h6" Color="Color.Primary">Authorization Extension Objects</MudText>
+              </TitleContent>
+              <ChildContent>
+                  <AuthorizationExtObjects/>
+              </ChildContent>
           </MudExpansionPanel>
       </MudExpansionPanels>
-
           
   </MudCard>
         @if (AppState.Oauth2Flow == Oauth2FlowEnum.client_credentials)

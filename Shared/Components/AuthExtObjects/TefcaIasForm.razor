@@ -1,28 +1,20 @@
 ﻿<MudForm @ref="form" Model="@hl7B2BModel" id="@Id">
-    
+
     <div style="display: flex; justify-content: flex-end;">
-        <MudText Color="Color.Tertiary">See FHIR Security IG (SSRAA) section 5.2.1.1</MudText>
-        <MudImage 
-            Class="cursor-pointer mud-ripple ma-2" 
-            Src="_content/UdapEd.Shared/images/hl7/icon-fhir-32.png" 
-            Alt="Fhir Icon" style="height: 36px; width: 36px; margin: 24px"
-            @onclick="@GoToFhirSecurityIG" />
+        <MudText Color="Color.Tertiary">See TEFCA Facilitated FHIR SOP Page 17</MudText>
+        <MudImage Width="158" Height="56"
+                  Class="cursor-pointer ma-2"
+                  Src="https://rce.sequoiaproject.org/wp-content/uploads/2023/10/rce-logo-gray.svg"
+                  Alt="Tefca Icon for Facilitated FHIR SOP"
+                  @onclick="@GoToTEFCAFacilitateFhirSOP" />
     </div>
 
     <MudTextField @bind-Value="hl7B2BModel.Version" Label="Version" Required="true" />
-    <MudTextField @bind-Value="hl7B2BModel.SubjectName" Label="Subject Name" />
-    <MudTextField @bind-Value="hl7B2BModel.SubjectId" Label="Subject ID" />
-    <MudTextField @bind-Value="hl7B2BModel.SubjectRole" Label="Subject Role" />
-    <MudTextField @bind-Value="hl7B2BModel.OrganizationName" Label="Organization Name" />
-    <MudTextField @bind-Value="hl7B2BModel.OrganizationId" Label="Organization ID" Required="true" />
     <MudTextField @bind-Value="newPurposeOfUse" Label="New Purpose of Use" />
-    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddPurposeOfUse">Add Purpose of Use</MudButton>
-    <MudChipSet T="string">
-        @foreach (var purpose in hl7B2BModel.PurposeOfUse)
-        {
-            <MudChip T="string" OnClose="() => RemovePurposeOfUse(purpose)" Closeable="true">@purpose</MudChip>
-        }
-    </MudChipSet>
+    <MudTextField @bind-Value="hl7B2BModel.PurposeOfUse" Label="Purpose of Use" Required="true" />
+    <MudTextField @bind-Value="hl7B2BModel.UserInformation" Label="FHIR Person" Required="true" />
+    <MudTextField @bind-Value="hl7B2BModel.PatientInformation" Label="FHIR Person" Required="true" />
+    <MudTextField @bind-Value="hl7B2BModel.IalVetted" Label="IA Vetted" />
     <MudTextField @bind-Value="newConsentPolicy" Label="New Consent Policy" />
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddConsentPolicy">Add Consent Policy</MudButton>
     <MudChipSet T="string">
@@ -40,6 +32,7 @@
             <MudChip T="string" OnClose="() => RemoveConsentReference(reference)" Closeable="true">@reference</MudChip>
         }
     </MudChipSet>
+    <MudTextField @bind-Value="hl7B2BModel.IdToken" Label="Id Token" />
 
     <MudGrid Justify="Justify.FlexEnd">
         <MudItem>
@@ -48,3 +41,7 @@
         </MudItem>
     </MudGrid>
 </MudForm>
+
+@code {
+
+}

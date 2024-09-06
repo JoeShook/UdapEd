@@ -1,6 +1,8 @@
 ﻿using System.Text.Json;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using MudBlazor;
+using Udap.Model;
 using Udap.Model.UdapAuthenticationExtensions;
 using UdapEd.Shared.Model.AuthExtObjects;
 
@@ -8,13 +10,14 @@ namespace UdapEd.Shared.Components.AuthExtObjects;
 
 public partial class Hl7B2bForm
 {
+    [Inject] private IJSRuntime JSRuntime { get; set; }
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
-    [Parameter] public EventCallback<Dictionary<string, B2BAuthorizationExtension>> OnInclude { get; set; }
-    [Parameter] public EventCallback<Dictionary<string, B2BAuthorizationExtension>> OnRemove { get; set; }
+    [Parameter] public EventCallback<Dictionary<string, HL7B2BAuthorizationExtension>> OnInclude { get; set; }
+    [Parameter] public EventCallback<Dictionary<string, HL7B2BAuthorizationExtension>> OnRemove { get; set; }
     [Parameter] public string? Id { get; set; }
 
     private MudForm form;
-    private B2BAuthorizationExtension hl7B2BModel = new B2BAuthorizationExtension();
+    private HL7B2BAuthorizationExtension hl7B2BModel = new HL7B2BAuthorizationExtension();
     private string selectedPurposeOfUse;
     private string newPurposeOfUse;
     private string selectedConsentPolicy;
@@ -24,17 +27,17 @@ public partial class Hl7B2bForm
     private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
     {
         WriteIndented = true,
-        Converters = { new B2BAuthorizationExtensionConverter() }
+        Converters = { new HL7B2BAuthorizationExtensionConverter() }
     };
 
     protected override async Task OnInitializedAsync()
     {
-        var authExtObj = AppState.AuthorizationExtObjects.SingleOrDefault(a => a.Key == "hl7-b2b");
+        var authExtObj = AppState.AuthorizationExtObjects.SingleOrDefault(a => a.Key == UdapConstants.UdapAuthorizationExtensions.Hl7B2B);
 
         if (authExtObj.Key != null && authExtObj.Value != null && !string.IsNullOrEmpty(authExtObj.Value.Json))
         {
-            hl7B2BModel = JsonSerializer.Deserialize<B2BAuthorizationExtension>(authExtObj.Value.Json) ??
-                          new B2BAuthorizationExtension();
+            hl7B2BModel = JsonSerializer.Deserialize<HL7B2BAuthorizationExtension>(authExtObj.Value.Json) ??
+                          new HL7B2BAuthorizationExtension();
             Console.WriteLine("hl7B2BModel: " + JsonSerializer.Serialize(hl7B2BModel));
             await Task.Delay(100);
             StateHasChanged();
@@ -43,7 +46,7 @@ public partial class Hl7B2bForm
         else
         {
             // default starter template
-            hl7B2BModel = JsonSerializer.Deserialize<B2BAuthorizationExtension>(
+            hl7B2BModel = JsonSerializer.Deserialize<HL7B2BAuthorizationExtension>(
                 "{\"version\":\"1\",\"subject_id\":\"urn:oid:2.16.840.1.113883.4.6#1234567890\",\"organization_id\":\"https://fhirlabs.net/fhir/r4\",\"organization_name\":\"FhirLabs\",\"purpose_of_use\":[\"urn:oid:2.16.840.1.113883.5.8#TREAT\"]}");
         }
     }
@@ -96,18 +99,18 @@ public partial class Hl7B2bForm
         await form.Validate();
         if (form.IsValid)
         {
-            var b2bAuthExtensions = UpdateAppState("hl7-b2b", hl7B2BModel, true);
+            var b2bAuthExtensions = UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2B, hl7B2BModel, true);
             await OnInclude.InvokeAsync(b2bAuthExtensions);
         }
     }
 
     private async Task HandleRemove()
     {
-        var b2bAuthExtensions = UpdateAppState("hl7-b2b", hl7B2BModel, false);
+        var b2bAuthExtensions = UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2B, hl7B2BModel, false);
         await OnRemove.InvokeAsync(b2bAuthExtensions);
     }
 
-    private Dictionary<string, B2BAuthorizationExtension> UpdateAppState(string key, B2BAuthorizationExtension model, bool use)
+    private Dictionary<string, HL7B2BAuthorizationExtension> UpdateAppState(string key, HL7B2BAuthorizationExtension model, bool use)
     {
         var jsonString = JsonSerializer.Serialize(model, _jsonSerializerOptions);
 
@@ -131,8 +134,13 @@ public partial class Hl7B2bForm
             .Where(a => a.Value.Use)
             .ToDictionary(
                 a => a.Key,
-                a => JsonSerializer.Deserialize<B2BAuthorizationExtension>(a.Value.Json, _jsonSerializerOptions)
+                a => JsonSerializer.Deserialize<HL7B2BAuthorizationExtension>(a.Value.Json, _jsonSerializerOptions)
             );
 
+    }
+
+    private async Task GoToFhirSecurityIG()
+    {
+        await JSRuntime.InvokeVoidAsync("open", "https://hl7.org/fhir/us/udap-security/b2b.html#b2b-authorization-extension-object", "_blank");
     }
 }

@@ -16,16 +16,15 @@ using Udap.Model.UdapAuthenticationExtensions;
 using UdapEd.Shared.Model.AuthExtObjects;
 
 namespace UdapEd.Shared.Components.AuthExtObjects;
-
-public partial class Hl7B2bUserForm
+public partial class TefcaIasForm
 {
     [Inject] private IJSRuntime JSRuntime { get; set; }
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
-    [Parameter] public EventCallback<Dictionary<string, HL7B2BUserAuthorizationExtension>> OnInclude { get; set; }
-    [Parameter] public EventCallback<Dictionary<string, HL7B2BUserAuthorizationExtension>> OnRemove { get; set; }
+    [Parameter] public EventCallback<Dictionary<string, TEFCAIASAuthorizationExtension>> OnInclude { get; set; }
+    [Parameter] public EventCallback<Dictionary<string, TEFCAIASAuthorizationExtension>> OnRemove { get; set; }
     [Parameter] public string? Id { get; set; }
     private MudForm form;
-    private HL7B2BUserAuthorizationExtension hl7B2BModel = new HL7B2BUserAuthorizationExtension();
+    private TEFCAIASAuthorizationExtension hl7B2BModel = new TEFCAIASAuthorizationExtension();
     private string selectedPurposeOfUse;
     private string newPurposeOfUse;
     private string selectedConsentPolicy;
@@ -35,17 +34,17 @@ public partial class Hl7B2bUserForm
     private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
     {
         WriteIndented = true,
-        Converters = { new HL7B2BUserAuthorizationExtensionConverter() }
+        Converters = { new TEFCAIASAuthorizationExtensionConverter() }
     };
 
     protected override async Task OnInitializedAsync()
     {
-        var authExtObj = AppState.AuthorizationExtObjects.SingleOrDefault(a => a.Key == UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER);
+        var authExtObj = AppState.AuthorizationExtObjects.SingleOrDefault(a => a.Key == UdapConstants.UdapAuthorizationExtensions.TEFCAIAS);
 
         if (authExtObj.Key != null && authExtObj.Value != null && !string.IsNullOrEmpty(authExtObj.Value.Json))
         {
-            hl7B2BModel = JsonSerializer.Deserialize<HL7B2BUserAuthorizationExtension>(authExtObj.Value.Json) ??
-                          new HL7B2BUserAuthorizationExtension();
+            hl7B2BModel = JsonSerializer.Deserialize<TEFCAIASAuthorizationExtension>(authExtObj.Value.Json) ??
+                          new TEFCAIASAuthorizationExtension();
             Console.WriteLine("hl7B2BModel: " + JsonSerializer.Serialize(hl7B2BModel));
             await Task.Delay(100);
             StateHasChanged();
@@ -54,45 +53,11 @@ public partial class Hl7B2bUserForm
         else
         {
             // default starter template
-            hl7B2BModel = JsonSerializer.Deserialize<HL7B2BUserAuthorizationExtension>(
+            hl7B2BModel = JsonSerializer.Deserialize<TEFCAIASAuthorizationExtension>(
                 "{\"version\":\"1\",\"subject_id\":\"urn:oid:2.16.840.1.113883.4.6#1234567890\",\"organization_id\":\"https://fhirlabs.net/fhir/r4\",\"organization_name\":\"FhirLabs\",\"purpose_of_use\":[\"urn:oid:2.16.840.1.113883.5.8#TREAT\"]}");
         }
     }
-
-    private void AddPurposeOfUse()
-    {
-        if (!string.IsNullOrWhiteSpace(newPurposeOfUse) && !hl7B2BModel.PurposeOfUse.Contains(newPurposeOfUse))
-        {
-            hl7B2BModel.PurposeOfUse.Add(newPurposeOfUse);
-            newPurposeOfUse = string.Empty;
-        }
-    }
-
-    private async Task RemovePurposeOfUse(string purpose)
-    {
-        if (hl7B2BModel.PurposeOfUse != null)
-        {
-            purpose = purpose.Trim();
-            Console.WriteLine("Attempting to remove purpose: " + purpose);
-            Console.WriteLine("Current purposes: " + string.Join(", ", hl7B2BModel.PurposeOfUse));
-            Console.WriteLine("List reference before removal: " + hl7B2BModel.PurposeOfUse.GetHashCode());
-
-            // Directly manipulate the list
-            hl7B2BModel.PurposeOfUse = hl7B2BModel.PurposeOfUse
-                .Where(p => !p.Equals(purpose, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            Console.WriteLine("Updated purposes: " + string.Join(", ", hl7B2BModel.PurposeOfUse));
-            Console.WriteLine("List reference after removal: " + hl7B2BModel.PurposeOfUse.GetHashCode());
-
-            await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, hl7B2BModel, true);
-            StateHasChanged();
-        }
-        else
-        {
-            Console.WriteLine("PurposeOfUse list is null.");
-        }
-    }
+    
 
     private void AddConsentPolicy()
     {
@@ -107,7 +72,7 @@ public partial class Hl7B2bUserForm
     {
         var remove = hl7B2BModel.ConsentPolicy?.Remove(policy);
         Console.WriteLine("Removed: " + remove);
-        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, hl7B2BModel, true);
+        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.TEFCAIAS, hl7B2BModel, true);
         StateHasChanged();
         await Task.Delay(100);
     }
@@ -125,7 +90,7 @@ public partial class Hl7B2bUserForm
     private async Task RemoveConsentReference(string reference)
     {
         hl7B2BModel.ConsentReference?.Remove(reference);
-        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, hl7B2BModel, true);
+        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.TEFCAIAS, hl7B2BModel, true);
         StateHasChanged();
     }
 
@@ -134,21 +99,21 @@ public partial class Hl7B2bUserForm
         await form.Validate();
         if (form.IsValid)
         {
-            var b2bAuthExtensions = await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, hl7B2BModel, true);
+            var b2bAuthExtensions = await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.TEFCAIAS, hl7B2BModel, true);
             await OnInclude.InvokeAsync(b2bAuthExtensions);
         }
     }
 
     private async Task HandleRemove()
     {
-        var b2bAuthExtensions = await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, hl7B2BModel, false);
+        var b2bAuthExtensions = await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.TEFCAIAS, hl7B2BModel, false);
         await OnRemove.InvokeAsync(b2bAuthExtensions);
     }
 
-    private async Task<Dictionary<string, HL7B2BUserAuthorizationExtension>> UpdateAppState(string key, HL7B2BUserAuthorizationExtension model, bool use)
+    private async Task<Dictionary<string, TEFCAIASAuthorizationExtension>> UpdateAppState(string key, TEFCAIASAuthorizationExtension model, bool use)
     {
         var jsonString = model.SerializeToJson(true);
-        
+
         if (AppState.AuthorizationExtObjects.ContainsKey(key))
         {
             AppState.AuthorizationExtObjects[key].Json = jsonString;
@@ -169,14 +134,14 @@ public partial class Hl7B2bUserForm
             .Where(a => a.Value.Use)
             .ToDictionary(
                 a => a.Key,
-                a => JsonSerializer.Deserialize<HL7B2BUserAuthorizationExtension>(a.Value.Json, _jsonSerializerOptions)
+                a => JsonSerializer.Deserialize<TEFCAIASAuthorizationExtension>(a.Value.Json, _jsonSerializerOptions)
             );
-        
+
         return updatedState;
     }
 
-    private async Task GoToFhirIdentityMatchingIG()
+    private async Task GoToTEFCAFacilitateFhirSOP()
     {
-        await JSRuntime.InvokeVoidAsync("open", "https://build.fhir.org/ig/HL7/fhir-identity-matching-ig/patient-matching.html#consumer-match", "_blank");
+        await JSRuntime.InvokeVoidAsync("open", "https://rce.sequoiaproject.org/wp-content/uploads/2024/07/SOP-Facilitated-FHIR-Implementation_508-1.pdf#page=17", "_blank");
     }
 }
