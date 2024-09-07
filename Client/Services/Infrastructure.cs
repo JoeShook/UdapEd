@@ -7,6 +7,7 @@
 // */
 #endregion
 
+using System.IO.Compression;
 using UdapEd.Shared.Services;
 
 namespace UdapEd.Client.Services;
@@ -29,5 +30,19 @@ public class Infrastructure : IInfrastructure
        }
 
        return string.Empty;
+    }
+
+    public async Task<byte[]> BuildMyTestCertificatePackage(List<string> subjAltNames)
+    {
+        var queryString = string.Join("&", subjAltNames.Select(name => $"subjAltNames={Uri.EscapeDataString(name)}"));
+        var response = await _httpClient.GetAsync($"Infrastructure/BuildMyTestCertificatePackage?{queryString}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var contentBase64 = await response.Content.ReadAsStringAsync();
+            return Convert.FromBase64String(contentBase64);
+        }
+
+        return new byte[] { };
     }
 }

@@ -126,23 +126,11 @@ public class AccessController : Controller
             tokenRequestModel.TokenEndpointUrl,
             clientCert);
 
-        var b2bHl7 = new B2BAuthorizationExtension()
+        foreach (var extension in tokenRequestModel.Extensions)
         {
-            SubjectId = "urn:oid:2.16.840.1.113883.4.6#1234567890",
-            OrganizationId = new Uri("https://fhirlabs.net/fhir/r4").OriginalString,
-            OrganizationName = "FhirLabs",
-            PurposeOfUse = new List<string>
-            {
-                "urn:oid:2.16.840.1.113883.5.8#TREAT"
-            }
-            // },
-            // ConsentReference = new HashSet<string>{
-            //     "https://fhirlabs.net/fhir/r4"
-            // }
-        };
-        tokenRequestBuilder.WithExtension("hl7-b2b", b2bHl7);
-
-
+            tokenRequestBuilder.WithExtension(extension.Key, extension.Value);
+        }
+        
         if (tokenRequestModel.Scope != null)
         {
             tokenRequestBuilder.WithScope(tokenRequestModel.Scope);

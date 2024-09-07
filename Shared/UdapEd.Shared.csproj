@@ -14,8 +14,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Udap.Model" Version="0.3.59" />
-    <PackageReference Include="Udap.Common" Version="0.3.59" />
+    <PackageReference Include="Udap.Model" Version="0.3.72" />
+    <PackageReference Include="Udap.Common" Version="0.3.72" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,13 +23,14 @@
     <PackageReference Include="BlazorMonaco" Version="3.2.0" IncludeAssets="all" />
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="BQuery" Version="3.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.7" />
+    <PackageReference Include="Google.Cloud.Storage.V1" Version="4.10.0" />
+    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.8" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
-    <PackageReference Include="MudBlazor" Version="7.5.0" />
-    <PackageReference Include="Udap.Smart.Model" Version="0.3.59" />
+    <PackageReference Include="MudBlazor" Version="7.8.0" />
+    <PackageReference Include="Udap.Smart.Model" Version="0.3.72" />
 
-    <PackageReference Include="Microsoft.AspNetCore.Components" Version="8.0.7" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="8.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.8" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,8 +38,12 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseMauiEssentials)' != 'false'">
-    <PackageReference Include="Microsoft.Maui.Essentials" Version="8.0.71" />
+    <PackageReference Include="Microsoft.Maui.Essentials" Version="8.0.82" />
   </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFrameworks)' != 'net8.0'">
+  <PackageReference Include="CommunityToolkit.Maui" Version="9.0.3" />
+</ItemGroup>
 
   <ItemGroup>
     <Content Update="wwwroot\CapabilityStatement-national-directory-api-server.json">

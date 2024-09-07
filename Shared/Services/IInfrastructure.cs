@@ -11,4 +11,5 @@ namespace UdapEd.Shared.Services;
 public interface IInfrastructure
 {
     Task<string> GetMyIp();
+    Task<byte[]> BuildMyTestCertificatePackage(List<string> subjAltNames);
 }

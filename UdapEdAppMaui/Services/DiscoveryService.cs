@@ -45,8 +45,7 @@ internal class DiscoveryService : IDiscoveryService
     }
 
 
-    public async Task<MetadataVerificationModel?> GetUdapMetadataVerificationModel(string metadataUrl, string? community,
-        CancellationToken token)
+    public async Task<MetadataVerificationModel?> GetUdapMetadataVerificationModel(string metadataUrl, string? community, CancellationToken token)
     {
         try
         {
@@ -70,23 +69,35 @@ internal class DiscoveryService : IDiscoveryService
                         }
                     };
 
-
-                    _udapClient.Problem += element =>
-                        result.Notifications.Add(
-                            element.ChainElementStatus.Summarize(TrustChainValidator.DefaultProblemFlags));
-                    _udapClient.Untrusted += certificate2 =>
+                    // Local functions to handle events
+                    void OnProblem(X509ChainElement element) =>
+                        result.Notifications.Add(element.ChainElementStatus.Summarize(TrustChainValidator.DefaultProblemFlags));
+                    void OnUntrusted(X509Certificate2 certificate2) =>
                         result.Notifications.Add("Untrusted: " + certificate2.Subject);
-                    _udapClient.TokenError += message => result.Notifications.Add("TokenError: " + message);
+                    void OnTokenError(string message) =>
+                        result.Notifications.Add("TokenError: " + message);
 
-                    await _udapClient.ValidateResource(
-                        metadataUrl,
-                        trustAnchorStore,
-                        community, token: token);
+                    // Register event handlers
+                    _udapClient.Problem += OnProblem;
+                    _udapClient.Untrusted += OnUntrusted;
+                    _udapClient.TokenError += OnTokenError;
 
-                    result.UdapServerMetaData = _udapClient.UdapServerMetaData;
-                    await SecureStorage.Default.SetAsync(UdapEdConstants.BASE_URL, metadataUrl);
+                    try
+                    {
+                        await _udapClient.ValidateResource(metadataUrl, trustAnchorStore, community, token: token);
 
-                    return result;
+                        result.UdapServerMetaData = _udapClient.UdapServerMetaData;
+                        await SecureStorage.Default.SetAsync(UdapEdConstants.BASE_URL, metadataUrl);
+
+                        return result;
+                    }
+                    finally
+                    {
+                        // Unregister event handlers
+                        _udapClient.Problem -= OnProblem;
+                        _udapClient.Untrusted -= OnUntrusted;
+                        _udapClient.TokenError -= OnTokenError;
+                    }
                 }
 
                 _logger.LogError("Missing anchor");
@@ -150,7 +161,7 @@ internal class DiscoveryService : IDiscoveryService
 
     public async Task<CertificateStatusViewModel?> UploadAnchorCertificate(string base64String)
     {
-        var result = new CertificateStatusViewModel { CertLoaded = CertLoadedEnum.Negative };
+        var result = new CertificateStatusViewModel { CertLoaded = CertLoadedEnum.Negative, UserSuppliedCertificate = true };
 
         try
         {
@@ -188,6 +199,7 @@ internal class DiscoveryService : IDiscoveryService
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
+            result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
             await SecureStorage.Default.SetAsync(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE, Convert.ToBase64String(certBytes));
 
             return result;
@@ -217,6 +229,7 @@ internal class DiscoveryService : IDiscoveryService
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
+            result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
             await SecureStorage.Default.SetAsync(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE, Convert.ToBase64String(certBytes));
 
             return result;
@@ -250,6 +263,7 @@ internal class DiscoveryService : IDiscoveryService
                 result.DistinguishedName = certificate.SubjectName.Name;
                 result.Thumbprint = certificate.Thumbprint;
                 result.CertLoaded = CertLoadedEnum.Positive;
+                result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
             }
             else
             {

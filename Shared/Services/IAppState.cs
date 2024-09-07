@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Components;
 using Udap.Model.Registration;
 using UdapEd.Shared.Model;
+using UdapEd.Shared.Model.AuthExtObjects;
 using UdapEd.Shared.Model.Discovery;
 using UdapEd.Shared.Model.Smart;
 
@@ -60,6 +61,7 @@ public interface IAppState
 
     PatientSearchPref? PatientSearchPref { get; }
 
+    public Dictionary<string, AuthExtModel> AuthorizationExtObjects { get; }
 
     Task SetPropertyAsync(
         ComponentBase caller,

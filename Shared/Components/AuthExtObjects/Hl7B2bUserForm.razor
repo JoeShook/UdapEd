@@ -1,0 +1,46 @@
+﻿<MudForm @ref="form" Model="@hl7B2BModel" id="@Id">
+    
+    <div style="display: flex; justify-content: flex-end;">
+        <MudText Color="Color.Tertiary">See Interoperable Digital Identity and Patient Matching Section 3.2.2</MudText>
+        <MudImage 
+            Class="cursor-pointer mud-ripple ma-2" 
+            Src="_content/UdapEd.Shared/images/hl7/icon-fhir-32.png" 
+            Alt="Fhir Icon" style="height: 36px; width: 36px; margin: 24px"
+            @onclick="@GoToFhirIdentityMatchingIG" />
+    </div>
+
+    <MudTextField @bind-Value="hl7B2BModel.Version" Label="Version" Required="true"/>
+    <MudTextField @bind-Value="hl7B2BModel.UserPerson" Label="FHIR Person"/>
+    <MudTextField @bind-Value="newPurposeOfUse" Label="New Purpose of Use"/>
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddPurposeOfUse">Add Purpose of Use</MudButton>
+    <MudChipSet T="string">
+        @foreach (var purpose in hl7B2BModel.PurposeOfUse)
+        {
+            <MudChip T="string" OnClose="() => RemovePurposeOfUse(purpose)" Closeable="true">@purpose</MudChip>
+        }
+    </MudChipSet>
+    <MudTextField @bind-Value="newConsentPolicy" Label="New Consent Policy"/>
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddConsentPolicy">Add Consent Policy</MudButton>
+    <MudChipSet T="string">
+        @foreach (var policy in hl7B2BModel.ConsentPolicy)
+        {
+            <MudChip T="string" OnClose="() => RemoveConsentPolicy(policy)" Closeable="true">@policy</MudChip>
+        }
+    </MudChipSet>
+
+    <MudTextField @bind-Value="newConsentReference" Label="New Consent Reference"/>
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddConsentReference">Add Consent Reference</MudButton>
+    <MudChipSet T="string">
+        @foreach (var reference in hl7B2BModel.ConsentReference)
+        {
+            <MudChip T="string" OnClose="() => RemoveConsentReference(reference)" Closeable="true">@reference</MudChip>
+        }
+    </MudChipSet>
+
+    <MudGrid Justify="Justify.FlexEnd">
+        <MudItem>
+            <MudButton OnClick="HandleRemove" Variant="Variant.Filled" Color="Color.Primary" Class="ma-2">&lt;= Remove</MudButton>
+            <MudButton OnClick="HandleInclude" Variant="Variant.Filled" Color="Color.Primary" Class="ma-2">Include =></MudButton>
+        </MudItem>
+    </MudGrid>
+</MudForm>

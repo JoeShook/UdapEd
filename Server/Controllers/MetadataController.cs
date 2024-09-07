@@ -176,7 +176,7 @@ public class MetadataController : Controller
     [HttpPost("UploadAnchorCertificate")]
     public IActionResult UploadAnchorCertificate([FromBody] string base64String)
     {
-        var result =  new CertificateStatusViewModel { CertLoaded = CertLoadedEnum.Negative };
+        var result =  new CertificateStatusViewModel { CertLoaded = CertLoadedEnum.Negative, UserSuppliedCertificate = true};
 
         try
         {
@@ -185,6 +185,7 @@ public class MetadataController : Controller
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
+            result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
             HttpContext.Session.SetString(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE, base64String);
 
             return Ok(result);
@@ -213,6 +214,7 @@ public class MetadataController : Controller
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
+            result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
             HttpContext.Session.SetString(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE, Convert.ToBase64String(certBytes));
 
             return Ok(result);
@@ -246,6 +248,7 @@ public class MetadataController : Controller
                 result.DistinguishedName = certificate.SubjectName.Name;
                 result.Thumbprint = certificate.Thumbprint;
                 result.CertLoaded = CertLoadedEnum.Positive;
+                result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
             }
             else
             {

@@ -38,7 +38,7 @@ builder.Services.AddScoped<IRegisterService, RegisterService>();
 builder.Services.AddScoped<IDiscoveryService, DiscoveryService>();
 builder.Services.AddScoped<IAccessService, AccessService>();
 builder.Services.AddScoped<IFhirService, FhirService>();
-builder.Services.AddScoped<IInfrastructure, Infrastructure>();
+builder.Services.AddScoped<IInfrastructure, UdapEd.Client.Services.Infrastructure>();
 builder.Services.AddSingleton<ICapabilityLookup, CapabilityLookup>();
 builder.Services.AddScoped<IClipboardService, ClipboardService>();
 builder.Services.AddScoped<IMutualTlsService, MutualTlsService>();

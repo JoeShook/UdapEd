@@ -10,6 +10,7 @@
 using System.Net;
 using System.Reflection;
 using Blazored.LocalStorage;
+using CommunityToolkit.Maui;
 using Hl7.Fhir.Rest;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -56,7 +57,7 @@ public static class MauiProgram
     public static MauiApp CreateMauiApp()
     {
         var builder = MauiApp.CreateBuilder();
-
+        builder.UseMauiCommunityToolkit();
         var flushInterval = new TimeSpan(0, 0, 1);
         var file = Path.Combine(FileSystem.AppDataDirectory, "UdapEdAppMaui.log");
 

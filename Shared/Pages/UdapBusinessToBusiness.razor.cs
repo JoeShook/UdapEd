@@ -9,7 +9,9 @@
 
 using System.Collections.Immutable;
 using System.IdentityModel.Tokens.Jwt;
+
 using System.Text;
+
 using IdentityModel;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -116,7 +118,7 @@ public partial class UdapBusinessToBusiness
     protected override async Task OnInitializedAsync()
     {
         await ResetSoftwareStatement();
-        
+
         await base.OnInitializedAsync();
     }
 
@@ -326,6 +328,15 @@ public partial class UdapBusinessToBusiness
                 Scope = ScopeOverride.IsNullOrEmpty() ? TokenRequestScope?.Replace("scope=", "").TrimEnd('&').Trim() : ScopeOverride
             };
 
+            var extensions = AppState.AuthorizationExtObjects.Where(a => a.Value.Use).ToList();
+
+            if (extensions.Any())
+            {
+                tokenRequestModel.Extensions = PayloadSerializer.Deserialize(extensions.ToDictionary(
+                    ext => ext.Key, 
+                    ext => ext.Value.Json));
+            }
+
             var requestToken = await AccessService
                 .BuildRequestAccessTokenForClientCredentials(tokenRequestModel, _signingAlgorithm);
 
@@ -501,4 +512,8 @@ public partial class UdapBusinessToBusiness
                         AppState.BaseUrl == r.Value.ResourceServer)
             .ToImmutableDictionary();
     }
+
+    
+
 }
+

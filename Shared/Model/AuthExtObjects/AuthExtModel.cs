@@ -7,13 +7,9 @@
 // */
 #endregion
 
-using UdapEd.Shared.Services;
-
-namespace UdapEdAppMaui.Services;
-internal class Infrastructure : IInfrastructure
+namespace UdapEd.Shared.Model.AuthExtObjects;
+public class AuthExtModel
 {
-    public Task<string> GetMyIp()
-    {
-       return Task.FromResult("0.0.0.0");
-    }
+    public bool Use { get; set; }
+    public string Json { get; set; }
 }

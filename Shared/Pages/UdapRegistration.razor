@@ -1,6 +1,4 @@
 ﻿@page "/udapRegistration"
-@using UdapEd.Shared
-@using UdapEd.Shared.Components
 @using UdapEd.Shared.Extensions
 
 <ErrorBoundary @ref="ErrorBoundary">
@@ -114,7 +112,7 @@
                                AdornmentIcon="@Icons.Material.Outlined.ArrowDropDown"
                                AdornmentColor="Color.Primary"
                                Variant="Variant.Outlined" 
-                               Error="SubjectAltName == null">
+                               Error="@string.IsNullOrEmpty(SubjectAltName)">
 
                         @foreach (var item in AppState.UdapClientCertificateInfo.SubjectAltNames)
                         {
