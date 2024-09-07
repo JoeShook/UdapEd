@@ -22,7 +22,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.8" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.8" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
-    <PackageReference Include="MudBlazor" Version="7.6.0" />
+    <PackageReference Include="MudBlazor" Version="7.8.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Udap.Common" Version="0.3.71" />
+    <PackageReference Include="Udap.Common" Version="0.3.72" />
   </ItemGroup>
 
   <!-- From:: https://jonhilton.net/visual-studio-2022-blazor-css-intellisense/ -->

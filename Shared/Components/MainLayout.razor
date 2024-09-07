@@ -5,7 +5,17 @@
 <MudPopoverProvider />
 <MudLayout>
     <Toolbar />
-    <MudMainContent Style="font-family: Candara" Class="px-8" MaxWidth="MaxWidth.False">
-        @Body
-  </MudMainContent>
+    
+    @if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsMacCatalyst() || OperatingSystem.IsWindows())
+    {
+        <MudMainContent Style="font-family: Candara" Class="px-8 mb-20" MaxWidth="MaxWidth.False">
+            @Body
+        </MudMainContent>
+    }
+    else
+    {
+        <MudMainContent Style="font-family: Candara" Class="px-8" MaxWidth="MaxWidth.False">
+            @Body
+        </MudMainContent>
+    }
 </MudLayout>

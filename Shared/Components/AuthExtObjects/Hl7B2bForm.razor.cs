@@ -26,8 +26,7 @@ public partial class Hl7B2bForm
     private string newConsentReference;
     private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
     {
-        WriteIndented = true,
-        Converters = { new HL7B2BAuthorizationExtensionConverter() }
+        WriteIndented = true
     };
 
     protected override async Task OnInitializedAsync()
@@ -38,10 +37,6 @@ public partial class Hl7B2bForm
         {
             hl7B2BModel = JsonSerializer.Deserialize<HL7B2BAuthorizationExtension>(authExtObj.Value.Json) ??
                           new HL7B2BAuthorizationExtension();
-            Console.WriteLine("hl7B2BModel: " + JsonSerializer.Serialize(hl7B2BModel));
-            await Task.Delay(100);
-            StateHasChanged();
-            await Task.Delay(100);
         }
         else
         {
@@ -50,7 +45,17 @@ public partial class Hl7B2bForm
                 "{\"version\":\"1\",\"subject_id\":\"urn:oid:2.16.840.1.113883.4.6#1234567890\",\"organization_id\":\"https://fhirlabs.net/fhir/r4\",\"organization_name\":\"FhirLabs\",\"purpose_of_use\":[\"urn:oid:2.16.840.1.113883.5.8#TREAT\"]}");
         }
     }
-    
+    public void Update()
+    {
+        var authExtObj = AppState.AuthorizationExtObjects.SingleOrDefault(a => a.Key == UdapConstants.UdapAuthorizationExtensions.Hl7B2B);
+
+        if (authExtObj.Key != null && authExtObj.Value != null && !string.IsNullOrEmpty(authExtObj.Value.Json))
+        {
+            hl7B2BModel = JsonSerializer.Deserialize<HL7B2BAuthorizationExtension>(authExtObj.Value.Json) ??
+                          new HL7B2BAuthorizationExtension();
+        }
+    }
+
     private void AddPurposeOfUse()
     {
         if (!string.IsNullOrWhiteSpace(newPurposeOfUse) && !hl7B2BModel.PurposeOfUse.Contains(newPurposeOfUse))
@@ -76,7 +81,7 @@ public partial class Hl7B2bForm
 
     private void RemoveConsentPolicy(string policy)
     {
-        hl7B2BModel.ConsentPolicy.Remove(policy);
+        hl7B2BModel.ConsentPolicy?.Remove(policy);
     }
 
     private void AddConsentReference()

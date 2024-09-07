@@ -10,7 +10,6 @@
     </div>
 
     <MudTextField @bind-Value="hl7B2BModel.Version" Label="Version" Required="true" />
-    <MudTextField @bind-Value="newPurposeOfUse" Label="New Purpose of Use" />
     <MudTextField @bind-Value="hl7B2BModel.PurposeOfUse" Label="Purpose of Use" Required="true" />
     <MudTextField @bind-Value="hl7B2BModel.UserInformation" Label="FHIR Person" Required="true" />
     <MudTextField @bind-Value="hl7B2BModel.PatientInformation" Label="FHIR Person" Required="true" />
@@ -41,7 +40,3 @@
         </MudItem>
     </MudGrid>
 </MudForm>
-
-@code {
-
-}

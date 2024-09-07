@@ -25,16 +25,14 @@ public partial class TefcaIasForm
     [Parameter] public string? Id { get; set; }
     private MudForm form;
     private TEFCAIASAuthorizationExtension hl7B2BModel = new TEFCAIASAuthorizationExtension();
-    private string selectedPurposeOfUse;
-    private string newPurposeOfUse;
+    
     private string selectedConsentPolicy;
     private string selectedConsentReference;
     private string newConsentPolicy;
     private string newConsentReference;
     private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
     {
-        WriteIndented = true,
-        Converters = { new TEFCAIASAuthorizationExtensionConverter() }
+        WriteIndented = true
     };
 
     protected override async Task OnInitializedAsync()
@@ -45,19 +43,25 @@ public partial class TefcaIasForm
         {
             hl7B2BModel = JsonSerializer.Deserialize<TEFCAIASAuthorizationExtension>(authExtObj.Value.Json) ??
                           new TEFCAIASAuthorizationExtension();
-            Console.WriteLine("hl7B2BModel: " + JsonSerializer.Serialize(hl7B2BModel));
-            await Task.Delay(100);
-            StateHasChanged();
-            await Task.Delay(100);
         }
         else
         {
             // default starter template
             hl7B2BModel = JsonSerializer.Deserialize<TEFCAIASAuthorizationExtension>(
-                "{\"version\":\"1\",\"subject_id\":\"urn:oid:2.16.840.1.113883.4.6#1234567890\",\"organization_id\":\"https://fhirlabs.net/fhir/r4\",\"organization_name\":\"FhirLabs\",\"purpose_of_use\":[\"urn:oid:2.16.840.1.113883.5.8#TREAT\"]}");
+                "{\"version\":\"1\",\"subject_id\":\"urn:oid:2.16.840.1.113883.4.6#1234567890\",\"organization_id\":\"https://fhirlabs.net/fhir/r4\",\"organization_name\":\"FhirLabs\",\"purpose_of_use\":\"urn:oid:2.16.840.1.113883.5.8#TREAT\"}");
         }
     }
-    
+
+    public void Update()
+    {
+        var authExtObj = AppState.AuthorizationExtObjects.SingleOrDefault(a => a.Key == UdapConstants.UdapAuthorizationExtensions.TEFCAIAS);
+
+        if (authExtObj.Key != null && authExtObj.Value != null && !string.IsNullOrEmpty(authExtObj.Value.Json))
+        {
+            hl7B2BModel = JsonSerializer.Deserialize<TEFCAIASAuthorizationExtension>(authExtObj.Value.Json) ??
+                          new TEFCAIASAuthorizationExtension();
+        }
+    }
 
     private void AddConsentPolicy()
     {

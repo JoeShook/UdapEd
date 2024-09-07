@@ -24,6 +24,7 @@ public partial class Hl7B2bUserForm
     [Parameter] public EventCallback<Dictionary<string, HL7B2BUserAuthorizationExtension>> OnInclude { get; set; }
     [Parameter] public EventCallback<Dictionary<string, HL7B2BUserAuthorizationExtension>> OnRemove { get; set; }
     [Parameter] public string? Id { get; set; }
+
     private MudForm form;
     private HL7B2BUserAuthorizationExtension hl7B2BModel = new HL7B2BUserAuthorizationExtension();
     private string selectedPurposeOfUse;
@@ -34,8 +35,7 @@ public partial class Hl7B2bUserForm
     private string newConsentReference;
     private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
     {
-        WriteIndented = true,
-        Converters = { new HL7B2BUserAuthorizationExtensionConverter() }
+        WriteIndented = true
     };
 
     protected override async Task OnInitializedAsync()
@@ -46,16 +46,23 @@ public partial class Hl7B2bUserForm
         {
             hl7B2BModel = JsonSerializer.Deserialize<HL7B2BUserAuthorizationExtension>(authExtObj.Value.Json) ??
                           new HL7B2BUserAuthorizationExtension();
-            Console.WriteLine("hl7B2BModel: " + JsonSerializer.Serialize(hl7B2BModel));
-            await Task.Delay(100);
-            StateHasChanged();
-            await Task.Delay(100);
         }
         else
         {
             // default starter template
             hl7B2BModel = JsonSerializer.Deserialize<HL7B2BUserAuthorizationExtension>(
                 "{\"version\":\"1\",\"subject_id\":\"urn:oid:2.16.840.1.113883.4.6#1234567890\",\"organization_id\":\"https://fhirlabs.net/fhir/r4\",\"organization_name\":\"FhirLabs\",\"purpose_of_use\":[\"urn:oid:2.16.840.1.113883.5.8#TREAT\"]}");
+        }
+    }
+
+    public void Update()
+    {
+        var authExtObj = AppState.AuthorizationExtObjects.SingleOrDefault(a => a.Key == UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER);
+
+        if (authExtObj.Key != null && authExtObj.Value != null && !string.IsNullOrEmpty(authExtObj.Value.Json))
+        {
+            hl7B2BModel = JsonSerializer.Deserialize<HL7B2BUserAuthorizationExtension>(authExtObj.Value.Json) ??
+                          new HL7B2BUserAuthorizationExtension();
         }
     }
 
@@ -179,4 +186,5 @@ public partial class Hl7B2bUserForm
     {
         await JSRuntime.InvokeVoidAsync("open", "https://build.fhir.org/ig/HL7/fhir-identity-matching-ig/patient-matching.html#consumer-match", "_blank");
     }
+
 }

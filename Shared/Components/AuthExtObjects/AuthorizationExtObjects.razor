@@ -5,25 +5,29 @@
 
                 <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
                     <MudTabPanel Text="hl7-b2b">
-                        <Hl7B2bForm OnInclude="HandleInclude" OnRemove="HandleRemove" />
+                        <Hl7B2bForm @ref="_hl7B2BForm" OnInclude="HandleInclude" OnRemove="HandleRemove" />
                     </MudTabPanel>
                     <MudTabPanel Text="hl7-b2b for TEFCA">
                     </MudTabPanel>
                     <MudTabPanel Text="hl7-b2b-user">
-                        <Hl7B2bUserForm OnInclude="HandleInclude" OnRemove="HandleRemove" />
+                        <Hl7B2bUserForm @ref="_hl7B2BUserForm" OnInclude="HandleInclude" OnRemove="HandleRemove" />
                     </MudTabPanel>
                     <MudTabPanel Text="tefca_ias">
-                        <TefcaIasForm OnInclude="HandleInclude" OnRemove="HandleRemove" />
+                        <TefcaIasForm @ref="_tefcaIasForm" OnInclude="HandleInclude" OnRemove="HandleRemove" />
                     </MudTabPanel>
                     <MudTabPanel Text="tefca_smart">
                     </MudTabPanel>
                 </MudTabs>
             </MudItem>
             <MudItem lg="6" md="12">
-                <MudText Align="Align.Right" Color="Color.Tertiary">Encoded</MudText>
-                <StandaloneCodeEditor @ref="_editor" Id="authExtObjectEditor" 
+                <MudGrid Justify="Justify.FlexEnd">
+                    <MudItem>
+                        <MudButton Class="ma-2" Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChanges">Save Custom Edits</MudButton>
+                    </MudItem>
+                </MudGrid>
+                <StandaloneCodeEditor @ref="_editor" Id="authExtObjectEditor"
                                       ConstructionOptions="EditorOptions"
-                                      OnDidInit="EditorOnDidInit" />
+                                      OnDidInit="EditorOnDidInit"/>
             </MudItem>
         </MudGrid>
     </MudCardContent>
