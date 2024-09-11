@@ -143,6 +143,7 @@ public partial class Hl7B2bUserForm
 
     private async Task HandleInclude()
     {
+        ParseJsonUserPerson();
         await form.Validate();
         if (form.IsValid)
         {
@@ -183,7 +184,12 @@ public partial class Hl7B2bUserForm
         await JSRuntime.InvokeVoidAsync("open", "https://build.fhir.org/ig/HL7/fhir-identity-matching-ig/patient-matching.html#consumer-match", "_blank");
     }
 
-    
+    private string? ValidateJsonUserPerson(string? input)
+    {
+        ParseJsonUserPerson();
+        var result = hl7B2BModel.UserPerson == null ? "Invalid Person Resource" : null;
+        return result;
+    }
 
     private void ParseJsonUserPerson()
     {
@@ -194,11 +200,14 @@ public partial class Hl7B2bUserForm
                 using JsonDocument doc = JsonDocument.Parse(_jsonUserPerson);
                 hl7B2BModel.UserPerson = doc.RootElement.Clone();
             }
-            catch (JsonException ex)
+            catch (JsonException)
             {
-                // Handle JSON parsing error
-                Console.WriteLine($"Invalid JSON: {ex.Message}");
+                hl7B2BModel.UserPerson = null;
             }
+        }
+        else
+        {
+            hl7B2BModel.UserPerson = null;
         }
     }
 }

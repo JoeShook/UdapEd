@@ -112,6 +112,8 @@ public partial class TefcaIasForm
 
     private async Task HandleInclude()
     {
+        ParseJsonRelatedPerson();
+        ParseJsonPatient();
         await form.Validate();
         if (form.IsValid)
         {
@@ -152,7 +154,12 @@ public partial class TefcaIasForm
         await JSRuntime.InvokeVoidAsync("open", "https://rce.sequoiaproject.org/wp-content/uploads/2024/07/SOP-Facilitated-FHIR-Implementation_508-1.pdf#page=17", "_blank");
     }
 
-
+    private string? ValidateJsonRelatedPerson(string? input)
+    {
+        ParseJsonRelatedPerson();
+        var result = hl7B2BModel.UserInformation == null ? "Invalid Person Resource" : null;
+        return result;
+    }
 
     private void ParseJsonRelatedPerson()
     {
@@ -162,14 +169,23 @@ public partial class TefcaIasForm
             {
                 using JsonDocument doc = JsonDocument.Parse(_jsonRelatedPerson);
                 hl7B2BModel.UserInformation = doc.RootElement.Clone();
-
             }
-            catch (JsonException ex)
+            catch (JsonException)
             {
-                // Handle JSON parsing error
-                Console.WriteLine($"Invalid JSON: {ex.Message}");
+                hl7B2BModel.UserInformation = null;
             }
         }
+        else
+        {
+            hl7B2BModel.UserInformation = null;
+        }
+    }
+
+    private string? ValidateJsonPatient(string? input)
+    {
+        ParseJsonPatient();
+        var result = hl7B2BModel.PatientInformation == null ? "Invalid Person Resource" : null;
+        return result;
     }
 
     private void ParseJsonPatient()
@@ -181,11 +197,14 @@ public partial class TefcaIasForm
                 using JsonDocument doc = JsonDocument.Parse(_jsonPatient);
                 hl7B2BModel.PatientInformation = doc.RootElement.Clone();
             }
-            catch (JsonException ex)
+            catch (JsonException)
             {
-                // Handle JSON parsing error
-                Console.WriteLine($"Invalid JSON: {ex.Message}");
+                hl7B2BModel.PatientInformation = null;
             }
+        }
+        else
+        {
+            hl7B2BModel.PatientInformation = null;
         }
     }
 }

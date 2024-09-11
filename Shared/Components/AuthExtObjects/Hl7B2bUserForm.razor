@@ -1,4 +1,4 @@
-﻿<MudForm @ref="form" Model="@hl7B2BModel" id="@Id">
+﻿<MudForm @ref="form" Model="@hl7B2BModel" id="@Id" >
     
     <div style="display: flex; justify-content: flex-end;">
         <MudText Color="Color.Tertiary">See Interoperable Digital Identity and Patient Matching Section 3.2.2</MudText>
@@ -10,7 +10,13 @@
     </div>
 
     <MudTextField @bind-Value="hl7B2BModel.Version" Label="Version" Required="true" />
-    <MudTextField @bind-Value="_jsonUserPerson" Label="FHIR Person" Required="true" OnBlur="ParseJsonUserPerson" />
+    <MudTextField  T="string" @bind-Value="_jsonUserPerson" 
+                   Label="FHIR Person" 
+                   Required="true"
+                   Immediate="true"
+                   RequiredError="FHIR Person is required"
+                   Validation="@(new Func<string?, string?>(ValidateJsonUserPerson))" />
+    
     <MudTextField @bind-Value="newPurposeOfUse" Label="New Purpose of Use"/>
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddPurposeOfUse">Add Purpose of Use</MudButton>
     <MudChipSet T="string">

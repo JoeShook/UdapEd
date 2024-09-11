@@ -11,8 +11,16 @@
 
     <MudTextField @bind-Value="hl7B2BModel.Version" Label="Version" Required="true" />
     <MudTextField @bind-Value="hl7B2BModel.PurposeOfUse" Label="Purpose of Use" Required="true" />
-    <MudTextField @bind-Value="_jsonRelatedPerson" Label="FHIR Related Person" Required="true" OnBlur="ParseJsonRelatedPerson" />
-    <MudTextField @bind-Value="_jsonPatient" Label="FHIR Patient" Required="true" OnBlur="ParseJsonPatient" />
+    <MudTextField @bind-Value="_jsonRelatedPerson" 
+                  Label="FHIR Related Person" 
+                  Required="true" 
+                  Immediate="true"
+                  Validation="@(new Func<string?, string?>(ValidateJsonRelatedPerson))" />
+    <MudTextField @bind-Value="_jsonPatient" 
+                  Label="FHIR Patient" 
+                  Required="true" 
+                  Immediate="true"
+                  Validation="@(new Func<string?, string?>(ValidateJsonPatient))" />
     <MudTextField @bind-Value="hl7B2BModel.IalVetted" Label="IA Vetted" />
     <MudTextField @bind-Value="newConsentPolicy" Label="New Consent Policy" />
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddConsentPolicy">Add Consent Policy</MudButton>
