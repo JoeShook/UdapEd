@@ -23,19 +23,14 @@ public partial class AuthorizationExtObjects
     [CascadingParameter]
     public CascadingAppState AppState { get; set; } = null!;
 
-    [Parameter]
-    public Func<KeyValuePair<string, AuthExtModel>, bool> AuthExtObjectSpecification
-
-    {
-        get => _authExtObjectPredicate;
-        set => _authExtObjectPredicate = value;
-    }
+    
+    [Parameter] public AuthExtObjectOperationType OperationType { get; set; }
 
     private StandaloneCodeEditor _editor = null!;
     private bool _isEditorInitialized;
-    private Hl7B2bUserForm? _hl7B2BUserForm;
-    private Hl7B2bForm? _hl7B2BForm;
-    private Hl7B2bTefcaForm? _hl7B2BTefcaForm;
+    private Hl7B2BUserForm? _hl7B2BUserForm;
+    private Hl7B2BForm? _hl7B2BForm;
+    private Hl7B2BTefcaForm? _hl7B2BTefcaForm;
     private TefcaIasForm? _tefcaIasForm;
 
     private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
@@ -44,15 +39,20 @@ public partial class AuthorizationExtObjects
     };
 
     private Func<KeyValuePair<string, AuthExtModel>, bool> _authExtObjectPredicate;
-
-    // private Func<KeyValuePair<string, AuthExtModel>, bool> _predicate;
-
+    
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (_isEditorInitialized && AppState.AuthorizationExtObjects.Any())
         {
-            // _predicate = a => a.Value.UseInAuth;
+            if (OperationType == AuthExtObjectOperationType.Auth)
+            {
+                _authExtObjectPredicate = a => a.Value.UseInAuth;
+            }
+            else
+            {
+                _authExtObjectPredicate = a => a.Value.UseInRegister;
+            }
             await SetEditorValue(_authExtObjectPredicate);
         }
     }
@@ -68,6 +68,7 @@ public partial class AuthorizationExtObjects
 
     private async Task EditorOnDidInit()
     {
+        Console.WriteLine("EditorOnDidInit()");
         await _editor.Layout(new Dimension() { Height = 600, Width = 200 });
         await JsRuntime.InvokeVoidAsync("setMonacoEditorResize", _editor.Id);
         _isEditorInitialized = true;
@@ -162,14 +163,14 @@ public partial class AuthorizationExtObjects
         }
         catch(Exception ex)
         {
-            Console.WriteLine(ex);
+            
             return; 
         }
     }
 
    
-    private void HandleUpdateEditor()
+    private Task HandleUpdateEditor()
     {
-        _editor?.SetValue(JsonSerializer.Serialize(AppState.AuthorizationExtObjects, _jsonSerializerOptions));
+        return InvokeAsync(() => _editor.SetValue(JsonSerializer.Serialize(AppState.AuthorizationExtObjects, _jsonSerializerOptions)));
     }
 }

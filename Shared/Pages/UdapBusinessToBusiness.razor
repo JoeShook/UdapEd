@@ -48,7 +48,7 @@
                   <MudText Typo="Typo.h6" Color="Color.Primary">Authorization Extension Objects</MudText>
               </TitleContent>
               <ChildContent>
-                  <AuthorizationExtObjects AuthExtObjectSpecification="@(a => a.Value.UseInAuth)"/>
+                  <AuthorizationExtObjects OperationType="@(AuthExtObjectOperationType.Auth)"/>
               </ChildContent>
           </MudExpansionPanel>
       </MudExpansionPanels>

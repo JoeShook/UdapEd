@@ -17,53 +17,55 @@ using UdapEd.Shared.Model.AuthExtObjects;
 
 namespace UdapEd.Shared.Components.AuthExtObjects;
 
-public partial class Hl7B2bUserForm
+public partial class Hl7B2BUserForm
 {
-    [Inject] private IJSRuntime JSRuntime { get; set; }
+    [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
     [Parameter] public EventCallback OnUpdateEditor { get; set; }
-    [Parameter] public string? Id { get; set; }
+    [Parameter] public string? Id { get; set; } [Parameter] public AuthExtObjectOperationType OperationType { get; set; }
 
-    private MudForm form;
-    private HL7B2BUserAuthorizationExtension hl7B2BModel = new HL7B2BUserAuthorizationExtension();
+    private MudForm _form = null!;
+    private HL7B2BUserAuthorizationExtension _hl7B2BModel = new HL7B2BUserAuthorizationExtension();
     private string? _jsonUserPerson = null;
-    private string selectedPurposeOfUse;
-    private string newPurposeOfUse;
-    private string selectedConsentPolicy;
-    private string selectedConsentReference;
-    private string newConsentPolicy;
-    private string newConsentReference;
+    private string? _selectedPurposeOfUse;
+    private string? _newPurposeOfUse;
+    private string? _selectedConsentPolicy;
+    private string? _selectedConsentReference;
+    private string? _newConsentPolicy;
+    private string? _newConsentReference;
 
     private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
     {
         WriteIndented = true
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         var authExtObj = AppState.AuthorizationExtObjects.SingleOrDefault(a => a.Key == UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER);
 
         if (authExtObj.Key != null && authExtObj.Value != null && !string.IsNullOrEmpty(authExtObj.Value.Json))
         {
-            hl7B2BModel = JsonSerializer.Deserialize<HL7B2BUserAuthorizationExtension>(authExtObj.Value.Json) ??
+            _hl7B2BModel = JsonSerializer.Deserialize<HL7B2BUserAuthorizationExtension>(authExtObj.Value.Json) ??
                           new HL7B2BUserAuthorizationExtension();
         }
         else
         {
             // default starter template
-            hl7B2BModel = JsonSerializer.Deserialize<HL7B2BUserAuthorizationExtension>(
+            _hl7B2BModel = JsonSerializer.Deserialize<HL7B2BUserAuthorizationExtension>(
                 "{\"version\":\"1\",\"subject_id\":\"urn:oid:2.16.840.1.113883.4.6#1234567890\",\"organization_id\":\"https://fhirlabs.net/fhir/r4\",\"organization_name\":\"FhirLabs\",\"purpose_of_use\":[\"urn:oid:2.16.840.1.113883.5.8#TREAT\"]}");
         }
 
-        _jsonUserPerson = hl7B2BModel?.UserPerson?.GetRawText();
+        _jsonUserPerson = _hl7B2BModel?.UserPerson?.GetRawText();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await form.Validate();
+            return _form.Validate();
         }
+
+        return Task.CompletedTask;
     }
 
     public void Update()
@@ -72,32 +74,32 @@ public partial class Hl7B2bUserForm
 
         if (authExtObj.Key != null && authExtObj.Value != null && !string.IsNullOrEmpty(authExtObj.Value.Json))
         {
-            hl7B2BModel = JsonSerializer.Deserialize<HL7B2BUserAuthorizationExtension>(authExtObj.Value.Json) ??
+            _hl7B2BModel = JsonSerializer.Deserialize<HL7B2BUserAuthorizationExtension>(authExtObj.Value.Json) ??
                           new HL7B2BUserAuthorizationExtension();
         }
     }
 
     private void AddPurposeOfUse()
     {
-        if (!string.IsNullOrWhiteSpace(newPurposeOfUse) && !hl7B2BModel.PurposeOfUse.Contains(newPurposeOfUse))
+        if (!string.IsNullOrWhiteSpace(_newPurposeOfUse) && _hl7B2BModel.PurposeOfUse != null && !_hl7B2BModel.PurposeOfUse.Contains(_newPurposeOfUse))
         {
-            hl7B2BModel.PurposeOfUse.Add(newPurposeOfUse);
-            newPurposeOfUse = string.Empty;
+            _hl7B2BModel.PurposeOfUse.Add(_newPurposeOfUse);
+            _newPurposeOfUse = string.Empty;
         }
     }
 
     private async Task RemovePurposeOfUse(string purpose)
     {
-        if (hl7B2BModel.PurposeOfUse != null)
+        if (_hl7B2BModel.PurposeOfUse != null)
         {
             purpose = purpose.Trim();
 
             // Directly manipulate the list
-            hl7B2BModel.PurposeOfUse = hl7B2BModel.PurposeOfUse
+            _hl7B2BModel.PurposeOfUse = _hl7B2BModel.PurposeOfUse
                 .Where(p => !p.Equals(purpose, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
-            await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, hl7B2BModel, true);
+            await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, _hl7B2BModel, true);
             StateHasChanged();
         }
         else
@@ -108,53 +110,54 @@ public partial class Hl7B2bUserForm
 
     private void AddConsentPolicy()
     {
-        if (!string.IsNullOrWhiteSpace(newConsentPolicy) && !hl7B2BModel.ConsentPolicy.Contains(newConsentPolicy))
+        if (!string.IsNullOrWhiteSpace(_newConsentPolicy) && _hl7B2BModel.ConsentPolicy != null && !_hl7B2BModel.ConsentPolicy.Contains(_newConsentPolicy))
         {
-            hl7B2BModel.ConsentPolicy.Add(newConsentPolicy);
-            newConsentPolicy = string.Empty;
+            _hl7B2BModel.ConsentPolicy.Add(_newConsentPolicy);
+            _newConsentPolicy = string.Empty;
         }
     }
 
     private async Task RemoveConsentPolicy(string policy)
     {
-        var remove = hl7B2BModel.ConsentPolicy?.Remove(policy);
+        var remove = _hl7B2BModel.ConsentPolicy?.Remove(policy);
         Console.WriteLine("Removed: " + remove);
-        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, hl7B2BModel, true);
+        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, _hl7B2BModel, true);
         StateHasChanged();
         await Task.Delay(100);
     }
 
     private void AddConsentReference()
     {
-        if (!string.IsNullOrWhiteSpace(newConsentReference) &&
-            !hl7B2BModel.ConsentReference.Contains(newConsentReference))
+        if (!string.IsNullOrWhiteSpace(_newConsentReference) &&
+            _hl7B2BModel.ConsentReference != null &&
+            !_hl7B2BModel.ConsentReference.Contains(_newConsentReference))
         {
-            hl7B2BModel.ConsentReference.Add(newConsentReference);
-            newConsentReference = string.Empty;
+            _hl7B2BModel.ConsentReference.Add(_newConsentReference);
+            _newConsentReference = string.Empty;
         }
     }
 
     private async Task RemoveConsentReference(string reference)
     {
-        hl7B2BModel.ConsentReference?.Remove(reference);
-        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, hl7B2BModel, true);
+        _hl7B2BModel.ConsentReference?.Remove(reference);
+        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, _hl7B2BModel, true);
         StateHasChanged();
     }
 
     private async Task HandleInclude()
     {
         ParseJsonUserPerson();
-        await form.Validate();
-        if (form.IsValid)
+        await _form.Validate();
+        if (_form.IsValid)
         {
-            await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, hl7B2BModel, true);
+            await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, _hl7B2BModel, true);
             await OnUpdateEditor.InvokeAsync();
         }
     }
 
     private async Task HandleRemove()
     {
-        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, hl7B2BModel, false);
+        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, _hl7B2BModel, false);
         await OnUpdateEditor.InvokeAsync();
     }
 
@@ -179,15 +182,15 @@ public partial class Hl7B2bUserForm
         return AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationExtObjects), AppState.AuthorizationExtObjects);
     }
 
-    private async Task GoToFhirIdentityMatchingIG()
+    private async Task GoToFhirIdentityMatchingIg()
     {
-        await JSRuntime.InvokeVoidAsync("open", "https://build.fhir.org/ig/HL7/fhir-identity-matching-ig/patient-matching.html#consumer-match", "_blank");
+        await JsRuntime.InvokeVoidAsync("open", "https://build.fhir.org/ig/HL7/fhir-identity-matching-ig/patient-matching.html#consumer-match", "_blank");
     }
 
     private string? ValidateJsonUserPerson(string? input)
     {
         ParseJsonUserPerson();
-        var result = hl7B2BModel.UserPerson == null ? "Invalid Person Resource" : null;
+        var result = _hl7B2BModel.UserPerson == null ? "Invalid Person Resource" : null;
         return result;
     }
 
@@ -198,16 +201,16 @@ public partial class Hl7B2bUserForm
             try
             {
                 using JsonDocument doc = JsonDocument.Parse(_jsonUserPerson);
-                hl7B2BModel.UserPerson = doc.RootElement.Clone();
+                _hl7B2BModel.UserPerson = doc.RootElement.Clone();
             }
             catch (JsonException)
             {
-                hl7B2BModel.UserPerson = null;
+                _hl7B2BModel.UserPerson = null;
             }
         }
         else
         {
-            hl7B2BModel.UserPerson = null;
+            _hl7B2BModel.UserPerson = null;
         }
     }
 }

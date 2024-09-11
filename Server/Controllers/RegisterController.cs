@@ -269,7 +269,12 @@ public class RegisterController : Controller
             .WithTokenEndpointAuthMethod(RegistrationDocumentValues.TokenEndpointAuthMethodValue)
             .WithScope(request.Scope ?? string.Empty)
             .Build();
-    
+
+        if (request.Extensions != null && request.Extensions.Any())
+        {
+            document.Extensions = request.Extensions;
+        }
+
         var signedSoftwareStatement =
             SignedSoftwareStatementBuilder<UdapDynamicClientRegistrationDocument>
                 .Create(clientCert, document)
@@ -342,6 +347,11 @@ public class RegisterController : Controller
             .WithLogoUri(request.LogoUri ?? "https://udaped.fhirlabs.net/_content/UdapEd.Shared/images/UdapEdLogobyDesigner.png")
             .Build();
 
+        if (request.Extensions != null && request.Extensions.Any())
+        {
+            document.Extensions = request.Extensions;
+        }
+
         var signedSoftwareStatement =
             SignedSoftwareStatementBuilder<UdapDynamicClientRegistrationDocument>
                 .Create(clientCert, document)
@@ -410,6 +420,11 @@ public class RegisterController : Controller
             .WithTokenEndpointAuthMethod(RegistrationDocumentValues.TokenEndpointAuthMethodValue)
             .WithScope(document.Scope) ;
 
+        if (document.Extensions != null && document.Extensions.Any())
+        {
+            dcrBuilder.Document.Extensions = document.Extensions;
+        }
+
         if (!request.SoftwareStatement.Contains(RegistrationDocumentValues.GrantTypes))
         {
             dcrBuilder.Document.GrantTypes = null;
@@ -474,7 +489,10 @@ public class RegisterController : Controller
             .WithRedirectUrls(document.RedirectUris)
             .WithLogoUri(document.LogoUri!);
 
-        
+        if (document.Extensions != null && document.Extensions.Any())
+        {
+            dcrBuilder.Document.Extensions = document.Extensions;
+        }
 
         var signedSoftwareStatement = dcrBuilder.BuildSoftwareStatement(alg);
 

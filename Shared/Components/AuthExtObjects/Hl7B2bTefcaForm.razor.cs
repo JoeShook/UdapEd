@@ -1,4 +1,13 @@
-﻿using System.Text.Json;
+﻿#region (c) 2024 Joseph Shook. All rights reserved.
+// /*
+//  Authors:
+//     Joseph Shook   Joseph.Shook@Surescripts.com
+// 
+//  See LICENSE in the project root for license information.
+// */
+#endregion
+
+using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
@@ -8,49 +17,52 @@ using UdapEd.Shared.Model.AuthExtObjects;
 
 namespace UdapEd.Shared.Components.AuthExtObjects;
 
-public partial class Hl7B2bTefcaForm
+public partial class Hl7B2BTefcaForm
 {
-    [Inject] private IJSRuntime JSRuntime { get; set; }
+    [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
     [Parameter] public EventCallback OnUpdateEditor { get; set; }
     [Parameter] public string? Id { get; set; }
+    [Parameter] public AuthExtObjectOperationType OperationType { get; set; }
 
-    private MudForm form;
-    private HL7B2BAuthorizationExtension hl7B2BModel = new HL7B2BAuthorizationExtension();
-    private string selectedPurposeOfUse;
-    private string newPurposeOfUse;
-    private string selectedConsentPolicy;
-    private string selectedConsentReference;
-    private string newConsentPolicy;
-    private string newConsentReference;
+    private MudForm _form = null!;
+    private HL7B2BAuthorizationExtension _hl7B2BModel = new HL7B2BAuthorizationExtension();
+    private string? _selectedPurposeOfUse;
+    private string? _newPurposeOfUse;
+    private string? _selectedConsentPolicy;
+    private string? _selectedConsentReference;
+    private string? _newConsentPolicy;
+    private string? _newConsentReference;
     private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
     {
         WriteIndented = true
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         var authExtObj = AppState.AuthorizationExtObjects.SingleOrDefault(a => a.Key == UdapConstants.UdapAuthorizationExtensions.Hl7B2B);
 
         if (authExtObj.Key != null && authExtObj.Value != null && !string.IsNullOrEmpty(authExtObj.Value.Json))
         {
-            hl7B2BModel = JsonSerializer.Deserialize<HL7B2BAuthorizationExtension>(authExtObj.Value.Json) ??
+            _hl7B2BModel = JsonSerializer.Deserialize<HL7B2BAuthorizationExtension>(authExtObj.Value.Json) ??
                           new HL7B2BAuthorizationExtension();
         }
         else
         {
             // default starter template
-            hl7B2BModel = JsonSerializer.Deserialize<HL7B2BAuthorizationExtension>(
+            _hl7B2BModel = JsonSerializer.Deserialize<HL7B2BAuthorizationExtension>(
                 "{\"version\":\"1\",\"subject_id\":\"urn:oid:2.16.840.1.113883.4.6#1234567890\",\"organization_id\":\"https://fhirlabs.net/fhir/r4\",\"organization_name\":\"FhirLabs\",\"purpose_of_use\":[\"urn:oid:2.16.840.1.113883.5.8#TREAT\"]}");
         }
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await form.Validate();
+            return _form.Validate();
         }
+
+        return Task.CompletedTask;
     }
 
     public void Update()
@@ -59,67 +71,68 @@ public partial class Hl7B2bTefcaForm
 
         if (authExtObj.Key != null && authExtObj.Value != null && !string.IsNullOrEmpty(authExtObj.Value.Json))
         {
-            hl7B2BModel = JsonSerializer.Deserialize<HL7B2BAuthorizationExtension>(authExtObj.Value.Json) ??
+            _hl7B2BModel = JsonSerializer.Deserialize<HL7B2BAuthorizationExtension>(authExtObj.Value.Json) ??
                           new HL7B2BAuthorizationExtension();
         }
     }
 
     private void AddPurposeOfUse()
     {
-        if (!string.IsNullOrWhiteSpace(newPurposeOfUse) && !hl7B2BModel.PurposeOfUse.Contains(newPurposeOfUse))
+        if (!string.IsNullOrWhiteSpace(_newPurposeOfUse) && _hl7B2BModel.PurposeOfUse != null && !_hl7B2BModel.PurposeOfUse.Contains(_newPurposeOfUse))
         {
-            hl7B2BModel.PurposeOfUse.Add(newPurposeOfUse);
-            newPurposeOfUse = string.Empty;
+            _hl7B2BModel.PurposeOfUse.Add(_newPurposeOfUse);
+            _newPurposeOfUse = string.Empty;
         }
     }
 
     private void RemovePurposeOfUse(string purpose)
     {
-        hl7B2BModel.PurposeOfUse.Remove(purpose);
+        _hl7B2BModel.PurposeOfUse?.Remove(purpose);
     }
 
     private void AddConsentPolicy()
     {
-        if (!string.IsNullOrWhiteSpace(newConsentPolicy) && !hl7B2BModel.ConsentPolicy.Contains(newConsentPolicy))
+        if (!string.IsNullOrWhiteSpace(_newConsentPolicy) && _hl7B2BModel.ConsentPolicy != null && !_hl7B2BModel.ConsentPolicy.Contains(_newConsentPolicy))
         {
-            hl7B2BModel.ConsentPolicy.Add(newConsentPolicy);
-            newConsentPolicy = string.Empty;
+            _hl7B2BModel.ConsentPolicy.Add(_newConsentPolicy);
+            _newConsentPolicy = string.Empty;
         }
     }
 
     private void RemoveConsentPolicy(string policy)
     {
-        hl7B2BModel.ConsentPolicy?.Remove(policy);
+        _hl7B2BModel.ConsentPolicy?.Remove(policy);
     }
 
     private void AddConsentReference()
     {
-        if (!string.IsNullOrWhiteSpace(newConsentReference) &&
-            !hl7B2BModel.ConsentReference.Contains(newConsentReference))
+        if (!string.IsNullOrWhiteSpace(_newConsentReference) &&
+            _hl7B2BModel.ConsentReference != null &&
+            !_hl7B2BModel.ConsentReference.Contains(_newConsentReference))
         {
-            hl7B2BModel.ConsentReference.Add(newConsentReference);
-            newConsentReference = string.Empty;
+            _hl7B2BModel.ConsentReference.Add(_newConsentReference);
+            _newConsentReference = string.Empty;
         }
     }
 
     private void RemoveConsentReference(string reference)
     {
-        hl7B2BModel.ConsentReference.Remove(reference);
+        _hl7B2BModel.ConsentReference?.Remove(reference);
     }
 
     private async Task HandleInclude()
     {
-        await form.Validate();
-        if (form.IsValid)
+        await _form.Validate();
+        if (_form.IsValid)
         {
-            await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2B, hl7B2BModel, true);
+            await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2B, _hl7B2BModel, true);
             await OnUpdateEditor.InvokeAsync();
         }
     }
 
     private async Task HandleRemove()
     {
-        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2B, hl7B2BModel, false);
+        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2B, _hl7B2BModel, false);
         await OnUpdateEditor.InvokeAsync();
     }
 
@@ -130,22 +143,39 @@ public partial class Hl7B2bTefcaForm
         if (AppState.AuthorizationExtObjects.ContainsKey(key))
         {
             AppState.AuthorizationExtObjects[key].Json = jsonString;
-            AppState.AuthorizationExtObjects[key].UseInAuth = use;
+            if (OperationType == AuthExtObjectOperationType.Auth)
+            {
+                AppState.AuthorizationExtObjects[key].UseInAuth = use;
+            }
+            else if (OperationType == AuthExtObjectOperationType.Register)
+            {
+                AppState.AuthorizationExtObjects[key].UseInRegister = use;
+            }
         }
         else
         {
-            AppState.AuthorizationExtObjects.Add(key, new AuthExtModel
+            var newAuthExtModel = new AuthExtModel
             {
-                Json = jsonString,
-                UseInAuth = use
-            });
+                Json = jsonString
+            };
+
+            if (OperationType == AuthExtObjectOperationType.Auth)
+            {
+                newAuthExtModel.UseInAuth = use;
+            }
+            else if (OperationType == AuthExtObjectOperationType.Register)
+            {
+                newAuthExtModel.UseInRegister = use;
+            }
+
+            AppState.AuthorizationExtObjects.Add(key, newAuthExtModel);
         }
 
         return AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationExtObjects), AppState.AuthorizationExtObjects);
     }
 
-    private async Task GoToFhirSecurityIG()
+    private async Task GoToTefcaFacilitateFhirSOP()
     {
-        await JSRuntime.InvokeVoidAsync("open", "https://hl7.org/fhir/us/udap-security/b2b.html#b2b-authorization-extension-object", "_blank");
+        await JsRuntime.InvokeVoidAsync("open", "https://rce.sequoiaproject.org/wp-content/uploads/2024/07/SOP-Facilitated-FHIR-Implementation_508-1.pdf#page=16", "_blank");
     }
 }

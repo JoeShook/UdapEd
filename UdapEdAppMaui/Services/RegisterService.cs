@@ -87,6 +87,10 @@ internal class RegisterService : IRegisterService
             .WithScope(request.Scope ?? string.Empty)
             .Build();
 
+        if (request.Extensions != null && request.Extensions.Any())
+        {
+            document.Extensions = request.Extensions;
+        }
 
         var signedSoftwareStatement =
             SignedSoftwareStatementBuilder<UdapDynamicClientRegistrationDocument>
@@ -154,6 +158,11 @@ internal class RegisterService : IRegisterService
             .WithLogoUri(request.LogoUri ?? "https://udaped.fhirlabs.net/images/UdapEdLogobyDesigner.png") 
             .Build();
 
+        if (request.Extensions != null && request.Extensions.Any())
+        {
+            document.Extensions = request.Extensions;
+        }
+
         var signedSoftwareStatement =
             SignedSoftwareStatementBuilder<UdapDynamicClientRegistrationDocument>
                 .Create(clientCert, document)
@@ -219,6 +228,11 @@ internal class RegisterService : IRegisterService
             .WithTokenEndpointAuthMethod(UdapConstants.RegistrationDocumentValues.TokenEndpointAuthMethodValue)
             .WithScope(document.Scope);
 
+        if (document.Extensions != null && document.Extensions.Any())
+        {
+            dcrBuilder.Document.Extensions = document.Extensions;
+        }
+
         if (!request.SoftwareStatement.Contains(UdapConstants.RegistrationDocumentValues.GrantTypes))
         {
             dcrBuilder.Document.GrantTypes = null;
@@ -280,7 +294,10 @@ internal class RegisterService : IRegisterService
             .WithRedirectUrls(document.RedirectUris)
             .WithLogoUri(document.LogoUri!);
 
-
+        if (document.Extensions != null && document.Extensions.Any())
+        {
+            dcrBuilder.Document.Extensions = document.Extensions;
+        }
 
         var signedSoftwareStatement = dcrBuilder.BuildSoftwareStatement(signingAlgorithm);
 
