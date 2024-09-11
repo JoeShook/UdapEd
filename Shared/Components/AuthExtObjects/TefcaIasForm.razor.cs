@@ -20,16 +20,17 @@ public partial class TefcaIasForm
 {
     [Inject] private IJSRuntime JSRuntime { get; set; }
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
-    [Parameter] public EventCallback<Dictionary<string, TEFCAIASAuthorizationExtension>> OnInclude { get; set; }
-    [Parameter] public EventCallback<Dictionary<string, TEFCAIASAuthorizationExtension>> OnRemove { get; set; }
+    [Parameter] public EventCallback OnUpdateEditor { get; set; }
     [Parameter] public string? Id { get; set; }
     private MudForm form;
     private TEFCAIASAuthorizationExtension hl7B2BModel = new TEFCAIASAuthorizationExtension();
-    
+    private string? _jsonRelatedPerson;
+    private string? _jsonPatient;
     private string selectedConsentPolicy;
     private string selectedConsentReference;
     private string newConsentPolicy;
     private string newConsentReference;
+
     private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
     {
         WriteIndented = true
@@ -50,8 +51,19 @@ public partial class TefcaIasForm
             hl7B2BModel = JsonSerializer.Deserialize<TEFCAIASAuthorizationExtension>(
                 "{\"version\":\"1\",\"subject_id\":\"urn:oid:2.16.840.1.113883.4.6#1234567890\",\"organization_id\":\"https://fhirlabs.net/fhir/r4\",\"organization_name\":\"FhirLabs\",\"purpose_of_use\":\"urn:oid:2.16.840.1.113883.5.8#TREAT\"}");
         }
+
+        _jsonRelatedPerson = hl7B2BModel?.UserInformation?.GetRawText();
+        _jsonPatient = hl7B2BModel?.PatientInformation?.GetRawText();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await form.Validate();
+        }
+    }
+    
     public void Update()
     {
         var authExtObj = AppState.AuthorizationExtObjects.SingleOrDefault(a => a.Key == UdapConstants.UdapAuthorizationExtensions.TEFCAIAS);
@@ -103,49 +115,77 @@ public partial class TefcaIasForm
         await form.Validate();
         if (form.IsValid)
         {
-            var b2bAuthExtensions = await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.TEFCAIAS, hl7B2BModel, true);
-            await OnInclude.InvokeAsync(b2bAuthExtensions);
+            await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.TEFCAIAS, hl7B2BModel, true);
+            await OnUpdateEditor.InvokeAsync();
         }
     }
 
     private async Task HandleRemove()
     {
-        var b2bAuthExtensions = await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.TEFCAIAS, hl7B2BModel, false);
-        await OnRemove.InvokeAsync(b2bAuthExtensions);
+        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.TEFCAIAS, hl7B2BModel, false);
+        await OnUpdateEditor.InvokeAsync();
     }
 
-    private async Task<Dictionary<string, TEFCAIASAuthorizationExtension>> UpdateAppState(string key, TEFCAIASAuthorizationExtension model, bool use)
+    private async Task UpdateAppState(string key, TEFCAIASAuthorizationExtension model, bool use)
     {
         var jsonString = model.SerializeToJson(true);
 
         if (AppState.AuthorizationExtObjects.ContainsKey(key))
         {
             AppState.AuthorizationExtObjects[key].Json = jsonString;
-            AppState.AuthorizationExtObjects[key].Use = use;
+            AppState.AuthorizationExtObjects[key].UseInAuth = use;
         }
         else
         {
             AppState.AuthorizationExtObjects.Add(key, new AuthExtModel
             {
                 Json = jsonString,
-                Use = use
+                UseInAuth = use
             });
         }
 
         await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationExtObjects), AppState.AuthorizationExtObjects);
-
-        var updatedState = AppState.AuthorizationExtObjects
-            .Where(a => a.Value.Use)
-            .ToDictionary(
-                a => a.Key,
-                a => JsonSerializer.Deserialize<TEFCAIASAuthorizationExtension>(a.Value.Json, _jsonSerializerOptions)
-            );
-
-        return updatedState;
     }
 
     private async Task GoToTEFCAFacilitateFhirSOP()
     {
         await JSRuntime.InvokeVoidAsync("open", "https://rce.sequoiaproject.org/wp-content/uploads/2024/07/SOP-Facilitated-FHIR-Implementation_508-1.pdf#page=17", "_blank");
+    }
+
+
+
+    private void ParseJsonRelatedPerson()
+    {
+        if (!string.IsNullOrEmpty(_jsonRelatedPerson))
+        {
+            try
+            {
+                using JsonDocument doc = JsonDocument.Parse(_jsonRelatedPerson);
+                hl7B2BModel.UserInformation = doc.RootElement.Clone();
+
+            }
+            catch (JsonException ex)
+            {
+                // Handle JSON parsing error
+                Console.WriteLine($"Invalid JSON: {ex.Message}");
+            }
+        }
+    }
+
+    private void ParseJsonPatient()
+    {
+        if (!string.IsNullOrEmpty(_jsonPatient))
+        {
+            try
+            {
+                using JsonDocument doc = JsonDocument.Parse(_jsonPatient);
+                hl7B2BModel.PatientInformation = doc.RootElement.Clone();
+            }
+            catch (JsonException ex)
+            {
+                // Handle JSON parsing error
+                Console.WriteLine($"Invalid JSON: {ex.Message}");
+            }
+        }
     }
 }

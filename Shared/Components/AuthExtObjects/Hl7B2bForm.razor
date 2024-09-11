@@ -22,6 +22,10 @@
         {
             <MudChip T="string" OnClose="() => RemovePurposeOfUse(purpose)" Closeable="true">@purpose</MudChip>
         }
+        @if (hl7B2BModel.PurposeOfUse.Count == 0)
+         {
+             <div class="validation-error">At least one Purpose of Use is required.</div>
+         }
     </MudChipSet>
     <MudTextField @bind-Value="newConsentPolicy" Label="New Consent Policy" />
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddConsentPolicy">Add Consent Policy</MudButton>

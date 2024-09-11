@@ -5,15 +5,16 @@
 
                 <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
                     <MudTabPanel Text="hl7-b2b">
-                        <Hl7B2bForm @ref="_hl7B2BForm" OnInclude="HandleInclude" OnRemove="HandleRemove" />
+                        <Hl7B2bForm @ref="_hl7B2BForm" OnUpdateEditor="HandleUpdateEditor" />
                     </MudTabPanel>
                     <MudTabPanel Text="hl7-b2b for TEFCA">
+                        <Hl7B2bTefcaForm @ref="_hl7B2BTefcaForm" OnUpdateEditor="HandleUpdateEditor"  />
                     </MudTabPanel>
                     <MudTabPanel Text="hl7-b2b-user">
-                        <Hl7B2bUserForm @ref="_hl7B2BUserForm" OnInclude="HandleInclude" OnRemove="HandleRemove" />
+                        <Hl7B2bUserForm @ref="_hl7B2BUserForm" OnUpdateEditor="HandleUpdateEditor" />
                     </MudTabPanel>
                     <MudTabPanel Text="tefca_ias">
-                        <TefcaIasForm @ref="_tefcaIasForm" OnInclude="HandleInclude" OnRemove="HandleRemove" />
+                        <TefcaIasForm @ref="_tefcaIasForm" OnUpdateEditor="HandleUpdateEditor" />
                     </MudTabPanel>
                     <MudTabPanel Text="tefca_smart">
                     </MudTabPanel>

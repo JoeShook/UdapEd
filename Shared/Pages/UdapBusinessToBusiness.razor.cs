@@ -328,7 +328,7 @@ public partial class UdapBusinessToBusiness
                 Scope = ScopeOverride.IsNullOrEmpty() ? TokenRequestScope?.Replace("scope=", "").TrimEnd('&').Trim() : ScopeOverride
             };
 
-            var extensions = AppState.AuthorizationExtObjects.Where(a => a.Value.Use).ToList();
+            var extensions = AppState.AuthorizationExtObjects.Where(a => a.Value.UseInAuth).ToList();
 
             if (extensions.Any())
             {

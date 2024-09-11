@@ -9,14 +9,18 @@
             @onclick="@GoToFhirIdentityMatchingIG" />
     </div>
 
-    <MudTextField @bind-Value="hl7B2BModel.Version" Label="Version" Required="true"/>
-    <MudTextField @bind-Value="hl7B2BModel.UserPerson" Label="FHIR Person"/>
+    <MudTextField @bind-Value="hl7B2BModel.Version" Label="Version" Required="true" />
+    <MudTextField @bind-Value="_jsonUserPerson" Label="FHIR Person" Required="true" OnBlur="ParseJsonUserPerson" />
     <MudTextField @bind-Value="newPurposeOfUse" Label="New Purpose of Use"/>
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddPurposeOfUse">Add Purpose of Use</MudButton>
     <MudChipSet T="string">
         @foreach (var purpose in hl7B2BModel.PurposeOfUse)
         {
             <MudChip T="string" OnClose="() => RemovePurposeOfUse(purpose)" Closeable="true">@purpose</MudChip>
+        }
+        @if (hl7B2BModel.PurposeOfUse.Count == 0)
+        {
+            <div class="validation-error">At least one Purpose of Use is required.</div>
         }
     </MudChipSet>
     <MudTextField @bind-Value="newConsentPolicy" Label="New Consent Policy"/>

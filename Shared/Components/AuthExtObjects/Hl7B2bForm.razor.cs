@@ -12,8 +12,7 @@ public partial class Hl7B2bForm
 {
     [Inject] private IJSRuntime JSRuntime { get; set; }
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
-    [Parameter] public EventCallback<Dictionary<string, HL7B2BAuthorizationExtension>> OnInclude { get; set; }
-    [Parameter] public EventCallback<Dictionary<string, HL7B2BAuthorizationExtension>> OnRemove { get; set; }
+    [Parameter] public EventCallback OnUpdateEditor { get; set; }
     [Parameter] public string? Id { get; set; }
 
     private MudForm form;
@@ -45,6 +44,15 @@ public partial class Hl7B2bForm
                 "{\"version\":\"1\",\"subject_id\":\"urn:oid:2.16.840.1.113883.4.6#1234567890\",\"organization_id\":\"https://fhirlabs.net/fhir/r4\",\"organization_name\":\"FhirLabs\",\"purpose_of_use\":[\"urn:oid:2.16.840.1.113883.5.8#TREAT\"]}");
         }
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await form.Validate();
+        }
+    }
+
     public void Update()
     {
         var authExtObj = AppState.AuthorizationExtObjects.SingleOrDefault(a => a.Key == UdapConstants.UdapAuthorizationExtensions.Hl7B2B);
@@ -104,44 +112,36 @@ public partial class Hl7B2bForm
         await form.Validate();
         if (form.IsValid)
         {
-            var b2bAuthExtensions = UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2B, hl7B2BModel, true);
-            await OnInclude.InvokeAsync(b2bAuthExtensions);
+            await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2B, hl7B2BModel, true);
+            await OnUpdateEditor.InvokeAsync();
         }
     }
 
     private async Task HandleRemove()
     {
-        var b2bAuthExtensions = UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2B, hl7B2BModel, false);
-        await OnRemove.InvokeAsync(b2bAuthExtensions);
+        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2B, hl7B2BModel, false);
+        await OnUpdateEditor.InvokeAsync();
     }
 
-    private Dictionary<string, HL7B2BAuthorizationExtension> UpdateAppState(string key, HL7B2BAuthorizationExtension model, bool use)
+    private Task UpdateAppState(string key, HL7B2BAuthorizationExtension model, bool use)
     {
         var jsonString = JsonSerializer.Serialize(model, _jsonSerializerOptions);
 
         if (AppState.AuthorizationExtObjects.ContainsKey(key))
         {
             AppState.AuthorizationExtObjects[key].Json = jsonString;
-            AppState.AuthorizationExtObjects[key].Use = use;
+            AppState.AuthorizationExtObjects[key].UseInAuth = use;
         }
         else
         {
             AppState.AuthorizationExtObjects.Add(key, new AuthExtModel
             {
                 Json = jsonString,
-                Use = use
+                UseInAuth = use
             });
         }
 
-        AppState.SetProperty(this, nameof(AppState.AuthorizationExtObjects), AppState.AuthorizationExtObjects);
-
-        return AppState.AuthorizationExtObjects
-            .Where(a => a.Value.Use)
-            .ToDictionary(
-                a => a.Key,
-                a => JsonSerializer.Deserialize<HL7B2BAuthorizationExtension>(a.Value.Json, _jsonSerializerOptions)
-            );
-
+        return AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationExtObjects), AppState.AuthorizationExtObjects);
     }
 
     private async Task GoToFhirSecurityIG()
