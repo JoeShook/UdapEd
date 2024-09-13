@@ -13,10 +13,10 @@ using Hl7.Fhir.Model;
 namespace UdapEd.Shared.Extensions;
 public class Hl7Helpers
 {
-    public static List<Coding> GetAllVsActReasonCodings()
+    public static List<Coding> GetAllCodingsFromType(Type type)
     {
         var codingList = new List<Coding>();
-        var properties = typeof(Hl7.Fhir.Packages.Hl7Terminology_6_0_2.VsActReason).GetProperties(BindingFlags.Public | BindingFlags.Static);
+        var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Static);
 
         foreach (var property in properties)
         {

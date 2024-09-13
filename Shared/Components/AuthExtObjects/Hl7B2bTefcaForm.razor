@@ -15,7 +15,11 @@
     <MudTextField @bind-Value="_hl7B2BModel.SubjectRole" Label="Subject Role" />
     <MudTextField @bind-Value="_hl7B2BModel.OrganizationName" Label="Organization Name" Required="true" />
     <MudTextField @bind-Value="_hl7B2BModel.OrganizationId" Label="Organization ID" Required="true" />
-    <MudTextField @bind-Value="_newPurposeOfUse" Label="New Purpose of Use" />
+    <MudAutocomplete T="string" @bind-Value="_newPurposeOfUse"
+                     Label="New Purpose of Use"
+                     SearchFunc="@SearchPurposeOfUse"
+                     MaxItems="100"
+                     Class="scrollable-dropdown" />
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddPurposeOfUse">Add Purpose of Use</MudButton>
     <MudChipSet T="string">
         @if (_hl7B2BModel.PurposeOfUse != null)

@@ -8,11 +8,13 @@
 #endregion
 
 using System.Text.Json;
+using Hl7.Fhir.Packages.Hl7Terminology_6_0_2;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
 using Udap.Model;
 using Udap.Model.UdapAuthenticationExtensions;
+using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model.AuthExtObjects;
 
 namespace UdapEd.Shared.Components.AuthExtObjects;
@@ -33,6 +35,8 @@ public partial class Hl7B2BForm
     private string? _selectedConsentReference;
     private string? _newConsentPolicy;
     private string? _newConsentReference;
+    private List<string> _vsPurposeOfUse;
+
     private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
     {
         WriteIndented = true
@@ -40,6 +44,8 @@ public partial class Hl7B2BForm
 
     protected override void OnInitialized()
     {
+        _vsPurposeOfUse = Hl7Helpers.GetAllCodingsFromType(typeof(VsPurposeOfUse)).Where(c => c.Code != "PurposeOfUse").Select(c => c.Code).ToList();
+
         var authExtObj = AppState.AuthorizationExtObjects.SingleOrDefault(a => a.Key == UdapConstants.UdapAuthorizationExtensions.Hl7B2B);
 
         if (authExtObj.Key != null && authExtObj.Value != null && !string.IsNullOrEmpty(authExtObj.Value.Json))
@@ -53,6 +59,16 @@ public partial class Hl7B2BForm
             _hl7B2BModel = JsonSerializer.Deserialize<HL7B2BAuthorizationExtension>(
                 "{\"version\":\"1\",\"subject_id\":\"urn:oid:2.16.840.1.113883.4.6#1234567890\",\"organization_id\":\"https://fhirlabs.net/fhir/r4\",\"organization_name\":\"FhirLabs\",\"purpose_of_use\":[\"urn:oid:2.16.840.1.113883.5.8#TREAT\"]}");
         }
+    }
+
+    private Task<IEnumerable<string>> SearchPurposeOfUse(string value, CancellationToken ct)
+    {
+        if (string.IsNullOrEmpty(value))
+            return Task.FromResult(_vsPurposeOfUse.AsEnumerable());
+
+        return Task.FromResult(_vsPurposeOfUse
+            .Where(c => c.Contains(value, StringComparison.InvariantCultureIgnoreCase))
+            .AsEnumerable());
     }
 
     protected override Task OnAfterRenderAsync(bool firstRender)
@@ -78,9 +94,9 @@ public partial class Hl7B2BForm
 
     private void AddPurposeOfUse()
     {
-        if (!string.IsNullOrWhiteSpace(_newPurposeOfUse) && _hl7B2BModel.PurposeOfUse != null && !_hl7B2BModel.PurposeOfUse.Contains(_newPurposeOfUse))
+        if (!string.IsNullOrWhiteSpace(_newPurposeOfUse) && _hl7B2BModel.PurposeOfUse != null && !_hl7B2BModel.PurposeOfUse.Contains($"urn:oid:2.16.840.1.113883.5.8#{_newPurposeOfUse}"))
         {
-            _hl7B2BModel.PurposeOfUse.Add(_newPurposeOfUse);
+            _hl7B2BModel.PurposeOfUse.Add($"urn:oid:2.16.840.1.113883.5.8#{_newPurposeOfUse}");
             _newPurposeOfUse = string.Empty;
         }
     }

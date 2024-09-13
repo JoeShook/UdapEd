@@ -8,11 +8,13 @@
 #endregion
 
 using System.Text.Json;
+using Hl7.Fhir.Packages.Hl7Terminology_6_0_2;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
 using Udap.Model;
 using Udap.Model.UdapAuthenticationExtensions;
+using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model.AuthExtObjects;
 
 namespace UdapEd.Shared.Components.AuthExtObjects;
@@ -32,6 +34,7 @@ public partial class TefcaIasForm
     private string? _selectedConsentReference;
     private string? _newConsentPolicy;
     private string? _newConsentReference;
+    private List<string> _vsPurposeOfUse = ["T-IAS"];
 
     private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
     {
@@ -56,6 +59,16 @@ public partial class TefcaIasForm
 
         _jsonRelatedPerson = _hl7B2BModel?.UserInformation?.GetRawText();
         _jsonPatient = _hl7B2BModel?.PatientInformation?.GetRawText();
+    }
+
+    private Task<IEnumerable<string>> SearchPurposeOfUse(string value, CancellationToken ct)
+    {
+        if (string.IsNullOrEmpty(value))
+            return Task.FromResult(_vsPurposeOfUse.AsEnumerable());
+
+        return Task.FromResult(_vsPurposeOfUse
+            .Where(c => c.Contains(value, StringComparison.InvariantCultureIgnoreCase))
+            .AsEnumerable());
     }
 
     protected override Task OnAfterRenderAsync(bool firstRender)

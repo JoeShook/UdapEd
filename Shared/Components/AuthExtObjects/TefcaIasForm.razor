@@ -10,7 +10,13 @@
     </div>
 
     <MudTextField @bind-Value="_hl7B2BModel.Version" Label="Version" Required="true" />
-    <MudTextField @bind-Value="_hl7B2BModel.PurposeOfUse" Label="Purpose of Use" Required="true" />
+    
+    <MudAutocomplete T="string" @bind-Value="_hl7B2BModel.PurposeOfUse"
+                     Label="New Purpose of Use"
+                     SearchFunc="@SearchPurposeOfUse"
+                     MaxItems="100"
+                     Class="scrollable-dropdown" />
+    
     <MudTextField @bind-Value="_jsonRelatedPerson" 
                   Label="FHIR Related Person" 
                   Required="true" 
