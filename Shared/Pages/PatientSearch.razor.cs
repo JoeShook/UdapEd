@@ -188,7 +188,83 @@ public partial class PatientSearch
         {
             Patient = patient.Id
         };
-
+        
         await AppState.SetPropertyAsync(this, nameof(AppState.LaunchContext), launchContext);
+    }
+
+    private async Task SetPatientContext(Patient patient)
+    {
+        AppState.FhirContext.CurrentPatient = patient;
+        await AppState.SetPropertyAsync(this, nameof(AppState.FhirContext), AppState.FhirContext);
+    }
+
+    private async Task SetRelatedPersonContext(Patient patient)
+    {
+        var relatedPerson = new RelatedPerson
+        {
+            Id = patient.Id,
+            Meta = patient.Meta,
+            Identifier = patient.Identifier,
+            Active = patient.Active,
+            Name = patient.Name,
+            Telecom = patient.Telecom,
+            Gender = patient.Gender,
+            BirthDate = patient.BirthDate,
+            Address = patient.Address,
+            Photo = patient.Photo,
+            Communication = new List<RelatedPerson.CommunicationComponent>()
+        };
+
+        foreach (var patientCommunication in patient.Communication)
+        {
+            var relatedPersonCommunication = new RelatedPerson.CommunicationComponent()
+            {
+                Language = patientCommunication.Language,
+                Preferred = patientCommunication.Preferred
+            };
+
+            relatedPerson.Communication.Add(relatedPersonCommunication);
+        }
+
+        AppState.FhirContext.CurrentRelatedPerson = relatedPerson;
+        await AppState.SetPropertyAsync(this, nameof(AppState.FhirContext), AppState.FhirContext);
+    }
+
+    private async Task SetPersonContext(Patient patient)
+    {
+        var person = new Person
+        {
+            Id = patient.Id,
+            Meta = patient.Meta,
+            Identifier = patient.Identifier,
+            Active = patient.Active,
+            Name = patient.Name,
+            Telecom = patient.Telecom,
+            Gender = patient.Gender,
+            BirthDate = patient.BirthDate,
+            Address = patient.Address
+            // Link = new List<Person.LinkComponent>()
+        };
+
+        if (patient.Photo.Any())
+        {
+            person.Photo = patient.Photo.FirstOrDefault();
+        }
+
+        // Map any additional fields as needed
+        // foreach (var patientLink in patient.Link)
+        // {
+        //     var personLink = new Person.LinkComponent
+        //     {
+        //         
+        //         Other = patientLink.Other,
+        //         Type = patientLink.Type
+        //     };
+        //
+        //     person.Link.Add(personLink);
+        // }
+
+        AppState.FhirContext.CurrentPerson = person;
+        await AppState.SetPropertyAsync(this, nameof(AppState.FhirContext), AppState.FhirContext);
     }
 }

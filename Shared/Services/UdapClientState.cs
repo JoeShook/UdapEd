@@ -126,6 +126,8 @@ public class UdapClientState : IAppState
     public PatientSearchPref? PatientSearchPref { get; set; }
     public Dictionary<string, AuthExtModel> AuthorizationExtObjects { get; set; }
 
+    public FhirContext FhirContext { get; set; }
+
     public Task SetPropertyAsync(ComponentBase caller, string propertyName, object? propertyValue, bool saveChanges = true,
         bool fhirStateHasChanged = true)
     {

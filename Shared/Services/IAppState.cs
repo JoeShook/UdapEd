@@ -63,6 +63,8 @@ public interface IAppState
 
     public Dictionary<string, AuthExtModel> AuthorizationExtObjects { get; }
 
+    public FhirContext FhirContext { get; }
+
     Task SetPropertyAsync(
         ComponentBase caller,
         string propertyName,
