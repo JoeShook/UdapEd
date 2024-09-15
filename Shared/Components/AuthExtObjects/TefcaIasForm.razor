@@ -17,16 +17,73 @@
                      MaxItems="100"
                      Class="scrollable-dropdown" />
     
-    <MudTextField @bind-Value="_jsonRelatedPerson" 
-                  Label="FHIR Related Person" 
-                  Required="true" 
-                  Immediate="true"
-                  Validation="@(new Func<string?, string?>(ValidateJsonRelatedPerson))" />
-    <MudTextField @bind-Value="_jsonPatient" 
-                  Label="FHIR Patient" 
-                  Required="true" 
-                  Immediate="true"
-                  Validation="@(new Func<string?, string?>(ValidateJsonPatient))" />
+    
+    <MudGrid Justify="Justify.SpaceBetween" @onclick="OpenRelatedPersonMenu" Class="mt-1">
+        
+        <MudItem>
+            <MudText OnClick="OpenRelatedPersonMenu">@(_jsonRelatedPerson)</MudText>
+        </MudItem>
+
+        <MudItem>
+            <MudMenu @ref="relatedPersonMenuRef" AriaLabel="Set Context" Variant="Variant.Text">
+                @if (AppState.FhirContext.CurrentRelatedPerson != null)
+                {
+                    <MudMenuItem OnClick="@UseRelatedPersonContext">
+                        @(new MarkupString(string.Join("<br/> ", AppState.FhirContext.CurrentRelatedPerson.Name.Select(hn => $"{hn.Given.First()}, {hn.Family}"))))
+                    </MudMenuItem>
+                }
+                <MudMenuItem OnClick="@EmptyRelatedPersonContext">Create Empty Person</MudMenuItem>
+                <MudMenuItem OnClick="@SearchForRelatedPerson">Search for Person</MudMenuItem>
+                <MudMenuItem OnClick="@ClearRelatedPersonContext">
+                    <MudIcon Icon="@Icons.Material.Outlined.Clear"/> Clear Person Context
+                </MudMenuItem>
+            </MudMenu>
+            <MudTooltip Text="Select Related Person" >
+                <MudIconButton OnClick="OpenRelatedPersonMenu" Color="Color.Secondary" Icon="@Icons.Material.Outlined.PersonPin" />
+            </MudTooltip>
+        </MudItem>
+        
+    </MudGrid>
+   
+    @if (_jsonRelatedPerson == null)
+    {
+        <MudText Color="Color.Error" Typo="Typo.caption">
+            Missing FHIR Related Person.
+        </MudText>
+    }
+    
+    <MudGrid Justify="Justify.SpaceBetween" @onclick="OpenPatientMenu" Class="mt-1">
+
+        <MudItem>
+            <MudText  >@(_jsonPatient)</MudText>
+        </MudItem>
+
+        <MudMenu @ref="patientMenuRef" AriaLabel="Set Context" Variant="Variant.Text">
+            @if (AppState.FhirContext.CurrentPatient != null)
+            {
+                <MudMenuItem OnClick="@UsePatientContext">
+                    @(new MarkupString(string.Join("<br/> ", AppState.FhirContext.CurrentPatient.Name.Select(hn => $"{hn.Given.First()}, {hn.Family}"))))
+                </MudMenuItem>
+            }
+            <MudMenuItem OnClick="@EmptyPatientContext">Create Empty Person</MudMenuItem>
+            <MudMenuItem OnClick="@SearchForPatient">Search for Person</MudMenuItem>
+            <MudMenuItem OnClick="@ClearPatientContext">
+                <MudIcon Icon="@Icons.Material.Outlined.Clear" /> Clear Person Context
+            </MudMenuItem>
+        </MudMenu>
+        
+        <MudTooltip Text="Select Patient">
+            <MudIconButton OnClick="OpenPatientMenu" Color="Color.Secondary" Icon="@Icons.Material.Outlined.PersonPin" />
+        </MudTooltip>
+    </MudGrid>
+
+    @if (_jsonPatient == null)
+    {
+        <MudText Color="Color.Error" Typo="Typo.caption" >
+            Missing FHIR Patient.
+        </MudText>
+    }
+
     <MudTextField @bind-Value="_hl7B2BModel.IalVetted" Label="IA Vetted" />
     <MudTextField @bind-Value="_newConsentPolicy" Label="New Consent Policy" />
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddConsentPolicy">Add Consent Policy</MudButton>

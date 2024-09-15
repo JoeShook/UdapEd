@@ -8,15 +8,34 @@
             Alt="Fhir Icon" style="height: 36px; width: 36px; margin: 24px"
             @onclick="@GoToFhirIdentityMatchingIg" />
     </div>
-
     <MudTextField @bind-Value="_hl7B2BModel.Version" Label="Version" Required="true" />
-    <MudTextField  T="string" @bind-Value="_jsonUserPerson" 
-                   Label="FHIR Person" 
-                   Required="true"
-                   Immediate="true"
-                   RequiredError="FHIR Person is required"
-                   Validation="@(new Func<string?, string?>(ValidateJsonUserPerson))" />
+
+    <div @onclick="OpenMenu" style="display: flex; justify-content: space-between; align-items: center;">
+        <MudText @onclick="OpenMenu">@(_jsonUserPerson)</MudText>
+        <MudTooltip Text="Select Person">
+            <MudMenu @ref="personMenuRef" AriaLabel="Set Context" EndIcon="@Icons.Material.Outlined.PersonPin" Color="Color.Secondary" Variant="Variant.Text">
+                @if (AppState.FhirContext.CurrentPerson != null)
+                {
+                    <MudMenuItem OnClick="@UsePersonContext">@(new MarkupString(string.Join("<br/> ", AppState.FhirContext.CurrentPerson.Name.Select(hn => $"{hn.Given.First()}, {hn.Family}"))))</MudMenuItem>
+                }
+                <MudMenuItem OnClick="@EmptyPersonContext">Create Empty Person</MudMenuItem>
+                <MudMenuItem OnClick="@SearchForPerson">Search for Person</MudMenuItem>
+                <MudMenuItem OnClick="@ClearPersonContext">
+                    <MudIcon Icon="@Icons.Material.Outlined.Clear"/> Clear Person Context
+                </MudMenuItem>
+            </MudMenu>
+        </MudTooltip>
+    </div>
     
+    @if (_jsonUserPerson == null)
+    {
+        <MudText Color="Color.Error" Typo="Typo.caption" >
+            Missing FHIR Person.
+        </MudText>
+    }
+
+    
+
     <MudAutocomplete T="string" @bind-Value="_newPurposeOfUse"
                      Label="New Purpose of Use"
                      SearchFunc="@SearchPurposeOfUse"

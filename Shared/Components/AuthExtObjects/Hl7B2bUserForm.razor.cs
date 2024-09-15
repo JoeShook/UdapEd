@@ -8,7 +8,9 @@
 #endregion
 
 using System.Text.Json;
+using Hl7.Fhir.Model;
 using Hl7.Fhir.Packages.Hl7Terminology_6_0_2;
+using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
@@ -16,19 +18,22 @@ using Udap.Model;
 using Udap.Model.UdapAuthenticationExtensions;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model.AuthExtObjects;
+using Task = System.Threading.Tasks.Task;
 
 namespace UdapEd.Shared.Components.AuthExtObjects;
 
 public partial class Hl7B2BUserForm
 {
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
     [Parameter] public EventCallback OnUpdateEditor { get; set; }
-    [Parameter] public string? Id { get; set; } [Parameter] public AuthExtObjectOperationType OperationType { get; set; }
+    [Parameter] public string? Id { get; set; }
+    [Parameter] public AuthExtObjectOperationType OperationType { get; set; }
 
     private MudForm _form = null!;
     private HL7B2BUserAuthorizationExtension _hl7B2BModel = new HL7B2BUserAuthorizationExtension();
-    private string? _jsonUserPerson = null;
+    private MarkupString? _jsonUserPerson = null;
     private string? _selectedPurposeOfUse;
     private string? _newPurposeOfUse;
     private string? _selectedConsentPolicy;
@@ -36,6 +41,7 @@ public partial class Hl7B2BUserForm
     private string? _newConsentPolicy;
     private string? _newConsentReference;
     private List<string> _vsPurposeOfUse;
+    private MudMenu personMenuRef;
 
     private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
     {
@@ -47,7 +53,7 @@ public partial class Hl7B2BUserForm
         _vsPurposeOfUse = Hl7Helpers.GetAllCodingsFromType(typeof(VsPurposeOfUse)).Where(c => c.Code != "PurposeOfUse").Select(c => c.Code).ToList();
 
         var authExtObj = AppState.AuthorizationExtObjects.SingleOrDefault(a => a.Key == UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER);
-
+        
         if (authExtObj.Key != null && authExtObj.Value != null && !string.IsNullOrEmpty(authExtObj.Value.Json))
         {
             _hl7B2BModel = JsonSerializer.Deserialize<HL7B2BUserAuthorizationExtension>(authExtObj.Value.Json) ??
@@ -55,12 +61,21 @@ public partial class Hl7B2BUserForm
         }
         else
         {
-            // default starter template
-            _hl7B2BModel = JsonSerializer.Deserialize<HL7B2BUserAuthorizationExtension>(
-                "{\"version\":\"1\",\"subject_id\":\"urn:oid:2.16.840.1.113883.4.6#1234567890\",\"organization_id\":\"https://fhirlabs.net/fhir/r4\",\"organization_name\":\"FhirLabs\",\"purpose_of_use\":[\"urn:oid:2.16.840.1.113883.5.8#TREAT\"]}");
+            _hl7B2BModel = new HL7B2BUserAuthorizationExtension();
         }
 
-        _jsonUserPerson = _hl7B2BModel?.UserPerson?.GetRawText();
+        if (_hl7B2BModel.UserPerson != null)
+        {
+            try
+            {
+                var person = new FhirJsonParser().Parse<Person>(_hl7B2BModel.UserPerson.ToString());
+                SetPersonPresentation(person);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
     }
 
     private Task<IEnumerable<string>> SearchPurposeOfUse(string value, CancellationToken ct)
@@ -110,7 +125,6 @@ public partial class Hl7B2BUserForm
         {
             purpose = purpose.Trim();
 
-            // Directly manipulate the list
             _hl7B2BModel.PurposeOfUse = _hl7B2BModel.PurposeOfUse
                 .Where(p => !p.Equals(purpose, StringComparison.OrdinalIgnoreCase))
                 .ToList();
@@ -136,7 +150,6 @@ public partial class Hl7B2BUserForm
     private async Task RemoveConsentPolicy(string policy)
     {
         var remove = _hl7B2BModel.ConsentPolicy?.Remove(policy);
-        Console.WriteLine("Removed: " + remove);
         await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, _hl7B2BModel, true);
         StateHasChanged();
         await Task.Delay(100);
@@ -162,7 +175,6 @@ public partial class Hl7B2BUserForm
 
     private async Task HandleInclude()
     {
-        ParseJsonUserPerson();
         await _form.Validate();
         if (_form.IsValid)
         {
@@ -180,19 +192,36 @@ public partial class Hl7B2BUserForm
     private Task UpdateAppState(string key, HL7B2BUserAuthorizationExtension model, bool use)
     {
         var jsonString = model.SerializeToJson(true);
-        
+
         if (AppState.AuthorizationExtObjects.ContainsKey(key))
         {
             AppState.AuthorizationExtObjects[key].Json = jsonString;
-            AppState.AuthorizationExtObjects[key].UseInAuth = use;
+            if (OperationType == AuthExtObjectOperationType.Auth)
+            {
+                AppState.AuthorizationExtObjects[key].UseInAuth = use;
+            }
+            else if (OperationType == AuthExtObjectOperationType.Register)
+            {
+                AppState.AuthorizationExtObjects[key].UseInRegister = use;
+            }
         }
         else
         {
-            AppState.AuthorizationExtObjects.Add(key, new AuthExtModel
+            var newAuthExtModel = new AuthExtModel
             {
-                Json = jsonString,
-                UseInAuth = use
-            });
+                Json = jsonString
+            };
+
+            if (OperationType == AuthExtObjectOperationType.Auth)
+            {
+                newAuthExtModel.UseInAuth = use;
+            }
+            else if (OperationType == AuthExtObjectOperationType.Register)
+            {
+                newAuthExtModel.UseInRegister = use;
+            }
+
+            AppState.AuthorizationExtObjects.Add(key, newAuthExtModel);
         }
 
         return AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationExtObjects), AppState.AuthorizationExtObjects);
@@ -205,28 +234,61 @@ public partial class Hl7B2BUserForm
 
     private string? ValidateJsonUserPerson(string? input)
     {
-        ParseJsonUserPerson();
         var result = _hl7B2BModel.UserPerson == null ? "Invalid Person Resource" : null;
         return result;
     }
 
-    private void ParseJsonUserPerson()
+    
+    private void SetPersonPresentation(Person person)
     {
-        if (!string.IsNullOrEmpty(_jsonUserPerson))
+        _jsonUserPerson = new MarkupString(string.Join("<br/> ",
+            person.Name.Select(hn => $"{hn.Given.First()}, {hn.Family}")));
+    }
+
+    private void UsePersonContext()
+    {
+        if (AppState.FhirContext.CurrentPerson != null)
         {
-            try
-            {
-                using JsonDocument doc = JsonDocument.Parse(_jsonUserPerson);
-                _hl7B2BModel.UserPerson = doc.RootElement.Clone();
-            }
-            catch (JsonException)
-            {
-                _hl7B2BModel.UserPerson = null;
-            }
+            var jsonString = new FhirJsonSerializer().SerializeToString(AppState.FhirContext.CurrentPerson);
+            _hl7B2BModel.UserPerson = JsonDocument.Parse(jsonString).RootElement;
+            SetPersonPresentation(AppState.FhirContext.CurrentPerson);
         }
-        else
+    }
+
+    private async Task EmptyPersonContext()
+    {
+        var person = new Person()
         {
-            _hl7B2BModel.UserPerson = null;
-        }
+            Name =
+            [
+                new HumanName()
+                {
+                    Family = "Newman",
+                    Given = new List<string>() { "Alice", "Jones" }
+                }
+            ]
+        };
+        
+        var jsonString = await new FhirJsonSerializer().SerializeToStringAsync(person);
+        _hl7B2BModel.UserPerson = JsonDocument.Parse(jsonString).RootElement;
+        SetPersonPresentation(person);
+
+    }
+
+    private void SearchForPerson()
+    {
+        NavigationManager.NavigateTo("/patientSearch");
+    }
+
+    private void ClearPersonContext()
+    {
+        AppState.FhirContext.CurrentPerson = null;
+        _jsonUserPerson = null;
+    }
+
+
+    private async Task OpenMenu(EventArgs e)
+    {
+        await personMenuRef.ToggleMenuAsync(e);
     }
 }
