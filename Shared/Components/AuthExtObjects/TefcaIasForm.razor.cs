@@ -21,7 +21,7 @@ using UdapEd.Shared.Model.AuthExtObjects;
 using Task = System.Threading.Tasks.Task;
 
 namespace UdapEd.Shared.Components.AuthExtObjects;
-public partial class TefcaIasForm
+public partial class TefcaIasForm : ComponentBase
 {
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;

@@ -22,7 +22,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace UdapEd.Shared.Components.AuthExtObjects;
 
-public partial class Hl7B2BUserForm
+public partial class Hl7B2BUserForm : ComponentBase
 {
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;

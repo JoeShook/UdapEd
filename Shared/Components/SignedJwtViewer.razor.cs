@@ -12,12 +12,13 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.IdentityModel.Tokens;
+using MudBlazor;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Services;
 
 namespace UdapEd.Shared.Components;
 
-public partial class SignedJwtViewer
+public partial class SignedJwtViewer : ComponentBase
 {
     /// <summary>
     /// A Signed JWT

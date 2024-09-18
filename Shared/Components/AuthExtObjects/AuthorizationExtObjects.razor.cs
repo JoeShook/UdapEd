@@ -17,7 +17,7 @@ using UdapEd.Shared.Model.AuthExtObjects;
 
 namespace UdapEd.Shared.Components.AuthExtObjects;
 
-public partial class AuthorizationExtObjects
+public partial class AuthorizationExtObjects : ComponentBase
 {
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
     [CascadingParameter]
