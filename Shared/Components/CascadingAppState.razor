@@ -262,6 +262,9 @@
 
     public AuthorizationCodeRequest? AuthorizationCodeRequest { get; private set; }
 
+
+    public Pkce Pkce { get; private set; } = new();
+
     private ClientRegistrations? _clientRegistrations;
 
     public ClientRegistrations ClientRegistrations

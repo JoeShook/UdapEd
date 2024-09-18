@@ -68,7 +68,6 @@ public partial class AuthorizationExtObjects
 
     private async Task EditorOnDidInit()
     {
-        Console.WriteLine("EditorOnDidInit()");
         await _editor.Layout(new Dimension() { Height = 600, Width = 200 });
         await JsRuntime.InvokeVoidAsync("setMonacoEditorResize", _editor.Id);
         _isEditorInitialized = true;

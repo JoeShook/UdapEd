@@ -46,6 +46,7 @@ public class UdapAuthorizationCodeTokenRequestModel : UdapBaseTokenRequestModel
             ClientCredentialStyle = ClientCredentialStyle,
             ClientId = ClientId,
             ClientSecret = ClientSecret,
+            CodeVerifier = CodeVerifier,
             Parameters = new Parameters()
         };
 
@@ -61,4 +62,6 @@ public class UdapAuthorizationCodeTokenRequestModel : UdapBaseTokenRequestModel
 
         return request;
     }
+
+    public string? CodeVerifier { get; set; }
 }

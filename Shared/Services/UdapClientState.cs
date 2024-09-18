@@ -118,7 +118,9 @@ public class UdapClientState : IAppState
     /// <summary>
     /// String representation of UDAP 3.1 Authorization Code Flow
     /// </summary>
-    public AuthorizationCodeRequest? AuthorizationCodeRequest { get; set; }
+    public AuthorizationCodeRequest AuthorizationCodeRequest { get; set; }
+
+    public Pkce Pkce { get; set; } = new();
 
     public ClientRegistrations? ClientRegistrations { get; set; }
     public ClientHeaders? ClientHeaders { get; set; }

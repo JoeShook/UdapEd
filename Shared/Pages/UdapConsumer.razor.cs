@@ -19,6 +19,7 @@ using Microsoft.JSInterop;
 using Udap.Common.Extensions;
 using Udap.Model;
 using UdapEd.Shared.Components;
+using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 
@@ -35,6 +36,26 @@ public partial class UdapConsumer
     [Inject] NavigationManager NavManager { get; set; } = null!;
     
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
+
+    private string AuthCodeRequestLink { get; set; } = string.Empty;
+
+    private bool _enablePkce;
+    public bool EnablePkce
+    {
+        get => _enablePkce;
+        set
+        {
+            AppState.Pkce.EnablePkce = value;
+            _enablePkce = value;
+
+            if (!value)
+            {
+                AppState.Pkce.CodeChallenge = null;
+                AppState.Pkce.CodeVerifier = null;
+            }
+        }
+    }
+    
 
     private string? _signingAlgorithm;
 
@@ -149,25 +170,38 @@ public partial class UdapConsumer
             Aud = $"aud={AppState.BaseUrl}"
         };
 
-        await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
+        var (codeChallenge, codeVerifier) = Smart.Pkce.Generate();
 
+        if (EnablePkce)
+        {
+            AppState.Pkce.CodeChallenge = $"{OidcConstants.AuthorizeRequest.CodeChallenge}={codeChallenge}";
+            AppState.Pkce.CodeChallengeMethod = $"{OidcConstants.AuthorizeRequest.CodeChallengeMethod}={OidcConstants.CodeChallengeMethods.Sha256}";
+            AppState.Pkce.CodeVerifier = codeVerifier;
+        }
+
+        AppState.Pkce.EnablePkce = EnablePkce;
+        await AppState.SetPropertyAsync(this, nameof(AppState.Pkce), AppState.Pkce, true, false);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
         BuildAuthorizeLink();
     }
 
-    private string AuthCodeRequestLink { get; set; } = string.Empty;
-    
     private void BuildAuthorizeLink()
     {
         var sb = new StringBuilder();
         sb.Append(AppState.MetadataVerificationModel?.UdapServerMetaData?.AuthorizationEndpoint);
         if (AppState.AuthorizationCodeRequest != null)
         {
-            sb.Append("?").Append(AppState.AuthorizationCodeRequest.ResponseType);
-            sb.Append("&").Append(AppState.AuthorizationCodeRequest.State);
-            sb.Append("&").Append(AppState.AuthorizationCodeRequest.ClientId);
-            sb.Append("&").Append(AppState.AuthorizationCodeRequest.Scope);
-            sb.Append("&").Append(AppState.AuthorizationCodeRequest.RedirectUri);
-            sb.Append("&").Append(AppState.AuthorizationCodeRequest.Aud);
+            sb.Append('?').Append(AppState.AuthorizationCodeRequest.ResponseType);
+            sb.Append('&').Append(AppState.AuthorizationCodeRequest.State);
+            sb.Append('&').Append(AppState.AuthorizationCodeRequest.ClientId);
+            sb.Append('&').Append(AppState.AuthorizationCodeRequest.Scope);
+            sb.Append('&').Append(AppState.AuthorizationCodeRequest.RedirectUri);
+            sb.Append('&').Append(AppState.AuthorizationCodeRequest.Aud);
+            if (EnablePkce)
+            {
+                sb.Append('&').Append(AppState.Pkce.CodeChallenge);
+                sb.Append('&').Append(AppState.Pkce.CodeChallengeMethod);
+            }
         }
 
         AuthCodeRequestLink = sb.ToString();
@@ -189,7 +223,9 @@ public partial class UdapConsumer
             AppState.AuthorizationCodeRequest?.State,
             AppState.AuthorizationCodeRequest?.Scope,
             AppState.AuthorizationCodeRequest?.RedirectUri,
-            AppState.AuthorizationCodeRequest?.Aud);
+            AppState.AuthorizationCodeRequest?.Aud,
+            AppState.Pkce?.CodeChallenge,
+            AppState.Pkce?.CodeChallengeMethod);
 
         Console.WriteLine(accessCodeRequestUrl);
         //
@@ -228,7 +264,25 @@ public partial class UdapConsumer
 
         return uri.Query.Replace("&", "&\r\n");
     }
-    
+
+    private bool _callBackEntryScrolled = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
+        if (!_callBackEntryScrolled && !string.IsNullOrEmpty(uri.Query))
+        {
+            var queryParams = QueryHelpers.ParseQuery(uri.Query);
+            if (!queryParams.GetValueOrDefault("code").ToString().IsNullOrEmpty())
+            {
+                var success = await JsRuntime.InvokeAsync<bool>("UdapEd.scrollTo", "CallBackEntry");
+                _callBackEntryScrolled = success;
+            }
+        }
+
+        EnablePkce = AppState.Pkce.EnablePkce;
+    }
+
     private void ResetSoftwareStatement()
     {
         TokenRequest1 = string.Empty;
@@ -271,7 +325,9 @@ public partial class UdapConsumer
         {
             tokenRequestModel.Code = AppState.LoginCallBackResult?.Code!;
         }
-        
+
+        tokenRequestModel.CodeVerifier = AppState.Pkce.CodeVerifier;
+
         var requestToken = await AccessService
             .BuildRequestAccessTokenForAuthCode(tokenRequestModel, SigningAlgorithm);
 
@@ -315,8 +371,12 @@ public partial class UdapConsumer
 
         sb = new StringBuilder();
         sb.AppendLine($"redirect_uri={NavManager.Uri.RemoveQueryParameters()}");
-        
+        if (AppState.Pkce.EnablePkce)
+        {
+            sb.AppendLine($"code_verifier={AppState.Pkce.CodeVerifier}");
+        }
         sb.Append($"udap={UdapConstants.UdapVersionsSupportedValue}");
+        
         TokenRequest4 = sb.ToString();
         
     }

@@ -19,6 +19,7 @@ using Microsoft.JSInterop;
 using Udap.Common.Extensions;
 using Udap.Model;
 using UdapEd.Shared.Components;
+using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 
@@ -34,7 +35,24 @@ public partial class UdapTieredOAuth
     [Inject] IAccessService AccessService { get; set; } = null!;
     [Inject] NavigationManager NavManager { get; set; } = null!;
     
-    [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
+    [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
+
+    private bool _enablePkce;
+    public bool EnablePkce
+    {
+        get => _enablePkce;
+        set
+        {
+            AppState.Pkce.EnablePkce = value;
+            _enablePkce = value;
+
+            if (!value)
+            {
+                AppState.Pkce.CodeChallenge = null;
+                AppState.Pkce.CodeVerifier = null;
+            }
+        }
+    }
 
     private string? _signingAlgorithm;
 
@@ -153,6 +171,17 @@ public partial class UdapTieredOAuth
             IdPBaseUrl = $"idp={AppState.ClientRegistrations?.SelectedRegistration?.IdPBaseUrl}"
         };
 
+        var (codeChallenge, codeVerifier) = Smart.Pkce.Generate();
+
+        if (EnablePkce)
+        {
+            AppState.Pkce.CodeChallenge = $"{OidcConstants.AuthorizeRequest.CodeChallenge}={codeChallenge}";
+            AppState.Pkce.CodeChallengeMethod = $"{OidcConstants.AuthorizeRequest.CodeChallengeMethod}={OidcConstants.CodeChallengeMethods.Sha256}";
+            AppState.Pkce.CodeVerifier = codeVerifier;
+        }
+
+        AppState.Pkce.EnablePkce = EnablePkce;
+        await AppState.SetPropertyAsync(this, nameof(AppState.Pkce), AppState.Pkce, true, false);
         await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
 
         BuildAuthorizeLink();
@@ -173,6 +202,11 @@ public partial class UdapTieredOAuth
             sb.Append("&").Append(@AppState.AuthorizationCodeRequest.Scope);
             sb.Append("&").Append(@AppState.AuthorizationCodeRequest.RedirectUri);
             sb.Append("&").Append(@AppState.AuthorizationCodeRequest.Aud);
+            if (EnablePkce)
+            {
+                sb.Append('&').Append(AppState.Pkce.CodeChallenge);
+                sb.Append('&').Append(AppState.Pkce.CodeChallengeMethod);
+            }
         }
 
         AuthCodeRequestLink = sb.ToString();
@@ -194,9 +228,10 @@ public partial class UdapTieredOAuth
             AppState.AuthorizationCodeRequest?.State,
             AppState.AuthorizationCodeRequest?.Scope,
             AppState.AuthorizationCodeRequest?.RedirectUri,
-            AppState.AuthorizationCodeRequest?.Aud);
+            AppState.AuthorizationCodeRequest?.Aud,
+            AppState.Pkce?.CodeChallenge,
+            AppState.Pkce?.CodeChallengeMethod);
 
-        Console.WriteLine(accessCodeRequestUrl);
         //
         // Builds an anchor href link the user clicks to initiate a user login page at the authorization server
         //
@@ -233,7 +268,26 @@ public partial class UdapTieredOAuth
 
         return uri.Query.Replace("&", "&\r\n");
     }
-    
+
+    private bool _callBackEntryScrolled = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
+        if (!_callBackEntryScrolled && !string.IsNullOrEmpty(uri.Query))
+        {
+            var queryParams = QueryHelpers.ParseQuery(uri.Query);
+            if (!queryParams.GetValueOrDefault("code").ToString().IsNullOrEmpty())
+            {
+                var success = await JsRuntime.InvokeAsync<bool>("UdapEd.scrollTo", "CallBackEntry");
+                _callBackEntryScrolled = success;
+            }
+        }
+
+        EnablePkce = AppState.Pkce.EnablePkce;
+    }
+
+
     private void ResetSoftwareStatement()
     {
         TokenRequest1 = string.Empty;
@@ -277,6 +331,8 @@ public partial class UdapTieredOAuth
         {
             tokenRequestModel.Code = AppState.LoginCallBackResult?.Code!;
         }
+
+        tokenRequestModel.CodeVerifier = AppState.Pkce.CodeVerifier;
 
         var requestToken = await AccessService
             .BuildRequestAccessTokenForAuthCode(tokenRequestModel, _signingAlgorithm);
@@ -322,7 +378,10 @@ public partial class UdapTieredOAuth
 
         sb = new StringBuilder();
         sb.AppendLine($"redirect_uri={NavManager.Uri.RemoveQueryParameters()}");
-        
+        if (AppState.Pkce.EnablePkce)
+        {
+            sb.AppendLine($"code_verifier={AppState.Pkce.CodeVerifier}");
+        }
         sb.Append($"udap={UdapConstants.UdapVersionsSupportedValue}");
         TokenRequest4 = sb.ToString();
         
@@ -363,7 +422,7 @@ public partial class UdapTieredOAuth
     {
         BuildAuthorizeLink();
 
-        await JSRuntime.InvokeVoidAsync("open", @AuthCodeRequestLink, "_self");
+        await JsRuntime.InvokeVoidAsync("open", @AuthCodeRequestLink, "_self");
     }
 
     private string? GetJwtHeader(string? tokenString)
