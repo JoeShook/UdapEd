@@ -254,7 +254,7 @@ public partial class Hl7B2BUserForm : ComponentBase
         }
     }
 
-    private async Task EmptyPersonContext()
+    public async Task EmptyPersonContext()
     {
         var person = new Person()
         {
@@ -274,19 +274,19 @@ public partial class Hl7B2BUserForm : ComponentBase
 
     }
 
-    private void SearchForPerson()
+    public void SearchForPerson()
     {
         NavigationManager.NavigateTo("/patientSearch");
     }
 
-    private void ClearPersonContext()
+    public void ClearPersonContext()
     {
         AppState.FhirContext.CurrentPerson = null;
         _jsonUserPerson = null;
     }
 
 
-    private async Task OpenMenu(EventArgs e)
+    protected async Task OpenMenu(EventArgs e)
     {
         await personMenuRef.ToggleMenuAsync(e);
     }
