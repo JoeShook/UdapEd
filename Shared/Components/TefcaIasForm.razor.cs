@@ -9,18 +9,16 @@
 
 using System.Text.Json;
 using Hl7.Fhir.Model;
-using Hl7.Fhir.Packages.Hl7Terminology_6_0_2;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
 using Udap.Model;
 using Udap.Model.UdapAuthenticationExtensions;
-using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model.AuthExtObjects;
 using Task = System.Threading.Tasks.Task;
 
-namespace UdapEd.Shared.Components.AuthExtObjects;
+namespace UdapEd.Shared.Components;
 public partial class TefcaIasForm : ComponentBase
 {
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;

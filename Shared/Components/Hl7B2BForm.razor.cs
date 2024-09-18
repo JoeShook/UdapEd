@@ -17,7 +17,7 @@ using Udap.Model.UdapAuthenticationExtensions;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model.AuthExtObjects;
 
-namespace UdapEd.Shared.Components.AuthExtObjects;
+namespace UdapEd.Shared.Components;
 
 public partial class Hl7B2BForm : ComponentBase
 {
