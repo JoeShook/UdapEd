@@ -28,7 +28,6 @@ public partial class Hl7B2BUserForm : ComponentBase
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
     [Parameter] public EventCallback OnUpdateEditor { get; set; }
-    [Parameter] public string? Id { get; set; }
     [Parameter] public AuthExtObjectOperationType OperationType { get; set; }
 
     private MudForm _form = null!;

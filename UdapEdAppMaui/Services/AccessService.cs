@@ -96,6 +96,11 @@ internal class AccessService : IAccessService
 
         var tokenRequest = tokenRequestBuilder.Build(signingAlgorithm);
 
+        if (tokenRequestModel.CodeVerifier != null)
+        {
+            tokenRequest.CodeVerifier = tokenRequestModel.CodeVerifier;
+        }
+
         return await Task.FromResult(tokenRequest.ToModel());
     }
 

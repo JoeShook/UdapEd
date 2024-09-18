@@ -32,6 +32,10 @@ public partial class UdapTieredOAuth
 
     private ErrorBoundary? ErrorBoundary { get; set; }
 
+#if ANDROID || IOS || MACCATALYST || WINDOWS
+    [Inject] IExternalWebAuthenticator ExternalWebAuthenticator { get; set; } = null!;
+#endif
+
     [Inject] IAccessService AccessService { get; set; } = null!;
     [Inject] NavigationManager NavManager { get; set; } = null!;
     
@@ -166,7 +170,7 @@ public partial class UdapTieredOAuth
             State = $"state={CryptoRandom.CreateUniqueId()}",
             ClientId = $"client_id={AppState.ClientRegistrations?.SelectedRegistration?.ClientId}",
             Scope = $"scope={AppState.ClientRegistrations?.SelectedRegistration?.Scope}",
-            RedirectUri = $"redirect_uri={NavManager.Uri.RemoveQueryParameters()}",
+            RedirectUri = $"redirect_uri={NavManager.Uri.RemoveQueryParameters().ToPlatformScheme()}",
             Aud = $"aud={AppState.BaseUrl}",
             IdPBaseUrl = $"idp={AppState.ClientRegistrations?.SelectedRegistration?.IdPBaseUrl}"
         };
@@ -422,8 +426,44 @@ public partial class UdapTieredOAuth
     {
         BuildAuthorizeLink();
 
+#if ANDROID || IOS || MACCATALYST || WINDOWS
+
+        var result = await ExternalWebAuthenticator.AuthenticateAsync(AuthCodeRequestLink, NavManager.Uri.RemoveQueryParameters().ToPlatformScheme());
+
+        var loginCallbackResult = new LoginCallBackResult
+        {
+            Code = result.Properties.GetValueOrDefault("code"),
+            Scope = result.Properties.GetValueOrDefault("scope"),
+            State = result.Properties.GetValueOrDefault("state"),
+            SessionState = result.Properties.GetValueOrDefault("session_state"),
+            Issuer = result.Properties.GetValueOrDefault("iss")
+        };
+        await AppState.SetPropertyAsync(this, nameof(AppState.LoginCallBackResult), loginCallbackResult, true, false);
+
+        var sb = new StringBuilder();
+        foreach (var resultProperty in result.Properties)
+        {
+            sb.AppendLine($"{resultProperty.Key}={resultProperty.Value}");
+        }
+        _webAuthenticorResponseProps = sb.ToString();
+
+#else
+
         await JsRuntime.InvokeVoidAsync("open", @AuthCodeRequestLink, "_self");
+#endif
     }
+
+    public string DeviceLoginCallback(bool reset = false)
+    {
+        if (reset)
+        {
+            return string.Empty;
+        }
+
+        return _webAuthenticorResponseProps;
+    }
+
+    private string _webAuthenticorResponseProps = string.Empty;
 
     private string? GetJwtHeader(string? tokenString)
     {

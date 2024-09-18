@@ -1,4 +1,4 @@
-﻿<MudForm @ref="form" Model="@_hl7B2BModel" id="@Id">
+﻿<MudForm @ref="form" Model="@_hl7B2BModel">
     
     <div style="display: flex; justify-content: flex-end;">
         <MudText Color="Color.Tertiary">See FHIR Security IG (SSRAA) section 5.2.1.1</MudText>
@@ -6,7 +6,7 @@
             Class="cursor-pointer mud-ripple ma-2" 
             Src="_content/UdapEd.Shared/images/hl7/icon-fhir-32.png" 
             Alt="Fhir Icon" style="height: 36px; width: 36px; margin: 24px"
-            @onclick="@GoToFhirSecurityIg" />
+            @onclick="GoToFhirSecurityIg" />
     </div>
 
     <MudTextField @bind-Value="_hl7B2BModel.Version" Label="Version" Required="true" />
