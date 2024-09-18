@@ -7,10 +7,11 @@
 // */
 #endregion
 
-namespace UdapEd.Shared.Model.AuthExtObjects;
-public class AuthExtModel
+namespace UdapEd.Shared.Components.AuthExtObjects;
+
+public enum AuthExtObjectOperationType
 {
-    public bool UseInAuth { get; set; }
-    public bool UseInRegister { get; set; }
-    public string Json { get; set; }
+    Auth,
+    Register
 }
+

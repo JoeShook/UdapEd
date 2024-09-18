@@ -18,6 +18,7 @@ using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
+using UdapEd.Shared.Services.Fhir;
 using CodeSystem = Hl7.Fhir.Model.CodeSystem;
 
 namespace UdapEd.Client.Services;
@@ -406,7 +407,13 @@ public class FhirService : IFhirService
         {
             return "Fhir";
         }
-        var appState = JsonSerializer.Deserialize<UdapClientState>(json);
+
+        var options = new JsonSerializerOptions
+        {
+            Converters = { new FhirContextJsonConverter() }
+        };
+
+        var appState = JsonSerializer.Deserialize<UdapClientState>(json, options);
         var controller = appState?.ClientMode == ClientSecureMode.mTLS ? "FhirMtls" : "Fhir";
         
         return controller;

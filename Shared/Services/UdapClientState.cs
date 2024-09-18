@@ -118,13 +118,17 @@ public class UdapClientState : IAppState
     /// <summary>
     /// String representation of UDAP 3.1 Authorization Code Flow
     /// </summary>
-    public AuthorizationCodeRequest? AuthorizationCodeRequest { get; set; }
+    public AuthorizationCodeRequest AuthorizationCodeRequest { get; set; }
+
+    public Pkce Pkce { get; set; } = new();
 
     public ClientRegistrations? ClientRegistrations { get; set; }
     public ClientHeaders? ClientHeaders { get; set; }
 
     public PatientSearchPref? PatientSearchPref { get; set; }
     public Dictionary<string, AuthExtModel> AuthorizationExtObjects { get; set; }
+
+    public FhirContext FhirContext { get; set; }
 
     public Task SetPropertyAsync(ComponentBase caller, string propertyName, object? propertyValue, bool saveChanges = true,
         bool fhirStateHasChanged = true)

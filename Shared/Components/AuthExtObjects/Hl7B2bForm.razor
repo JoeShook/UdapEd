@@ -1,4 +1,4 @@
-﻿<MudForm @ref="form" Model="@hl7B2BModel" id="@Id">
+﻿<MudForm @ref="form" Model="@_hl7B2BModel" id="@Id">
     
     <div style="display: flex; justify-content: flex-end;">
         <MudText Color="Color.Tertiary">See FHIR Security IG (SSRAA) section 5.2.1.1</MudText>
@@ -6,38 +6,58 @@
             Class="cursor-pointer mud-ripple ma-2" 
             Src="_content/UdapEd.Shared/images/hl7/icon-fhir-32.png" 
             Alt="Fhir Icon" style="height: 36px; width: 36px; margin: 24px"
-            @onclick="@GoToFhirSecurityIG" />
+            @onclick="@GoToFhirSecurityIg" />
     </div>
 
-    <MudTextField @bind-Value="hl7B2BModel.Version" Label="Version" Required="true" />
-    <MudTextField @bind-Value="hl7B2BModel.SubjectName" Label="Subject Name" />
-    <MudTextField @bind-Value="hl7B2BModel.SubjectId" Label="Subject ID" />
-    <MudTextField @bind-Value="hl7B2BModel.SubjectRole" Label="Subject Role" />
-    <MudTextField @bind-Value="hl7B2BModel.OrganizationName" Label="Organization Name" />
-    <MudTextField @bind-Value="hl7B2BModel.OrganizationId" Label="Organization ID" Required="true" />
-    <MudTextField @bind-Value="newPurposeOfUse" Label="New Purpose of Use" />
+    <MudTextField @bind-Value="_hl7B2BModel.Version" Label="Version" Required="true" />
+    <MudTextField @bind-Value="_hl7B2BModel.SubjectName" Label="Subject Name" />
+    <MudTextField @bind-Value="_hl7B2BModel.SubjectId" Label="Subject ID" />
+    <MudTextField @bind-Value="_hl7B2BModel.SubjectRole" Label="Subject Role" />
+    <MudTextField @bind-Value="_hl7B2BModel.OrganizationName" Label="Organization Name" />
+    <MudTextField @bind-Value="_hl7B2BModel.OrganizationId" Label="Organization ID" Required="true" />
+    <MudAutocomplete T="string" @bind-Value="_newPurposeOfUse" 
+                     Label="New Purpose of Use" 
+                     SearchFunc="@SearchPurposeOfUse" 
+                     MaxItems="100" 
+                     Class="scrollable-dropdown"  />
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddPurposeOfUse">Add Purpose of Use</MudButton>
     <MudChipSet T="string">
-        @foreach (var purpose in hl7B2BModel.PurposeOfUse)
+        @if (_hl7B2BModel.PurposeOfUse != null)
         {
-            <MudChip T="string" OnClose="() => RemovePurposeOfUse(purpose)" Closeable="true">@purpose</MudChip>
+            foreach (var purpose in _hl7B2BModel.PurposeOfUse)
+            {
+                <MudChip T="string" OnClose="() => RemovePurposeOfUse(purpose)">@purpose</MudChip>
+            }
+
+            if (_hl7B2BModel.PurposeOfUse.Count == 0)
+            {
+                <div class="validation-error">At least one Purpose of Use is required.</div>
+            }
         }
+
+
     </MudChipSet>
-    <MudTextField @bind-Value="newConsentPolicy" Label="New Consent Policy" />
+    <MudTextField @bind-Value="_newConsentPolicy" Label="New Consent Policy" />
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddConsentPolicy">Add Consent Policy</MudButton>
     <MudChipSet T="string">
-        @foreach (var policy in hl7B2BModel.ConsentPolicy)
+        @if (_hl7B2BModel.ConsentPolicy != null)
         {
-            <MudChip T="string" OnClose="() => RemoveConsentPolicy(policy)" Closeable="true">@policy</MudChip>
+            foreach (var policy in _hl7B2BModel.ConsentPolicy)
+            {
+                <MudChip T="string" OnClose="() => RemoveConsentPolicy(policy)">@policy</MudChip>
+            }
         }
     </MudChipSet>
 
-    <MudTextField @bind-Value="newConsentReference" Label="New Consent Reference" />
+    <MudTextField @bind-Value="_newConsentReference" Label="New Consent Reference" />
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddConsentReference">Add Consent Reference</MudButton>
     <MudChipSet T="string">
-        @foreach (var reference in hl7B2BModel.ConsentReference)
+        @if (_hl7B2BModel.ConsentReference != null)
         {
-            <MudChip T="string" OnClose="() => RemoveConsentReference(reference)" Closeable="true">@reference</MudChip>
+            foreach (var reference in _hl7B2BModel.ConsentReference)
+            {
+                <MudChip T="string" OnClose="() => RemoveConsentReference(reference)">@reference</MudChip>
+            }
         }
     </MudChipSet>
 

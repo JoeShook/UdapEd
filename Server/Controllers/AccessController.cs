@@ -102,7 +102,12 @@ public class AccessController : Controller
             tokenRequestModel.Code);
 
         var tokenRequest = tokenRequestBuilder.Build(alg);
-        
+
+        if (tokenRequestModel.CodeVerifier != null)
+        {
+            tokenRequest.CodeVerifier = tokenRequestModel.CodeVerifier;
+        }
+
         return Task.FromResult<IActionResult>(Ok(tokenRequest));
     }
 

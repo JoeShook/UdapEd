@@ -10,6 +10,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using Hl7.Fhir.Rest;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -150,7 +151,8 @@ builder.Services.AddTransient<FhirMTlsClientWithUrlProvider>(sp =>
     var certificateProvider = sp.GetRequiredService<IClientCertificateProvider>();
     var certificate = certificateProvider.GetClientCertificate();
     var anchorCertificate = certificateProvider.GetAnchorCertificates();
-
+    // var intermediateCertificate = new X509Certificate2Collection(new X509Certificate2("SureFhirmTLS_Intermediate.cer"));
+    
     if (certificate != null)
     {
         Log.Logger.Information($"mTLS Client: {certificate.Thumbprint}");
@@ -161,8 +163,9 @@ builder.Services.AddTransient<FhirMTlsClientWithUrlProvider>(sp =>
     {
         // httpClientHandler.CheckCertificateRevocationList = true;
         // httpClientHandler.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
+        var logger = sp.GetRequiredService<ILogger<Program>>();
         httpClientHandler.ServerCertificateCustomValidationCallback =
-            HttpClientHandlerExtension.CreateCustomRootValidator(anchorCertificate);
+            HttpClientHandlerExtension.CreateCustomRootValidator(anchorCertificate, logger);
     }
     
     var fhirMTlsProvider = new FhirMTlsClientWithUrlProvider(

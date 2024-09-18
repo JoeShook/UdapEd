@@ -329,11 +329,20 @@ public partial class UdapRegistration
             
             var request = dcrBuilder.Build();
 
+            var extensions = AppState.AuthorizationExtObjects.Where(a => a.Value.UseInRegister).ToList();
+
+            if (extensions.Any())
+            {
+                request.Extensions = PayloadSerializer.Deserialize(extensions.ToDictionary(
+                    ext => ext.Key,
+                    ext => ext.Value.Json));
+            }
+            
             if (request.Scope == null && request.GrantTypes?.Count > 0)
             {
                 _missingScope = true;
             }
-            
+            Console.WriteLine(request.SerializeToJson(true));
             var statement = await RegisterService
                 .BuildSoftwareStatementForClientCredentials(request, _signingAlgorithm);
             if (statement != null)

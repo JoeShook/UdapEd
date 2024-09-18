@@ -47,6 +47,7 @@ using UdapEdAppMaui.Services.Authentication;
 using UdapEdAppMaui.Services.Search;
 
 
+
 #if WINDOWS
 using WinUIEx;
 #endif
@@ -160,8 +161,9 @@ public static class MauiProgram
             {
                 // httpClientHandler.CheckCertificateRevocationList = true;
                 // httpClientHandler.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
+                var logger = sp.GetRequiredService<ILogger<HttpClientHandler>>();
                 httpClientHandler.ServerCertificateCustomValidationCallback =
-                    HttpClientHandlerExtension.CreateCustomRootValidator(anchorCertificate);
+                    HttpClientHandlerExtension.CreateCustomRootValidator(anchorCertificate, logger);
             }
 
             var fhirMTlsProvider = new FhirMTlsClientWithUrlProvider(

@@ -7,6 +7,7 @@
 @using UdapEd.Shared.Model.Discovery
 @using UdapEd.Shared.Services
 @using UdapEd.Shared.Model.Smart;
+@using UdapEd.Shared.Services.Fhir
 
 @implements UdapEd.Shared.Services.IAppState
 @inject ILocalStorageService LocalStorageService
@@ -90,6 +91,7 @@
     private static List<string> _certDefaultBaseUrLs = new List<string>
     {
         "https://fhirlabs.net/fhir/r4",
+        "https://tefca.fhirlabs.net/fhir/r4",
         "https://stage.healthtogo.me:8181/fhir/r4/stage",
         "https://dev-mtx-interop.meditech.com",
         "https://securefhir.zimt.work/udap-public",
@@ -260,6 +262,9 @@
 
     public AuthorizationCodeRequest? AuthorizationCodeRequest { get; private set; }
 
+
+    public Pkce Pkce { get; private set; } = new();
+
     private ClientRegistrations? _clientRegistrations;
 
     public ClientRegistrations ClientRegistrations
@@ -292,6 +297,16 @@
         private set => _authExtObjeTemplateSelected = value;
     }
 
+    private FhirContext? _fhirContext;
+
+    public FhirContext FhirContext
+    {
+        get { return _fhirContext ??= new FhirContext(); }
+        private set => _fhirContext = value;
+    }
+
+
+
     /// <summary>
     /// Certificate from Material Design Icons
     /// </summary>
@@ -313,8 +328,11 @@
             var json = await LocalStorageService.GetItemAsStringAsync(UdapStateKeyName);
             if (!string.IsNullOrEmpty(json))
             {
-                // Deserialize to AppStateData
-                var appStateData = JsonSerializer.Deserialize<UdapClientState>(json);
+                var options = new JsonSerializerOptions
+                {
+                    Converters = { new FhirContextJsonConverter() }
+                };
+                var appStateData = JsonSerializer.Deserialize<UdapClientState>(json, options);
 
                 var properties = appStateData?.GetType().GetProperties();
                 if (properties != null)
@@ -339,7 +357,11 @@
         // TIP: Never store sensitive data in LocalStorage
 
         var appState = (IAppState)this;
-        var json = JsonSerializer.Serialize(appState);
+        var options = new JsonSerializerOptions
+        {
+            Converters = { new FhirContextJsonConverter() }
+        };
+        var json = JsonSerializer.Serialize(appState, options);
         await LocalStorageService.SetItemAsStringAsync(UdapStateKeyName, json);
     }
 }

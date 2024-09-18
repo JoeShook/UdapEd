@@ -48,7 +48,7 @@
                   <MudText Typo="Typo.h6" Color="Color.Primary">Authorization Extension Objects</MudText>
               </TitleContent>
               <ChildContent>
-                  <AuthorizationExtObjects/>
+                  <AuthorizationExtObjects OperationType="@(AuthExtObjectOperationType.Auth)"/>
               </ChildContent>
           </MudExpansionPanel>
       </MudExpansionPanels>
@@ -146,13 +146,18 @@
             <MudCard Class="pa-2 ma-2" Elevation="3">
                 <MudCardActions>
                     <MudGrid Justify="Justify.FlexStart">
-                        <MudItem sm="6" xs="12">
+                        <MudItem Class="d-inline-flex">
                             <MudButton Class="m-3"
                                        Color="Color.Primary"
                                        ButtonType="ButtonType.Button"
                                        Variant="Variant.Filled"
                                        OnClick="BuildAuthCodeRequest">Build Access Code Request</MudButton>
                         </MudItem>
+                        <MudItem Class="d-inline-flex">
+                            <MudCheckBox @bind-Value="EnablePkce" T="bool"
+                                         Label="Enable PKCE" />
+                        </MudItem>
+                        <MudSpacer/>
                     </MudGrid>
                 </MudCardActions>
                 <MudCardContent>
@@ -169,6 +174,11 @@
                                     <input Class="pre udap-indent-1" @bind-value="AppState.AuthorizationCodeRequest.Scope" @oninput="BuildAuthorizeLink" />
                                     <input Class="pre udap-indent-1" @bind-value="AppState.AuthorizationCodeRequest.RedirectUri" @oninput="BuildAuthorizeLink" />
                                     <input Class="pre udap-indent-1" @bind-value="AppState.AuthorizationCodeRequest.Aud" @oninput="BuildAuthorizeLink" />
+                                    @if (AppState.Pkce.EnablePkce)
+                                    {
+                                        <input Class="pre udap-indent-1" @bind-value="AppState.Pkce.CodeChallenge" @oninput="BuildAuthorizeLink" />
+                                        <input Class="pre udap-indent-1" @bind-value="AppState.Pkce.CodeChallengeMethod" @oninput="BuildAuthorizeLink" />
+                                    }
                                     <pre>Host: @AppState.MetadataVerificationModel?.UdapServerMetaData?.AuthorizationEndpoint</pre>
                                 }
                             </MudPaper>

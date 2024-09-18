@@ -25,6 +25,7 @@ using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 
+
 namespace UdapEd.Shared.Pages;
 
 public partial class UdapBusinessToBusiness
@@ -44,8 +45,27 @@ public partial class UdapBusinessToBusiness
     [Inject] IAccessService AccessService { get; set; } = null!;
     [Inject] NavigationManager NavManager { get; set; } = null!;
     
-    [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
+    [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
 
+    private string AuthCodeRequestLink { get; set; } = string.Empty;
+
+    private bool _enablePkce;
+    public bool EnablePkce
+    {
+        get => _enablePkce;
+        set
+        {
+            AppState.Pkce.EnablePkce = value;
+            _enablePkce = value;
+
+            if (!value)
+            {
+                AppState.Pkce.CodeChallenge = null;
+                AppState.Pkce.CodeVerifier = null;
+            }
+        }
+    }
+    
     private string? _signingAlgorithm;
 
     public string SigningAlgorithm
@@ -118,7 +138,6 @@ public partial class UdapBusinessToBusiness
     protected override async Task OnInitializedAsync()
     {
         await ResetSoftwareStatement();
-
         await base.OnInitializedAsync();
     }
 
@@ -159,12 +178,21 @@ public partial class UdapBusinessToBusiness
             Aud = $"aud={AppState.BaseUrl}"
         };
 
+        var (codeChallenge, codeVerifier) = Smart.Pkce.Generate();
+
+        if (EnablePkce)
+        {
+            AppState.Pkce.CodeChallenge = $"{OidcConstants.AuthorizeRequest.CodeChallenge}={codeChallenge}";
+            AppState.Pkce.CodeChallengeMethod = $"{OidcConstants.AuthorizeRequest.CodeChallengeMethod}={OidcConstants.CodeChallengeMethods.Sha256}";
+            AppState.Pkce.CodeVerifier = codeVerifier;
+        }
+
+        AppState.Pkce.EnablePkce = EnablePkce;
+        await AppState.SetPropertyAsync(this, nameof(AppState.Pkce), AppState.Pkce, true, false);
         await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
 
         BuildAuthorizeLink();
     }
-
-    private string AuthCodeRequestLink { get; set; } = string.Empty;
     
     private void BuildAuthorizeLink()
     {
@@ -172,12 +200,17 @@ public partial class UdapBusinessToBusiness
         sb.Append(@AppState.MetadataVerificationModel?.UdapServerMetaData?.AuthorizationEndpoint);
         if (@AppState.AuthorizationCodeRequest != null)
         {
-            sb.Append("?").Append(@AppState.AuthorizationCodeRequest.ResponseType);
-            sb.Append("&").Append(@AppState.AuthorizationCodeRequest.State);
-            sb.Append("&").Append(@AppState.AuthorizationCodeRequest.ClientId);
-            sb.Append("&").Append(@AppState.AuthorizationCodeRequest.Scope);
-            sb.Append("&").Append(@AppState.AuthorizationCodeRequest.RedirectUri);
-            sb.Append("&").Append(@AppState.AuthorizationCodeRequest.Aud);
+            sb.Append('?').Append(@AppState.AuthorizationCodeRequest.ResponseType);
+            sb.Append('&').Append(@AppState.AuthorizationCodeRequest.State);
+            sb.Append('&').Append(@AppState.AuthorizationCodeRequest.ClientId);
+            sb.Append('&').Append(@AppState.AuthorizationCodeRequest.Scope);
+            sb.Append('&').Append(@AppState.AuthorizationCodeRequest.RedirectUri);
+            sb.Append('&').Append(@AppState.AuthorizationCodeRequest.Aud);
+            if (EnablePkce)
+            {
+                sb.Append('&').Append(AppState.Pkce.CodeChallenge);
+                sb.Append('&').Append(AppState.Pkce.CodeChallengeMethod);
+            }
         }
 
         AuthCodeRequestLink = sb.ToString();
@@ -187,10 +220,10 @@ public partial class UdapBusinessToBusiness
     private async Task GetAccessCode()
     {
         LoginRedirectLinkText = "Loading...";
-        AppState.SetProperty(this, nameof(AppState.AccessCodeRequestResult), null);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AccessCodeRequestResult), null);
 
         //UI has been changing properties so save it but don't rebind
-        AppState.SetProperty(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeRequest), AuthorizationCodeRequest, true, false);
         var url = new RequestUrl(AppState.MetadataVerificationModel?.UdapServerMetaData?.AuthorizationEndpoint!);
 
         var accessCodeRequestUrl = url.AppendParams(
@@ -199,7 +232,9 @@ public partial class UdapBusinessToBusiness
             AppState.AuthorizationCodeRequest?.State,
             AppState.AuthorizationCodeRequest?.Scope,
             AppState.AuthorizationCodeRequest?.RedirectUri,
-            AppState.AuthorizationCodeRequest?.Aud);
+            AppState.AuthorizationCodeRequest?.Aud,
+            AppState.Pkce?.CodeChallenge,
+            AppState.Pkce?.CodeChallengeMethod);
 
         //
         // Builds an anchor href link the user clicks to initiate a user login page at the authorization server
@@ -248,20 +283,22 @@ public partial class UdapBusinessToBusiness
             var queryParams = QueryHelpers.ParseQuery(uri.Query);
             if (!queryParams.GetValueOrDefault("code").ToString().IsNullOrEmpty())
             {
-                var success = await JSRuntime.InvokeAsync<bool>("UdapEd.scrollTo", "CallBackEntry");
+                var success = await JsRuntime.InvokeAsync<bool>("UdapEd.scrollTo", "CallBackEntry");
                 _callBackEntryScrolled = success;
             }
         }
-        
+
+        EnablePkce = AppState.Pkce.EnablePkce;
     }
 
     private async Task ResetSoftwareStatement()
     {
         TokenRequest1 = string.Empty;
-        TokenRequest2 = string.Empty;
-        TokenRequest3 = string.Empty;
-        TokenRequest4 = string.Empty;
-        await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeRequest), null);
+            TokenRequest2 = string.Empty;
+            TokenRequest3 = string.Empty;
+            TokenRequest4 = string.Empty;
+            await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeRequest), null);
+        
         LoginCallback(true);
         StateHasChanged();
     }
@@ -287,7 +324,7 @@ public partial class UdapBusinessToBusiness
 
         if (AppState.Oauth2Flow == Oauth2FlowEnum.authorization_code)
         {
-            Console.WriteLine("Why");
+            
             var tokenRequestModel = new AuthorizationCodeTokenRequestModel
             {
                 ClientId = AppState.ClientRegistrations?.SelectedRegistration?.ClientId,
@@ -301,6 +338,8 @@ public partial class UdapBusinessToBusiness
             {
                 tokenRequestModel.Code = AppState.LoginCallBackResult?.Code!;
             }
+
+            tokenRequestModel.CodeVerifier = AppState.Pkce.CodeVerifier;
             
             var requestToken = await AccessService
                 .BuildRequestAccessTokenForAuthCode(tokenRequestModel, _signingAlgorithm);
@@ -328,7 +367,7 @@ public partial class UdapBusinessToBusiness
                 Scope = ScopeOverride.IsNullOrEmpty() ? TokenRequestScope?.Replace("scope=", "").TrimEnd('&').Trim() : ScopeOverride
             };
 
-            var extensions = AppState.AuthorizationExtObjects.Where(a => a.Value.Use).ToList();
+            var extensions = AppState.AuthorizationExtObjects.Where(a => a.Value.UseInAuth).ToList();
 
             if (extensions.Any())
             {
@@ -393,7 +432,12 @@ public partial class UdapBusinessToBusiness
 
         sb = new StringBuilder();
         sb.AppendLine($"redirect_uri={NavManager.Uri.RemoveQueryParameters()}");
+        if (AppState.Pkce.EnablePkce)
+        {
+            sb.AppendLine($"code_verifier={AppState.Pkce.CodeVerifier}");
+        }
         sb.Append($"udap={UdapConstants.UdapVersionsSupportedValue}");
+        
         TokenRequest4 = sb.ToString();
         
     }
@@ -475,7 +519,7 @@ public partial class UdapBusinessToBusiness
         _webAuthenticorResponseProps = sb.ToString();
 
 #else
-        await JSRuntime.InvokeVoidAsync("open", @AuthCodeRequestLink, "_self");
+        await JsRuntime.InvokeVoidAsync("open", @AuthCodeRequestLink, "_self");
 #endif
 
     }
@@ -491,6 +535,7 @@ public partial class UdapBusinessToBusiness
     }
 
     private string _webAuthenticorResponseProps = string.Empty;
+    
 
     private string? GetJwtHeader(string? tokenString)
     {

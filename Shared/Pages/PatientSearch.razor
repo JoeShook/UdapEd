@@ -116,8 +116,16 @@
                             <MudTd DataLabel="Id">@context.Id</MudTd>
                             <MudTd DataLabel="Identifier">@(new MarkupString(string.Join("<br/> ", context.Identifier.Select(identifier => $"{identifier.System}|{identifier.Value}"))))</MudTd>
                             <MudTd>
-                                <MudIconButton Icon="@Icons.Material.Outlined.PersonPin" Color="Color.Secondary" aria-label="Set patient context"
-                                               OnClick="@(() => SetLaunchContext(context))" />
+                                
+                                <MudTooltip Text="Set Context">
+                                    <MudMenu AriaLabel="Set Context" Icon="@Icons.Material.Outlined.PersonPin" Color="Color.Secondary" Variant="Variant.Text">
+                                        <MudMenuItem OnClick="@(() => SetPatientContext(context))">Set Patient Context</MudMenuItem>
+                                        <MudMenuItem OnClick="@(() => SetRelatedPersonContext(context))">Set Related Person Context</MudMenuItem>
+                                        <MudMenuItem OnClick="@(() => SetPersonContext(context))">Set Person Context</MudMenuItem>
+                                        <MudMenuItem OnClick="@(() => SetLaunchContext(context))">Set Launch Context</MudMenuItem>
+                                    </MudMenu>
+                                </MudTooltip>
+
                             </MudTd>
                         </RowTemplate>
                         <PagerContent>

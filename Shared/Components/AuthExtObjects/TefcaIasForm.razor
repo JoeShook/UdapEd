@@ -1,4 +1,4 @@
-﻿<MudForm @ref="form" Model="@hl7B2BModel" id="@Id">
+﻿<MudForm @ref="_form" Model="@_hl7B2BModel" id="@Id">
 
     <div style="display: flex; justify-content: flex-end;">
         <MudText Color="Color.Tertiary">See TEFCA Facilitated FHIR SOP Page 17</MudText>
@@ -6,32 +6,113 @@
                   Class="cursor-pointer ma-2"
                   Src="https://rce.sequoiaproject.org/wp-content/uploads/2023/10/rce-logo-gray.svg"
                   Alt="Tefca Icon for Facilitated FHIR SOP"
-                  @onclick="@GoToTEFCAFacilitateFhirSOP" />
+                  @onclick="@GoToTefcaFacilitateFhirSOP" />
     </div>
 
-    <MudTextField @bind-Value="hl7B2BModel.Version" Label="Version" Required="true" />
-    <MudTextField @bind-Value="hl7B2BModel.PurposeOfUse" Label="Purpose of Use" Required="true" />
-    <MudTextField @bind-Value="hl7B2BModel.UserInformation" Label="FHIR Person" Required="true" />
-    <MudTextField @bind-Value="hl7B2BModel.PatientInformation" Label="FHIR Person" Required="true" />
-    <MudTextField @bind-Value="hl7B2BModel.IalVetted" Label="IA Vetted" />
-    <MudTextField @bind-Value="newConsentPolicy" Label="New Consent Policy" />
+    <MudTextField @bind-Value="_hl7B2BModel.Version" Label="Version" Required="true" />
+    
+    <MudAutocomplete T="string" @bind-Value="_hl7B2BModel.PurposeOfUse"
+                     Label="New Purpose of Use"
+                     SearchFunc="@SearchPurposeOfUse"
+                     MaxItems="100"
+                     Class="scrollable-dropdown" />
+    
+    
+    <MudGrid Justify="Justify.SpaceBetween" @onclick="OpenRelatedPersonMenu" Class="mt-1">
+        
+        <MudItem>
+            <MudText OnClick="OpenRelatedPersonMenu">@(_jsonRelatedPerson)</MudText>
+        </MudItem>
+
+        <MudItem>
+            <MudMenu @ref="relatedPersonMenuRef" AriaLabel="Set Context" Variant="Variant.Text">
+                @if (AppState.FhirContext.CurrentRelatedPerson != null)
+                {
+                    <MudMenuItem OnClick="@UseRelatedPersonContext">
+                        @(new MarkupString(string.Join("<br/> ", AppState.FhirContext.CurrentRelatedPerson.Name.Select(hn => $"{hn.Given.First()}, {hn.Family}"))))
+                    </MudMenuItem>
+                }
+                <MudMenuItem OnClick="@EmptyRelatedPersonContext">Create Empty Person</MudMenuItem>
+                <MudMenuItem OnClick="@SearchForRelatedPerson">Search for Person</MudMenuItem>
+                <MudMenuItem OnClick="@ClearRelatedPersonContext">
+                    <MudIcon Icon="@Icons.Material.Outlined.Clear"/> Clear Person Context
+                </MudMenuItem>
+            </MudMenu>
+            <MudTooltip Text="Select Related Person" >
+                <MudIconButton OnClick="OpenRelatedPersonMenu" Color="Color.Secondary" Icon="@Icons.Material.Outlined.PersonPin" />
+            </MudTooltip>
+        </MudItem>
+        
+    </MudGrid>
+   
+    @if (_jsonRelatedPerson == null)
+    {
+        <MudText Color="Color.Error" Typo="Typo.caption">
+            Missing FHIR Related Person.
+        </MudText>
+    }
+    
+    <MudGrid Justify="Justify.SpaceBetween" @onclick="OpenPatientMenu" Class="mt-1">
+
+        <MudItem>
+            <MudText  >@(_jsonPatient)</MudText>
+        </MudItem>
+
+        <MudMenu @ref="patientMenuRef" AriaLabel="Set Context" Variant="Variant.Text">
+            @if (AppState.FhirContext.CurrentPatient != null)
+            {
+                <MudMenuItem OnClick="@UsePatientContext">
+                    @(new MarkupString(string.Join("<br/> ", AppState.FhirContext.CurrentPatient.Name.Select(hn => $"{hn.Given.First()}, {hn.Family}"))))
+                </MudMenuItem>
+            }
+            <MudMenuItem OnClick="@EmptyPatientContext">Create Empty Person</MudMenuItem>
+            <MudMenuItem OnClick="@SearchForPatient">Search for Person</MudMenuItem>
+            <MudMenuItem OnClick="@ClearPatientContext">
+                <MudIcon Icon="@Icons.Material.Outlined.Clear" /> Clear Person Context
+            </MudMenuItem>
+        </MudMenu>
+        
+        <MudTooltip Text="Select Patient">
+            <MudIconButton OnClick="OpenPatientMenu" Color="Color.Secondary" Icon="@Icons.Material.Outlined.PersonPin" />
+        </MudTooltip>
+    </MudGrid>
+
+    @if (_jsonPatient == null)
+    {
+        <MudText Color="Color.Error" Typo="Typo.caption" >
+            Missing FHIR Patient.
+        </MudText>
+    }
+
+    <MudTextField @bind-Value="_hl7B2BModel.IalVetted" Label="IA Vetted" />
+    <MudTextField @bind-Value="_newConsentPolicy" Label="New Consent Policy" />
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddConsentPolicy">Add Consent Policy</MudButton>
     <MudChipSet T="string">
-        @foreach (var policy in hl7B2BModel.ConsentPolicy)
+        @if (_hl7B2BModel.ConsentPolicy != null)
         {
-            <MudChip T="string" OnClose="() => RemoveConsentPolicy(policy)" Closeable="true">@policy</MudChip>
+            foreach (var policy in _hl7B2BModel.ConsentPolicy)
+            {
+                <MudChip T="string" OnClose="() => RemoveConsentPolicy(policy)">@policy</MudChip>
+            }
         }
     </MudChipSet>
+    @if (_hl7B2BModel.ConsentPolicy.Count == 0)
+    {
+        <div class="validation-error">At least one Consent Policy is required.</div>
+    }
 
-    <MudTextField @bind-Value="newConsentReference" Label="New Consent Reference" />
+    <MudTextField @bind-Value="_newConsentReference" Label="New Consent Reference" />
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddConsentReference">Add Consent Reference</MudButton>
     <MudChipSet T="string">
-        @foreach (var reference in hl7B2BModel.ConsentReference)
+        @if (_hl7B2BModel.ConsentReference != null)
         {
-            <MudChip T="string" OnClose="() => RemoveConsentReference(reference)" Closeable="true">@reference</MudChip>
+            foreach (var reference in _hl7B2BModel.ConsentReference)
+            {
+                <MudChip T="string" OnClose="() => RemoveConsentReference(reference)">@reference</MudChip>
+            }
         }
     </MudChipSet>
-    <MudTextField @bind-Value="hl7B2BModel.IdToken" Label="Id Token" />
+    <MudTextField @bind-Value="_hl7B2BModel.IdToken" Label="Id Token" />
 
     <MudGrid Justify="Justify.FlexEnd">
         <MudItem>

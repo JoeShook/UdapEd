@@ -7,13 +7,10 @@
 // */
 #endregion
 
-using System;
 using System.Text.Json;
 using BlazorMonaco.Editor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using Microsoft.Maui.Platform;
-using MudBlazor;
 using Udap.Model;
 using Udap.Model.UdapAuthenticationExtensions;
 using UdapEd.Shared.Model.AuthExtObjects;
@@ -25,10 +22,15 @@ public partial class AuthorizationExtObjects
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
     [CascadingParameter]
     public CascadingAppState AppState { get; set; } = null!;
+
+    
+    [Parameter] public AuthExtObjectOperationType OperationType { get; set; }
+
     private StandaloneCodeEditor _editor = null!;
     private bool _isEditorInitialized;
-    private Hl7B2bUserForm? _hl7B2BUserForm;
-    private Hl7B2bForm? _hl7B2BForm;
+    private Hl7B2BUserForm? _hl7B2BUserForm;
+    private Hl7B2BForm? _hl7B2BForm;
+    private Hl7B2BTefcaForm? _hl7B2BTefcaForm;
     private TefcaIasForm? _tefcaIasForm;
 
     private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
@@ -36,13 +38,22 @@ public partial class AuthorizationExtObjects
         WriteIndented = true
     };
 
+    private Func<KeyValuePair<string, AuthExtModel>, bool> _authExtObjectPredicate;
     
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (_isEditorInitialized && AppState.AuthorizationExtObjects.Any())
         {
-            await SetEditorValue();
+            if (OperationType == AuthExtObjectOperationType.Auth)
+            {
+                _authExtObjectPredicate = a => a.Value.UseInAuth;
+            }
+            else
+            {
+                _authExtObjectPredicate = a => a.Value.UseInRegister;
+            }
+            await SetEditorValue(_authExtObjectPredicate);
         }
     }
 
@@ -62,11 +73,11 @@ public partial class AuthorizationExtObjects
         _isEditorInitialized = true;
     }
 
-    private async Task SetEditorValue()
+    private async Task SetEditorValue(Func<KeyValuePair<string, AuthExtModel>, bool> predicate)
     {
         var b2bAuthExtensions = new Dictionary<string, object>();
 
-        foreach (var keyValuePair in AppState.AuthorizationExtObjects.Where(a => a.Value.Use))
+        foreach (var keyValuePair in AppState.AuthorizationExtObjects.Where(predicate))
         {
             if (!string.IsNullOrEmpty(keyValuePair.Value.Json))
             {
@@ -146,48 +157,19 @@ public partial class AuthorizationExtObjects
             
             _hl7B2BUserForm?.Update();
             _hl7B2BForm?.Update();
+            _hl7B2BTefcaForm?.Update();
             _tefcaIasForm?.Update();
         }
         catch(Exception ex)
         {
-            Console.WriteLine(ex);
+            
             return; 
         }
     }
 
-    public class Marker
+   
+    private Task HandleUpdateEditor()
     {
-        public string? Message { get; set; }
-        public int Severity { get; set; }
-    }
-
-    private void HandleInclude(Dictionary<string, HL7B2BAuthorizationExtension> b2bAuthExtensions)
-    {
-        _editor?.SetValue(JsonSerializer.Serialize(b2bAuthExtensions, _jsonSerializerOptions));
-    }
-
-    private void HandleRemove(Dictionary<string, HL7B2BAuthorizationExtension> b2bAuthExtensions)
-    {
-        _editor?.SetValue(JsonSerializer.Serialize(AppState.AuthorizationExtObjects, _jsonSerializerOptions));
-    }
-
-    private void HandleInclude(Dictionary<string, HL7B2BUserAuthorizationExtension> b2bAuthExtensions)
-    {
-        _editor?.SetValue(JsonSerializer.Serialize(b2bAuthExtensions, _jsonSerializerOptions));
-    }
-
-    private void HandleRemove(Dictionary<string, HL7B2BUserAuthorizationExtension> b2bAuthExtensions)
-    {
-        _editor?.SetValue(JsonSerializer.Serialize(AppState.AuthorizationExtObjects, _jsonSerializerOptions));
-    }
-
-    private void HandleInclude(Dictionary<string, TEFCAIASAuthorizationExtension> b2bAuthExtensions)
-    {
-        _editor?.SetValue(JsonSerializer.Serialize(b2bAuthExtensions, _jsonSerializerOptions));
-    }
-
-    private void HandleRemove(Dictionary<string, TEFCAIASAuthorizationExtension> b2bAuthExtensions)
-    {
-        _editor?.SetValue(JsonSerializer.Serialize(AppState.AuthorizationExtObjects, _jsonSerializerOptions));
+        return InvokeAsync(() => _editor.SetValue(JsonSerializer.Serialize(AppState.AuthorizationExtObjects, _jsonSerializerOptions)));
     }
 }

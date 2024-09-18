@@ -19,7 +19,7 @@ using UdapEd.Shared.Model.AuthExtObjects;
 
 namespace UdapEd.Shared.Components.AuthExtObjects;
 
-public partial class Hl7B2BForm
+public partial class Hl7B2BTefcaForm
 {
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
@@ -27,7 +27,7 @@ public partial class Hl7B2BForm
     [Parameter] public string? Id { get; set; }
     [Parameter] public AuthExtObjectOperationType OperationType { get; set; }
 
-    private MudForm form = null!;
+    private MudForm _form = null!;
     private HL7B2BAuthorizationExtension _hl7B2BModel = new HL7B2BAuthorizationExtension();
     private string? _selectedPurposeOfUse;
     private string? _newPurposeOfUse;
@@ -71,11 +71,12 @@ public partial class Hl7B2BForm
             .AsEnumerable());
     }
 
+
     protected override Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            return form.Validate();
+            return _form.Validate();
         }
 
         return Task.CompletedTask;
@@ -138,8 +139,8 @@ public partial class Hl7B2BForm
 
     private async Task HandleInclude()
     {
-        await form.Validate();
-        if (form.IsValid)
+        await _form.Validate();
+        if (_form.IsValid)
         {
             await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2B, _hl7B2BModel, true);
             await OnUpdateEditor.InvokeAsync();
@@ -190,8 +191,8 @@ public partial class Hl7B2BForm
         return AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationExtObjects), AppState.AuthorizationExtObjects);
     }
 
-    private async Task GoToFhirSecurityIg()
+    private async Task GoToTefcaFacilitateFhirSOP()
     {
-        await JsRuntime.InvokeVoidAsync("open", "https://hl7.org/fhir/us/udap-security/b2b.html#b2b-authorization-extension-object", "_blank");
+        await JsRuntime.InvokeVoidAsync("open", "https://rce.sequoiaproject.org/wp-content/uploads/2024/07/SOP-Facilitated-FHIR-Implementation_508-1.pdf#page=16", "_blank");
     }
 }

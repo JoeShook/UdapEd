@@ -18,4 +18,6 @@ public class AuthorizationCodeTokenRequestModel
 
     public string? RedirectUrl { get; set; }
 
+    public string? CodeVerifier { get; set; }
+
 }

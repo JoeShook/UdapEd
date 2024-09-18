@@ -22,6 +22,11 @@ public class Infrastructure : IInfrastructure
 
     public async Task<byte[]> BuildMyTestCertificatePackage(List<string> subjAltNames)
     {
+        if (!subjAltNames.Any())
+        {
+            return [];
+        }
+
         var caFilePath = "gs://cert_store_private/surefhirlabs_community/SureFhirLabs_CA.pfx";
         var intermediateFilePath = "gs://cert_store_private/surefhirlabs_community/intermediates/SureFhirLabs_Intermediate.pfx";
 
@@ -33,11 +38,21 @@ public class Infrastructure : IInfrastructure
 
         var certTooling = new CertificateTooling();
 
+        var x500Builder = new X500DistinguishedNameBuilder();
+        x500Builder.AddCommonName(subjAltNames.First());
+        x500Builder.AddOrganizationalUnitName("UDAP");
+        x500Builder.AddOrganizationName("Fhir Coding");
+        x500Builder.AddLocalityName("Portland");
+        x500Builder.AddStateOrProvinceName("Oregon");
+        x500Builder.AddCountryOrRegion("US");
+
+        var distinguishedName = x500Builder.Build();
+
         var rsaCertificate = certTooling.BuildUdapClientCertificate(
             subCA,
             rootCA,
             subCA.GetRSAPrivateKey()!,
-            "CN=fhirlabs.net, OU=UDAP, O=Fhir Coding, L=Portland, S=Oregon, C=US",
+            distinguishedName,
             subjAltNames,
             "http://crl.fhircerts.net/crl/surefhirlabsIntermediateCrl.crl",
             "http://crl.fhircerts.net/certs/intermediates/SureFhirLabs_Intermediate.cer"
@@ -47,7 +62,7 @@ public class Infrastructure : IInfrastructure
             subCA,
             rootCA,
             subCA.GetRSAPrivateKey()!,
-            "CN=fhirlabs.net, OU=UDAP, O=Fhir Coding, L=Portland, S=Oregon, C=US",
+            distinguishedName,
             subjAltNames,
             "http://crl.fhircerts.net/crl/surefhirlabsIntermediateCrl.crl",
             "http://crl.fhircerts.net/certs/intermediates/SureFhirLabs_Intermediate.cer"

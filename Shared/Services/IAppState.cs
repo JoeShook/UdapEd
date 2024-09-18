@@ -53,7 +53,9 @@ public interface IAppState
     ClientStatus Status { get; }
 
 
-    AuthorizationCodeRequest?AuthorizationCodeRequest { get; }
+    AuthorizationCodeRequest? AuthorizationCodeRequest { get; }
+
+    Pkce Pkce { get; }
 
     ClientRegistrations? ClientRegistrations { get; }
 
@@ -62,6 +64,8 @@ public interface IAppState
     PatientSearchPref? PatientSearchPref { get; }
 
     public Dictionary<string, AuthExtModel> AuthorizationExtObjects { get; }
+
+    public FhirContext FhirContext { get; }
 
     Task SetPropertyAsync(
         ComponentBase caller,
