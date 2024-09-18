@@ -31,7 +31,7 @@ public partial class Hl7B2BUserForm : ComponentBase
     [Parameter] public AuthExtObjectOperationType OperationType { get; set; }
 
     private MudForm _form = null!;
-    public HL7B2BUserAuthorizationExtension _hl7B2BModel = new HL7B2BUserAuthorizationExtension();
+    private HL7B2BUserAuthorizationExtension _hl7B2BModel = new HL7B2BUserAuthorizationExtension();
     private MarkupString? _jsonUserPerson = null;
     private string? _selectedPurposeOfUse;
     private string? _newPurposeOfUse;
@@ -254,7 +254,7 @@ public partial class Hl7B2BUserForm : ComponentBase
         }
     }
 
-    public async Task EmptyPersonContext()
+    private async Task EmptyPersonContext()
     {
         var person = new Person()
         {
@@ -274,19 +274,19 @@ public partial class Hl7B2BUserForm : ComponentBase
 
     }
 
-    public void SearchForPerson()
+    private void SearchForPerson()
     {
         NavigationManager.NavigateTo("/patientSearch");
     }
 
-    public void ClearPersonContext()
+    private void ClearPersonContext()
     {
         AppState.FhirContext.CurrentPerson = null;
         _jsonUserPerson = null;
     }
 
 
-    protected async Task OpenMenu(EventArgs e)
+    private async Task OpenMenu(EventArgs e)
     {
         await personMenuRef.ToggleMenuAsync(e);
     }
