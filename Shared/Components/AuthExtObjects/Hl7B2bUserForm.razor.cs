@@ -31,7 +31,7 @@ public partial class Hl7B2BUserForm : ComponentBase
     [Parameter] public AuthExtObjectOperationType OperationType { get; set; }
 
     private MudForm _form = null!;
-    private HL7B2BUserAuthorizationExtension _hl7B2BModel = new HL7B2BUserAuthorizationExtension();
+    public HL7B2BUserAuthorizationExtension _hl7B2BModel = new HL7B2BUserAuthorizationExtension();
     private MarkupString? _jsonUserPerson = null;
     private string? _selectedPurposeOfUse;
     private string? _newPurposeOfUse;
