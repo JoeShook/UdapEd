@@ -117,6 +117,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<AppSharedState>();
         builder.Services.AddSingleton<UdapClientState>(); //Singleton in Blazor wasm and Scoped in Blazor Server
         builder.Services.AddScoped<IRegisterService, RegisterService>();
+        builder.Services.AddScoped<ICertificationService, CertificationService>();
         builder.Services.AddScoped<IDiscoveryService, DiscoveryService>();
         builder.Services.AddScoped<IAccessService, AccessService>();
         builder.Services.AddTransient<IFhirService, FhirService>();

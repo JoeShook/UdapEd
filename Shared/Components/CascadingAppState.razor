@@ -171,6 +171,8 @@
 
     public RawSoftwareStatementAndHeader? SoftwareStatementBeforeEncoding { get; private set; }
 
+    public RawSoftwareStatementAndHeader? CertSoftwareStatementBeforeEncoding { get; private set; }
+
     public UdapRegisterRequest? UdapRegistrationRequest { get; private set; }
 
     public Oauth2FlowEnum Oauth2Flow { get; private set; }
@@ -248,11 +250,18 @@
     public bool CertificateLoaded { get; set; }
 
     /// <summary>
+    /// Is the certification cert loaded with private key?
+    /// </summary>
+    public bool CertificationCertLoaded { get; set; }
+
+    /// <summary>
     /// Is an anchor loaded to validated trust to a resource servers software statement
     /// </summary>
     public bool AnchorLoaded { get; set; }
 
     public CertificateStatusViewModel? UdapClientCertificateInfo { get; private set; }
+
+    public CertificateStatusViewModel? CertificationAndEndorsementInfo { get; private set; }
 
     public CertificateStatusViewModel? UdapAnchorCertificateInfo { get; private set; }
 

@@ -20,6 +20,8 @@ public interface IAppState
 
     RawSoftwareStatementAndHeader SoftwareStatementBeforeEncoding { get; }
 
+    RawSoftwareStatementAndHeader? CertSoftwareStatementBeforeEncoding { get; }
+
     UdapRegisterRequest? UdapRegistrationRequest { get; }
     Oauth2FlowEnum Oauth2Flow { get; }
 
@@ -29,6 +31,8 @@ public interface IAppState
     UdapClientCredentialsTokenRequestModel? ClientCredentialsTokenRequest { get; }
 
     CertificateStatusViewModel? UdapClientCertificateInfo { get; }
+
+    CertificateStatusViewModel? CertificationAndEndorsementInfo { get; }
 
     CertificateStatusViewModel? UdapAnchorCertificateInfo { get; }
 

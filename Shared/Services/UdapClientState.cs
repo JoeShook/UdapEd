@@ -33,6 +33,8 @@ public class UdapClientState : IAppState
 
     public RawSoftwareStatementAndHeader? SoftwareStatementBeforeEncoding { get; set; }
 
+    public RawSoftwareStatementAndHeader? CertSoftwareStatementBeforeEncoding { get; set; }
+
     public UdapRegisterRequest? UdapRegistrationRequest { get; set; }
 
     public Oauth2FlowEnum Oauth2Flow { get; set; } = Oauth2FlowEnum.client_credentials;
@@ -44,6 +46,8 @@ public class UdapClientState : IAppState
     public UdapAuthorizationCodeTokenRequestModel? AuthorizationCodeTokenRequest { get; set; }
 
     public CertificateStatusViewModel? UdapClientCertificateInfo { get; set; }
+
+    public CertificateStatusViewModel? CertificationAndEndorsementInfo { get; set; }
 
     public CertificateStatusViewModel? UdapAnchorCertificateInfo { get; set; }
 

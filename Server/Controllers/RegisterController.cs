@@ -12,7 +12,6 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -93,24 +92,6 @@ public class RegisterController : Controller
         return Ok(result);
     }
 
-    private string GetPublicKeyAlgorithm(X509Certificate2 certificate)
-    {
-        string keyAlgOid = certificate.GetKeyAlgorithm();
-        var oid = new Oid(keyAlgOid);
-
-        if (oid.Value == "1.2.840.113549.1.1.1")
-        {
-            return "RS";
-        }
-
-        if (oid.Value == "1.2.840.10045.2.1")
-        {
-            return "ES";
-        }
-
-        return "";
-    }
-
     [HttpPost("UploadClientCertificate")]
     public IActionResult UploadClientCertificate([FromBody] string base64String)
     {
@@ -123,7 +104,7 @@ public class RegisterController : Controller
     [HttpPost("ValidateCertificate")]
     public IActionResult ValidateCertificate([FromBody] string password)
     {
-        Console.WriteLine(HttpContext.Session.GetInt32(UdapEdConstants.UDAP_CLIENT_UPLOADED_CERTIFICATE));
+        // Console.WriteLine(HttpContext.Session.GetInt32(UdapEdConstants.UDAP_CLIENT_UPLOADED_CERTIFICATE));
         var result = new CertificateStatusViewModel
         {
             CertLoaded = CertLoadedEnum.Negative,
@@ -174,7 +155,7 @@ public class RegisterController : Controller
     [HttpGet("IsClientCertificateLoaded")]
     public IActionResult IsClientCertificateLoaded()
     {
-        Console.WriteLine(HttpContext.Session.GetInt32(UdapEdConstants.UDAP_CLIENT_UPLOADED_CERTIFICATE));
+        // Console.WriteLine(HttpContext.Session.GetInt32(UdapEdConstants.UDAP_CLIENT_UPLOADED_CERTIFICATE));
         var result = new CertificateStatusViewModel
         {
             CertLoaded = CertLoadedEnum.Negative,
@@ -553,5 +534,23 @@ public class RegisterController : Controller
 
             return BadRequest(ex);
         }
+    }
+
+    private string GetPublicKeyAlgorithm(X509Certificate2 certificate)
+    {
+        string keyAlgOid = certificate.GetKeyAlgorithm();
+        var oid = new Oid(keyAlgOid);
+
+        if (oid.Value == "1.2.840.113549.1.1.1")
+        {
+            return "RS";
+        }
+
+        if (oid.Value == "1.2.840.10045.2.1")
+        {
+            return "ES";
+        }
+
+        return "";
     }
 }
