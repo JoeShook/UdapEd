@@ -13,7 +13,7 @@ public interface ICertificationService
         UdapCertificationAndEndorsementDocument request,
         string signingAlgorithm);
 
-    Task<UdapRegisterRequest?> BuildRequestBody(
+    Task<string?> BuildRequestBody(
         RawSoftwareStatementAndHeader? request,
         string signingAlgorithm);
 

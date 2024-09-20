@@ -50,33 +50,3 @@ public class UdapDcrBuilderForAuthorizationCodeUnchecked : UdapDcrBuilderForAuth
         return new UdapDcrBuilderForAuthorizationCodeUnchecked(true);
     }
 }
-
-
-/// <summary>
-/// This builder gives access to the underlying <see cref="UdapCertificationAndEndorsementDocument"/>.
-/// It is intended for usage in constructing invalid documents.
-/// </summary>
-public class UdapCertificationsAndEndorsementBuilderUnchecked : UdapCertificationsAndEndorsementBuilder
-{
-    public new UdapCertificationAndEndorsementDocument Document => base.Document;
-
-    protected UdapCertificationsAndEndorsementBuilderUnchecked(string certificationName, X509Certificate2 certificate) : base(certificationName)
-    {
-        base.WithCertificate(certificate);
-    }
-    protected UdapCertificationsAndEndorsementBuilderUnchecked(string certificationName) : base(certificationName)
-    {
-       
-    }
-
-    public new static UdapCertificationsAndEndorsementBuilderUnchecked Create(string certificationName, X509Certificate2 cert)
-    {
-        return new UdapCertificationsAndEndorsementBuilderUnchecked(certificationName, cert);
-    }
-
-
-    public new static UdapCertificationsAndEndorsementBuilderUnchecked Create(string certificationName)
-    {
-        return new UdapCertificationsAndEndorsementBuilderUnchecked(certificationName);
-    }
-}

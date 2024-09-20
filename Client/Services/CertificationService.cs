@@ -52,9 +52,13 @@ public class CertificationService : ICertificationService
         return await result.Content.ReadFromJsonAsync<RawSoftwareStatementAndHeader>();
     }
 
-    public Task<UdapRegisterRequest?> BuildRequestBody(RawSoftwareStatementAndHeader? request, string signingAlgorithm)
+    public async Task<string?> BuildRequestBody(RawSoftwareStatementAndHeader? request, string signingAlgorithm)
     {
-        throw new NotImplementedException();
+        var result = await _httpClient.PostAsJsonAsync($"Certifications/BuildRequestBody?alg={signingAlgorithm}", request);
+
+        result.EnsureSuccessStatusCode();
+
+        return await result.Content.ReadAsStringAsync();
     }
 
     public async Task<CertificateStatusViewModel?> ValidateCertificate(string password)

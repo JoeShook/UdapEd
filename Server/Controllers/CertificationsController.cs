@@ -7,19 +7,21 @@
 // */
 #endregion
 
+using System;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using Google.Api.Gax;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using Udap.Model;
 using Udap.Model.Registration;
-using Udap.Model.Statement;
 using Udap.Util.Extensions;
 using UdapEd.Server.Extensions;
 using UdapEd.Shared;
 using UdapEd.Shared.Model;
+using UdapEd.Shared.Model.Registration;
 using static Udap.Model.UdapConstants;
 
 namespace UdapEd.Server.Controllers;
@@ -222,13 +224,6 @@ public class CertificationsController : Controller
 
         var certificationBuilder = UdapCertificationsAndEndorsementBuilder.Create(request.CertificationName, clientCert);
 
-        //
-        // Unchecked
-        //
-        // certificationBuilder.Document.Issuer = request.Issuer;
-        // certificationBuilder.Document.Subject = request.Subject;
-
-
         var signedSoftwareStatement = certificationBuilder
             .WithExpiration(request.Expiration)
             .WithAudience(request.Audience)
@@ -270,6 +265,53 @@ public class CertificationsController : Controller
 
         return Ok(result);
     }
+
+    [HttpPost("BuildRequestBody")]
+    public IActionResult BuildRequestBodyForClientCredentials(
+       [FromBody] RawSoftwareStatementAndHeader request,
+       [FromQuery] string alg)
+    {
+        var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY);
+
+        if (clientCertWithKey == null)
+        {
+            return BadRequest("Cannot find a certificate.  Reload the certificate.");
+        }
+
+        var certBytes = Convert.FromBase64String(clientCertWithKey);
+        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+
+        var document = JsonSerializer
+            .Deserialize<UdapCertificationAndEndorsementDocument>(request.SoftwareStatement)!;
+
+        var certificationBuilder = UdapCertificationsAndEndorsementBuilderUnchecked.Create(document.CertificationName, clientCert);
+        
+        var signedSoftwareStatement = certificationBuilder
+            .WithExpiration(document.Expiration)
+            .WithAudience(document.Audience)
+            .WithCertificationDescription(document.CertificationDescription)
+            .WithCertificationUris(document.CertificationUris)
+            .WithDeveloperName(document.DeveloperName)
+            .WithDeveloperAddress(document.DeveloperAddress)
+            .WithClientName(document.ClientName)
+            .WithSoftwareId(document.SoftwareId)
+            .WithSoftwareVersion(document.SoftwareVersion)
+            .WithClientUri(document.ClientUri)
+            .WithLogoUri(document.LogoUri)
+            .WithTermsOfService(document.TosUri)
+            .WithPolicyUri(document.PolicyUri)
+            .WithContacts(document.Contacts)
+            .WithRedirectUris(document.RedirectUris)
+            .WithIPsAllowed(document.IpAllowed)
+            .WithGrantTypes(document.GrantTypes)
+            .WithResponseTypes(document.ResponseTypes) // omit for client_credentials rule
+            .WithScope(document.Scope)
+            .WithTokenEndpointAuthMethod(document.TokenEndpointAuthMethod)
+            .BuildSoftwareStatement(alg);
+        
+        return Ok(signedSoftwareStatement);
+    }
+
     private string GetPublicKeyAlgorithm(X509Certificate2 certificate)
     {
         string keyAlgOid = certificate.GetKeyAlgorithm();
