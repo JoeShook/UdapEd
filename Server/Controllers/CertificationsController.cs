@@ -20,6 +20,7 @@ using Udap.Model.Registration;
 using Udap.Util.Extensions;
 using UdapEd.Server.Extensions;
 using UdapEd.Shared;
+using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Registration;
 using static Udap.Model.UdapConstants;
@@ -70,7 +71,7 @@ public class CertificationsController : Controller
                     .ToList();
             }
 
-            result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(certificate);
+            result.PublicKeyAlgorithm = certificate.GetPublicKeyAlgorithm();
             result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
         }
         catch (Exception ex)
@@ -107,14 +108,13 @@ public class CertificationsController : Controller
 
         if (clientCertSession == null)
         {
-            return Ok(CertLoadedEnum.Negative);
+            return Ok(result);
         }
 
         var certBytes = Convert.FromBase64String(clientCertSession);
         try
         {
             var certificate = new X509Certificate2(certBytes, password, X509KeyStorageFlags.Exportable);
-            var subjectName = certificate.SubjectName.Name;
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             HttpContext.Session.SetString(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
             result.DistinguishedName = certificate.SubjectName.Name;
@@ -134,7 +134,7 @@ public class CertificationsController : Controller
                 .ToList();
             }
 
-            result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(certificate);
+            result.PublicKeyAlgorithm = certificate.GetPublicKeyAlgorithm();
             result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
         }
         catch (Exception ex)
@@ -193,7 +193,7 @@ public class CertificationsController : Controller
                         .ToList();
                 }
 
-                result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(certificate);
+                result.PublicKeyAlgorithm = certificate.GetPublicKeyAlgorithm();
                 result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
             }
 
@@ -210,7 +210,7 @@ public class CertificationsController : Controller
     [HttpPost("BuildSoftwareStatement")]
     public IActionResult BuildSoftwareStatementWithHeaderForClientCredentials(
         [FromBody] UdapCertificationAndEndorsementDocument request,
-        [FromQuery] string alg)
+        [FromQuery] string signingAlgorithm)
     {
         var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY);
 
@@ -245,7 +245,7 @@ public class CertificationsController : Controller
             .WithResponseTypes(request.ResponseTypes) // omit for client_credentials rule
             .WithScope(request.Scope)
             .WithTokenEndpointAuthMethod(request.TokenEndpointAuthMethod)
-            .BuildSoftwareStatement(alg);
+            .BuildSoftwareStatement(signingAlgorithm);
                 
         var tokenHandler = new JsonWebTokenHandler();
         var jsonToken = tokenHandler.ReadToken(signedSoftwareStatement);
@@ -269,7 +269,7 @@ public class CertificationsController : Controller
     [HttpPost("BuildRequestBody")]
     public IActionResult BuildRequestBodyForClientCredentials(
        [FromBody] RawSoftwareStatementAndHeader request,
-       [FromQuery] string alg)
+       [FromQuery] string signingAlgorithm)
     {
         var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY);
 
@@ -307,26 +307,8 @@ public class CertificationsController : Controller
             .WithResponseTypes(document.ResponseTypes) // omit for client_credentials rule
             .WithScope(document.Scope)
             .WithTokenEndpointAuthMethod(document.TokenEndpointAuthMethod)
-            .BuildSoftwareStatement(alg);
+            .BuildSoftwareStatement(signingAlgorithm);
         
         return Ok(signedSoftwareStatement);
-    }
-
-    private string GetPublicKeyAlgorithm(X509Certificate2 certificate)
-    {
-        string keyAlgOid = certificate.GetKeyAlgorithm();
-        var oid = new Oid(keyAlgOid);
-
-        if (oid.Value == "1.2.840.113549.1.1.1")
-        {
-            return "RS";
-        }
-
-        if (oid.Value == "1.2.840.10045.2.1")
-        {
-            return "ES";
-        }
-
-        return "";
     }
 }

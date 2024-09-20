@@ -686,6 +686,8 @@ public partial class UdapRegistration
 
         RegistrationResult = string.Empty;
         await AppState.SetPropertyAsync(this, nameof(AppState.RegistrationDocument), null);
+
+        HighlightSoftwareStatement();
     }
 
     private async Task BuildRequestBodyForClientCredentials()
@@ -901,4 +903,31 @@ public partial class UdapRegistration
         }
     }
 
+    private void HighlightSoftwareStatement()
+    {
+        RequestBody = RequestBody.Replace("<mark>", "").Replace("</mark>", "");
+        var jsonDocument = JsonDocument.Parse(RequestBody);
+        if (jsonDocument.RootElement.TryGetProperty("software_statement", out var softwareStatementElement))
+        {
+            var softwareStatement = softwareStatementElement.GetString();
+            RequestBody = RequestBody.Replace(softwareStatement, $"<mark>{softwareStatement}</mark>");
+        }
+    }
+
+    private void HighlightCertifications()
+    {
+        RequestBody = RequestBody.Replace("<mark>", "").Replace("</mark>", "");
+        var jsonDocument = JsonDocument.Parse(RequestBody);
+        if (jsonDocument.RootElement.TryGetProperty("certifications", out var certificationsElement) &&
+            certificationsElement.ValueKind == JsonValueKind.Array &&
+            certificationsElement.GetArrayLength() > 0)
+        {
+            var firstCertification = certificationsElement[0];
+            if (firstCertification.ValueKind == JsonValueKind.String)
+            {
+                var certificationValue = firstCertification.GetString();
+                RequestBody = RequestBody.Replace(certificationValue, $"<mark>{certificationValue}</mark>");
+            }
+        }
+    }
 }

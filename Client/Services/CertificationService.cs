@@ -41,26 +41,6 @@ public class CertificationService : ICertificationService
         result.EnsureSuccessStatusCode();
     }
 
-    public async Task<RawSoftwareStatementAndHeader?> BuildSoftwareStatement(UdapCertificationAndEndorsementDocument request, string signingAlgorithm)
-    {
-        var result = await _httpClient.PostAsJsonAsync(
-            $"Certifications/BuildSoftwareStatement?alg={signingAlgorithm}",
-            request);
-
-        result.EnsureSuccessStatusCode();
-
-        return await result.Content.ReadFromJsonAsync<RawSoftwareStatementAndHeader>();
-    }
-
-    public async Task<string?> BuildRequestBody(RawSoftwareStatementAndHeader? request, string signingAlgorithm)
-    {
-        var result = await _httpClient.PostAsJsonAsync($"Certifications/BuildRequestBody?alg={signingAlgorithm}", request);
-
-        result.EnsureSuccessStatusCode();
-
-        return await result.Content.ReadAsStringAsync();
-    }
-
     public async Task<CertificateStatusViewModel?> ValidateCertificate(string password)
     {
         var result = await _httpClient.PostAsJsonAsync(
@@ -86,4 +66,25 @@ public class CertificationService : ICertificationService
 
         return response;
     }
+
+    public async Task<RawSoftwareStatementAndHeader?> BuildSoftwareStatement(UdapCertificationAndEndorsementDocument request, string signingAlgorithm)
+    {
+        var result = await _httpClient.PostAsJsonAsync(
+            $"Certifications/BuildSoftwareStatement?alg={signingAlgorithm}",
+            request);
+
+        result.EnsureSuccessStatusCode();
+
+        return await result.Content.ReadFromJsonAsync<RawSoftwareStatementAndHeader>();
+    }
+
+    public async Task<string?> BuildRequestBody(RawSoftwareStatementAndHeader? request, string signingAlgorithm)
+    {
+        var result = await _httpClient.PostAsJsonAsync($"Certifications/BuildRequestBody?alg={signingAlgorithm}", request);
+
+        result.EnsureSuccessStatusCode();
+
+        return await result.Content.ReadAsStringAsync();
+    }
+
 }
