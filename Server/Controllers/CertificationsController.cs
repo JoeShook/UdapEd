@@ -147,6 +147,16 @@ public class CertificationsController : Controller
         return Ok(result);
     }
 
+    [HttpDelete]
+    public IActionResult RemoveCertificate()
+    {
+        HttpContext.Session.Remove(UdapEdConstants.CERTIFICATION_CERTIFICATE);
+        HttpContext.Session.Remove(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY);
+        HttpContext.Session.Remove(UdapEdConstants.CERTIFICATION_UPLOADED_CERTIFICATE);
+
+        return Ok();
+    }
+
     [HttpGet("IsClientCertificateLoaded")]
     public IActionResult IsClientCertificateLoaded()
     {
@@ -216,7 +226,7 @@ public class CertificationsController : Controller
 
         if (clientCertWithKey == null)
         {
-            return BadRequest("Cannot find a certificate.  Reload the certificate.");
+            return Ok(null);
         }
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
@@ -275,7 +285,7 @@ public class CertificationsController : Controller
 
         if (clientCertWithKey == null)
         {
-            return BadRequest("Cannot find a certificate.  Reload the certificate.");
+            return Ok(null);
         }
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);

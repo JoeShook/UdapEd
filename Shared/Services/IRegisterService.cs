@@ -16,7 +16,7 @@ namespace UdapEd.Shared.Services;
 
 public interface IRegisterService
 {
-    Task UploadClientCertificate(string certBytes);
+    Task UploadClientCertificate(string base64EncodedBytes);
 
     Task<RawSoftwareStatementAndHeader?> BuildSoftwareStatementForClientCredentials(
         UdapDynamicClientRegistrationDocument request, 

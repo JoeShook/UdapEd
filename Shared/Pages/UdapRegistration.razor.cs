@@ -11,12 +11,14 @@ using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using Google.Api.Gax;
 using Hl7.Fhir.Rest;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
+using Org.BouncyCastle.Ocsp;
 using Udap.Model;
 using Udap.Model.Registration;
 using UdapEd.Shared.Components;
@@ -531,6 +533,11 @@ public partial class UdapRegistration
     {
         try
         {
+            if (!AppState.CertificationCertLoaded)
+            {
+                return;
+            }
+
             var builder = UdapCertificationsAndEndorsementBuilderUnchecked
                 .Create("FhirLabs Administrator Certification");
 
@@ -906,17 +913,39 @@ public partial class UdapRegistration
     private void HighlightSoftwareStatement()
     {
         RequestBody = RequestBody.Replace("<mark>", "").Replace("</mark>", "");
+        RequestBody = RequestBody.Replace($"<div id=\"expandableText\" class=\"expandable\" onclick=\"toggleText()\">", "").Replace("</mark>", "");
+        RequestBody = RequestBody.Replace($"<span id=\"indicator\" class=\"indicator\">[+]</span></div>", "").Replace("</mark>", "");
+
         var jsonDocument = JsonDocument.Parse(RequestBody);
         if (jsonDocument.RootElement.TryGetProperty("software_statement", out var softwareStatementElement))
         {
             var softwareStatement = softwareStatementElement.GetString();
             RequestBody = RequestBody.Replace(softwareStatement, $"<mark>{softwareStatement}</mark>");
         }
+
+        if (jsonDocument.RootElement.TryGetProperty("certifications", out var certificationsElement) &&
+            certificationsElement.ValueKind == JsonValueKind.Array &&
+            certificationsElement.GetArrayLength() > 0)
+        {
+            var firstCertification = certificationsElement[0];
+            if (firstCertification.ValueKind == JsonValueKind.String)
+            {
+                var certificationValue = firstCertification.GetString();
+                RequestBody = RequestBody
+                    .Replace(certificationValue,
+                        $"<div id=\"expandableText\" class=\"expandable\" onclick=\"toggleText()\">" +
+                        $"{certificationValue}" +
+                        $"<span id=\"indicator\" class=\"indicator\">[+]</span></div>");
+            }
+        }
     }
 
     private void HighlightCertifications()
     {
         RequestBody = RequestBody.Replace("<mark>", "").Replace("</mark>", "");
+        RequestBody = RequestBody.Replace($"<div id=\"expandableText\" class=\"expandable\" onclick=\"toggleText()\">", "").Replace("</mark>", "");
+        RequestBody = RequestBody.Replace($"<span id=\"indicator\" class=\"indicator\">[+]</span></div>", "").Replace("</mark>", "");
+
         var jsonDocument = JsonDocument.Parse(RequestBody);
         if (jsonDocument.RootElement.TryGetProperty("certifications", out var certificationsElement) &&
             certificationsElement.ValueKind == JsonValueKind.Array &&
@@ -928,6 +957,16 @@ public partial class UdapRegistration
                 var certificationValue = firstCertification.GetString();
                 RequestBody = RequestBody.Replace(certificationValue, $"<mark>{certificationValue}</mark>");
             }
+        }
+
+        if (jsonDocument.RootElement.TryGetProperty("software_statement", out var softwareStatementElement))
+        {
+            var softwareStatement = softwareStatementElement.GetString();
+            RequestBody = RequestBody
+                .Replace(softwareStatement,
+                    $"<div id=\"expandableText\" class=\"expandable\" onclick=\"toggleText()\">" +
+                    $"{softwareStatement}" +
+                    $"<span id=\"indicator\" class=\"indicator\">[+]</span></div>");
         }
     }
 }

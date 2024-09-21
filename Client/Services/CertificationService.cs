@@ -67,6 +67,13 @@ public class CertificationService : ICertificationService
         return response;
     }
 
+    public async Task<bool> RemoveCertificate()
+    {
+        var response = await _httpClient.DeleteAsync("Certifications/RemoveCertificate");
+
+        return response.IsSuccessStatusCode;
+    }
+
     public async Task<RawSoftwareStatementAndHeader?> BuildSoftwareStatement(UdapCertificationAndEndorsementDocument request, string signingAlgorithm)
     {
         var result = await _httpClient.PostAsJsonAsync(

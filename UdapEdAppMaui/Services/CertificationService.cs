@@ -26,6 +26,7 @@ public class CertificationService : ICertificationService
 
     readonly HttpClient _httpClient;
     private readonly ILogger<CertificationService> _logger;
+    private const int ChunkSize = 4000; // Define a suitable chunk size per each Platform 
 
     public CertificationService(HttpClient httpClient, ILogger<CertificationService> logger)
     {
@@ -51,7 +52,7 @@ public class CertificationService : ICertificationService
 
             var subjectName = certificate.SubjectName.Name;
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
-            await SecureStorage.Default.SetAsync(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
+            await StoreInChunks(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY, clientCertWithKeyBytes);
             result.DistinguishedName = subjectName;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -78,9 +79,10 @@ public class CertificationService : ICertificationService
         return result;
     }
 
-    public async Task UploadCertificate(string certBytes)
+    public async Task UploadCertificate(string base64EncodedBytes)
     {
-        await SecureStorage.Default.SetAsync(UdapEdConstants.CERTIFICATION_CERTIFICATE, certBytes);
+        var certBytes = Convert.FromBase64String(base64EncodedBytes);
+        await StoreInChunks(UdapEdConstants.CERTIFICATION_CERTIFICATE, certBytes);
     }
 
 
@@ -89,10 +91,10 @@ public class CertificationService : ICertificationService
         var result = new CertificateStatusViewModel
         {
             CertLoaded = CertLoadedEnum.Negative,
-            UserSuppliedCertificate = (await SecureStorage.Default.GetAsync(UdapEdConstants.CERTIFICATION_UPLOADED_CERTIFICATE) ?? false.ToString()) != false.ToString()
+            UserSuppliedCertificate = (await RetrieveFromChunks(UdapEdConstants.CERTIFICATION_UPLOADED_CERTIFICATE) ?? false.ToString()) != false.ToString()
         };
 
-        var clientCertSession = await SecureStorage.Default.GetAsync(UdapEdConstants.CERTIFICATION_CERTIFICATE);
+        var clientCertSession = await RetrieveFromChunks(UdapEdConstants.CERTIFICATION_CERTIFICATE);
 
         if (clientCertSession == null)
         {
@@ -104,7 +106,7 @@ public class CertificationService : ICertificationService
         {
             var certificate = new X509Certificate2(certBytes, password, X509KeyStorageFlags.Exportable);
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
-            await SecureStorage.Default.SetAsync(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
+            await StoreInChunks(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY, clientCertWithKeyBytes);
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -140,12 +142,12 @@ public class CertificationService : ICertificationService
         var result = new CertificateStatusViewModel
         {
             CertLoaded = CertLoadedEnum.Negative,
-            UserSuppliedCertificate = (await SecureStorage.Default.GetAsync(UdapEdConstants.CERTIFICATION_UPLOADED_CERTIFICATE) ?? false.ToString()) != false.ToString()
+            UserSuppliedCertificate = (await RetrieveFromChunks(UdapEdConstants.CERTIFICATION_UPLOADED_CERTIFICATE) ?? false.ToString()) != false.ToString()
         };
 
         try
         {
-            var clientCertSession = await SecureStorage.Default.GetAsync(UdapEdConstants.CERTIFICATION_CERTIFICATE);
+            var clientCertSession = await RetrieveFromChunks(UdapEdConstants.CERTIFICATION_CERTIFICATE);
 
             if (clientCertSession != null)
             {
@@ -156,7 +158,7 @@ public class CertificationService : ICertificationService
                 result.CertLoaded = CertLoadedEnum.Negative;
             }
 
-            var certBytesWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY);
+            var certBytesWithKey = await RetrieveFromChunks(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY);
 
             if (certBytesWithKey != null)
             {
@@ -193,9 +195,17 @@ public class CertificationService : ICertificationService
         }
     }
 
+    public async Task<bool> RemoveCertificate()
+    {
+        await RemoveChunks(UdapEdConstants.CERTIFICATION_CERTIFICATE);
+        await RemoveChunks(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY);
+        
+        return true;
+    }
+
     public async Task<RawSoftwareStatementAndHeader?> BuildSoftwareStatement(UdapCertificationAndEndorsementDocument request, string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await RetrieveFromChunks(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -251,11 +261,11 @@ public class CertificationService : ICertificationService
 
     public async Task<string?> BuildRequestBody(RawSoftwareStatementAndHeader? request, string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await RetrieveFromChunks(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
-            throw new Exception("Cannot find a certificate.  Reload the certificate.");
+            return null;
         }
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
@@ -290,5 +300,66 @@ public class CertificationService : ICertificationService
             .BuildSoftwareStatement(signingAlgorithm);
 
         return signedSoftwareStatement;
+    }
+
+    private async Task StoreInChunks(string baseKey, byte[] data)
+    {
+        int totalChunks = (int)Math.Ceiling((double)data.Length / ChunkSize);
+
+        for (int i = 0; i < totalChunks; i++)
+        {
+            int chunkSize = Math.Min(ChunkSize, data.Length - (i * ChunkSize));
+            var chunk = new byte[chunkSize];
+            Array.Copy(data, i * ChunkSize, chunk, 0, chunkSize);
+
+            string chunkKey = $"{baseKey}_chunk_{i}";
+            await SecureStorage.Default.SetAsync(chunkKey, Convert.ToBase64String(chunk));
+        }
+
+        // Store the total number of chunks
+        await SecureStorage.Default.SetAsync($"{baseKey}_totalChunks", totalChunks.ToString());
+    }
+    private async Task<string?> RetrieveFromChunks(string baseKey)
+    {
+        string? totalChunksStr = await SecureStorage.Default.GetAsync($"{baseKey}_totalChunks");
+        if (totalChunksStr == null)
+        {
+            return null;
+        }
+
+        int totalChunks = int.Parse(totalChunksStr);
+        var data = new List<byte>();
+
+        for (int i = 0; i < totalChunks; i++)
+        {
+            string chunkKey = $"{baseKey}_chunk_{i}";
+            string? chunkBase64 = await SecureStorage.Default.GetAsync(chunkKey);
+            if (chunkBase64 != null)
+            {
+                byte[] chunk = Convert.FromBase64String(chunkBase64);
+                data.AddRange(chunk);
+            }
+        }
+
+        return Convert.ToBase64String(data.ToArray());
+    }
+    private async Task RemoveChunks(string baseKey)
+    {
+        string? totalChunksStr = await SecureStorage.Default.GetAsync($"{baseKey}_totalChunks");
+        if (totalChunksStr == null)
+        {
+            return;
+        }
+
+        int totalChunks = int.Parse(totalChunksStr);
+
+        for (int i = 0; i < totalChunks; i++)
+        {
+            string chunkKey = $"{baseKey}_chunk_{i}";
+            SecureStorage.Default.Remove(chunkKey);
+        }
+
+        // Remove the entry that stores the total number of chunks
+        SecureStorage.Default.Remove($"{baseKey}_totalChunks");
     }
 }

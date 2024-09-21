@@ -9,6 +9,8 @@ public interface ICertificationService
 
     Task UploadCertificate(string certBytes);
 
+    Task<bool> RemoveCertificate();
+
     Task<RawSoftwareStatementAndHeader?> BuildSoftwareStatement(
         UdapCertificationAndEndorsementDocument request,
         string signingAlgorithm);
@@ -19,5 +21,4 @@ public interface ICertificationService
 
     Task<CertificateStatusViewModel?> ValidateCertificate(string password);
     Task<CertificateStatusViewModel?> ClientCertificateLoadStatus();
-    
 }
