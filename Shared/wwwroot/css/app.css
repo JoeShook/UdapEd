@@ -149,7 +149,13 @@ pre {
 }
 
 .udap-knowledge {
-  background-color: #E8F5E9;
+  background-color: #F5F5F5;
+  padding: 8px;
+  margin: 8px;
+}
+
+.udap-rowgroup {
+  background-color: #F0F8FF;
   padding: 8px;
   margin: 8px;
 }

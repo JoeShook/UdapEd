@@ -356,7 +356,7 @@ private readonly List<string> _supportedResources = new List<string>()
                 {
                     var results =
                         await MetadataService.GetSmartMetadata(
-                            $"{endpointResource.Address}/.well-known/smart-configuration", default);
+                            $"{endpointResource.Address.EnsureTrailingSlash()}.well-known/smart-configuration", default);
 
                     endPointTreeItem.Children ??= new List<TreeItemData<FhirHierarchyEntry>>();
                     endPointTreeItem.Children.Add(new TreeItemData(

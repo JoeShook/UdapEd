@@ -562,6 +562,8 @@ internal class RegisterService : IRegisterService
                 .Where(s => KeepSmartVersion(s, smartV1Scopes, smartV2Scopes))
                 .ToList();
 
+
+
         var enrichScopes = new List<string>();
 
         if (tieredOauth)
