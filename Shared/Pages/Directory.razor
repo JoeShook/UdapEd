@@ -240,9 +240,8 @@
                                             @{
                                                 var presenter = item.Value!;
                                             }
-                                                <MudTreeViewItem Items="@item.Children" Expanded="true" >
+                                                <MudTreeViewItem Items="@item.Children" Expanded="true"  >
                                                 <BodyContent>
-
                                                     <MudStack Wrap="Wrap.Wrap">
 
                                                         @if (presenter.Link == null)
@@ -256,15 +255,10 @@
                                                             {
                                                                 case "udap":
 
-                                                                    <MudPaper Class="d-flex align-content-start flex-wrap flex-grow-1 gap-4" Elevation="0">
-                                                                        <MudPaper Elevation="0" >
-                                                                            <MudImage Class="cursor-pointer" src="_content/UdapEd.Shared/images/udap/UDAP_Ecosystem_Gears.png" 
-                                                                                      Alt="UDAP Icon" style="height: 36px; width: 36px; " />
-                                                                        </MudPaper>
-                                                                            <MudPaper Elevation="0">
-                                                                            <MudText  Color="Color.Tertiary"><b>UDAP: </b>@($" {presenter.Name} (Endpoint/{presenter.Id})")</MudText>
-                                                                        </MudPaper>
-                                                                    </MudPaper>
+                                                                    
+                                                                    <MudImage Class="cursor-pointer" src="_content/UdapEd.Shared/images/udap/UDAP_Ecosystem_Gears.png" 
+                                                                              Alt="UDAP Icon" style="height: 36px; width: 36px; " />
+                                                                        
 
 
                                                                     <MudLink Style="justify-self: start;"
@@ -285,7 +279,13 @@
 
                                                                     }
 
-                                                                    @if (@presenter.ErrorNotifications != null && @presenter.ErrorNotifications.Any())
+                                                                    
+                                                                    @if (presenter.IsLoading)
+                                                                    {
+                                                                            <MudProgressCircular Color="Color.Secondary" Indeterminate="true" Size="Size.Small" />
+                                                                        <span> (Validating  Metadata...)</span>
+                                                                    }
+                                                                    else if (@presenter.ErrorNotifications != null && @presenter.ErrorNotifications.Any())
                                                                     {
                                                                         <MudButton Class="mt-3" Style="justify-self: start;"
                                                                                    Color="Color.Primary"
@@ -305,7 +305,7 @@
                                                                             <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew"/>
                                                                         </MudLink>
                                                                     }
-
+                                                                
                                                                     break;
 
                                                                 case "smart":
