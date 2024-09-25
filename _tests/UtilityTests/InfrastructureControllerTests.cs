@@ -20,13 +20,12 @@ namespace UtilityTests
             var queryString = string.Join("&", subjAltNames.Select(name => $"subjAltNames={Uri.EscapeDataString(name)}"));
             queryString += $"&password=udap-test";
             var response = await new HttpClient()
-                .GetAsync($"https://localhost:7041/Infrastructure/JitFhirlabsCommunityCertificate?{queryString}");
+                .GetAsync($"https://udaped.fhirlabs.net/Infrastructure/JitFhirlabsCommunityCertificate?{queryString}");
 
             Assert.True(response.IsSuccessStatusCode);
             
-                var contentBase64 = await response.Content.ReadAsStringAsync();
+            var contentBase64 = await response.Content.ReadAsStringAsync();
             var bytes = Convert.FromBase64String(contentBase64);
-            
             var certificate = new X509Certificate2(bytes, "udap-test");
 
             var subjectAltNames = certificate.GetSubjectAltNames()
@@ -35,6 +34,7 @@ namespace UtilityTests
                 .ToList();
 
             Assert.Equal(subjAltNames, subjectAltNames);
+            Assert.True(certificate.HasPrivateKey);
         }
 
         [Fact]
@@ -53,6 +53,7 @@ namespace UtilityTests
                 .ToList();
 
             Assert.Equal(subjAltNames, subjectAltNames);
+            Assert.True(certificate.HasPrivateKey);
         }
     }
 }
