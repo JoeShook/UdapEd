@@ -20,27 +20,27 @@ using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model.AuthExtObjects;
 using Task = System.Threading.Tasks.Task;
 
-namespace UdapEd.Shared.Components.AuthExtObjects;
-public partial class TefcaIasForm
+namespace UdapEd.Shared.Components;
+
+public partial class Hl7B2BUserForm : ComponentBase
 {
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
     [Parameter] public EventCallback OnUpdateEditor { get; set; }
-    [Parameter] public string? Id { get; set; }
     [Parameter] public AuthExtObjectOperationType OperationType { get; set; }
 
     private MudForm _form = null!;
-    private TEFCAIASAuthorizationExtension _hl7B2BModel = new TEFCAIASAuthorizationExtension();
-    private MarkupString? _jsonRelatedPerson;
-    private MarkupString? _jsonPatient;
+    private HL7B2BUserAuthorizationExtension _hl7B2BModel = new HL7B2BUserAuthorizationExtension();
+    private MarkupString? _jsonUserPerson = null;
+    private string? _selectedPurposeOfUse;
+    private string? _newPurposeOfUse;
     private string? _selectedConsentPolicy;
     private string? _selectedConsentReference;
     private string? _newConsentPolicy;
     private string? _newConsentReference;
-    private List<string> _vsPurposeOfUse = ["T-IAS"];
-    private MudMenu relatedPersonMenuRef;
-    private MudMenu patientMenuRef;
+    private List<string> _vsPurposeOfUse;
+    private MudMenu personMenuRef;
 
     private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
     {
@@ -49,39 +49,26 @@ public partial class TefcaIasForm
 
     protected override void OnInitialized()
     {
-        var authExtObj =
-            AppState.AuthorizationExtObjects.SingleOrDefault(a =>
-                a.Key == UdapConstants.UdapAuthorizationExtensions.TEFCAIAS);
+        _vsPurposeOfUse = Hl7Helpers.GetAllCodingsFromType(typeof(VsPurposeOfUse)).Where(c => c.Code != "PurposeOfUse").Select(c => c.Code).ToList();
 
+        var authExtObj = AppState.AuthorizationExtObjects.SingleOrDefault(a => a.Key == UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER);
+        
         if (authExtObj.Key != null && authExtObj.Value != null && !string.IsNullOrEmpty(authExtObj.Value.Json))
         {
-            _hl7B2BModel = JsonSerializer.Deserialize<TEFCAIASAuthorizationExtension>(authExtObj.Value.Json) ??
-                           new TEFCAIASAuthorizationExtension();
+            _hl7B2BModel = JsonSerializer.Deserialize<HL7B2BUserAuthorizationExtension>(authExtObj.Value.Json) ??
+                          new HL7B2BUserAuthorizationExtension();
         }
         else
         {
-            _hl7B2BModel = new TEFCAIASAuthorizationExtension();
+            _hl7B2BModel = new HL7B2BUserAuthorizationExtension();
         }
 
-        if (_hl7B2BModel?.UserInformation != null)
+        if (_hl7B2BModel.UserPerson != null)
         {
             try
             {
-                var person = new FhirJsonParser().Parse<RelatedPerson>(_hl7B2BModel?.UserInformation.ToString());
-                SetRelatedPersonPresentation(person);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-        }
-
-        if (_hl7B2BModel?.PatientInformation != null)
-        {
-            try
-            {
-                var patient = new FhirJsonParser().Parse<Patient>(_hl7B2BModel?.PatientInformation.ToString());
-                SetPatientPresentation(patient);
+                var person = new FhirJsonParser().Parse<Person>(_hl7B2BModel.UserPerson.ToString());
+                SetPersonPresentation(person);
             }
             catch (Exception e)
             {
@@ -100,6 +87,7 @@ public partial class TefcaIasForm
             .AsEnumerable());
     }
 
+
     protected override Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -109,15 +97,43 @@ public partial class TefcaIasForm
 
         return Task.CompletedTask;
     }
-    
+
     public void Update()
     {
-        var authExtObj = AppState.AuthorizationExtObjects.SingleOrDefault(a => a.Key == UdapConstants.UdapAuthorizationExtensions.TEFCAIAS);
+        var authExtObj = AppState.AuthorizationExtObjects.SingleOrDefault(a => a.Key == UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER);
 
         if (authExtObj.Key != null && authExtObj.Value != null && !string.IsNullOrEmpty(authExtObj.Value.Json))
         {
-            _hl7B2BModel = JsonSerializer.Deserialize<TEFCAIASAuthorizationExtension>(authExtObj.Value.Json) ??
-                          new TEFCAIASAuthorizationExtension();
+            _hl7B2BModel = JsonSerializer.Deserialize<HL7B2BUserAuthorizationExtension>(authExtObj.Value.Json) ??
+                          new HL7B2BUserAuthorizationExtension();
+        }
+    }
+
+    private void AddPurposeOfUse()
+    {
+        if (!string.IsNullOrWhiteSpace(_newPurposeOfUse) && _hl7B2BModel.PurposeOfUse != null && !_hl7B2BModel.PurposeOfUse.Contains($"urn:oid:2.16.840.1.113883.5.8#{_newPurposeOfUse}"))
+        {
+            _hl7B2BModel.PurposeOfUse.Add($"urn:oid:2.16.840.1.113883.5.8#{_newPurposeOfUse}");
+            _newPurposeOfUse = string.Empty;
+        }
+    }
+
+    private async Task RemovePurposeOfUse(string purpose)
+    {
+        if (_hl7B2BModel.PurposeOfUse != null)
+        {
+            purpose = purpose.Trim();
+
+            _hl7B2BModel.PurposeOfUse = _hl7B2BModel.PurposeOfUse
+                .Where(p => !p.Equals(purpose, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, _hl7B2BModel, true);
+            StateHasChanged();
+        }
+        else
+        {
+            Console.WriteLine("PurposeOfUse list is null.");
         }
     }
 
@@ -133,8 +149,7 @@ public partial class TefcaIasForm
     private async Task RemoveConsentPolicy(string policy)
     {
         var remove = _hl7B2BModel.ConsentPolicy?.Remove(policy);
-        Console.WriteLine("Removed: " + remove);
-        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.TEFCAIAS, _hl7B2BModel, true);
+        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, _hl7B2BModel, true);
         StateHasChanged();
         await Task.Delay(100);
     }
@@ -153,7 +168,7 @@ public partial class TefcaIasForm
     private async Task RemoveConsentReference(string reference)
     {
         _hl7B2BModel.ConsentReference?.Remove(reference);
-        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.TEFCAIAS, _hl7B2BModel, true);
+        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, _hl7B2BModel, true);
         StateHasChanged();
     }
 
@@ -162,20 +177,20 @@ public partial class TefcaIasForm
         await _form.Validate();
         if (_form.IsValid)
         {
-            await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.TEFCAIAS, _hl7B2BModel, true);
+            await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, _hl7B2BModel, true);
             await OnUpdateEditor.InvokeAsync();
         }
     }
 
     private async Task HandleRemove()
     {
-        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.TEFCAIAS, _hl7B2BModel, false);
+        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, _hl7B2BModel, false);
         await OnUpdateEditor.InvokeAsync();
     }
 
-    private Task UpdateAppState(string key, TEFCAIASAuthorizationExtension model, bool use)
+    private Task UpdateAppState(string key, HL7B2BUserAuthorizationExtension model, bool use)
     {
-        var jsonString = JsonSerializer.Serialize(model, _jsonSerializerOptions);
+        var jsonString = model.SerializeToJson(true);
 
         if (AppState.AuthorizationExtObjects.ContainsKey(key))
         {
@@ -211,37 +226,37 @@ public partial class TefcaIasForm
         return AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationExtObjects), AppState.AuthorizationExtObjects);
     }
 
-    private async Task GoToTefcaFacilitateFhirSOP()
+    private async Task GoToFhirIdentityMatchingIg()
     {
-        await JsRuntime.InvokeVoidAsync("open", "https://rce.sequoiaproject.org/wp-content/uploads/2024/07/SOP-Facilitated-FHIR-Implementation_508-1.pdf#page=17", "_blank");
+        await JsRuntime.InvokeVoidAsync("open", "https://build.fhir.org/ig/HL7/fhir-identity-matching-ig/patient-matching.html#consumer-match", "_blank");
     }
 
-    private string? ValidateJsonRelatedPerson(string? input)
+    private string? ValidateJsonUserPerson(string? input)
     {
-        var result = _hl7B2BModel.UserInformation == null ? "Invalid Person Resource" : null;
+        var result = _hl7B2BModel.UserPerson == null ? "Invalid Person Resource" : null;
         return result;
     }
-    
 
-    private void SetRelatedPersonPresentation(RelatedPerson person)
+    
+    private void SetPersonPresentation(Person person)
     {
-        _jsonRelatedPerson = new MarkupString(string.Join("<br/> ",
+        _jsonUserPerson = new MarkupString(string.Join("<br/> ",
             person.Name.Select(hn => $"{hn.Given.First()}, {hn.Family}")));
     }
 
-    private void UseRelatedPersonContext()
+    private void UsePersonContext()
     {
-        if (AppState.FhirContext.CurrentRelatedPerson != null)
+        if (AppState.FhirContext.CurrentPerson != null)
         {
-            var jsonString = new FhirJsonSerializer().SerializeToString(AppState.FhirContext.CurrentRelatedPerson);
-            _hl7B2BModel.UserInformation = JsonDocument.Parse(jsonString).RootElement;
-            SetRelatedPersonPresentation(AppState.FhirContext.CurrentRelatedPerson);
+            var jsonString = new FhirJsonSerializer().SerializeToString(AppState.FhirContext.CurrentPerson);
+            _hl7B2BModel.UserPerson = JsonDocument.Parse(jsonString).RootElement;
+            SetPersonPresentation(AppState.FhirContext.CurrentPerson);
         }
     }
 
-    private async Task EmptyRelatedPersonContext()
+    private async Task EmptyPersonContext()
     {
-        var relatedPerson = new RelatedPerson()
+        var person = new Person()
         {
             Name =
             [
@@ -252,78 +267,27 @@ public partial class TefcaIasForm
                 }
             ]
         };
-
-        var jsonString = await new FhirJsonSerializer().SerializeToStringAsync(relatedPerson);
-        _hl7B2BModel.UserInformation = JsonDocument.Parse(jsonString).RootElement;
-        SetRelatedPersonPresentation(relatedPerson);
-    }
-
-    private void SearchForRelatedPerson()
-    {
-        NavigationManager.NavigateTo("/patientSearch");
-    }
-
-    private void ClearRelatedPersonContext()
-    {
-        AppState.FhirContext.CurrentRelatedPerson = null;
-        _jsonRelatedPerson = null;
-    }
-
-
-
-    private void SetPatientPresentation(Patient patient)
-    {
-        _jsonPatient = new MarkupString(string.Join("<br/> ",
-            patient.Name.Select(hn => $"{hn.Given.First()}, {hn.Family}")));
-    }
-
-    private void UsePatientContext()
-    {
-        if (AppState.FhirContext.CurrentPatient != null)
-        {
-            var jsonString = new FhirJsonSerializer().SerializeToString(AppState.FhirContext.CurrentPatient);
-            _hl7B2BModel.PatientInformation = JsonDocument.Parse(jsonString).RootElement;
-            SetPatientPresentation(AppState.FhirContext.CurrentPatient);
-        }
-    }
-
-    private async Task EmptyPatientContext()
-    {
-        var person = new Patient()
-        {
-            Name =
-            [
-                new HumanName()
-                {
-                    Family = "Newman",
-                    Given = new List<string>() { "Alice", "Jones" }
-                }
-            ]
-        };
-
+        
         var jsonString = await new FhirJsonSerializer().SerializeToStringAsync(person);
-        _hl7B2BModel.PatientInformation = JsonDocument.Parse(jsonString).RootElement;
-        SetPatientPresentation(person);
+        _hl7B2BModel.UserPerson = JsonDocument.Parse(jsonString).RootElement;
+        SetPersonPresentation(person);
+
     }
 
-    private void SearchForPatient()
+    private void SearchForPerson()
     {
         NavigationManager.NavigateTo("/patientSearch");
     }
 
-    private void ClearPatientContext()
+    private void ClearPersonContext()
     {
-        AppState.FhirContext.CurrentPatient = null;
-        _jsonRelatedPerson = null;
+        AppState.FhirContext.CurrentPerson = null;
+        _jsonUserPerson = null;
     }
 
-    private async Task OpenRelatedPersonMenu(EventArgs e)
-    {
-        await relatedPersonMenuRef.ToggleMenuAsync(e);
-    }
 
-    private async Task OpenPatientMenu(EventArgs e)
+    private async Task OpenMenu(EventArgs e)
     {
-        await patientMenuRef.ToggleMenuAsync(e);
+        await personMenuRef.ToggleMenuAsync(e);
     }
 }

@@ -7,12 +7,18 @@
 // */
 #endregion
 
+using System.Net.NetworkInformation;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
+using Google.Api.Gax;
 using Hl7.Fhir.Rest;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
+using Org.BouncyCastle.Ocsp;
 using Udap.Model;
 using Udap.Model.Registration;
 using UdapEd.Shared.Components;
@@ -54,6 +60,7 @@ public partial class UdapRegistration
     private bool _missingScope;
     private bool _cancelRegistration;
     private UdapDynamicClientRegistrationDocument? _udapDcrDocument;
+    private UdapCertificationAndEndorsementDocument? _udapCertificationDocument;
     private string _localRegisteredClients = string.Empty;
 
     
@@ -74,7 +81,6 @@ public partial class UdapRegistration
         }
         set
         {
-            Console.WriteLine(value);
             _signingAlgorithm = value;
         }
     }
@@ -89,6 +95,7 @@ public partial class UdapRegistration
 
     ErrorBoundary? ErrorBoundary { get; set; }
     [Inject] IRegisterService RegisterService { get; set; } = null!;
+    [Inject] ICertificationService CertificationService { get; set; } = null!;
 
     [Inject] NavigationManager NavigationManager { get; set; } = null!;
 
@@ -136,7 +143,46 @@ public partial class UdapRegistration
         set => _beforeEncodingHeader = value;
     }
 
-    
+    private string _beforeCertificationEncodingHeader = string.Empty;
+    private string CertSoftwareStatementBeforeEncodingHeader
+    {
+        get
+        {
+            if (!string.IsNullOrEmpty(_beforeCertificationEncodingHeader))
+            {
+                return _beforeCertificationEncodingHeader;
+            }
+
+            if (AppState.CertSoftwareStatementBeforeEncoding?.Header == null)
+            {
+                return _beforeCertificationEncodingHeader;
+            }
+
+            string? jsonHeader = null;
+
+            try
+            {
+                jsonHeader = JsonNode.Parse(AppState.CertSoftwareStatementBeforeEncoding.Header)
+                    ?.ToJsonString(
+                        // new JsonSerializerOptions()
+                        // {
+                        //     WriteIndented = true
+                        // }
+                    ).Replace("\\u002B", "+");
+            }
+            catch
+            {
+                // ignored
+            }
+
+            return jsonHeader ?? string.Empty;
+        }
+
+        set => _beforeCertificationEncodingHeader = value;
+    }
+
+
+
     private string _beforeEncodingStatement = string.Empty;
     private string SoftwareStatementBeforeEncodingSoftwareStatement
     {
@@ -172,11 +218,55 @@ public partial class UdapRegistration
         set => _beforeEncodingStatement = value;
     }
 
+    private string _beforeEncodingCertStatement = string.Empty;
+    private string CertSoftwareStatementBeforeEncodingSoftwareStatement
+    {
+        get
+        {
+            if (!string.IsNullOrEmpty(_beforeEncodingCertStatement))
+            {
+                return _beforeEncodingCertStatement;
+            }
+
+            if (AppState.CertSoftwareStatementBeforeEncoding?.SoftwareStatement == null)
+            {
+                return _beforeEncodingCertStatement;
+            }
+
+            string? jsonStatement = null;
+
+            try
+            {
+                jsonStatement = JsonNode.Parse(AppState.CertSoftwareStatementBeforeEncoding.SoftwareStatement)
+                    ?.ToJsonString(new JsonSerializerOptions()
+                    {
+                        WriteIndented = true
+                    });
+            }
+            catch
+            {
+                // ignored
+            }
+
+            return jsonStatement ?? string.Empty;
+        }
+
+        set => _beforeEncodingCertStatement = value;
+    }
+
+
     private const string VALID_STYLE = "pre udap-indent-1";
     private const string INVALID_STYLE = "pre udap-indent-1 jwt-invalid";
     public string ValidRawSoftwareStatementStyle { get; set; } = VALID_STYLE;
+    public string ValidCertRawSoftwareStatementStyle { get; set; } = VALID_STYLE;
 
     private void Reset()
+    {
+        _signingAlgorithm = null;
+        StateHasChanged();
+    }
+
+    private void CiertificationReset()
     {
         _signingAlgorithm = null;
         StateHasChanged();
@@ -203,6 +293,26 @@ public partial class UdapRegistration
         catch
         {
             ValidRawSoftwareStatementStyle = INVALID_STYLE;
+        }
+    }
+
+    private void PersistCertSoftwareStatement()
+    {
+        try
+        {
+            var rawStatement = new RawSoftwareStatementAndHeader
+            {
+                Header = CertSoftwareStatementBeforeEncodingHeader,
+                SoftwareStatement = _beforeEncodingCertStatement
+                // Scope = beforeEncodingScope
+            };
+
+            ValidCertRawSoftwareStatementStyle = VALID_STYLE;
+            AppState.SetProperty(this, nameof(AppState.CertSoftwareStatementBeforeEncoding), rawStatement);
+        }
+        catch
+        {
+            ValidCertRawSoftwareStatementStyle = INVALID_STYLE;
         }
     }
 
@@ -265,6 +375,7 @@ public partial class UdapRegistration
     {
         _cancelRegistration = false;
         SetRawMessage("Loading ...");
+        SetRawCertificationMessage("Loading ...");
 
         await Task.Delay(150);
 
@@ -284,11 +395,15 @@ public partial class UdapRegistration
                     SmartV1Scopes,
                     SmartV2Scopes));
         }
+
+        await BuildRawCertSoftwareStatement();
     }
+
     private async Task BuildRawCancelSoftwareStatement()
     {
         _cancelRegistration = true;
         SetRawMessage("Loading ...");
+        SetRawCertificationMessage("Loading ...");
 
         await Task.Delay(150);
 
@@ -342,7 +457,7 @@ public partial class UdapRegistration
             {
                 _missingScope = true;
             }
-            Console.WriteLine(request.SerializeToJson(true));
+            // Console.WriteLine(request.SerializeToJson(true));
             var statement = await RegisterService
                 .BuildSoftwareStatementForClientCredentials(request, _signingAlgorithm);
             if (statement != null)
@@ -414,11 +529,86 @@ public partial class UdapRegistration
     }
 
 
+    private async Task BuildRawCertSoftwareStatement()
+    {
+        try
+        {
+            if (!AppState.CertificationCertLoaded)
+            {
+                return;
+            }
+
+            var builder = UdapCertificationsAndEndorsementBuilderUnchecked
+                .Create("FhirLabs Administrator Certification");
+
+            builder
+            .WithCertificationDescription("Application can perform all CRUD operations against the FHIR server.")
+                .WithCertificationUris(new List<string>()
+                    { "https://certifications.fhirlabs.net/criteria/admin-2024.7" })
+                .WithDeveloperName("Joe Shook")
+                .WithDeveloperAddress("Portland Oregon")
+                .WithClientName(UdapEdConstants.CLIENT_NAME)
+                .WithSoftwareId(UdapEdConstants.CLIENT_NAME)
+                .WithSoftwareVersion(@Assembly.GetExecutingAssembly().GetName().Version.ToString())
+                .WithClientUri("https://udaped.fhirlabs.net")
+                .WithLogoUri("https://udaped.fhirlabs.net/_content/UdapEd.Shared/images/UdapEdLogobyDesigner.png")
+                .WithTermsOfService("https://udaped.fhirlabs.net/TermsOfService.html")
+                .WithPolicyUri("https://udaped.fhirlabs.net/Policy.html")
+                .WithContacts(new List<string>() { "mailto:Joseph.Shook@Surescripts.com", "mailto:JoeShook@gmail.com" })
+                // SMART
+                //.WithLaunchUri("https://udaped.fhirlabs.net/smart/launch?iss=https://launch.smarthealthit.org/v/r4/fhir&launch=WzAsIiIsIiIsIkFVVE8iLDAsMCwwLCIiLCIiLCIiLCIiLCJhdXRoX2ludmFsaWRfY2xpZW50X2lkIiwiIiwiIiwyLDFd")
+
+                //
+                // Must be empty for client_credentials
+                //
+                // .WithRedirectUris(new List<string>
+                //     { new Uri($"https://client.fhirlabs.net/redirect/{Guid.NewGuid()}").AbsoluteUri })
+
+                // .WithIPsAllowed(new List<string>() { "198.51.100.0/24", "203.0.113.55" })
+                // .WithGrantTypes(new List<string>() { "authorization_code", "refresh_token", "client_credentials" })
+                // .WithResponseTypes(new HashSet<string> { "code" }) // omit for client_credentials rule
+                .WithScope("user/*.write")
+                .WithTokenEndpointAuthMethod("private_key_jwt"); // 'none' if authorization server allows it.
+                                                                // 'client_secret_post': The client uses the HTTP POST parameters
+                                                                // as defined in OAuth 2.0, Section 2.3.1.
+                                                                // "client_secret_basic": The client uses HTTP Basic as defined in
+                                                                // OAuth 2.0, Section 2.3.1.
+                                                                //
+                                                                // The additional value private_key_jwt may also be used.
+                                                                //
+                                                                    
+            builder.Document.Expiration = EpochTime.GetIntDate(DateTime.Now.AddYears(1)); //todo set expiration in UI
+            var request = builder.Build();
+
+            var statement = await CertificationService
+                .BuildSoftwareStatement(request, _signingAlgorithm);
+            
+            if (statement != null)
+            {
+                SetRawCertStatement(statement.Header, statement.SoftwareStatement);
+                await AppState.SetPropertyAsync(this, nameof(AppState.CertSoftwareStatementBeforeEncoding), statement);
+            }
+        }
+        catch (Exception ex)
+        {
+            SetRawCertificationMessage(string.Empty);
+            await ResetCertificationSoftwareStatement();
+            RawSoftwareStatementError = ex.Message;
+        }
+    }
+    
     private void SetRawMessage(string message)
     {
         RawSoftwareStatementError = string.Empty;
         SoftwareStatementBeforeEncodingHeader = message;
         SoftwareStatementBeforeEncodingSoftwareStatement = string.Empty;
+    }
+
+    private void SetRawCertificationMessage(string message)
+    {
+        RawSoftwareStatementError = string.Empty;
+        CertSoftwareStatementBeforeEncodingHeader = message;
+        CertSoftwareStatementBeforeEncodingSoftwareStatement = string.Empty;
     }
 
     private void SetRawStatement(string header, string softwareStatement = "")
@@ -444,7 +634,30 @@ public partial class UdapRegistration
         
         SoftwareStatementBeforeEncodingHeader = jsonHeader ?? string.Empty;
         SoftwareStatementBeforeEncodingSoftwareStatement = jsonStatement ?? string.Empty;
-        
+    }
+
+    private void SetRawCertStatement(string header, string softwareStatement = "")
+    {
+        var jsonHeader = JsonNode.Parse(header)
+            ?.ToJsonString(new JsonSerializerOptions()
+            {
+                WriteIndented = true
+            }).Replace("\\u002B", "+");
+
+        var jsonStatement = JsonNode.Parse(softwareStatement)
+            ?.ToJsonString(new JsonSerializerOptions()
+            {
+                WriteIndented = true,
+
+            });
+
+        if (jsonStatement != null)
+        {
+            _udapCertificationDocument = JsonSerializer.Deserialize<UdapCertificationAndEndorsementDocument>(jsonStatement);
+        }
+
+        CertSoftwareStatementBeforeEncodingHeader = jsonHeader ?? string.Empty;
+        CertSoftwareStatementBeforeEncodingSoftwareStatement = jsonStatement ?? string.Empty;
     }
 
     private async Task ResetSoftwareStatement()
@@ -455,6 +668,13 @@ public partial class UdapRegistration
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapRegistrationRequest), null);
         _registrationResult = null;
         await AppState.SetPropertyAsync(this, nameof(AppState.RegistrationDocument), null);
+    }
+
+    private async Task ResetCertificationSoftwareStatement()
+    {
+        SetRawCertificationMessage(string.Empty);
+        await AppState.SetPropertyAsync(this, nameof(AppState.CertSoftwareStatementBeforeEncoding), null);
+       
     }
 
     private async Task BuildRequestBody()
@@ -473,20 +693,29 @@ public partial class UdapRegistration
 
         RegistrationResult = string.Empty;
         await AppState.SetPropertyAsync(this, nameof(AppState.RegistrationDocument), null);
+
+        HighlightSoftwareStatement();
     }
 
     private async Task BuildRequestBodyForClientCredentials()
     {
+        var certifications = await CertificationService
+            .BuildRequestBody(AppState.CertSoftwareStatementBeforeEncoding, _signingAlgorithm);
+        
         var registerRequest = await RegisterService
-            .BuildRequestBodyForClientCredentials(
-                AppState.SoftwareStatementBeforeEncoding,
-                _signingAlgorithm);
+            .BuildRequestBodyForClientCredentials(AppState.SoftwareStatementBeforeEncoding, _signingAlgorithm);
+
+        if (!string.IsNullOrEmpty(certifications))
+        {
+            registerRequest.Certifications = new string[] { certifications };
+        }
 
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapRegistrationRequest), registerRequest);
-
+    
         RequestBody = JsonSerializer.Serialize(
             registerRequest,
             new JsonSerializerOptions { WriteIndented = true });
+
     }
 
     private async Task BuildRequestBodyForAuthorizationCode()
@@ -629,9 +858,7 @@ public partial class UdapRegistration
 
             _udapDcrDocument = JsonSerializer.Deserialize<UdapDynamicClientRegistrationDocument>(_beforeEncodingStatement);
             var beforeEncodingScope = _udapDcrDocument?.Scope;
-            Console.WriteLine(beforeEncodingScope);
-
-
+            
             AppState.ClientRegistrations.SelectedRegistration.Scope = beforeEncodingScope;
             await AppState.SetPropertyAsync(this, nameof(AppState.ClientRegistrations), AppState.ClientRegistrations);
         }
@@ -683,4 +910,63 @@ public partial class UdapRegistration
         }
     }
 
+    private void HighlightSoftwareStatement()
+    {
+        RequestBody = RequestBody.Replace("<mark>", "").Replace("</mark>", "");
+        RequestBody = RequestBody.Replace($"<div id=\"expandableText\" class=\"expandable\" onclick=\"toggleText()\">", "").Replace("</mark>", "");
+        RequestBody = RequestBody.Replace($"<span id=\"indicator\" class=\"indicator\">[+]</span></div>", "").Replace("</mark>", "");
+
+        var jsonDocument = JsonDocument.Parse(RequestBody);
+        if (jsonDocument.RootElement.TryGetProperty("software_statement", out var softwareStatementElement))
+        {
+            var softwareStatement = softwareStatementElement.GetString();
+            RequestBody = RequestBody.Replace(softwareStatement, $"<mark>{softwareStatement}</mark>");
+        }
+
+        if (jsonDocument.RootElement.TryGetProperty("certifications", out var certificationsElement) &&
+            certificationsElement.ValueKind == JsonValueKind.Array &&
+            certificationsElement.GetArrayLength() > 0)
+        {
+            var firstCertification = certificationsElement[0];
+            if (firstCertification.ValueKind == JsonValueKind.String)
+            {
+                var certificationValue = firstCertification.GetString();
+                RequestBody = RequestBody
+                    .Replace(certificationValue,
+                        $"<div id=\"expandableText\" class=\"expandable\" onclick=\"toggleText()\">" +
+                        $"{certificationValue}" +
+                        $"<span id=\"indicator\" class=\"indicator\">[+]</span></div>");
+            }
+        }
+    }
+
+    private void HighlightCertifications()
+    {
+        RequestBody = RequestBody.Replace("<mark>", "").Replace("</mark>", "");
+        RequestBody = RequestBody.Replace($"<div id=\"expandableText\" class=\"expandable\" onclick=\"toggleText()\">", "").Replace("</mark>", "");
+        RequestBody = RequestBody.Replace($"<span id=\"indicator\" class=\"indicator\">[+]</span></div>", "").Replace("</mark>", "");
+
+        var jsonDocument = JsonDocument.Parse(RequestBody);
+        if (jsonDocument.RootElement.TryGetProperty("certifications", out var certificationsElement) &&
+            certificationsElement.ValueKind == JsonValueKind.Array &&
+            certificationsElement.GetArrayLength() > 0)
+        {
+            var firstCertification = certificationsElement[0];
+            if (firstCertification.ValueKind == JsonValueKind.String)
+            {
+                var certificationValue = firstCertification.GetString();
+                RequestBody = RequestBody.Replace(certificationValue, $"<mark>{certificationValue}</mark>");
+            }
+        }
+
+        if (jsonDocument.RootElement.TryGetProperty("software_statement", out var softwareStatementElement))
+        {
+            var softwareStatement = softwareStatementElement.GetString();
+            RequestBody = RequestBody
+                .Replace(softwareStatement,
+                    $"<div id=\"expandableText\" class=\"expandable\" onclick=\"toggleText()\">" +
+                    $"{softwareStatement}" +
+                    $"<span id=\"indicator\" class=\"indicator\">[+]</span></div>");
+        }
+    }
 }

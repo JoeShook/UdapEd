@@ -17,14 +17,14 @@ using Udap.Model.UdapAuthenticationExtensions;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model.AuthExtObjects;
 
-namespace UdapEd.Shared.Components.AuthExtObjects;
+namespace UdapEd.Shared.Components;
 
-public partial class Hl7B2BForm
+public partial class Hl7B2BForm : ComponentBase
 {
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
     [Parameter] public EventCallback OnUpdateEditor { get; set; }
-    [Parameter] public string? Id { get; set; }
+   
     [Parameter] public AuthExtObjectOperationType OperationType { get; set; }
 
     private MudForm form = null!;

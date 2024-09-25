@@ -15,9 +15,9 @@ using Udap.Model;
 using Udap.Model.UdapAuthenticationExtensions;
 using UdapEd.Shared.Model.AuthExtObjects;
 
-namespace UdapEd.Shared.Components.AuthExtObjects;
+namespace UdapEd.Shared.Components;
 
-public partial class AuthorizationExtObjects
+public partial class AuthorizationExtObjects : ComponentBase
 {
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
     [CascadingParameter]
@@ -28,10 +28,10 @@ public partial class AuthorizationExtObjects
 
     private StandaloneCodeEditor _editor = null!;
     private bool _isEditorInitialized;
-    private Hl7B2BUserForm? _hl7B2BUserForm;
-    private Hl7B2BForm? _hl7B2BForm;
-    private Hl7B2BTefcaForm? _hl7B2BTefcaForm;
-    private TefcaIasForm? _tefcaIasForm;
+    public Hl7B2BUserForm? _hl7B2BUserForm;
+    protected Hl7B2BForm? _hl7B2BForm;
+    protected Hl7B2BTefcaForm? _hl7B2BTefcaForm;
+    protected TefcaIasForm? _tefcaIasForm;
 
     private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
     {

@@ -27,12 +27,8 @@ public class Infrastructure : IInfrastructure
             return [];
         }
 
-        var caFilePath = "gs://cert_store_private/surefhirlabs_community/SureFhirLabs_CA.pfx";
-        var intermediateFilePath = "gs://cert_store_private/surefhirlabs_community/intermediates/SureFhirLabs_Intermediate.pfx";
+        var (caData, intermediateData) = await GetSigningCertificates();
 
-        byte[] caData = await DownloadFileFromGcsAsync(caFilePath);
-        byte[] intermediateData = await DownloadFileFromGcsAsync(intermediateFilePath);
-        
         using var rootCA = new X509Certificate2(caData, "udap-test");
         using var subCA = new X509Certificate2(intermediateData, "udap-test");
 
@@ -92,6 +88,50 @@ public class Infrastructure : IInfrastructure
         // Return the zip file as a byte array
         return memoryStream.ToArray();
     }
+
+    public async Task<byte[]> JitFhirlabsCommunityCertificate(List<string> subjAltNames, string password)
+    {
+        var (caData, intermediateData) = await GetSigningCertificates();
+
+        using var rootCA = new X509Certificate2(caData, "udap-test");
+        using var subCA = new X509Certificate2(intermediateData, "udap-test");
+
+        var certTooling = new CertificateTooling();
+
+        var x500Builder = new X500DistinguishedNameBuilder();
+        x500Builder.AddCommonName(subjAltNames.First());
+        x500Builder.AddOrganizationalUnitName("UDAP");
+        x500Builder.AddOrganizationName("Fhir Coding");
+        x500Builder.AddLocalityName("Portland");
+        x500Builder.AddStateOrProvinceName("Oregon");
+        x500Builder.AddCountryOrRegion("US");
+
+        var distinguishedName = x500Builder.Build();
+
+        var rsaCertificate = certTooling.BuildUdapClientCertificate(
+            subCA,
+            rootCA,
+            subCA.GetRSAPrivateKey()!,
+            distinguishedName,
+            subjAltNames,
+            "http://crl.fhircerts.net/crl/surefhirlabsIntermediateCrl.crl",
+            "http://crl.fhircerts.net/certs/intermediates/SureFhirLabs_Intermediate.cer"
+        );
+
+        return rsaCertificate;
+
+    }
+
+    private async Task<(byte[] caData, byte[] intermediateData)> GetSigningCertificates()
+    {
+        var caFilePath = "gs://cert_store_private/surefhirlabs_community/SureFhirLabs_CA.pfx";
+        var intermediateFilePath = "gs://cert_store_private/surefhirlabs_community/intermediates/SureFhirLabs_Intermediate.pfx";
+
+        byte[] caData = await DownloadFileFromGcsAsync(caFilePath);
+        byte[] intermediateData = await DownloadFileFromGcsAsync(intermediateFilePath);
+        return (caData, intermediateData);
+    }
+    
 
     private async Task<byte[]> DownloadFileFromGcsAsync(string gcsFilePath)
     {

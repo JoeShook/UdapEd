@@ -97,7 +97,8 @@
         "https://securefhir.zimt.work/udap-public",
         "https://identity-matching.fast.hl7.org/fhir",
         "https://national-directory.fast.hl7.org/fhir",
-        "https://udap.fhir.poolnook.me/evernorth"
+        "https://udap.fhir.poolnook.me/evernorth",
+        "https://fhir-udap.azurewebsites.net"
     };
 
     private string? _baseUrl;
@@ -170,6 +171,8 @@
     public MetadataVerificationModel? MetadataVerificationModel { get; private set; }
 
     public RawSoftwareStatementAndHeader? SoftwareStatementBeforeEncoding { get; private set; }
+
+    public RawSoftwareStatementAndHeader? CertSoftwareStatementBeforeEncoding { get; private set; }
 
     public UdapRegisterRequest? UdapRegistrationRequest { get; private set; }
 
@@ -248,11 +251,18 @@
     public bool CertificateLoaded { get; set; }
 
     /// <summary>
+    /// Is the certification cert loaded with private key?
+    /// </summary>
+    public bool CertificationCertLoaded { get; set; }
+
+    /// <summary>
     /// Is an anchor loaded to validated trust to a resource servers software statement
     /// </summary>
     public bool AnchorLoaded { get; set; }
 
     public CertificateStatusViewModel? UdapClientCertificateInfo { get; private set; }
+
+    public CertificateStatusViewModel? CertificationAndEndorsementInfo { get; private set; }
 
     public CertificateStatusViewModel? UdapAnchorCertificateInfo { get; private set; }
 

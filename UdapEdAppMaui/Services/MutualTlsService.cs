@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using Udap.Common.Certificates;
 using Udap.Util.Extensions;
 using UdapEd.Shared;
+using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 
@@ -63,7 +64,7 @@ public class MutualTlsService : IMutualTlsService
                 .Select(tuple => tuple.Item2)
                 .ToList();
 
-            result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(certificate);
+            result.PublicKeyAlgorithm = certificate.GetPublicKeyAlgorithm();
             result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
 
         }
@@ -76,24 +77,6 @@ public class MutualTlsService : IMutualTlsService
         }
 
         return result;
-    }
-
-    private string GetPublicKeyAlgorithm(X509Certificate2 certificate)
-    {
-        string keyAlgOid = certificate.GetKeyAlgorithm();
-        var oid = new Oid(keyAlgOid);
-
-        if (oid.Value == "1.2.840.113549.1.1.1")
-        {
-            return "RS";
-        }
-
-        if (oid.Value == "1.2.840.10045.2.1")
-        {
-            return "ES";
-        }
-
-        return "";
     }
 
     public async Task<CertificateStatusViewModel?> ValidateCertificate(string password)

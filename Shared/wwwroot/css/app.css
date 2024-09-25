@@ -149,7 +149,13 @@ pre {
 }
 
 .udap-knowledge {
-  background-color: #E8F5E9;
+  background-color: #F5F5F5;
+  padding: 8px;
+  margin: 8px;
+}
+
+.udap-rowgroup {
+  background-color: #F0F8FF;
   padding: 8px;
   margin: 8px;
 }
@@ -172,3 +178,27 @@ pre {
 .blink {
   animation: blink 1s linear 5;
 }
+
+.expandable {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  padding: 10px;
+  padding-right: 40px; /* Add padding to the right to make space for the indicator */
+  position: relative;
+}
+
+  .expandable.expanded {
+    white-space: normal;
+  }
+
+.indicator {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  font-weight: bold;
+  width: 30px; /* Adjust the width as needed */
+  text-align: center; /* Center the indicator text */
+}a

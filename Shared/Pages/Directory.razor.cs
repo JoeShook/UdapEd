@@ -194,8 +194,10 @@ private readonly List<string> _supportedResources = new List<string>()
 
         var result = await FhirService.SearchGet($" {_fhirSearch.BaseUrl}/{_fhirSearch.ResourceName}?{_searchString}");
         await SearchHandler(result);
+        StateHasChanged();
+        await AugmentHandler();
     }
-
+    
     private async T.Task SearchPost()
     {
         _fhirResults = new FhirResults();
@@ -273,7 +275,7 @@ private readonly List<string> _supportedResources = new List<string>()
                     var nameMaybe = domainResource.NamedChildren.FirstOrDefault(nc => nc.ElementName == "name");
                     var resource = new FhirJsonParser().Parse(referenceContext) as DomainResource;
                     var orgEntry = new TreeItemData(nameMaybe.Value?.ToString() ?? resource?.Id ?? "Unknown", resource?.Id ?? "Unknown", $"{resource?.TypeName}/{resource?.Id}");
-
+                    
                     _fhirResults.TreeViewStore.Children?.Add(orgEntry);
                 }
                 
@@ -334,29 +336,25 @@ private readonly List<string> _supportedResources = new List<string>()
             foreach (var dynamicEndpointType in dynamicEndpointTypes)
             {
                 if (dynamicEndpointType.Value?.ToString() == "udap")
-                {
-                    var results =
-                        await MetadataService.GetUdapMetadataVerificationModel(
-                            $"{endpointResource.Address}", null, default);
-
+                {   
                     endPointTreeItem.Children ??= new List<TreeItemData<FhirHierarchyEntry>>();
                     endPointTreeItem.Children.Add(new TreeItemData(
-                        id: endpointResource.Id, 
+                        id: endpointResource.Id,
                         name: endpointResource.Name,
                         resourceReference: $"{endpointResource?.TypeName}/{endpointResource?.Id}",
                         icon: Icons.Material.TwoTone.DynamicForm,
-                        iconColor: results.Notifications.Any() ? Color.Error : Color.Success,
-                        link: AppendUdapWellKnown(endpointResource.Address), 
-                        type: dynamicEndpointType.Value?.ToString(), 
-                        metadata: results,
-                        errorNotifications: results.Notifications));
+                        // iconColor: results.Notifications.Any() ? Color.Error : Color.Success,
+                        iconColor: Color.Error,
+                        link: AppendUdapWellKnown(endpointResource.Address),
+                        type: dynamicEndpointType.Value?.ToString()
+                    ));
                 }
 
                 if (dynamicEndpointType.Value?.ToString() == "smart")
                 {
                     var results =
                         await MetadataService.GetSmartMetadata(
-                            $"{endpointResource.Address}/.well-known/smart-configuration", default);
+                            $"{endpointResource.Address.EnsureTrailingSlash()}.well-known/smart-configuration", default);
 
                     endPointTreeItem.Children ??= new List<TreeItemData<FhirHierarchyEntry>>();
                     endPointTreeItem.Children.Add(new TreeItemData(
@@ -414,6 +412,43 @@ private readonly List<string> _supportedResources = new List<string>()
         }
     }
 
+    private async T.Task AugmentHandler()
+    {
+        if (_fhirResults.TreeViewStore.Children != null)
+        {
+            var tasks = _fhirResults.TreeViewStore.Children.Where(c => 
+                    c.Children != null && c.Children.Any())
+                .SelectMany(c => c.Children)
+                .Where(treeItemData => treeItemData.Value != null 
+                                       && treeItemData.Value.IsLoading
+                                       && treeItemData.Value.Type == "udap")
+                .Select(async treeItemData =>
+                {
+                    var fhirHierarchyEntry = treeItemData.Value;
+                    
+                    if(fhirHierarchyEntry == null)
+                    {
+                        return;
+                    }
+
+                    await T.Task.Yield();
+                    var results = await MetadataService.GetUdapMetadataVerificationModel(
+                        $"{fhirHierarchyEntry.Link}", null, default);
+                    
+                    if (results == null)
+                    {
+                        return;
+                    }
+                    
+                    fhirHierarchyEntry.IsLoading = false;
+                    fhirHierarchyEntry.UdapMetadata = results;
+                    fhirHierarchyEntry.ErrorNotifications = results.Notifications;
+
+                });
+            await T.Task.WhenAll(tasks);
+        }
+    }
+
     private string? AppendUdapWellKnown(string endpointResourceAddress)
     {
         if (!endpointResourceAddress.Contains(UdapConstants.Discovery.DiscoveryEndpoint))
@@ -463,7 +498,8 @@ private readonly List<string> _supportedResources = new List<string>()
             string? link = null, string? type = null, 
             MetadataVerificationModel? metadata = null, 
             List<string>? errorNotifications = null,
-            string? mtlCertificate = null) : base(new FhirHierarchyEntry())
+            string? mtlCertificate = null,
+            bool isLoading = true) : base(new FhirHierarchyEntry())
         {
             Value!.Id = id;
             Value.Name = name;
@@ -475,6 +511,7 @@ private readonly List<string> _supportedResources = new List<string>()
             Value.UdapMetadata = metadata;
             Value.ErrorNotifications = errorNotifications;
             Value.MtlsServerCertificate = mtlCertificate;
+            Value.IsLoading = isLoading;
         }
     }
 
@@ -485,6 +522,7 @@ private readonly List<string> _supportedResources = new List<string>()
         public string ResourceReference;
         public string? Type;
         public string? Link;
+        public bool IsLoading { get; set; } = true;
 
         public string? Icon { get; set; }
         public Color IconColor { get; set; } = Color.Warning;

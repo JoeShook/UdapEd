@@ -12,7 +12,6 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -23,6 +22,7 @@ using Udap.Model.Statement;
 using Udap.Util.Extensions;
 using UdapEd.Server.Extensions;
 using UdapEd.Shared;
+using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Registration;
 using static Udap.Model.UdapConstants;
@@ -79,7 +79,7 @@ public class RegisterController : Controller
             .Select(tuple => tuple.Item2)
                 .ToList();
             
-            result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(certificate);
+            result.PublicKeyAlgorithm = certificate.GetPublicKeyAlgorithm();
             result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
         }
         catch (Exception ex)
@@ -91,24 +91,6 @@ public class RegisterController : Controller
         }
 
         return Ok(result);
-    }
-
-    private string GetPublicKeyAlgorithm(X509Certificate2 certificate)
-    {
-        string keyAlgOid = certificate.GetKeyAlgorithm();
-        var oid = new Oid(keyAlgOid);
-
-        if (oid.Value == "1.2.840.113549.1.1.1")
-        {
-            return "RS";
-        }
-
-        if (oid.Value == "1.2.840.10045.2.1")
-        {
-            return "ES";
-        }
-
-        return "";
     }
 
     [HttpPost("UploadClientCertificate")]
@@ -123,7 +105,7 @@ public class RegisterController : Controller
     [HttpPost("ValidateCertificate")]
     public IActionResult ValidateCertificate([FromBody] string password)
     {
-        Console.WriteLine(HttpContext.Session.GetInt32(UdapEdConstants.UDAP_CLIENT_UPLOADED_CERTIFICATE));
+        // Console.WriteLine(HttpContext.Session.GetInt32(UdapEdConstants.UDAP_CLIENT_UPLOADED_CERTIFICATE));
         var result = new CertificateStatusViewModel
         {
             CertLoaded = CertLoadedEnum.Negative,
@@ -158,7 +140,7 @@ public class RegisterController : Controller
                 .Select(tuple => tuple.Item2)
                 .ToList();
 
-            result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(certificate);
+            result.PublicKeyAlgorithm = certificate.GetPublicKeyAlgorithm();
             result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
         }
         catch (Exception ex)
@@ -174,7 +156,7 @@ public class RegisterController : Controller
     [HttpGet("IsClientCertificateLoaded")]
     public IActionResult IsClientCertificateLoaded()
     {
-        Console.WriteLine(HttpContext.Session.GetInt32(UdapEdConstants.UDAP_CLIENT_UPLOADED_CERTIFICATE));
+        // Console.WriteLine(HttpContext.Session.GetInt32(UdapEdConstants.UDAP_CLIENT_UPLOADED_CERTIFICATE));
         var result = new CertificateStatusViewModel
         {
             CertLoaded = CertLoadedEnum.Negative,
@@ -199,23 +181,23 @@ public class RegisterController : Controller
             if (certBytesWithKey != null)
             {
                 var certBytes = Convert.FromBase64String(certBytesWithKey);
-                var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
-                result.DistinguishedName = clientCert.SubjectName.Name;
-                result.Thumbprint = clientCert.Thumbprint;
+                var certificate = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+                result.DistinguishedName = certificate.SubjectName.Name;
+                result.Thumbprint = certificate.Thumbprint;
                 result.CertLoaded = CertLoadedEnum.Positive;
 
-                if (clientCert.NotAfter < DateTime.Now.Date)
+                if (certificate.NotAfter < DateTime.Now.Date)
                 {
                     result.CertLoaded = CertLoadedEnum.Expired;
                 }
 
-                result.SubjectAltNames = clientCert
+                result.SubjectAltNames = certificate
                     .GetSubjectAltNames(n => n.TagNo == (int)X509Extensions.GeneralNameType.URI)
                     .Select(tuple => tuple.Item2)
                     .ToList();
 
-                result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(clientCert);
-                result.Issuer = clientCert.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
+                result.PublicKeyAlgorithm = certificate.GetPublicKeyAlgorithm();
+                result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
             }
 
             return Ok(result);

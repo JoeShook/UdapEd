@@ -5,6 +5,9 @@ public static class UdapEdConstants
     public const string UDAP_CLIENT_CERTIFICATE_WITH_KEY = "udap_clientCertificateWithKey";
     public const string UDAP_CLIENT_CERTIFICATE = "udap_clientCertificate";
     public const string UDAP_CLIENT_UPLOADED_CERTIFICATE = "udap_client_upladed_cert";
+    public const string CERTIFICATION_CERTIFICATE_WITH_KEY = "certification_CertificateWithKey";
+    public const string CERTIFICATION_CERTIFICATE = "certification_certificate";
+    public const string CERTIFICATION_UPLOADED_CERTIFICATE = "certification_upladed_cert";
     public const string UDAP_ANCHOR_CERTIFICATE = "udap_anchorCertificate";
     public const string CLIENT_NAME = "FhirLabs UdapEd";
 

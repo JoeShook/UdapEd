@@ -1,0 +1,46 @@
+﻿@implements IDisposable
+
+<InputFile id="fileInput" OnChange="UploadFilesAsync" hidden />
+
+
+<MudFab Class="ma-2"
+        HtmlTag="label"
+        Size="Size.Small"
+        Color="@CertLoadedColor"
+        StartIcon="@AppState.CertificateIcon"
+        Label="Upload a Certification Or Endorsement Certificate"
+        IconSize="Size.Small"
+        for="fileInput"/>
+
+<MudFab HtmlTag="label"
+        Class="ma-2"
+        Size="Size.Small"
+        Color="@CertLoadedColorForDefaultCommunity"
+        StartIcon="@AppState.CertificateIcon"
+        Label="FhirLabs Example Certification"
+        IconSize="Size.Small"
+        OnClick="@LoadFhirLabsExampleCertificatationCertificate"/>
+
+<MudIconButton
+    Class="ma-2"
+    Size="Size.Small"
+    Icon="@Icons.Material.Filled.Delete"
+    OnClick="@ClearCertificationAndEndorsementInfo"
+    />
+
+
+@if (AppState.ClientMode == ClientSecureMode.UDAP && (
+    !string.IsNullOrEmpty(AppState.CertificationAndEndorsementInfo?.DistinguishedName) ||
+     !string.IsNullOrEmpty(AppState.CertificationAndEndorsementInfo?.Thumbprint)))
+{   
+        <MudText Typo="Typo.body2"><b>Subject:</b>@AppState.CertificationAndEndorsementInfo?.DistinguishedName</MudText>
+        <MudText Typo="Typo.caption"> <b>Thumbprint (sha1)</b> </MudText>
+        <MudText  Typo="Typo.body2">@AppState.CertificationAndEndorsementInfo?.Thumbprint </MudText>
+        <MudText Typo="Typo.body2"><b>Issuer:</b> @AppState.CertificationAndEndorsementInfo?.Issuer </MudText>
+       
+
+    @if (AppState.CertificationAndEndorsementInfo.CertLoaded == CertLoadedEnum.Expired)
+    {
+        <MudAlert Severity="Severity.Error">Certificate Expired</MudAlert>
+    }
+}

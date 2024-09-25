@@ -11,20 +11,20 @@ jobs:
   build:
 
     runs-on: windows-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
     - name: Checkout
       uses: actions/checkout@v3
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: |
-          6.0.x
-          7.0.x
-          8.0.x
-    - name: Install .NET Maui
+        dotnet-version: '8.0.x'
+
+    - name: Install .NET Maui workload
       run: dotnet workload install maui
+
     - name: Restore dependencies
-      run: dotnet restore UdapEd.sln
+      run: dotnet restore --verbosity detailed UdapEd.sln
+
     - name: Build
-      run: dotnet build -c Release UdapEd.sln    
+      run: dotnet build -c Release --verbosity detailed UdapEd.sln

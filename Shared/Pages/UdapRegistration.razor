@@ -23,50 +23,29 @@
 
         <MudCard Class="pa-2 ma-2" Elevation="3">
 
-            <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
-                <MudTabPanel Text="Client Certificate">
+            <MudTabs Class="udap-rowgroup" Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
+                <MudTabPanel Text="Udap Client Certificate">
                     <MudGrid Spacing="2" Justify="Justify.FlexStart" align-start>
                         <MudItem>
                             <ClientCertLoader OnCertificateLoaded="@Reset" />
                         </MudItem>
                         <MudSpacer />
-                        <MudItem Class="d-inline-flex pa-2">
-                            <MudCardHeader>
-                                @if (AppState.UdapClientCertificateInfo != null && AppState.UdapClientCertificateInfo.SubjectAltNames.Any())
-                                {
-                                    <MudCard>
-                                        <MudCardHeader><MudText Typo="Typo.h6">Registered Clients: </MudText></MudCardHeader>
-                                        <MudCardContent>
-                                            <MudDataGrid Dense="true"
-                                                         ReadOnly="true"
-                                                         Items="@CurrentClientRegistrations"
-                                                         Striped="true">
-                                                <Columns>
-                                                    <HierarchyColumn T="ClientRegistration"></HierarchyColumn>
-                                                    <PropertyColumn Property="x => x.SubjAltName" Title="Subject Alt Name (URI)" />
-                                                    <PropertyColumn Property="x => x.ClientId" Title="Client ID" />
-                                                    <PropertyColumn Property="x => x.GrantType" Title="Grant Type" />
-                                                </Columns>
-                                                <ChildRowContent>
-                                                    <MudCard>
-                                                        <MudCardHeader>
-                                                            <CardHeaderContent>
-                                                                <MudText Typo="Typo.h6">Scopes</MudText>
-                                                            </CardHeaderContent>
-                                                        </MudCardHeader>
-                                                        <MudCardContent>
-                                                            <MudText><pre>@(context.Item?.Scope?.Replace(" ", "\r\n"))</pre></MudText>
-                                                        </MudCardContent>
-                                                    </MudCard>
-                                                </ChildRowContent>
-                                            </MudDataGrid>
-                                        </MudCardContent>
-                                    </MudCard>
-                                }
-                            </MudCardHeader>
-                        </MudItem>
+                        
                     </MudGrid>
                 </MudTabPanel>
+                <MudTabPanel Text="Self-Declared Declerations" ToolTip="Self-Declared Certifications and Endorsements">
+                    <MudGrid Spacing="2" Justify="Justify.FlexStart" align-start>
+                        <MudItem>
+                            <CertificationAndEndorsementLoader OnCertificationCertLoaded="@CiertificationReset" />
+                        </MudItem>
+                        <MudSpacer />
+                    </MudGrid>
+                </MudTabPanel>
+                
+                    <MudTabPanel Text="Declarations" ToolTip="Certifications and Endorsements">
+                        Future:  Select Certification and Endorsements or upload.  It will be a signed jwt.
+                    </MudTabPanel>
+             
                 <MudTabPanel Text="@("View All Registered Clients")">
                     <MudButton Color="Color.Primary"
                                ButtonType="ButtonType.Button"
@@ -85,6 +64,39 @@
 
                 </MudTabPanel>
             </MudTabs>
+            <MudCardHeader>
+                @if (AppState.UdapClientCertificateInfo != null && AppState.UdapClientCertificateInfo.SubjectAltNames.Any())
+                {
+                    <MudCard>
+                        <MudCardHeader><MudText Typo="Typo.h6">Registered Clients: </MudText></MudCardHeader>
+                        <MudCardContent>
+                            <MudDataGrid Dense="true"
+                                         ReadOnly="true"
+                                         Items="@CurrentClientRegistrations"
+                                         Striped="true">
+                                <Columns>
+                                    <HierarchyColumn T="ClientRegistration"></HierarchyColumn>
+                                    <PropertyColumn Property="x => x.SubjAltName" Title="Subject Alt Name (URI)" />
+                                    <PropertyColumn Property="x => x.ClientId" Title="Client ID" />
+                                    <PropertyColumn Property="x => x.GrantType" Title="Grant Type" />
+                                </Columns>
+                                <ChildRowContent>
+                                    <MudCard>
+                                        <MudCardHeader>
+                                            <CardHeaderContent>
+                                                <MudText Typo="Typo.h6">Scopes</MudText>
+                                            </CardHeaderContent>
+                                        </MudCardHeader>
+                                        <MudCardContent>
+                                            <MudText><pre>@(context.Item?.Scope?.Replace(" ", "\r\n"))</pre></MudText>
+                                        </MudCardContent>
+                                    </MudCard>
+                                </ChildRowContent>
+                            </MudDataGrid>
+                        </MudCardContent>
+                    </MudCard>
+                }
+            </MudCardHeader>
 
             <MudCardContent>
                 <MudGrid Justify="Justify.FlexStart">
@@ -305,37 +317,76 @@
                     </MudItem>
                 </MudGrid>
             </MudCardActions>
-
+            
             <MudCardContent>
-                <MudGrid Spacing="1" Class="mt-8">
-                    <MudItem sm="6" xs="12">
-                        <MudPaper Class="udap-input" Elevation="3">
-                            <MudText Align="Align.Right" Color="Color.Tertiary">Raw Software Statement</MudText>
-                            <pre Class="@ValidRawSoftwareStatementStyle">[</pre>
-                            <InputTextArea id="StatementHeader"
-                                           Class="@ValidRawSoftwareStatementStyle"
-                                           rows="@(SoftwareStatementBeforeEncodingHeader.Count(s => s == '\n') + 5)"
-                                           @bind-Value="SoftwareStatementBeforeEncodingHeader" />,
-                            <InputTextArea Class="@ValidRawSoftwareStatementStyle"
-                                           rows="@(SoftwareStatementBeforeEncodingSoftwareStatement.Count(s => s == '\n') + 1)"
-                                           @bind-Value="SoftwareStatementBeforeEncodingSoftwareStatement"
-                                           @onfocusout="PersistSoftwareStatement" />
-                            <pre Class="@ValidRawSoftwareStatementStyle">]</pre>
-                        </MudPaper>
-                        @if (_missingScope)
-                        {
-                            <MudAlert Severity="Severity.Warning">Don't forget a scope</MudAlert>
-                        }
+                <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+                    <MudTabPanel Text="Registration">
+                        <MudGrid Spacing="1" Class="mt-8">
+                            <MudItem sm="6" xs="12">
 
-                    </MudItem>
-                    <MudItem sm="6" xs="12">
-                        <MudPaper Class="udap-analyzed" Elevation="3">
-                            <MudText Align="Align.Right" Color="Color.Tertiary">x509 certificates from x5c</MudText>
-                            <CertificateViewer JwtHeaderWithx5c="@SoftwareStatementBeforeEncodingHeader" />
-                        </MudPaper>
-                    </MudItem>
-                </MudGrid>
+
+                                <MudPaper Class="udap-input" Elevation="3">
+                                    <MudText Align="Align.Right" Color="Color.Tertiary">Raw Software Statement</MudText>
+                                    <pre Class="@ValidRawSoftwareStatementStyle">[</pre>
+                                    <InputTextArea id="RegistrationStatementHeader"
+                                                   Class="@ValidRawSoftwareStatementStyle"
+                                                   rows="@(SoftwareStatementBeforeEncodingHeader.Count(s => s == '\n') + 5)"
+                                                   @bind-Value="SoftwareStatementBeforeEncodingHeader"/>,
+                                    <InputTextArea Class="@ValidRawSoftwareStatementStyle"
+                                                   rows="@(SoftwareStatementBeforeEncodingSoftwareStatement.Count(s => s == '\n') + 1)"
+                                                   @bind-Value="SoftwareStatementBeforeEncodingSoftwareStatement"
+                                                   @onfocusout="PersistSoftwareStatement"/>
+                                    <pre Class="@ValidRawSoftwareStatementStyle">]</pre>
+                                </MudPaper>
+                                @if (_missingScope)
+                                {
+                                    <MudAlert Severity="Severity.Warning">Don't forget a scope</MudAlert>
+                                }
+
+                            </MudItem>
+                            <MudItem sm="6" xs="12">
+                                <MudPaper Class="udap-analyzed" Elevation="3">
+                                    <MudText Align="Align.Right" Color="Color.Tertiary">x509 certificates from x5c</MudText>
+                                    <CertificateViewer JwtHeaderWithx5c="@SoftwareStatementBeforeEncodingHeader"/>
+                                </MudPaper>
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
+                
+                    <MudTabPanel Text="Certifications">
+                        <MudGrid Spacing="1" Class="mt-8">
+                            <MudItem sm="6" xs="12">
+                        
+                                <MudPaper Class="udap-input" Elevation="3">
+                                    <MudText Align="Align.Right" Color="Color.Tertiary">Raw Software Statement</MudText>
+                                    <pre Class="@ValidCertRawSoftwareStatementStyle">[</pre>
+                                    <InputTextArea id="CertificationStatementHeader"
+                                                   Class="@ValidCertRawSoftwareStatementStyle"
+                                                   rows="@(CertSoftwareStatementBeforeEncodingHeader.Count(s => s == '\n') + 5)"
+                                                   @bind-Value="CertSoftwareStatementBeforeEncodingHeader" />,
+                                    <InputTextArea Class="@ValidCertRawSoftwareStatementStyle"
+                                                   rows="@(CertSoftwareStatementBeforeEncodingSoftwareStatement.Count(s => s == '\n') + 1)"
+                                                   @bind-Value="CertSoftwareStatementBeforeEncodingSoftwareStatement"
+                                                   @onfocusout="PersistCertSoftwareStatement" />
+                                    <pre Class="@ValidCertRawSoftwareStatementStyle">]</pre>
+                                </MudPaper>
+                                @if (_missingScope)
+                                {
+                                    <MudAlert Severity="Severity.Warning">Don't forget a scope</MudAlert>
+                                }
+                        
+                            </MudItem>
+                            <MudItem sm="6" xs="12">
+                                <MudPaper Class="udap-analyzed" Elevation="3">
+                                    <MudText Align="Align.Right" Color="Color.Tertiary">x509 certificates from x5c</MudText>
+                                    <CertificateViewer JwtHeaderWithx5c="@CertSoftwareStatementBeforeEncodingHeader" />
+                                </MudPaper>
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
+                </MudTabs>
             </MudCardContent>
+
         </MudCard>
 
         <MudCard Class="pa-2 ma-2" Elevation="3">
@@ -353,13 +404,23 @@
                         <MudPaper Class="udap-input" Elevation="3">
                             <MudText Align="Align.Right" Color="Color.Tertiary">Request Body</MudText>
                             <MudText Align="Align.Right" Color="Color.Tertiary">Actual software_statement</MudText>
-                            <pre>@RequestBody</pre>
+                            <pre>@((MarkupString)RequestBody)</pre>
                         </MudPaper>
                     </MudItem>
                     <MudItem sm="6" xs="12">
                         <MudPaper Class="udap-analyzed" Elevation="3">
-                            <SignedJwtViewer Title="<b>Decoded software_statement::</b>"
-                                             SignedSoftwareStatement="@AppState.UdapRegistrationRequest?.SoftwareStatement" />
+                            
+                            <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+                                <MudTabPanel Text="Client Registration Decoded" OnClick="HighlightSoftwareStatement">
+                                    <SignedJwtViewer Title="<b>Decoded software_statement::</b>"
+                                                     SignedSoftwareStatement="@AppState.UdapRegistrationRequest?.SoftwareStatement"/>
+                                </MudTabPanel>
+                                <MudTabPanel Text="Certifications and Endorsements Decoded" OnClick="HighlightCertifications">
+                                    <SignedJwtViewer Title="<b>Decoded software_statement::</b>"
+                                                     SignedSoftwareStatement="@AppState.UdapRegistrationRequest?.Certifications.FirstOrDefault()"/>
+                                </MudTabPanel>
+                            </MudTabs>
+                            
                         </MudPaper>
                     </MudItem>
 

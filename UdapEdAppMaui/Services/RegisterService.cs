@@ -8,7 +8,6 @@
 #endregion
 
 using System.Net.Http.Headers;
-using System.Security.Cryptography;
 using Microsoft.Extensions.Logging;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
@@ -34,6 +33,7 @@ internal class RegisterService : IRegisterService
     private readonly HttpClient _httpClient;
     private readonly ILogger<RegisterService> _logger;
     private readonly IConfiguration _configuration;
+    private const int ChunkSize = 4000; // Define a suitable chunk size per each Platform 
 
     public RegisterService(HttpClient httpClient, ILogger<RegisterService> logger, IConfiguration configuration)
     {
@@ -42,15 +42,16 @@ internal class RegisterService : IRegisterService
         _configuration = configuration;
     }
 
-    public async Task UploadClientCertificate(string certBytes)
+    public async Task UploadClientCertificate(string base64EncodedBytes)
     {
-        await SecureStorage.Default.SetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE, certBytes);
+        var certBytes = Convert.FromBase64String(base64EncodedBytes);
+        await StoreInChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE, certBytes);
     }
 
     public async Task<RawSoftwareStatementAndHeader?> BuildSoftwareStatementForClientCredentials(
         UdapDynamicClientRegistrationDocument request, string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -118,7 +119,7 @@ internal class RegisterService : IRegisterService
 
     public async Task<RawSoftwareStatementAndHeader?> BuildSoftwareStatementForAuthorizationCode(UdapDynamicClientRegistrationDocument request, string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -189,7 +190,7 @@ internal class RegisterService : IRegisterService
 
     public async Task<UdapRegisterRequest?> BuildRequestBodyForClientCredentials(RawSoftwareStatementAndHeader? request, string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -251,7 +252,7 @@ internal class RegisterService : IRegisterService
 
     public async Task<UdapRegisterRequest?> BuildRequestBodyForAuthorizationCode(RawSoftwareStatementAndHeader? request, string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -367,7 +368,7 @@ internal class RegisterService : IRegisterService
             CertLoaded = CertLoadedEnum.Negative
         };
 
-        var clientCertSession = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE);
+        var clientCertSession = await RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE);
 
         if (clientCertSession == null)
         {
@@ -383,7 +384,7 @@ internal class RegisterService : IRegisterService
             var certificate = new X509Certificate2(certBytes, password, X509KeyStorageFlags.Exportable);
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
-            await SecureStorage.Default.SetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
+            await StoreInChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, clientCertWithKeyBytes);
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -398,7 +399,7 @@ internal class RegisterService : IRegisterService
                 .Select(tuple => tuple.Item2)
                 .ToList();
 
-            result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(certificate);
+            result.PublicKeyAlgorithm = certificate.GetPublicKeyAlgorithm();
             result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
 
         }
@@ -421,7 +422,7 @@ internal class RegisterService : IRegisterService
 
         try
         {
-            var clientCertSession = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE);
+            var clientCertSession = await RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE);
 
             if (clientCertSession != null)
             {
@@ -432,28 +433,28 @@ internal class RegisterService : IRegisterService
                 result.CertLoaded = CertLoadedEnum.Negative;
             }
 
-            var certBytesWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
+            var certBytesWithKey = await RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
             if (certBytesWithKey != null)
             {
                 var certBytes = Convert.FromBase64String(certBytesWithKey);
-                var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
-                result.DistinguishedName = clientCert.SubjectName.Name;
-                result.Thumbprint = clientCert.Thumbprint;
+                var certificate = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+                result.DistinguishedName = certificate.SubjectName.Name;
+                result.Thumbprint = certificate.Thumbprint;
                 result.CertLoaded = CertLoadedEnum.Positive;
 
-                if (clientCert.NotAfter < DateTime.Now.Date)
+                if (certificate.NotAfter < DateTime.Now.Date)
                 {
                     result.CertLoaded = CertLoadedEnum.Expired;
                 }
 
-                result.SubjectAltNames = clientCert
+                result.SubjectAltNames = certificate
                     .GetSubjectAltNames(n => n.TagNo == (int)X509Extensions.GeneralNameType.URI)
                     .Select(tuple => tuple.Item2)
                     .ToList();
 
-                result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(clientCert);
-                result.Issuer = clientCert.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
+                result.PublicKeyAlgorithm = certificate.GetPublicKeyAlgorithm();
+                result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
 
             }
 
@@ -493,7 +494,7 @@ internal class RegisterService : IRegisterService
             }
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
-            await SecureStorage.Default.SetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
+            await StoreInChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, clientCertWithKeyBytes);
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -502,7 +503,7 @@ internal class RegisterService : IRegisterService
                 .Select(tuple => tuple.Item2)
                 .ToList();
 
-            result.PublicKeyAlgorithm = GetPublicKeyAlgorithm(certificate);
+            result.PublicKeyAlgorithm = certificate.GetPublicKeyAlgorithm();
             result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
         }
         catch (Exception ex)
@@ -560,6 +561,8 @@ internal class RegisterService : IRegisterService
             scopes
                 .Where(s => KeepSmartVersion(s, smartV1Scopes, smartV2Scopes))
                 .ToList();
+
+
 
         var enrichScopes = new List<string>();
 
@@ -624,21 +627,46 @@ internal class RegisterService : IRegisterService
         return true;
     }
 
-    private string GetPublicKeyAlgorithm(X509Certificate2 certificate)
+
+    private async Task StoreInChunks(string baseKey, byte[] data)
     {
-        string keyAlgOid = certificate.GetKeyAlgorithm();
-        var oid = new Oid(keyAlgOid);
+        int totalChunks = (int)Math.Ceiling((double)data.Length / ChunkSize);
 
-        if (oid.Value == "1.2.840.113549.1.1.1")
+        for (int i = 0; i < totalChunks; i++)
         {
-            return "RS";
+            int chunkSize = Math.Min(ChunkSize, data.Length - (i * ChunkSize));
+            var chunk = new byte[chunkSize];
+            Array.Copy(data, i * ChunkSize, chunk, 0, chunkSize);
+
+            string chunkKey = $"{baseKey}_chunk_{i}";
+            await SecureStorage.Default.SetAsync(chunkKey, Convert.ToBase64String(chunk));
         }
 
-        if (oid.Value == "1.2.840.10045.2.1")
+        // Store the total number of chunks
+        await SecureStorage.Default.SetAsync($"{baseKey}_totalChunks", totalChunks.ToString());
+    }
+    private async Task<string?> RetrieveFromChunks(string baseKey)
+    {
+        string? totalChunksStr = await SecureStorage.Default.GetAsync($"{baseKey}_totalChunks");
+        if (totalChunksStr == null)
         {
-            return "ES";
+            return null;
         }
 
-        return "";
+        int totalChunks = int.Parse(totalChunksStr);
+        var data = new List<byte>();
+
+        for (int i = 0; i < totalChunks; i++)
+        {
+            string chunkKey = $"{baseKey}_chunk_{i}";
+            string? chunkBase64 = await SecureStorage.Default.GetAsync(chunkKey);
+            if (chunkBase64 != null)
+            {
+                byte[] chunk = Convert.FromBase64String(chunkBase64);
+                data.AddRange(chunk);
+            }
+        }
+
+        return Convert.ToBase64String(data.ToArray());
     }
 }

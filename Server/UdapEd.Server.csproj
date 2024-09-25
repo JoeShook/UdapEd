@@ -25,7 +25,7 @@
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.9.0" />
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.9.0" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.9.0" />
-    <PackageReference Include="Udap.Smart.Model" Version="0.3.77" />
+    <PackageReference Include="Udap.Smart.Model" Version="0.3.81" />
 
   </ItemGroup>
 
@@ -35,13 +35,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Udap.Client" Version="0.3.77" />
-    <PackageReference Include="Udap.Model" Version="0.3.77" />
-    <PackageReference Include="Udap.Common" Version="0.3.77" />
+    <PackageReference Include="Udap.Client" Version="0.3.81" />
+    <PackageReference Include="Udap.Model" Version="0.3.81" />
+    <PackageReference Include="Udap.Common" Version="0.3.81" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="fhirlabs.net.client.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="FhirLabsAdminCertification.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="FhirLabs_mTLS_Client.pfx">

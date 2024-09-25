@@ -7,7 +7,7 @@
 // */
 #endregion
 
-namespace UdapEd.Shared.Components.AuthExtObjects;
+namespace UdapEd.Shared.Components;
 
 public enum AuthExtObjectOperationType
 {

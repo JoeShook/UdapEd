@@ -35,6 +35,7 @@ builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddSingleton<AppSharedState>();
 builder.Services.AddScoped<IRegisterService, RegisterService>();
+builder.Services.AddScoped<ICertificationService, CertificationService>();
 builder.Services.AddScoped<IDiscoveryService, DiscoveryService>();
 builder.Services.AddScoped<IAccessService, AccessService>();
 builder.Services.AddScoped<IFhirService, FhirService>();

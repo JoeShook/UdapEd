@@ -45,4 +45,17 @@ public class Infrastructure : IInfrastructure
 
         return new byte[] { };
     }
+
+    /// <summary>
+    /// Not implemented.  This is a web service to allow udap client certificates from the Fhirlabs community in automation workflows.
+    /// Maybe something like HL7-FAST Foundry can use this to generate a client certificate for a UDAP Tiered enabled Authorization server.
+    /// The implementation will only be exposed on the Web Service and not in the client UI.
+    /// </summary>
+    /// <param name="subjAltNames"></param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    public Task<byte[]> JitFhirlabsCommunityCertificate(List<string> subjAltNames, string password)
+    {
+        throw new NotImplementedException();
+    }
 }
