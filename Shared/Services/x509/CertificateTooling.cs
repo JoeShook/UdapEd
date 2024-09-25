@@ -23,7 +23,8 @@ public class CertificateTooling
             string? crl,
             string? buildAIAExtensionsPath = null,
             DateTimeOffset notBefore = default,
-            DateTimeOffset notAfter = default)
+            DateTimeOffset notAfter = default,
+            string password = "udap-test")
     {
 
         if (notBefore == default)
@@ -99,7 +100,7 @@ public class CertificateTooling
         certPackage.Add(new X509Certificate2(intermediateCert.Export(X509ContentType.Cert)));
         certPackage.Add(new X509Certificate2(caCert.Export(X509ContentType.Cert)));
 
-        return certPackage.Export(X509ContentType.Pkcs12, "udap-test");
+        return certPackage.Export(X509ContentType.Pkcs12, password);
     }
 
     public byte[] BuildClientCertificateECDSA(
@@ -111,7 +112,8 @@ public class CertificateTooling
         string? crl,
         string? buildAIAExtensionsPath,
         DateTimeOffset notBefore = default,
-        DateTimeOffset notAfter = default)
+        DateTimeOffset notAfter = default,
+        string password = "udap-test")
     {
 
         if (notBefore == default)
@@ -188,7 +190,7 @@ public class CertificateTooling
         certPackage.Add(new X509Certificate2(caCert.Export(X509ContentType.Cert)));
 
 
-        return certPackage.Export(X509ContentType.Pkcs12, "udap-test");
+        return certPackage.Export(X509ContentType.Pkcs12, password);
     }
 
     protected static void AddAuthorityKeyIdentifier(X509Certificate2 caCert, CertificateRequest intermediateReq)

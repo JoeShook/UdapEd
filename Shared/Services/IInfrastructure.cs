@@ -11,5 +11,13 @@ namespace UdapEd.Shared.Services;
 public interface IInfrastructure
 {
     Task<string> GetMyIp();
+
+    /// <summary>
+    /// Package up a zip file containing an RSA and ECSD type certificates for use in the Fhirlabs community.
+    /// </summary>
+    /// <param name="subjAltNames"></param>
+    /// <returns></returns>
     Task<byte[]> BuildMyTestCertificatePackage(List<string> subjAltNames);
+
+    Task<byte[]> JitFhirlabsCommunityCertificate(List<string> subjAltNames, string password);
 }

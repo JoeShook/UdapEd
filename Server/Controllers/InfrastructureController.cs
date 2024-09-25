@@ -26,11 +26,20 @@ public class InfrastructureController : Controller
         _infrastructure = infrastructure;
     }
 
-    [HttpGet("{BuildMyTestCertificatePackage}")]
+    [HttpGet("BuildMyTestCertificatePackage")]
     public async Task<IActionResult> BuildMyTestCertificatePackage(List<string> subjAltNames, CancellationToken token)
     {
         var zip = await _infrastructure.BuildMyTestCertificatePackage(subjAltNames);
         var base64String = Convert.ToBase64String(zip);
+
+        return Ok(base64String);
+    }
+
+    [HttpGet("JitFhirlabsCommunityCertificate")]
+    public async Task<IActionResult> JitFhirlabsCommunityCertificate(List<string> subjAltNames, string password, CancellationToken token)
+    {
+        var clientCertBytes = await _infrastructure.JitFhirlabsCommunityCertificate(subjAltNames, password);
+        var base64String = Convert.ToBase64String(clientCertBytes);
 
         return Ok(base64String);
     }
