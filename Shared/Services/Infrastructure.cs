@@ -8,13 +8,23 @@
 #endregion
 
 using System.IO.Compression;
+using System.Runtime.ConstrainedExecution;
 using System.Security.Cryptography.X509Certificates;
 using Google.Cloud.Storage.V1;
+using Org.BouncyCastle.X509;
+using UdapEd.Shared.Model;
 using UdapEd.Shared.Services.x509;
 
 namespace UdapEd.Shared.Services;
 public class Infrastructure : IInfrastructure
 {
+    private HttpClient _httpClient;
+
+    public Infrastructure(HttpClient httpClient)
+    {
+        _httpClient = httpClient;
+    }
+
     public Task<string> GetMyIp()
     {
        return Task.FromResult("0.0.0.0");
@@ -120,6 +130,34 @@ public class Infrastructure : IInfrastructure
 
         return rsaCertificate;
 
+    }
+
+    public async Task<CertificateViewModel?> GetX509data(string url)
+    {
+        _httpClient.Timeout = TimeSpan.FromSeconds(2);
+        try
+        {
+            var bytes = await _httpClient.GetByteArrayAsync(url);
+
+            var cert = new X509Certificate2(bytes);
+            return new CertificateDisplayBuilder(cert).BuildCertificateDisplayData();
+        }
+        catch (Exception ex)
+        {
+            
+        }
+
+        return null;
+    }
+
+    public async Task<string?> GetCrldata(string url)
+    {
+        _httpClient.Timeout = TimeSpan.FromSeconds(2);
+        var bytes = await _httpClient.GetByteArrayAsync(url);
+
+        var crl = new X509Crl(bytes);
+
+        return crl.ToString();
     }
 
     private async Task<(byte[] caData, byte[] intermediateData)> GetSigningCertificates()

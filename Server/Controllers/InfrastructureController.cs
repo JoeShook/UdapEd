@@ -43,4 +43,20 @@ public class InfrastructureController : Controller
 
         return Ok(base64String);
     }
+
+    [HttpGet("GetX509data")]
+    public async Task<IActionResult> GetX509data(string url, CancellationToken token)
+    {
+        var viewModel = await _infrastructure.GetX509data(url);
+
+        return Ok(viewModel);
+    }
+
+    [HttpGet("GetCrldata")]
+    public async Task<IActionResult> GetCrldata(string url, CancellationToken token)
+    {
+        var viewModel = await _infrastructure.GetCrldata(url);
+
+        return Ok(viewModel);
+    }
 }

@@ -1,4 +1,4 @@
-﻿#region (c) 2023 Joseph Shook. All rights reserved.
+﻿#region (c) 2024 Joseph Shook. All rights reserved.
 // /*
 //  Authors:
 //     Joseph Shook   Joseph.Shook@Surescripts.com
@@ -11,16 +11,12 @@ using System.Collections;
 using System.Collections.Specialized;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json;
-using BQuery;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
-using MudBlazor;
 using UdapEd.Shared.Components;
-using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 
 namespace UdapEd.Shared.Pages;
@@ -157,7 +153,7 @@ public partial class UdapDiscovery
 
             if (_result != null && _result.Contains("udap_versions_supported"))
             {
-                AppendOrMoveBaseUrl(BaseUrl);
+                await AppendOrMoveBaseUrl(BaseUrl);
             }
             else if(Community == null)
             {
@@ -202,7 +198,7 @@ public partial class UdapDiscovery
 
                 if (result != null && result.UdapServerMetaData != null)
                 {
-                    AppendOrMoveBaseUrl(BaseUrl);
+                    await AppendOrMoveBaseUrl(BaseUrl);
                 }
             }
         }
@@ -210,7 +206,7 @@ public partial class UdapDiscovery
         return AppState.BaseUrls.Cast<DictionaryEntry>().Select(e => (string)e.Key);
     }
 
-    private void AppendOrMoveBaseUrl(string? appStateBaseUrl)
+    private async Task AppendOrMoveBaseUrl(string? appStateBaseUrl)
     {
         var baseUrls = AppState.BaseUrls;
         if (baseUrls != null && appStateBaseUrl != null)
@@ -224,7 +220,7 @@ public partial class UdapDiscovery
                 baseUrls.Remove(appStateBaseUrl);
                 baseUrls.Insert(0, appStateBaseUrl, null);
             }
-            AppState.SetProperty(this, nameof(AppState.BaseUrls), baseUrls);
+            await AppState.SetPropertyAsync(this, nameof(AppState.BaseUrls), baseUrls);
         }
     }
     

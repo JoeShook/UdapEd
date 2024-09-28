@@ -8,7 +8,13 @@
 #endregion
 
 using System.IO.Compression;
+using System.Net.Http.Json;
+using System.Security.Cryptography.X509Certificates;
+using BlazorMonaco;
+using Org.BouncyCastle.X509;
+using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
+using static Google.Apis.Requests.BatchRequest;
 
 namespace UdapEd.Client.Services;
 
@@ -57,5 +63,34 @@ public class Infrastructure : IInfrastructure
     public Task<byte[]> JitFhirlabsCommunityCertificate(List<string> subjAltNames, string password)
     {
         throw new NotImplementedException();
+    }
+
+    public async Task<CertificateViewModel?> GetX509data(string url)
+    {
+        try{
+            var response = await _httpClient.GetAsync($"Infrastructure/GetX509data?url={url}");
+
+            return await response.Content.ReadFromJsonAsync<CertificateViewModel>();
+        }
+        catch (Exception ex)
+        {
+            //_logger.LogError(ex, "Failed GetCertificateData from list");
+            return null;
+        }
+    }
+
+    public async Task<string?> GetCrldata(string url)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"Infrastructure/GetCrldata?url={url}");
+
+            return await response.Content.ReadAsStringAsync();
+        }
+        catch (Exception ex)
+        {
+            //_logger.LogError(ex, "Failed GetCertificateData from list");
+            return null;
+        }
     }
 }

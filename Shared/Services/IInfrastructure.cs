@@ -7,6 +7,10 @@
 // */
 #endregion
 
+using Org.BouncyCastle.X509;
+using System.Security.Cryptography.X509Certificates;
+using UdapEd.Shared.Model;
+
 namespace UdapEd.Shared.Services;
 public interface IInfrastructure
 {
@@ -20,4 +24,8 @@ public interface IInfrastructure
     Task<byte[]> BuildMyTestCertificatePackage(List<string> subjAltNames);
 
     Task<byte[]> JitFhirlabsCommunityCertificate(List<string> subjAltNames, string password);
+
+    Task<CertificateViewModel?> GetX509data(string url);
+
+    Task<string?> GetCrldata(string url);
 }

@@ -1,0 +1,41 @@
+﻿
+<CertificateViewer Class="mt-2"
+    Title="Certificates in x5c header:"
+    JwtHeader="@JwtHeaderWithx5c" 
+                   
+                   IntermediateResolved = "(x509Encoded) => { 
+                            IntermediateCertificate = x509Encoded;
+                   }"
+
+                   CrlResolved = "(x509Encoded) => { 
+                        CRL = x509Encoded;
+                   }"
+/>
+
+@if (IntermediateCertificate != null)
+{
+        <CertificateViewer Class="mt-2"
+        Title="Intermediate Certificate"
+        EncodeCertificate="@IntermediateCertificate" />
+}
+
+@if (CRL != null)
+{
+    <MudExpansionPanels Class="mt-2">
+        <MudExpansionPanel Expanded="true">
+            <TitleContent>
+                <MudText Typo="Typo.h6">Certificate Revocation List:</MudText>
+            </TitleContent>
+           
+            <ChildContent >
+                <MudCard Class="mt-4">
+                    <MudCardContent>
+                        <pre>@CRL</pre>
+                    </MudCardContent>
+                </MudCard>
+            </ChildContent>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+
+
+}
