@@ -61,6 +61,7 @@ public partial class CertificateViewer : ComponentBase
         if (string.IsNullOrEmpty(JwtHeader) && EncodeCertificate == null)
         {
             _certificateView = default;
+            return;
         }
 
         if (!string.IsNullOrEmpty(JwtHeader) && !JwtHeader.Equals("Loading ..."))

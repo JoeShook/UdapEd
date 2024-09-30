@@ -12,7 +12,7 @@
 
 
     <MudExpansionPanels Class="@Class">
-        <MudExpansionPanel Expanded="true">
+        <MudExpansionPanel Expanded="true" Style="background-color: #E8F5E9">
             <TitleContent>
                 <MudText Typo="Typo.h6">@Title</MudText>
             </TitleContent>
@@ -35,25 +35,36 @@
                                 {
                                     <MudItem Class="pa-2" Style="@color" md="6" sm="12" xs="12">
                                         <strong>@keyValuePair.Key</strong>
+                                    @if (!string.IsNullOrEmpty(@keyValuePair.Value))
+                                    {
                                         <MudButton
                                             IconColor="Color.Info"
                                             StartIcon=@Icons.Material.Filled.Launch
                                             Size="Size.Small"
                                             OnClick="@(() => ResolveIntermediate(keyValuePair.Value))">
                                             <MudText Color="Color.Info">Resolve</MudText>
-                                        </MudButton>
+                                    </MudButton>
+                                }
+                                else
+                                {
+                                    //Top level
+                                    Title = "Certificate Authority";
+                                }
                                     </MudItem>
                                 }
                                 else if (keyValuePair.Key == "CRL Distribution")
                                 {
                                     <MudItem Class="pa-2" Style="@color" md="6" sm="12" xs="12">
                                         <strong>@keyValuePair.Key</strong>
-                                        <MudButton IconColor="Color.Info"
-                                                   StartIcon=@Icons.Material.Filled.Launch
-                                                   Size="Size.Small"
-                                                   OnClick="@(() => ResolveCrl(keyValuePair.Value))">
-                                            <MudText Color="Color.Info">Resolve</MudText>
-                                        </MudButton>
+                                        @if (!string.IsNullOrEmpty(@keyValuePair.Value))
+                                        {
+                                            <MudButton IconColor="Color.Info"
+                                                       StartIcon=@Icons.Material.Filled.Launch
+                                                       Size="Size.Small"
+                                                       OnClick="@(() => ResolveCrl(keyValuePair.Value))">
+                                                <MudText Color="Color.Info">Resolve</MudText>
+                                            </MudButton>
+                                        }
                                     </MudItem>
                                 }
                                 else
