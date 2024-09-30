@@ -123,10 +123,12 @@ internal class AccessService : IAccessService
             tokenRequestModel.TokenEndpointUrl,
             clientCert);
 
-        foreach (var extension in tokenRequestModel.Extensions)
+        if (tokenRequestModel.Extensions != null)
         {
-
-            tokenRequestBuilder.WithExtension(extension.Key, extension.Value);
+            foreach (var extension in tokenRequestModel.Extensions)
+            {
+                tokenRequestBuilder.WithExtension(extension.Key, extension.Value);
+            }
         }
 
 
@@ -157,7 +159,7 @@ internal class AccessService : IAccessService
             Scope = tokenResponse.Raw,
             TokenType = tokenResponse.TokenType,
             Headers = JsonSerializer.Serialize(
-                tokenResponse.HttpResponse.Headers,
+                tokenResponse.HttpResponse?.Headers,
                 new JsonSerializerOptions { WriteIndented = true })
         };
 

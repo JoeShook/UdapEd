@@ -8,7 +8,6 @@
 #endregion
 
 using System.IO.Compression;
-using System.Runtime.ConstrainedExecution;
 using System.Security.Cryptography.X509Certificates;
 using Google.Cloud.Storage.V1;
 using Org.BouncyCastle.X509;
@@ -144,18 +143,26 @@ public class Infrastructure : IInfrastructure
         }
         catch (Exception ex)
         {
-            
+            var model = new CertificateViewModel();
+            var errorEntry = new Dictionary<string, string> { { "Error", ex.Message } };
+            model.TableDisplay.Add(errorEntry);
+            return model;
         }
-
-        return null;
     }
 
     public async Task<string?> GetCrldata(string url)
     {
-        var bytes = await _httpClient.GetByteArrayAsync(url);
-        var crl = new X509Crl(bytes);
+        try
+        {
+            var bytes = await _httpClient.GetByteArrayAsync(url);
+            var crl = new X509Crl(bytes);
 
-        return crl.ToString();
+            return crl.ToString();
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
     }
 
     private async Task<(byte[] caData, byte[] intermediateData)> GetSigningCertificates()

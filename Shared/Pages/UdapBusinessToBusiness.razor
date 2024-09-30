@@ -123,7 +123,7 @@
                         <MudItem sm="6" xs="12">
                             <MudPaper Class="udap-analyzed" Elevation="3">
                                 <MudText Align="Align.Right" Color="Color.Tertiary">Client Assertion Decoded</MudText>
-                                <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+                                <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" KeepPanelsAlive="true">
                                     <MudTabPanel Text="Client Assertion">
                                         <SignedJwtViewer Title="<b>Decoded client_assertion::</b>"
                                                          SignedSoftwareStatement="@AppState.ClientCredentialsTokenRequest?.ClientAssertion?.Value"/>
@@ -339,7 +339,7 @@
               <MudItem sm="6" xs="12">
                 <MudPaper Class="udap-analyzed">
                   <MudText Align="Align.Right" Color="Color.Tertiary">Client Assertion Decoded</MudText>
-                  <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+                  <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" KeepPanelsAlive="true">
                     <MudTabPanel Text="Client Assertion">
                         <SignedJwtViewer Title="<b>Decoded client_assertion::</b>"
                                                          SignedSoftwareStatement="@AppState.AuthorizationCodeTokenRequest?.ClientAssertion?.Value" />
