@@ -23,6 +23,7 @@ public class Infrastructure : IInfrastructure
     public Infrastructure(HttpClient httpClient)
     {
         _httpClient = httpClient;
+        _httpClient.Timeout = TimeSpan.FromSeconds(2);
     }
 
     public Task<string> GetMyIp()
@@ -134,7 +135,6 @@ public class Infrastructure : IInfrastructure
 
     public async Task<CertificateViewModel?> GetX509data(string url)
     {
-        _httpClient.Timeout = TimeSpan.FromSeconds(2);
         try
         {
             var bytes = await _httpClient.GetByteArrayAsync(url);
@@ -152,9 +152,7 @@ public class Infrastructure : IInfrastructure
 
     public async Task<string?> GetCrldata(string url)
     {
-        _httpClient.Timeout = TimeSpan.FromSeconds(2);
         var bytes = await _httpClient.GetByteArrayAsync(url);
-
         var crl = new X509Crl(bytes);
 
         return crl.ToString();
