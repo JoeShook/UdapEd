@@ -85,6 +85,7 @@ public partial class UdapDiscovery
     }
 
     private string? _community;
+    private CertificatePKIViewer? _certificateViewer;
 
     private string? Community
     {
@@ -135,6 +136,7 @@ public partial class UdapDiscovery
     //
     private async Task GetMetadata()
     {
+        _certificateViewer?.Reset();
         Result = "Loading ...";
         await Task.Delay(1000);
 

@@ -43,12 +43,37 @@ public partial class CertificateViewer : ComponentBase
     [Inject] private IInfrastructure Infrastructure { get; set; } = null!;
     private Dictionary<string, string> _certificateMetadata = new Dictionary<string, string>();
     private CertificateViewModel? _certificateView;
+    private string? _thumbPrint;
+    private string? _aiaPath;
 
     [Parameter]
-    public EventCallback<CertificateViewModel?> IntermediateResolved { get; set; }
+    public EventCallback<CertificateViewModel?> IntermediateResolvedEvent { get; set; }
 
     [Parameter]
-    public EventCallback<string?> CrlResolved { get; set; }
+    public EventCallback<string?> CrlResolvedEvent { get; set; }
+
+    [Parameter]
+    public EventCallback<CrlFileCacheSettings?> CrlCachedEvent { get; set; }
+
+    public X509CacheSettings? StoreCache { get; set; }
+    public CrlFileCacheSettings? FileCache { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FindX509StoreCache();
+    }
+
+    private async Task FindX509StoreCache()
+    {
+        _thumbPrint = _certificateView?.TableDisplay.FirstOrDefault(x => x.ContainsKey("Thumbprint SHA1"))?["Thumbprint SHA1"];
+        _aiaPath = _certificateView?.TableDisplay.FirstOrDefault(x => x.ContainsKey("Authority Information Access"))?["Authority Information Access"];
+
+        if (_thumbPrint != null)
+        {
+            StoreCache = await Infrastructure.GetX509StoreCache(_thumbPrint);
+            FileCache = await Infrastructure.GetCryptNetUrlCache(_aiaPath);
+        }
+    }
 
     /// <summary>
     /// Method invoked when the component has received parameters from its parent in
@@ -57,7 +82,6 @@ public partial class CertificateViewer : ComponentBase
     /// <returns>A <see cref="T:System.Threading.Tasks.Task" /> representing any asynchronous operation.</returns>
     protected override async Task OnParametersSetAsync()
     {
-
         if (string.IsNullOrEmpty(JwtHeader) && EncodeCertificate == null)
         {
             _certificateView = default;
@@ -82,12 +106,32 @@ public partial class CertificateViewer : ComponentBase
     private async Task ResolveIntermediate(string url)
     {
         var viewModel = await Infrastructure.GetX509data(url);
-        await IntermediateResolved.InvokeAsync(viewModel);
+        await IntermediateResolvedEvent.InvokeAsync(viewModel);
     }
 
     private async Task ResolveCrl(string url)
     {
         var crl = await Infrastructure.GetCrldata(url);
-        await CrlResolved.InvokeAsync(crl);
+        var crlFileCache = await Infrastructure.GetCryptNetUrlCache(url);
+        await CrlResolvedEvent.InvokeAsync(crl);
+        await CrlCachedEvent.InvokeAsync(crlFileCache);
+    }
+
+    private async Task RemoveFromStore()
+    {
+        if (_thumbPrint != null)
+        {
+            await Infrastructure.RemoveFromX509Store(StoreCache);
+            await FindX509StoreCache();
+        }
+    }
+
+    private async Task RemoveFromFileCache()
+    {
+        if (_thumbPrint != null)
+        {
+            await Infrastructure.RemoveFromFileCache(FileCache);
+            FileCache = null;
+        }
     }
 }

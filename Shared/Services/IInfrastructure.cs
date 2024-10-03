@@ -28,4 +28,29 @@ public interface IInfrastructure
     Task<CertificateViewModel?> GetX509data(string url);
 
     Task<string?> GetCrldata(string url);
+    Task<X509CacheSettings?> GetX509StoreCache(string thumbprint);
+    Task<CrlFileCacheSettings?> GetCryptNetUrlCache(string? path);
+    Task RemoveFromX509Store(X509CacheSettings? settings);
+    Task RemoveFromFileCache(CrlFileCacheSettings? settings);
+}
+
+public class X509CacheSettings
+{
+    public bool Cached { get; set; }
+
+    public StoreName? StoreName { get; set; }
+    public string? StoreNameDescription { get; set; }
+    public StoreLocation? StoreLocation { get; set; }
+
+    public string? Thumbprint { get; set; }
+}
+
+public class CrlFileCacheSettings
+{
+    public bool Cached { get; set; }
+
+    public string? MetadataFile { get; set; }
+    public string? ContentFile { get; set; }
+
+    public string? UrlPath { get; set; }
 }

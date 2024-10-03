@@ -108,7 +108,7 @@ public static class MauiProgram
         // Register services
         builder.Services.AddSingleton<IConfiguration>(configuration);
 #endif
-
+        builder.Services.AddSingleton<CrlCacheService>();
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddScoped(sp => new HttpClient());
         builder.Services.AddMudServices();
@@ -124,8 +124,8 @@ public static class MauiProgram
         builder.Services.AddScoped<IInfrastructure, Infrastructure>();
 
 
-        builder.Services.AddScoped<TrustChainValidator>();
-        builder.Services.AddScoped<UdapClientDiscoveryValidator>();
+        builder.Services.AddTransient<TrustChainValidator>();
+        builder.Services.AddTransient<UdapClientDiscoveryValidator>();
         builder.Services.AddHttpClient<IUdapClient, UdapClient>()
             .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()));
         builder.Services.AddSingleton<ICapabilityLookup, CapabilityLookup>();

@@ -201,4 +201,14 @@ pre {
   font-weight: bold;
   width: 30px; /* Adjust the width as needed */
   text-align: center; /* Center the indicator text */
-}a
+}
+
+.tertiary-bullet {
+  font-size: 14px;
+  margin-left: 10px;
+  list-style-type: disc; 
+}
+
+.tertiary-bullet::marker {
+  color: var(--mud-warning);
+}

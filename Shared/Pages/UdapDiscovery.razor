@@ -67,7 +67,7 @@
                               <SignedJwtViewer Title="<b>Decoded software_statement::</b>" SignedSoftwareStatement="@AppState.MetadataVerificationModel?.UdapServerMetaData?.SignedMetadata" />
                           </MudTabPanel>
                           <MudTabPanel Text="Certificates">
-                              <CertificatePKIViewer JwtHeaderWithx5c="@GetJwtHeader()" />
+                                <CertificatePKIViewer @ref="_certificateViewer"  JwtHeaderWithx5c="@GetJwtHeader()" />
                           </MudTabPanel>
                       </MudTabs>
                   </MudPaper>

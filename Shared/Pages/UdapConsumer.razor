@@ -239,7 +239,7 @@
                                                SignedSoftwareStatement="@AppState.AuthorizationCodeTokenRequest?.ClientAssertion?.Value" />
                           </MudTabPanel>
                           <MudTabPanel Text="Certificates">
-                              <CertificatePKIViewer JwtHeaderWithx5c="@GetJwtHeader(AppState.AuthorizationCodeTokenRequest?.ClientAssertion?.Value)" />
+                              <CertificatePKIViewer  @ref="_certificateViewer" JwtHeaderWithx5c="@GetJwtHeader(AppState.AuthorizationCodeTokenRequest?.ClientAssertion?.Value)" />
                           </MudTabPanel>
                       </MudTabs>
                   </MudPaper>

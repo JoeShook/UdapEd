@@ -2,19 +2,13 @@
 <CertificateViewer Class="mt-2"
     Title="@Title"
     JwtHeader="@JwtHeaderWithx5c"
-                   EncodeCertificate="@EncodeCertificate"
-                   
-    IntermediateResolved = "(x509Encoded) => { 
-        IntermediateCertificate = x509Encoded;
-   }"
-
-   CrlResolved = "(x509Encoded) => { 
-        CRL = x509Encoded;
-   }"
-/>
-
-
-@if (CRL != null)
+    EncodeCertificate="@EncodeCertificate"
+    IntermediateResolvedEvent = "(x509Encoded) => { IntermediateCertificate = x509Encoded; }"
+    CrlResolvedEvent="(crlDescription) => { Crl = crlDescription; }"
+    CrlCachedEvent="(crlFileCacheSettings) => { CrlUrlCache = crlFileCacheSettings; StateHasChanged();}"
+   />
+    
+@if (Crl != null)
 {
     <MudExpansionPanels Class="mt-2">
         <MudExpansionPanel Expanded="true" Style="background-color: #EDE7F6">
@@ -25,7 +19,24 @@
             <ChildContent>
                 <MudCard Class="mt-4">
                     <MudCardContent>
-                        <pre>@CRL</pre>
+                        @if (CrlUrlCache != null && CrlUrlCache.Cached)
+                        {
+                            <MudGrid>
+                                <MudItem Style="display: flex; align-items: center;">
+                                    <MudIcon Icon="@Icons.Material.Filled.Cached" Color="Color.Warning" Size="Size.Small" />
+                                    <MudText Class="mr-2" Color="Color.Warning">Cached with Windows CryptnetUrlCache on File System</MudText>
+                                </MudItem>
+                            </MudGrid>
+
+                            <MudButton
+                                IconColor="Color.Info"
+                                StartIcon=@Icons.Material.Filled.Remove
+                                Size="Size.Small"
+                                       OnClick="@(() => RemoveCrlFromCache(CrlUrlCache))">
+                                <MudText Color="Color.Info">Remove</MudText>
+                            </MudButton>
+                        }
+                        <pre>@Crl</pre>
                     </MudCardContent>
                 </MudCard>
             </ChildContent>

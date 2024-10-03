@@ -300,6 +300,7 @@ public partial class UdapConsumer
 
     private async Task BuildAccessTokenRequest ()
     {
+        _certificateViewer?.Reset();
         ResetSoftwareStatement();
         TokenRequest1 = "Loading ...";
         await Task.Delay(50);
@@ -456,6 +457,7 @@ public partial class UdapConsumer
     }
 
     private string _webAuthenticorResponseProps = string.Empty;
+    private CertificatePKIViewer _certificateViewer;
 
     private string GetJwtHeader(string? tokenString)
     {

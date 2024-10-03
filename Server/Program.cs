@@ -34,7 +34,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Host.UseSerilog((ctx, lc) => lc
-    .MinimumLevel.Information()
+    .MinimumLevel.Debug()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
     .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
     .MinimumLevel.Override("Microsoft.AspNetCore.Authentication", LogEventLevel.Information)
@@ -48,6 +48,8 @@ builder.Host.UseSerilog((ctx, lc) => lc
 
 // Mount Cloud Secrets
 builder.Configuration.AddJsonFile("/secret/udapEdAppsettings", true, false);
+
+builder.Services.AddSingleton<CrlCacheService>();
 
 builder.Services.AddSession(options =>
 {

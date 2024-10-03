@@ -1,13 +1,9 @@
 ﻿@implements IDisposable
 
-@using System.Text.Json.Nodes
-@using IdentityModel.Client
-@using UdapEd.Shared.Services
-
 
 @if (_certificateView?.TableDisplay.First() != null)
 {
-    string color = "#E8F5E9";
+    string color;
     int i = 0;
 
 
@@ -19,63 +15,120 @@
            
             <ChildContent >
                
-                        <MudGrid Class="pa-2" Spacing="2">
-                            @foreach (KeyValuePair<string, string> keyValuePair in _certificateView?.TableDisplay.First())
-                            {
-                                if (i % 2 == 0)
-                                {
-                                    color = "background-color: #E8F5E9;";
-                                }
-                                else
-                                {
-                                    color = "background-color: #EDE7F6";
-                                }
+               @if (StoreCache != null && StoreCache.Cached)
+               {
+                   <MudGrid Spacing="1">
+                       <MudItem Style="display: flex; align-items: center;" >
+                           <MudIcon Icon="@Icons.Material.Filled.Cached" Color="Color.Warning" Size="Size.Small" />
+                           <MudText Class="ml-2" Color="Color.Warning">Cached in Windows Certificate Store</MudText>
+                       </MudItem>
+                       <MudSpacer/>
+                       <MudItem>
+                           <MudButton
+                               IconColor="Color.Info"
+                               StartIcon=@Icons.Material.Filled.Remove
+                               Size="Size.Small"
+                               OnClick="@(() => RemoveFromStore())">
+                               <MudText Color="Color.Info">Remove from Certificate Store</MudText>
+                           </MudButton>
+                       </MudItem>
+                       <MudItem xs="1"/>
+                       <MudItem xs="11">
+                            <ul >
+                                <li class="tertiary-bullet" ><MudText Color="Color.Warning">@($"Store: {StoreCache.StoreLocation.ToString()}")</MudText> </li>
+                                <li class="tertiary-bullet"><MudText Color="Color.Warning">@($"Folder: {StoreCache.StoreNameDescription}")</MudText></li>
+                           </ul>
+                       </MudItem>
+                   </MudGrid>
+               }
 
-                                if (keyValuePair.Key == "Authority Information Access")
-                                {
-                                    <MudItem Class="pa-2" Style="@color" md="6" sm="12" xs="12">
-                                        <strong>@keyValuePair.Key</strong>
-                                    @if (!string.IsNullOrEmpty(@keyValuePair.Value))
-                                    {
-                                        <MudButton
-                                            IconColor="Color.Info"
-                                            StartIcon=@Icons.Material.Filled.Launch
-                                            Size="Size.Small"
-                                            OnClick="@(() => ResolveIntermediate(keyValuePair.Value))">
-                                            <MudText Color="Color.Info">Resolve</MudText>
-                                    </MudButton>
-                                }
-                                else
-                                {
-                                    //Top level
-                                    Title = "Certificate Authority";
-                                }
-                                    </MudItem>
-                                }
-                                else if (keyValuePair.Key == "CRL Distribution")
-                                {
-                                    <MudItem Class="pa-2" Style="@color" md="6" sm="12" xs="12">
-                                        <strong>@keyValuePair.Key</strong>
-                                        @if (!string.IsNullOrEmpty(@keyValuePair.Value))
-                                        {
-                                            <MudButton IconColor="Color.Info"
-                                                       StartIcon=@Icons.Material.Filled.Launch
-                                                       Size="Size.Small"
-                                                       OnClick="@(() => ResolveCrl(keyValuePair.Value))">
-                                                <MudText Color="Color.Info">Resolve</MudText>
-                                            </MudButton>
-                                        }
-                                    </MudItem>
-                                }
-                                else
-                                {
-                                    <MudItem Class="pa-2" Style="@color" md="6" sm="12" xs="12"><strong>@keyValuePair.Key</strong></MudItem>
-                                }
+                @if (FileCache != null && FileCache.Cached)
+                {
+                    <MudGrid>
+                        <MudItem Style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.Cached" Color="Color.Warning" Size="Size.Small" />
+                            <MudText Class="mr-2" Color="Color.Warning">Cached with Windows CryptnetUrlCache on File System</MudText>
+                        </MudItem>
+                        <MudSpacer/>
+                        <MudItem>
+                            <MudButton
+                                IconColor="Color.Info"
+                                StartIcon=@Icons.Material.Filled.Remove
+                                Size="Size.Small"
+                                OnClick="@(() => RemoveFromFileCache())">
+                                <MudText Color="Color.Info">Remove from FileCache</MudText>
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                }
 
-                                <MudItem Class="pa-2" Style="@color" md="6" sm="12" xs="12"><pre>@keyValuePair.Value</pre></MudItem>
-                                i++;
-                            }
-                        </MudGrid>
+               <MudGrid Class="pa-2" Spacing="2">
+                   @if (_certificateView?.TableDisplay.Count > 0)
+                   {
+                       foreach (KeyValuePair<string, string> keyValuePair in _certificateView.TableDisplay.First())
+                       {
+                           if (i % 2 == 0)
+                           {
+                               color = "background-color: #E8F5E9;";
+                           }
+                           else
+                           {
+                               color = "background-color: #EDE7F6";
+                           }
+
+                           if (keyValuePair.Key == "Authority Information Access")
+                           {
+                               <MudItem Class="pa-2" Style="@color" md="6" sm="12" xs="12">
+                                   <strong>@keyValuePair.Key</strong>
+                                   @if (!string.IsNullOrEmpty(@keyValuePair.Value))
+                                   {
+                                       <MudButton
+                                           IconColor="Color.Info"
+                                           StartIcon=@Icons.Material.Filled.Launch
+                                           Size="Size.Small"
+                                           OnClick="@(() => ResolveIntermediate(keyValuePair.Value))">
+                                           <MudText Color="Color.Info">Resolve</MudText>
+                                       </MudButton>
+                                   }
+                                   else
+                                   {
+                                       //Top level
+                                       Title = "Certificate Authority";
+                                   }
+                               </MudItem>
+                           }
+                           else
+                           {
+                               if (keyValuePair.Key == "CRL Distribution")
+                               {
+                                   <MudItem Class="pa-2" Style="@color" md="6" sm="12" xs="12">
+                                       <strong>@keyValuePair.Key</strong>
+                                       @if (!string.IsNullOrEmpty(@keyValuePair.Value))
+                                       {
+                                           <MudButton IconColor="Color.Info"
+                                                      StartIcon=@Icons.Material.Filled.Launch
+                                                      Size="Size.Small"
+                                                      OnClick="@(() => ResolveCrl(keyValuePair.Value))">
+                                               <MudText Color="Color.Info">Resolve</MudText>
+                                           </MudButton>
+                                       }
+                                   </MudItem>
+                               }
+                               else
+                               {
+                                   <MudItem Class="pa-2" Style="@color" md="6" sm="12" xs="12">
+                                       <strong>@keyValuePair.Key</strong>
+                                   </MudItem>
+                               }
+                           }
+
+                           <MudItem Class="pa-2" Style="@color" md="6" sm="12" xs="12">
+                               <pre>@keyValuePair.Value</pre>
+                           </MudItem>
+                           i++;
+                       }
+                   }
+               </MudGrid>
         
             </ChildContent>
         </MudExpansionPanel>

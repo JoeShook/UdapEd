@@ -305,6 +305,7 @@ public partial class UdapTieredOAuth
 
     private async Task BuildAccessTokenRequest ()
     {
+        _certificateViewer?.Reset();
         ResetSoftwareStatement();
         TokenRequest1 = "Loading ...";
         await Task.Delay(50);
@@ -464,6 +465,7 @@ public partial class UdapTieredOAuth
     }
 
     private string _webAuthenticorResponseProps = string.Empty;
+    private CertificatePKIViewer _certificateViewer;
 
     private string? GetJwtHeader(string? tokenString)
     {

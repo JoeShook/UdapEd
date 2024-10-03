@@ -305,6 +305,7 @@ public partial class UdapBusinessToBusiness
 
     private async Task BuildAccessTokenRequest ()
     {
+        _certificateViewer?.Reset();
         await ResetSoftwareStatement();
         TokenRequest1 = "Loading ...";
         await Task.Delay(50);
@@ -535,7 +536,8 @@ public partial class UdapBusinessToBusiness
     }
 
     private string _webAuthenticorResponseProps = string.Empty;
-    
+    private CertificatePKIViewer _certificateViewer;
+
 
     private string? GetJwtHeader(string? tokenString)
     {

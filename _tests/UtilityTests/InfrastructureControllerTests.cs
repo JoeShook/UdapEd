@@ -13,6 +13,7 @@ using NSubstitute;
 using Udap.Util.Extensions;
 using UdapEd.Shared.Services;
 using Xunit.Abstractions;
+using Microsoft.Extensions.Logging;
 
 namespace UtilityTests
 {
@@ -55,7 +56,9 @@ namespace UtilityTests
         {
             var subjAltNames = new List<string> { "udap://joe.shook/", "udap://joseph.shook/" };
 
-            var infrastructure = new Infrastructure(Substitute.For<HttpClient>());
+            var infrastructure = new Infrastructure(
+                Substitute.For<HttpClient>(), 
+                Substitute.For<CrlCacheService>(Substitute.For<ILogger<CrlCacheService>>()));
             var bytes = await infrastructure.JitFhirlabsCommunityCertificate(subjAltNames, "udap-test");
 
             var certificate = new X509Certificate2(bytes, "udap-test");
