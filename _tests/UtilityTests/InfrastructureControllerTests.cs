@@ -58,7 +58,8 @@ namespace UtilityTests
 
             var infrastructure = new Infrastructure(
                 Substitute.For<HttpClient>(), 
-                Substitute.For<CrlCacheService>(Substitute.For<ILogger<CrlCacheService>>()));
+                Substitute.For<CrlCacheService>(Substitute.For<ILogger<CrlCacheService>>()),
+                Substitute.For<ILogger<Infrastructure>>());
             var bytes = await infrastructure.JitFhirlabsCommunityCertificate(subjAltNames, "udap-test");
 
             var certificate = new X509Certificate2(bytes, "udap-test");

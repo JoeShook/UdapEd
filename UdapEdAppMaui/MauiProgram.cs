@@ -45,7 +45,8 @@ using UdapEdAppMaui.Services.Authentication;
 using UdapEdAppMaui.Services;
 using UdapEdAppMaui.Services.Authentication;
 using UdapEdAppMaui.Services.Search;
-
+using AuthTokenHttpMessageHandler = UdapEd.Shared.Services.Authentication.AuthTokenHttpMessageHandler;
+using IAccessTokenProvider = UdapEd.Shared.Services.Authentication.IAccessTokenProvider;
 
 
 #if WINDOWS

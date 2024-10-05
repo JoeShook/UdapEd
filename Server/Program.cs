@@ -1,4 +1,4 @@
-#region (c) 2023 Joseph Shook. All rights reserved.
+#region (c) 2024 Joseph Shook. All rights reserved.
 // /*
 //  Authors:
 //     Joseph Shook   Joseph.Shook@Surescripts.com
@@ -8,11 +8,7 @@
 #endregion
 
 using System.Net;
-using System.Net.Http;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
 using Hl7.Fhir.Rest;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Serilog;
 using Serilog.Events;
@@ -21,11 +17,9 @@ using Udap.Client.Authentication;
 using Udap.Client.Client;
 using Udap.Client.Configuration;
 using Udap.Common.Certificates;
-using UdapEd.Client.Services;
 using UdapEd.Server.Extensions;
 using UdapEd.Server.Rest;
 using UdapEd.Server.Services.Authentication;
-using UdapEd.Shared;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Services.Authentication;
 using FhirClientWithUrlProvider = UdapEd.Shared.Services.FhirClientWithUrlProvider;
@@ -149,7 +143,7 @@ builder.Services.AddScoped<IInfrastructure, UdapEd.Shared.Services.Infrastructur
 builder.Services.AddTransient<FhirMTlsClientWithUrlProvider>(sp =>
 {
     var baeUrlProvider = sp.GetRequiredService<IBaseUrlProvider>();
-    var httpClientHandler = new System.Net.Http.HttpClientHandler();
+    var httpClientHandler = new HttpClientHandler();
     var certificateProvider = sp.GetRequiredService<IClientCertificateProvider>();
     var certificate = certificateProvider.GetClientCertificate();
     var anchorCertificate = certificateProvider.GetAnchorCertificates();
