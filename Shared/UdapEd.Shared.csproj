@@ -40,7 +40,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseMauiEssentials)' != 'false'">
-    <PackageReference Include="Microsoft.Maui.Essentials" Version="8.0.90" />
+    <PackageReference Include="Microsoft.Maui.Essentials" Version="8.0.91" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFrameworks)' != 'net8.0'">
