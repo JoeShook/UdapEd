@@ -16,6 +16,7 @@
         <OutputType>Exe</OutputType>
         <RootNamespace>UdapEdAppMaui</RootNamespace>
         <UseMaui>true</UseMaui>
+        <UseMauiBlazor>true</UseMauiBlazor>
         <SingleProject>true</SingleProject>
         <ImplicitUsings>enable</ImplicitUsings>
         <EnableDefaultCssItems>false</EnableDefaultCssItems>
