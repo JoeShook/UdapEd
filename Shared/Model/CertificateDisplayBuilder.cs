@@ -5,6 +5,8 @@ using System.Security.Cryptography;
 using System.Text;
 using Udap.Util.Extensions;
 using X509Extensions = Org.BouncyCastle.Asn1.X509.X509Extensions;
+using System;
+using System.Numerics;
 
 namespace UdapEd.Shared.Model;
 public class CertificateDisplayBuilder
@@ -20,7 +22,7 @@ public class CertificateDisplayBuilder
     {
         var data = new Dictionary<string, string>();
 
-        data.Add("Serial Number", _cert.SerialNumber);
+        data.Add("Serial Number", GetSerialNumber(_cert));
         data.Add("Subject", _cert.Subject);
         data.Add("Subject Alternative Names", GetSANs(_cert));
         data.Add("Public Key Alogorithm", GetPublicKeyAlgorithm(_cert));
@@ -67,6 +69,15 @@ public class CertificateDisplayBuilder
 
         var key = cert.GetRSAPublicKey() as AsymmetricAlgorithm ?? cert.GetECDsaPublicKey();
         return $"{oid.FriendlyName} ({key?.KeySize})";
+    }
+
+    private string GetSerialNumber(X509Certificate2 cert)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"Hex : {cert.SerialNumber}");
+        sb.AppendLine($"Decimal : {new BigInteger(cert.GetSerialNumber())}");
+
+        return sb.ToString();
     }
 
     private string GetSANs(X509Certificate2 cert)

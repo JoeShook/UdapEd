@@ -131,11 +131,14 @@ public class AccessController : Controller
             tokenRequestModel.TokenEndpointUrl,
             clientCert);
 
-        foreach (var extension in tokenRequestModel.Extensions)
+        if (tokenRequestModel.Extensions != null)
         {
-            tokenRequestBuilder.WithExtension(extension.Key, extension.Value);
+            foreach (var extension in tokenRequestModel.Extensions)
+            {
+                tokenRequestBuilder.WithExtension(extension.Key, extension.Value);
+            }
         }
-        
+
         if (tokenRequestModel.Scope != null)
         {
             tokenRequestBuilder.WithScope(tokenRequestModel.Scope);

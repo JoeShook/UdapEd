@@ -14,36 +14,37 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Udap.Model" Version="0.3.81" />
-    <PackageReference Include="Udap.Common" Version="0.3.81" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Udap.Model" Version="0.3.87" />
+    <PackageReference Include="Udap.Common" Version="0.3.87" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="BlazorMonaco" Version="3.2.0" IncludeAssets="all" />
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
     <PackageReference Include="BQuery" Version="3.1.0" />
     <PackageReference Include="Google.Cloud.Storage.V1" Version="4.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.8" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
     <PackageReference Include="MudBlazor" Version="7.8.0" />
-    <PackageReference Include="Udap.Smart.Model" Version="0.3.81" />
+    <PackageReference Include="Udap.Smart.Model" Version="0.3.87" />
 
     <PackageReference Include="Microsoft.AspNetCore.Components" Version="8.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.8" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Components\AuthExtObjects\" />
     <Folder Include="Properties\" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseMauiEssentials)' != 'false'">
-    <PackageReference Include="Microsoft.Maui.Essentials" Version="8.0.90" />
+    <PackageReference Include="Microsoft.Maui.Essentials" Version="8.0.91" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFrameworks)' != 'net8.0'">
-    <PackageReference Include="CommunityToolkit.Maui" Version="9.0.3" />
+    <PackageReference Include="CommunityToolkit.Maui" Version="9.1.0" />
   </ItemGroup>
 
  

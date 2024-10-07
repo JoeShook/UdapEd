@@ -8,8 +8,8 @@
 #endregion
 
 using Microsoft.Extensions.Logging;
-using Udap.Client.Authentication;
 using UdapEd.Shared;
+using UdapEd.Shared.Services.Authentication;
 
 namespace UdapEdAppMaui.Services.Authentication;
 

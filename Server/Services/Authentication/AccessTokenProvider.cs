@@ -7,8 +7,8 @@
 // */
 #endregion
 
-using Udap.Client.Authentication;
 using UdapEd.Shared;
+using UdapEd.Shared.Services.Authentication;
 
 namespace UdapEd.Server.Services.Authentication;
 

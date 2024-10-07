@@ -373,11 +373,13 @@ public partial class UdapRegistration
 
     private async Task BuildRawSoftwareStatement()
     {
+        _certificateViewerForClient?.Reset();
+        _certificateViewerForCertification?.Reset();
         _cancelRegistration = false;
         SetRawMessage("Loading ...");
         SetRawCertificationMessage("Loading ...");
 
-        await Task.Delay(150);
+        await Task.Delay(100);
 
         if (AppState.Oauth2Flow == Oauth2FlowEnum.client_credentials)
         {
@@ -865,6 +867,8 @@ public partial class UdapRegistration
     }
 
     private Dictionary<string, bool>? _redirectUrls;
+    private CertificatePKIViewer _certificateViewerForClient;
+    private CertificatePKIViewer _certificateViewerForCertification;
 
     public Dictionary<string, bool> RedirectUrls
     {

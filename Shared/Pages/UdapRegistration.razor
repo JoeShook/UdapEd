@@ -319,7 +319,7 @@
             </MudCardActions>
             
             <MudCardContent>
-                <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+                <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" KeepPanelsAlive="true">
                     <MudTabPanel Text="Registration">
                         <MudGrid Spacing="1" Class="mt-8">
                             <MudItem sm="6" xs="12">
@@ -347,7 +347,7 @@
                             <MudItem sm="6" xs="12">
                                 <MudPaper Class="udap-analyzed" Elevation="3">
                                     <MudText Align="Align.Right" Color="Color.Tertiary">x509 certificates from x5c</MudText>
-                                    <CertificateViewer JwtHeaderWithx5c="@SoftwareStatementBeforeEncodingHeader"/>
+                                    <CertificatePKIViewer @ref="_certificateViewerForClient" JwtHeaderWithx5c="@SoftwareStatementBeforeEncodingHeader" />
                                 </MudPaper>
                             </MudItem>
                         </MudGrid>
@@ -379,7 +379,7 @@
                             <MudItem sm="6" xs="12">
                                 <MudPaper Class="udap-analyzed" Elevation="3">
                                     <MudText Align="Align.Right" Color="Color.Tertiary">x509 certificates from x5c</MudText>
-                                    <CertificateViewer JwtHeaderWithx5c="@CertSoftwareStatementBeforeEncodingHeader" />
+                                    <CertificatePKIViewer  @ref="_certificateViewerForCertification"  JwtHeaderWithx5c="@CertSoftwareStatementBeforeEncodingHeader" />
                                 </MudPaper>
                             </MudItem>
                         </MudGrid>

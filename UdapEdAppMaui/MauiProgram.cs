@@ -45,12 +45,10 @@ using UdapEdAppMaui.Services.Authentication;
 using UdapEdAppMaui.Services;
 using UdapEdAppMaui.Services.Authentication;
 using UdapEdAppMaui.Services.Search;
+using AuthTokenHttpMessageHandler = UdapEd.Shared.Services.Authentication.AuthTokenHttpMessageHandler;
+using IAccessTokenProvider = UdapEd.Shared.Services.Authentication.IAccessTokenProvider;
 
 
-
-#if WINDOWS
-using WinUIEx;
-#endif
 
 namespace UdapEdAppMaui;
 public static class MauiProgram
@@ -108,7 +106,7 @@ public static class MauiProgram
         // Register services
         builder.Services.AddSingleton<IConfiguration>(configuration);
 #endif
-
+        builder.Services.AddSingleton<CrlCacheService>();
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddScoped(sp => new HttpClient());
         builder.Services.AddMudServices();
@@ -124,8 +122,8 @@ public static class MauiProgram
         builder.Services.AddScoped<IInfrastructure, Infrastructure>();
 
 
-        builder.Services.AddScoped<TrustChainValidator>();
-        builder.Services.AddScoped<UdapClientDiscoveryValidator>();
+        builder.Services.AddTransient<TrustChainValidator>();
+        builder.Services.AddTransient<UdapClientDiscoveryValidator>();
         builder.Services.AddHttpClient<IUdapClient, UdapClient>()
             .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()));
         builder.Services.AddSingleton<ICapabilityLookup, CapabilityLookup>();
@@ -209,23 +207,7 @@ public static class MauiProgram
 		builder.Logging.AddDebug();
 #endif
 
-#if WINDOWS
-            builder.ConfigureLifecycleEvents(events =>
-            {
-                events.AddWindows(wndLifeCycleBuilder =>
-                {
-                    wndLifeCycleBuilder.OnWindowCreated(window =>
-                    {
-                        window.CenterOnScreen(1024,768); //Set size and center on screen using WinUIEx extension method
 
-                        var manager = WinUIEx.WindowManager.Get(window);
-                        manager.PersistenceId = "MainWindowPersistanceId"; // Remember window position and size across runs
-                        manager.MinWidth = 640;
-                        manager.MinHeight = 480;
-                    });
-                });
-            });
-#endif
 
 
         return builder.Build();

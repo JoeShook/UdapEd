@@ -1,0 +1,54 @@
+﻿
+<CertificateViewer Class="mt-2"
+    Title="@Title"
+    JwtHeader="@JwtHeaderWithx5c"
+    EncodeCertificate="@EncodeCertificate"
+    IntermediateResolvedEvent = "(x509Encoded) => { IntermediateCertificate = x509Encoded; }"
+    CrlResolvedEvent="(crlDescription) => { Crl = crlDescription; }"
+    CrlCachedEvent="(crlFileCacheSettings) => { CrlUrlCache = crlFileCacheSettings; StateHasChanged();}"
+   />
+    
+@if (Crl != null)
+{
+    <MudExpansionPanels Class="mt-2">
+        <MudExpansionPanel Expanded="true" Style="background-color: #EDE7F6">
+            <TitleContent>
+                <MudText Typo="Typo.h6">Certificate Revocation List:</MudText>
+            </TitleContent>
+           
+            <ChildContent>
+                <MudCard Class="mt-4">
+                    <MudCardContent>
+                        @if (CrlUrlCache != null && CrlUrlCache.Cached)
+                        {
+                            <MudGrid>
+                                <MudItem Style="display: flex; align-items: center;">
+                                    <MudIcon Icon="@Icons.Material.Filled.Cached" Color="Color.Warning" Size="Size.Small" />
+                                    <MudText Class="mr-2" Color="Color.Warning">Cached with Windows CryptnetUrlCache on File System</MudText>
+                                </MudItem>
+                            </MudGrid>
+
+                            <MudButton
+                                IconColor="Color.Info"
+                                StartIcon=@Icons.Material.Filled.Remove
+                                Size="Size.Small"
+                                       OnClick="@(() => RemoveCrlFromCache(CrlUrlCache))">
+                                <MudText Color="Color.Info">Remove</MudText>
+                            </MudButton>
+                        }
+                        <pre>@Crl</pre>
+                    </MudCardContent>
+                </MudCard>
+            </ChildContent>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+}
+
+
+@if (IntermediateCertificate != null)
+{
+    <CertificatePKIViewer Class="mt-2"
+                          Title="Intermediate Certificate"
+                          EncodeCertificate="@IntermediateCertificate" />
+    
+}

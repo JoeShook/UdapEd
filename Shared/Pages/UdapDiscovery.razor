@@ -22,7 +22,7 @@
               </MudStack>
           </MudItem>
           <MudSpacer/>
-            <MudItem sm="8" xs="12">
+          <MudItem sm="8" xs="12">
               <MudGrid Spacing="2" Justify="Justify.FlexEnd" Class="bottom:0;right:0">
                   <UdapAnchorCertificate/>
               </MudGrid>
@@ -33,8 +33,8 @@
                       <MudAutocomplete T="string"
                                        Label="Enter BaseUrl"
                                        HelperText=@($"UDAP Metadata URL: {RequestUrl.GetWellKnownUdap(BaseUrl, Community)}")
-                                         @bind-Value="BaseUrl"
-                                         @bind-Text="BaseUrl"
+                                                                                  @bind-Value="BaseUrl"
+                                       @bind-Text="BaseUrl"
                                        SearchFunc="@GetMetadata"
                                        ResetValueOnEmptyText="true"
                                        DebounceInterval="10000" />
@@ -53,29 +53,27 @@
                   </MudAlert>
               }
           </MudItem>
-      <MudGrid Spacing="1" Class="mt-8">
-        <MudItem sm="6" xs="12">
-          <MudPaper Class="udap-input" Elevation="3">
-            <pre>@Result</pre>
-          </MudPaper>
-        </MudItem>
-        <MudItem sm="6" xs="12">
-          <MudPaper Class="udap-analyzed" Elevation="3">
-            <MudText Align="Align.Right" Color="Color.Tertiary">Discovery | Metadata | Signed | Communities</MudText>
-            <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
-              <MudTabPanel Text="Signed Software Statement">
-                <SignedJwtViewer Title="<b>Decoded software_statement::</b>" SignedSoftwareStatement="@AppState.MetadataVerificationModel?.UdapServerMetaData?.SignedMetadata" />
-              </MudTabPanel>
-              <MudTabPanel Text="Certificates">
-                <CertificateViewer JwtHeaderWithx5c="@GetJwtHeader()" />
-              </MudTabPanel>
-            </MudTabs>
-          </MudPaper>
-        </MudItem>
+          <MudGrid Spacing="1" Class="mt-8">
+              <MudItem sm="6" xs="12">
+                  <MudPaper Class="udap-input" Elevation="3">
+                      <pre>@Result</pre>
+                  </MudPaper>
+              </MudItem>
+              <MudItem sm="6" xs="12">
+                  <MudPaper Class="udap-analyzed" Elevation="3">
+                      <MudText Align="Align.Right" Color="Color.Tertiary">Discovery | Metadata | Signed | Communities</MudText>
+                      <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2" KeepPanelsAlive="true">
+                          <MudTabPanel Text="Signed Software Statement">
+                              <SignedJwtViewer Title="<b>Decoded software_statement::</b>" SignedSoftwareStatement="@AppState.MetadataVerificationModel?.UdapServerMetaData?.SignedMetadata" />
+                          </MudTabPanel>
+                          <MudTabPanel Text="Certificates">
+                                <CertificatePKIViewer @ref="_certificateViewer"  JwtHeaderWithx5c="@GetJwtHeader()" />
+                          </MudTabPanel>
+                      </MudTabs>
+                  </MudPaper>
+              </MudItem>
+          </MudGrid>
       </MudGrid>
-
-    </MudGrid>
-
 
   </ChildContent>
   <ErrorContent Context="ex">

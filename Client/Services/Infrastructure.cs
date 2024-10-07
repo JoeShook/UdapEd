@@ -7,7 +7,8 @@
 // */
 #endregion
 
-using System.IO.Compression;
+using System.Net.Http.Json;
+using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 
 namespace UdapEd.Client.Services;
@@ -15,9 +16,12 @@ namespace UdapEd.Client.Services;
 public class Infrastructure : IInfrastructure
 {
     private HttpClient _httpClient;
-    public Infrastructure(HttpClient httpClient)
+    private readonly ILogger<Infrastructure> _logger;
+
+    public Infrastructure(HttpClient httpClient, ILogger<Infrastructure> logger)
     {
         _httpClient = httpClient;
+        _logger = logger;
     }
 
     public async Task<string> GetMyIp()
@@ -57,5 +61,104 @@ public class Infrastructure : IInfrastructure
     public Task<byte[]> JitFhirlabsCommunityCertificate(List<string> subjAltNames, string password)
     {
         throw new NotImplementedException();
+    }
+
+    public async Task<CertificateViewModel?> GetX509data(string url)
+    {
+        try{
+            var response = await _httpClient.GetAsync($"Infrastructure/GetX509data?url={url}");
+
+            return await response.Content.ReadFromJsonAsync<CertificateViewModel>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed GetCertificateData from list");
+            return null;
+        }
+    }
+
+    public async Task<string?> GetCrldata(string url)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"Infrastructure/GetCrldata?url={url}");
+
+            return await response.Content.ReadAsStringAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed GetCertificateData from list");
+            return null;
+        }
+    }
+
+    public async Task<X509CacheSettings?> GetX509StoreCache(string thumbprint)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"Infrastructure/GetX509StoreCache?thumbprint={thumbprint}");
+
+            return await response.Content.ReadFromJsonAsync<X509CacheSettings>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get X509 store cache");
+            return null;
+        }
+    }
+    public async Task<CrlFileCacheSettings?> GetCryptNetUrlCache(string location)
+    {
+        try
+        {
+            _logger.LogDebug($"Calling GetCryptNetUrlCache");
+           var response = await _httpClient.GetAsync($"Infrastructure/GetCryptNetUrlCache?crlUrl={location}");
+
+            return await response.Content.ReadFromJsonAsync<CrlFileCacheSettings>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get file cache");
+            return null;
+        }
+    }
+
+    public async Task RemoveFromX509Store(X509CacheSettings? settings)
+    {
+        if (settings == null)
+        {
+            throw new ArgumentNullException(nameof(settings));
+        }
+
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("Infrastructure/RemoveFromX509Store", settings);
+
+            response.EnsureSuccessStatusCode();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to remove from X509 store");
+            throw;
+        }
+    }
+
+    public async Task RemoveFromFileCache(CrlFileCacheSettings? settings)
+    {
+        if (settings == null)
+        {
+            throw new ArgumentNullException(nameof(settings));
+        }
+
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("Infrastructure/RemoveFromFileCache", settings);
+
+            response.EnsureSuccessStatusCode();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to remove from file cache");
+            throw;
+        }
     }
 }

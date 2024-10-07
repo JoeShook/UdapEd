@@ -8,13 +8,29 @@
 #endregion
 
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using Google.Cloud.Storage.V1;
+using Microsoft.Extensions.Logging;
+using Org.BouncyCastle.X509;
+using UdapEd.Shared.Model;
 using UdapEd.Shared.Services.x509;
 
 namespace UdapEd.Shared.Services;
 public class Infrastructure : IInfrastructure
 {
+    private HttpClient _httpClient;
+    private readonly CrlCacheService _crlCacheService;
+    private readonly ILogger<Infrastructure> _logger;
+
+    public Infrastructure(HttpClient httpClient, CrlCacheService crlCacheService, ILogger<Infrastructure> logger)
+    {
+        _httpClient = httpClient;
+        _crlCacheService = crlCacheService;
+        _logger = logger;
+        _httpClient.Timeout = TimeSpan.FromSeconds(2);
+    }
+
     public Task<string> GetMyIp()
     {
        return Task.FromResult("0.0.0.0");
@@ -29,8 +45,8 @@ public class Infrastructure : IInfrastructure
 
         var (caData, intermediateData) = await GetSigningCertificates();
 
-        using var rootCA = new X509Certificate2(caData, "udap-test");
-        using var subCA = new X509Certificate2(intermediateData, "udap-test");
+        using var rootCa = new X509Certificate2(caData, "udap-test");
+        using var subCa = new X509Certificate2(intermediateData, "udap-test");
 
         var certTooling = new CertificateTooling();
 
@@ -45,9 +61,9 @@ public class Infrastructure : IInfrastructure
         var distinguishedName = x500Builder.Build();
 
         var rsaCertificate = certTooling.BuildUdapClientCertificate(
-            subCA,
-            rootCA,
-            subCA.GetRSAPrivateKey()!,
+            subCa,
+            rootCa,
+            subCa.GetRSAPrivateKey()!,
             distinguishedName,
             subjAltNames,
             "http://crl.fhircerts.net/crl/surefhirlabsIntermediateCrl.crl",
@@ -55,9 +71,9 @@ public class Infrastructure : IInfrastructure
         );
 
         var ecdsaCertificate = certTooling.BuildClientCertificateECDSA(
-            subCA,
-            rootCA,
-            subCA.GetRSAPrivateKey()!,
+            subCa,
+            rootCa,
+            subCa.GetRSAPrivateKey()!,
             distinguishedName,
             subjAltNames,
             "http://crl.fhircerts.net/crl/surefhirlabsIntermediateCrl.crl",
@@ -93,8 +109,8 @@ public class Infrastructure : IInfrastructure
     {
         var (caData, intermediateData) = await GetSigningCertificates();
 
-        using var rootCA = new X509Certificate2(caData, "udap-test");
-        using var subCA = new X509Certificate2(intermediateData, "udap-test");
+        using var rootCa = new X509Certificate2(caData, "udap-test");
+        using var subCa = new X509Certificate2(intermediateData, "udap-test");
 
         var certTooling = new CertificateTooling();
 
@@ -109,9 +125,9 @@ public class Infrastructure : IInfrastructure
         var distinguishedName = x500Builder.Build();
 
         var rsaCertificate = certTooling.BuildUdapClientCertificate(
-            subCA,
-            rootCA,
-            subCA.GetRSAPrivateKey()!,
+            subCa,
+            rootCa,
+            subCa.GetRSAPrivateKey()!,
             distinguishedName,
             subjAltNames,
             "http://crl.fhircerts.net/crl/surefhirlabsIntermediateCrl.crl",
@@ -122,18 +138,241 @@ public class Infrastructure : IInfrastructure
 
     }
 
+    public async Task<CertificateViewModel?> GetX509data(string url)
+    {
+        try
+        {
+            var bytes = await _httpClient.GetByteArrayAsync(url);
+
+            var cert = new X509Certificate2(bytes);
+            return new CertificateDisplayBuilder(cert).BuildCertificateDisplayData();
+        }
+        catch (Exception ex)
+        {
+            var model = new CertificateViewModel();
+            var errorEntry = new Dictionary<string, string> { { "Error", ex.Message } };
+            model.TableDisplay.Add(errorEntry);
+            return model;
+        }
+    }
+
+    public async Task<string?> GetCrldata(string url)
+    {
+        try
+        {
+            var bytes = await _httpClient.GetByteArrayAsync(url);
+            var crl = new X509Crl(bytes);
+
+            return crl.ToString();
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
+    }
+
+    public Task<X509CacheSettings?> GetX509StoreCache(string thumbprint)
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            // Define the stores to search on Windows
+            var stores = new[]
+            {
+                //StoreName.My,
+                // StoreName.Root,
+                 StoreName.CertificateAuthority,
+                // StoreName.TrustedPeople,
+                // StoreName.TrustedPublisher
+            };
+
+            foreach (var storeName in stores)
+            {
+                using (var store = new X509Store(storeName, StoreLocation.LocalMachine))
+                {
+                    store.Open(OpenFlags.ReadOnly);
+                    var cert = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false);
+                    if (cert.Count > 0)
+                    {
+                        return Task.FromResult<X509CacheSettings?>(new X509CacheSettings
+                        {
+                            StoreLocation = StoreLocation.LocalMachine,
+                            StoreName = storeName,
+                            StoreNameDescription = DescribeStoreName(storeName),
+                            Cached = true,
+                            Thumbprint = thumbprint
+                        });
+                    }
+                }
+
+                using (var store = new X509Store(storeName, StoreLocation.CurrentUser))
+                {
+                    store.Open(OpenFlags.ReadOnly);
+                    var cert = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false);
+                    if (cert.Count > 0)
+                    {
+                        return Task.FromResult<X509CacheSettings?>(new X509CacheSettings
+                        {
+                            StoreLocation = StoreLocation.CurrentUser,
+                            StoreName = storeName,
+                            StoreNameDescription = DescribeStoreName(storeName),
+                            Cached = true,
+                            Thumbprint = thumbprint
+                        });
+                    }
+                }
+            }
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            // On Linux, search the OpenSSL-based certificate store
+            using var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+            store.Open(OpenFlags.ReadOnly);
+            var cert = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false);
+            if (cert.Count > 0)
+            {
+                return Task.FromResult<X509CacheSettings?>(new X509CacheSettings
+                {
+                    StoreLocation = StoreLocation.CurrentUser,
+                    StoreName = StoreName.My,
+                    StoreNameDescription = "OpenSSL-based store",
+                    Cached = true,
+                    Thumbprint = thumbprint
+                });
+            }
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            // On macOS, search the Keychain
+            using var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+            store.Open(OpenFlags.ReadOnly);
+            var cert = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false);
+            if (cert.Count > 0)
+            {
+                return Task.FromResult<X509CacheSettings?>(new X509CacheSettings
+                {
+                    StoreLocation = StoreLocation.CurrentUser,
+                    StoreName = StoreName.My,
+                    StoreNameDescription = "macOS Keychain",
+                    Cached = true,
+                    Thumbprint = thumbprint
+                });
+            }
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")))
+        {
+            // On Android, search the KeyStore
+            using var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+            store.Open(OpenFlags.ReadOnly);
+            var cert = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false);
+            if (cert.Count > 0)
+            {
+                return Task.FromResult<X509CacheSettings?>(new X509CacheSettings
+                {
+                    StoreLocation = StoreLocation.CurrentUser,
+                    StoreName = StoreName.My,
+                    StoreNameDescription = "Android KeyStore",
+                    Cached = true,
+                    Thumbprint = thumbprint
+                });
+            }
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("MACCATALYST")))
+        {
+            // On Mac Catalyst, search the Keychain
+            using var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+            store.Open(OpenFlags.ReadOnly);
+            var cert = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false);
+            if (cert.Count > 0)
+            {
+                return Task.FromResult<X509CacheSettings?>(new X509CacheSettings
+                {
+                    StoreLocation = StoreLocation.CurrentUser,
+                    StoreName = StoreName.My,
+                    StoreNameDescription = "Mac Catalyst Keychain",
+                    Cached = true,
+                    Thumbprint = thumbprint
+                });
+            }
+        }
+
+        return Task.FromResult<X509CacheSettings?>(new X509CacheSettings());
+    }
+
+    public Task<CrlFileCacheSettings?> GetCryptNetUrlCache(string? location)
+    {
+        if (location == null)
+        {
+            return Task.FromResult<CrlFileCacheSettings?>(new CrlFileCacheSettings()
+            {
+                Cached = false
+            });
+        }
+
+        return Task.FromResult<CrlFileCacheSettings?>(_crlCacheService.Get(location));
+    }
+
+    public Task RemoveFromX509Store(X509CacheSettings? settings)
+    {
+        if(settings != null && 
+           settings.StoreName.HasValue && 
+           settings.StoreLocation.HasValue &&
+           settings.Thumbprint != null)
+        {
+            try
+            {
+                using var store = new X509Store(settings.StoreName.Value, settings.StoreLocation.Value);
+                store.Open(OpenFlags.ReadWrite);
+                var certCollection = store.Certificates.Find(X509FindType.FindByThumbprint, settings.Thumbprint, false);
+
+                if (certCollection.Count > 0)
+                {
+                    store.Remove(certCollection[0]);
+                    Console.WriteLine($"Certificate with thumbprint {settings.Thumbprint} removed from {settings.StoreName} store at {settings.StoreLocation}.");
+                }
+                else
+                {
+                    Console.WriteLine($"Certificate with thumbprint {settings.Thumbprint} not found in {settings.StoreName} store at {settings.StoreLocation}.");
+                }
+
+                store.Close();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+            }
+        }
+        else
+        {
+            Console.WriteLine("Invalid settings provided for certificate removal.");
+        }
+
+
+        return Task.CompletedTask;
+    }
+
+    public Task RemoveFromFileCache(CrlFileCacheSettings? settings)
+    {
+        if (settings != null)
+        {
+            _crlCacheService.Remove(settings);
+        }
+        
+
+        return Task.CompletedTask;
+    }
+
     private async Task<(byte[] caData, byte[] intermediateData)> GetSigningCertificates()
     {
         var caFilePath = "gs://cert_store_private/surefhirlabs_community/SureFhirLabs_CA.pfx";
         var intermediateFilePath = "gs://cert_store_private/surefhirlabs_community/intermediates/SureFhirLabs_Intermediate.pfx";
 
-        byte[] caData = await DownloadFileFromGcsAsync(caFilePath);
-        byte[] intermediateData = await DownloadFileFromGcsAsync(intermediateFilePath);
+        byte[] caData = await DownloadFileFromGcs(caFilePath);
+        byte[] intermediateData = await DownloadFileFromGcs(intermediateFilePath);
         return (caData, intermediateData);
     }
     
 
-    private async Task<byte[]> DownloadFileFromGcsAsync(string gcsFilePath)
+    private async Task<byte[]> DownloadFileFromGcs(string gcsFilePath)
     {
         var storageClient = StorageClient.Create();
         var bucketName = "cert_store_private";
@@ -143,4 +382,25 @@ public class Infrastructure : IInfrastructure
         await storageClient.DownloadObjectAsync(bucketName, objectName, memoryStream);
         return memoryStream.ToArray();
     }
+
+
+    private string? DescribeStoreName(StoreName storeName)
+    {
+        switch (storeName)
+        {
+            case StoreName.My:
+                return "Personal";
+            case StoreName.Root:
+                return "Trusted Root Certification Authorities";
+            case StoreName.CertificateAuthority:
+                return "Intermediate Certification Authorities";
+            case StoreName.TrustedPeople:
+                return "Trusted People";
+            case StoreName.TrustedPublisher:
+                return "Trusted Publisher";
+            default:
+                return null;
+        }
+    }
+
 }
