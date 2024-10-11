@@ -18,6 +18,7 @@ using UdapEd.Client.Services.Search;
 using UdapEd.Shared;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Services.Search;
+using CdsService = UdapEd.Client.Services.CdsService;
 
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -43,6 +44,7 @@ builder.Services.AddScoped<IInfrastructure, UdapEd.Client.Services.Infrastructur
 builder.Services.AddSingleton<ICapabilityLookup, CapabilityLookup>();
 builder.Services.AddScoped<IClipboardService, ClipboardService>();
 builder.Services.AddScoped<IMutualTlsService, MutualTlsService>();
+builder.Services.AddScoped<ICdsService, CdsService>();
 
 // Add this so that the resolve() extension will be available when including in FhirPath
 Hl7.FhirPath.FhirPathCompiler.DefaultSymbolTable.AddFhirExtensions();

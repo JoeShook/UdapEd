@@ -1,0 +1,55 @@
+﻿@page "/cdshooks/main-view"
+
+@using IDialogService = MudBlazor.IDialogService
+@using Microsoft.Fast.Components.FluentUI
+@using Orientation = Microsoft.Fast.Components.FluentUI.Orientation
+@using UdapEd.Shared.CdsComponents
+@using Color = MudBlazor.Color
+
+@code {
+    [Inject] public required IDialogService DialogService { get; set; }
+
+    private bool _isRightPaneVisible = true;
+
+    private void ToggleVisibility()
+    {
+        _isRightPaneVisible = !_isRightPaneVisible;
+        StateHasChanged();
+    }
+
+    private async Task OpenDialog()
+    {
+        var options = new DialogOptions { FullScreen = true };
+        var dialog = await DialogService.ShowAsync<ConfigureServicesDialog>("Options Dialog", options);
+        await dialog.Result;
+    }
+}
+
+<MudToolBar Style="background-color:#3e4e76">
+    <MudSpacer />
+    <MudMenu Label="Settings" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Settings" AriaLabel="">
+        <MudMenuItem OnClick="@(() => OpenDialog())">Add CDS Servicesg</MudMenuItem>
+        <MudMenuItem OnClick="@(() => OpenDialog())">Configure CDS Services</MudMenuItem>
+        <MudMenuItem OnClick="@(() => OpenDialog())">Change Patient</MudMenuItem>
+        <MudMenuItem OnClick="@(() => OpenDialog())">Change FHIR Server</MudMenuItem>
+        <MudMenuItem OnClick="@(() => OpenDialog())">Reset Configuration</MudMenuItem>
+    </MudMenu>
+</MudToolBar>
+
+
+<FluentSplitter Orientation="Orientation.Horizontal" BarSize="16" Class="cds-full-height">
+    <Panel1>
+        <HookView Class="px-8"/>
+    </Panel1>
+    <Panel2 >
+        <ContextView Class="px-8"/>
+    </Panel2>
+</FluentSplitter>
+
+
+<style>
+
+    .cds-full-height {
+        height: 100vh; /* Ensure the parent container takes the full viewport height */      
+    }
+</style>

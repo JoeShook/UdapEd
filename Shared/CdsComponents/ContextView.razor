@@ -1,0 +1,13 @@
+﻿@using Microsoft.Fast.Components.FluentUI
+@code {
+    [Parameter]
+    public string Class { get; set; } = string.Empty;
+}
+
+<FluentCard class="@Class">
+    <div>
+        <!-- Your ContextView content goes here -->
+        <h1>CDS Developer Panel</h1>
+        <!-- Add more content as needed -->
+    </div>
+</FluentCard>

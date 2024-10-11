@@ -15,6 +15,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Fast.Components.FluentUI" Version="3.7.8" />
+    <PackageReference Include="Udap.CdsHooks.Model" Version="0.3.91" />
     <PackageReference Include="Udap.Model" Version="0.3.87" />
     <PackageReference Include="Udap.Common" Version="0.3.87" />
   </ItemGroup>
@@ -54,4 +56,5 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
+     
 </Project>

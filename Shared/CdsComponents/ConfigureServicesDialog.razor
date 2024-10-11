@@ -1,0 +1,34 @@
+﻿@using UdapEd.Shared.Model.CdsHooks
+
+<MudDialog Style="margin: 20px">
+    <DialogContent>
+        <MudText Typo="Typo.h6" GutterBottom="true">Configure CDS Services</MudText>
+        @if (Services != null)
+        {
+            foreach (var service in Services)
+            {
+                <ServiceDisplay CdsServiceModel="service" />
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Submit">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Inject] ICdsService CdaService { get; set; } = null!;
+    
+    [Parameter]
+    public List<CdsServiceViewModel>? Services { get; set; }
+
+    void Submit() => MudDialog.Close();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        Services = await CdaService.FetchCdsServices();
+    }
+}

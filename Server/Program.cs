@@ -8,6 +8,7 @@
 #endregion
 
 using System.Net;
+using Hl7.Fhir.Model.CdsHooks;
 using Hl7.Fhir.Rest;
 using Microsoft.Extensions.Options;
 using Serilog;
@@ -111,8 +112,8 @@ builder.Services.AddHttpClient<FhirClientWithUrlProvider>((sp, httpClient) =>
     .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()));
 
 builder.Services.AddTransient<IClientCertificateProvider, ClientCertificateProvider>();
-builder.Services.AddScoped<IInfrastructure, UdapEd.Shared.Services.Infrastructure>();
-
+builder.Services.AddScoped<IInfrastructure, Infrastructure>();
+builder.Services.AddHttpClient<ICdsService, CdsService>();
 //
 // This does not allow you to let the client dynamically load new mTLS certificates.  The HttpHandler doesn't reenter.
 //

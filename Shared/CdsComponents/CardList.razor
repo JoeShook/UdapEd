@@ -1,0 +1,9 @@
+﻿@code {
+    [Parameter]
+    public EventCallback TakeSuggestion { get; set; }
+}
+
+<div class="card-list">
+    <!-- Add your card items here -->
+    <button @onclick="TakeSuggestion">Take Suggestion</button>
+</div>

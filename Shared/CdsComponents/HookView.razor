@@ -1,0 +1,49 @@
+﻿@using Microsoft.Fast.Components.FluentUI
+
+@inject NavigationManager Navigation
+
+
+@code {
+    
+    [Parameter]
+    public string Class { get; set; } = string.Empty;
+
+    private string? _firstQueryParam;
+
+    protected override void OnInitialized()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+        _firstQueryParam = query.Keys.FirstOrDefault();
+    }
+}
+
+
+
+
+@code {
+    
+}
+
+<FluentCard class="@Class">
+    @if (_firstQueryParam == "PatientView")
+    {
+        <PatientView />
+    }
+    else if (_firstQueryParam == "RxView")
+    {
+        <PatientView />
+    }
+    else if (_firstQueryParam == "RxSign")
+    {
+        <PatientView />
+    }
+    else if (_firstQueryParam == "PamaImaging")
+    {
+        <PatientView />
+    }
+    else
+    {
+        <p>Component not found</p>
+    }
+</FluentCard>
