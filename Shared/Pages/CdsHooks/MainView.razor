@@ -1,27 +1,71 @@
 ﻿@page "/cdshooks/main-view"
-
-@using IDialogService = MudBlazor.IDialogService
+@using System.Text.Json.Serialization
+@using Hl7.Fhir.Model
+@using Hl7.Fhir.Serialization
 @using Microsoft.Fast.Components.FluentUI
-@using Orientation = Microsoft.Fast.Components.FluentUI.Orientation
+@using Udap.CdsHooks.Model
 @using UdapEd.Shared.CdsComponents
+@using UdapEd.Shared.Search
+@using IDialogService = MudBlazor.IDialogService
+@using Orientation = Microsoft.Fast.Components.FluentUI.Orientation
 @using Color = MudBlazor.Color
+@using T = System.Threading.Tasks
 
 @code {
     [Inject] public required IDialogService DialogService { get; set; }
 
-    private bool _isRightPaneVisible = true;
-
-    private void ToggleVisibility()
+    private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
     {
-        _isRightPaneVisible = !_isRightPaneVisible;
-        StateHasChanged();
+        WriteIndented = true,
+        Converters = { new FhirResourceConverter() },
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
+
+    private string _searchString = "smart-1288992";
+    private readonly FhirSearch _fhirSearch = new() { BaseUrl = "https://launch.smarthealthit.org/v/r2/fhir" };
+    private Hl7.Fhir.Model.Patient? _patient;
+    private CdsResponse? _cdsResponse;
+    private string RequestJson;
+    private string ResponseJson;
+    private string Messages;
+    
+    private async T.Task OpenDialog()
+    {
+        var options = new DialogOptions { FullScreen = true, CloseButton = true};
+        var dialog = await DialogService.ShowAsync<ConfigureServicesDialog>("Configure CDS Services", options);
+        await dialog.Result;
     }
 
-    private async Task OpenDialog()
+    [Inject] ICdsService CdsService { get; set; } = null!;
+    [Inject] private IFhirService FhirService { get; set; } = null!;
+
+    protected override async T.Task OnInitializedAsync()
     {
-        var options = new DialogOptions { FullScreen = true };
-        var dialog = await DialogService.ShowAsync<ConfigureServicesDialog>("Options Dialog", options);
-        await dialog.Result;
+        try
+        {
+            _fhirSearch.ResourceName = "Patient";
+            var result = await FhirService.Get($" {_fhirSearch.BaseUrl}/{_fhirSearch.ResourceName}/{_searchString}");
+            //var response = await Http.GetFromJsonAsync<CdsResponse>("/api/PatientData?patientId=example-patient-id&fhirAccessToken=example-token&fhirServerUrl=https://example.com/fhir");
+            _patient = result.Result as Patient;
+
+            var cdsRequest = new CdsRequest
+            {
+                HookInstance = Guid.NewGuid().ToString(),
+                Hook = "patient-view",
+                Context = new CdsContext { PatientId = _patient.Id, UserId = "Practitioner/COREPRACTITIONER1" },
+                    Prefetch = new Dictionary<string, Hl7.Fhir.Model.Resource>() { { "patient", _patient } }
+            };
+            
+            RequestJson = JsonSerializer.Serialize(cdsRequest, JsonOptions);
+            _cdsResponse = await CdsService.GetCdsService(cdsRequest);
+            Console.WriteLine(_cdsResponse.Cards.First().Summary);
+            ResponseJson = JsonSerializer.Serialize(_cdsResponse, JsonOptions);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching patient data: {ex.Message}");
+        }
     }
 }
 
@@ -37,12 +81,12 @@
 </MudToolBar>
 
 
-<FluentSplitter Orientation="Orientation.Horizontal" BarSize="16" Class="cds-full-height">
+<FluentSplitter Orientation="Orientation.Horizontal" BarSize="16" >
     <Panel1>
-        <HookView Class="px-8"/>
+        <HookView Class="px-8 cds-full-height" Patient="@_patient" CdsResponse="@_cdsResponse" />
     </Panel1>
     <Panel2 >
-        <ContextView Class="px-8"/>
+        <ContextView Class="px-8 cds-full-height" RequestJson="@RequestJson" ResponseJson="@ResponseJson" MessagesJson="@Messages" />
     </Panel2>
 </FluentSplitter>
 

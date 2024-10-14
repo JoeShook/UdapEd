@@ -12,6 +12,7 @@ using BQuery;
 using Hl7.Fhir.FhirPath;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Fast.Components.FluentUI;
 using MudBlazor.Services;
 using UdapEd.Client.Services;
 using UdapEd.Client.Services.Search;
@@ -45,6 +46,7 @@ builder.Services.AddSingleton<ICapabilityLookup, CapabilityLookup>();
 builder.Services.AddScoped<IClipboardService, ClipboardService>();
 builder.Services.AddScoped<IMutualTlsService, MutualTlsService>();
 builder.Services.AddScoped<ICdsService, CdsService>();
+builder.Services.AddFluentUIComponents();
 
 // Add this so that the resolve() extension will be available when including in FhirPath
 Hl7.FhirPath.FhirPathCompiler.DefaultSymbolTable.AddFhirExtensions();

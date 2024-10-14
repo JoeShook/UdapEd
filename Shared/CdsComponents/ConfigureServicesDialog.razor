@@ -2,18 +2,15 @@
 
 <MudDialog Style="margin: 20px">
     <DialogContent>
-        <MudText Typo="Typo.h6" GutterBottom="true">Configure CDS Services</MudText>
+        
         @if (Services != null)
         {
             foreach (var service in Services)
             {
-                <ServiceDisplay CdsServiceModel="service" />
+                <ServiceDisplay CdsServiceModel="service"/>
             }
         }
     </DialogContent>
-    <DialogActions>
-        <MudButton Color="Color.Primary" OnClick="Submit">Close</MudButton>
-    </DialogActions>
 </MudDialog>
 
 @code {

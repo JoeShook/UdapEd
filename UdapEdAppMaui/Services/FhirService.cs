@@ -415,6 +415,55 @@ internal class FhirService : IFhirService
         }
     }
 
+    public async Task<FhirResultModel<Hl7.Fhir.Model.Resource>> Get(string resourcePath)
+    {
+        try
+        {
+            var fhirClient = new FhirClient(resourcePath, new FhirClientSettings() { PreferredFormat = ResourceFormat.Json });
+            var resource = await fhirClient.GetAsync(resourcePath);
+            
+            if (resource is OperationOutcome operationOutcome)
+            {
+                return new FhirResultModel<Hl7.Fhir.Model.Resource>(operationOutcome);
+            }
+
+            return new FhirResultModel<Hl7.Fhir.Model.Resource>(resource);
+        }
+        catch (FhirOperationException ex)
+        {
+            _logger.LogWarning(ex.Message);
+
+            if (ex.Status == HttpStatusCode.Unauthorized)
+            {
+                return new FhirResultModel<Hl7.Fhir.Model.Resource>(true);
+            }
+
+            if (ex.Outcome != null)
+            {
+                return new FhirResultModel<Hl7.Fhir.Model.Resource>(ex.Outcome);
+            }
+
+            var operationOutCome = new OperationOutcome()
+            {
+                ResourceBase = null,
+                Issue =
+                [
+                    new OperationOutcome.IssueComponent
+                    {
+                        Diagnostics = "Resource Server Error:"
+                    }
+                ]
+            };
+
+            return new FhirResultModel<Hl7.Fhir.Model.Resource>(operationOutCome);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message);
+            throw;
+        }
+    }
+
     private static SearchParams BuildSearchParams(PatientSearchModel model)
     {
         var searchParams = new SearchParams();

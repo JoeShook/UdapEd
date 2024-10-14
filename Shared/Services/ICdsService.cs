@@ -7,6 +7,7 @@
 // */
 #endregion
 
+using Udap.CdsHooks.Model;
 using UdapEd.Shared.Model.CdsHooks;
 
 namespace UdapEd.Shared.Services;
@@ -14,4 +15,5 @@ namespace UdapEd.Shared.Services;
 public interface ICdsService
 {
     Task<List<CdsServiceViewModel>?> FetchCdsServices();
+    Task<CdsResponse?> GetCdsService(CdsRequest request);
 }

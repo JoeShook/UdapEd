@@ -1,14 +1,22 @@
-﻿@using Microsoft.Fast.Components.FluentUI
+﻿@using Hl7.Fhir.Model
+@using Microsoft.Fast.Components.FluentUI
+@using Udap.CdsHooks.Model
+
 
 @inject NavigationManager Navigation
-
+@inject HttpClient Http
 
 @code {
-    
+    private string? _firstQueryParam;
+
     [Parameter]
     public string Class { get; set; } = string.Empty;
 
-    private string? _firstQueryParam;
+    [Parameter]
+    public Patient? Patient { get; set; }
+
+    [Parameter]
+    public CdsResponse? CdsResponse { get; set; }
 
     protected override void OnInitialized()
     {
@@ -16,19 +24,15 @@
         var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
         _firstQueryParam = query.Keys.FirstOrDefault();
     }
-}
 
-
-
-
-@code {
     
 }
 
 <FluentCard class="@Class">
     @if (_firstQueryParam == "PatientView")
     {
-        <PatientView />
+        <PatientView Patient="@Patient" />
+        <CardList CdsResponse="@CdsResponse" />
     }
     else if (_firstQueryParam == "RxView")
     {

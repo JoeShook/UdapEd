@@ -9,6 +9,7 @@
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Udap.CdsHooks.Model;
 using UdapEd.Server.Extensions;
 using UdapEd.Shared.Services;
 
@@ -29,6 +30,13 @@ public class CdsServicesController : Controller
     public async Task<IActionResult> FetchCdsServices()
     {
         var services = await _cdsService.FetchCdsServices();
+        return Ok(services);
+    }
+
+    [HttpPost("GetCdsService")]
+    public async Task<IActionResult> GetCdsService([FromBody] CdsRequest request)
+    {
+        var services = await _cdsService.GetCdsService(request);
         return Ok(services);
     }
 }

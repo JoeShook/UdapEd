@@ -27,6 +27,7 @@ using UdapEd.Shared.Pages;
 using UdapEd.Shared.Search;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Services.Authentication;
+using UdapEd.Shared.Services.Cds;
 using UdapEd.Shared.Services.Search;
 /* Unmerged change from project 'UdapEdAppMaui (net8.0-windows10.0.19041.0)'
 Before:
@@ -121,6 +122,7 @@ public static class MauiProgram
         builder.Services.AddTransient<IFhirService, FhirService>();
         builder.Services.AddScoped<IInfrastructure, Infrastructure>();
         builder.Services.AddHttpClient<CdsService>();
+        builder.Services.AddHttpClient<IServiceExchange, ServiceExchange>();
 
         builder.Services.AddTransient<TrustChainValidator>();
         builder.Services.AddTransient<UdapClientDiscoveryValidator>();

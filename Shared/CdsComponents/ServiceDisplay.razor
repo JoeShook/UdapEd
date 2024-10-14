@@ -1,5 +1,4 @@
 ﻿@using UdapEd.Shared.Model.CdsHooks
-@inject IJSRuntime Js
 
 <MudGrid>
     <MudItem xs="6" Style="margin-top: auto;">
@@ -32,7 +31,7 @@
     
     protected override void OnInitialized()
     {
-        var definitionCopy = JsonSerializer.Serialize(CdsServiceModel, new JsonSerializerOptions { WriteIndented = true });
+        var definitionCopy = JsonSerializer.Serialize(CdsServiceModel.CdsService, new JsonSerializerOptions { WriteIndented = true });
         _serviceMetadata = definitionCopy; 
         base.OnInitialized();
     }

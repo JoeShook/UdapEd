@@ -364,5 +364,43 @@ public class FhirBaseController<T> : ControllerBase
             throw;
         }
     }
+
+    [HttpPost("Get")]
+    public async Task<IActionResult> Get([FromBody] string resourcePath)
+    {
+        try
+        {
+            var fhirClient = new FhirClient(resourcePath, new FhirClientSettings() { PreferredFormat = ResourceFormat.Json });
+            Console.WriteLine(resourcePath);
+            var resource = await fhirClient.GetAsync(resourcePath);
+            var resourceJson = await new FhirJsonSerializer().SerializeToStringAsync(resource);
+
+            return Ok(resourceJson);
+        }
+        catch (FhirOperationException ex)
+        {
+            _logger.LogWarning(ex.Message);
+
+            if (ex.Status == HttpStatusCode.Unauthorized)
+            {
+                return Unauthorized();
+            }
+
+            if (ex.Outcome != null)
+            {
+                var outcomeJson = await new FhirJsonSerializer().SerializeToStringAsync(ex.Outcome);
+                return NotFound(outcomeJson);
+            }
+            else
+            {
+                return NotFound("Resource Server Error: " + ex.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message);
+            throw;
+        }
+    }
 }
 

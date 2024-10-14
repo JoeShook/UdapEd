@@ -1,0 +1,81 @@
+﻿@using Microsoft.Fast.Components.FluentUI
+@using System.Collections.Generic
+@using Udap.CdsHooks.Model
+@inject NavigationManager Navigation
+
+<FluentCard Class="cds-card">
+    <h3>
+        @CdsCard.Summary
+    </h3>
+    
+    <h5>
+        Source: <a href="@($"{Navigation.Uri}/#")">@CdsCard.Source?.Label</a>
+    </h5>
+
+    <div>
+        @if (CdsCard.Suggestions != null)
+        {
+            foreach (var suggestion in CdsCard.Suggestions)
+            {
+                <FluentButton Appearance="Appearance.Filled" Class="Button-module__emphasis">
+                    @suggestion.Label
+                </FluentButton>
+            }
+        }
+    </div>
+    
+    <FluentDivider Class="cds-divider" Style="width: 100%;" Role="@DividerRole.Presentation"></FluentDivider>
+    <div class="_DropdownButtonBase-module__dropdown-button-base">
+
+        <FluentButton Appearance="Appearance.Filled" OnClick="HandleDismiss">
+            Dismiss
+        </FluentButton>
+        @* <FluentButton Appearance="Appearance.Neutral" aria-haspopup="menu" aria-expanded="false" aria-label="More Options" OnClick="HandleMoreOptions"> *@
+        @*     <span class="SplitButton-module__caret-icon"></span> *@
+        @* </FluentButton> *@
+    </div>
+
+</FluentCard>
+
+@code {
+
+    [Parameter]
+    public CdsCard CdsCard { get; set; }
+
+    [Parameter]
+    public string Cost { get; set; }
+
+    [Parameter]
+    public string Savings { get; set; }
+
+    [Parameter]
+    public string SourceUrl { get; set; }
+
+    [Parameter]
+    public string SourceText { get; set; }
+
+    [Parameter]
+    public EventCallback OnChangeToGeneric { get; set; }
+
+    [Parameter]
+    public EventCallback OnDismiss { get; set; }
+
+    [Parameter]
+    public EventCallback OnMoreOptions { get; set; }
+
+    private async Task HandleDismiss()
+    {
+        if (OnDismiss.HasDelegate)
+        {
+            await OnDismiss.InvokeAsync(null);
+        }
+    }
+
+    private async Task HandleMoreOptions()
+    {
+        if (OnMoreOptions.HasDelegate)
+        {
+            await OnMoreOptions.InvokeAsync(null);
+        }
+    }
+}
