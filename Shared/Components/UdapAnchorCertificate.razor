@@ -57,12 +57,12 @@
 </MudCard>
 
 @code {
+    private static UdapAnchorCertificate? _instance;
     [CascadingParameter] CascadingAppState AppState { get; set; } = null!;
     readonly PeriodicTimer _periodicTimer = new PeriodicTimer(TimeSpan.FromMinutes(5));
+    [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
 
     private bool _checkServerSession;
-
-
     public Color AnchorLoadedColor;
     public Color EmrDirectAnchorLoadedColor;
     public Color FhirLabsAnchorLoadedColor;
@@ -70,6 +70,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        _instance = this;
         var userSuppliedCertificate = AppState.UdapAnchorCertificateInfo?.UserSuppliedCertificate;
 
         var anchorCertificateLoadStatus = await DiscoveryService.AnchorCertificateLoadStatus();
@@ -95,24 +96,28 @@
         }
 
 
-        if (Bq.Events != null)
-        {
-            //No background tasks in Maui.  FYI IOS doesn't allow it.
-            RunTimer();
-        }
+        await JSRuntime.InvokeVoidAsync("pageEventHandlers.registerHandlers");
+        RunTimer();
     }
+    
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    [JSInvokable("OnPageFocus")]
+    public static async Task OnPageFocus()
     {
-        if (Bq.Events != null && firstRender)
+        if (_instance != null)
         {
-            Bq.Events.OnBlur += Events_OnBlur;
-            Bq.Events.OnFocusAsync += Events_OnFocus;
+            await _instance.OnPageFocusInstance();
         }
-        await base.OnAfterRenderAsync(firstRender);
     }
 
-    private async Task Events_OnFocus(FocusEventArgs obj)
+    [JSInvokable("OnPageBlur")]
+    public static void OnPageBlur()
+    {
+        _instance?.OnPageBlurInstance();
+    }
+
+
+    private async Task OnPageFocusInstance()
     {
         var anchorCertificateLoadStatus = await DiscoveryService.AnchorCertificateLoadStatus();
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapAnchorCertificateInfo), anchorCertificateLoadStatus);
@@ -134,7 +139,7 @@
         _checkServerSession = true;
     }
 
-    private void Events_OnBlur(FocusEventArgs obj)
+    private void OnPageBlurInstance()
     {
         _checkServerSession = false;
     }

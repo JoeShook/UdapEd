@@ -7,9 +7,10 @@
 // */
 #endregion
 
-using BQuery;
+// using BQuery;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.JSInterop;
 using MudBlazor;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
@@ -20,14 +21,18 @@ namespace UdapEd.Shared.Components;
 
 public partial class CertificationAndEndorsementLoader
 {
+    private static CertificationAndEndorsementLoader? _instance;
     [Inject] private ICertificationService CertificationService { get; set; } = null!;
     [CascadingParameter] private CascadingAppState AppState { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
     private readonly PeriodicTimer _periodicTimer = new PeriodicTimer(TimeSpan.FromMinutes(5));
     private bool _checkServerSession;
 
     protected override async Task OnInitializedAsync()
     {
+        _instance = this;
+
         var userSuppliedCertificate = AppState.CertificationAndEndorsementInfo?.UserSuppliedCertificate;
         var clientCertificateLoadStatus = await CertificationService.ClientCertificateLoadStatus();
 
@@ -48,26 +53,28 @@ public partial class CertificationAndEndorsementLoader
             await SetCertLoadedColorFoExample(clientCertificateLoadStatus.CertLoaded);
         }
 
-
-        if (Bq.Events != null)
-        {
-            //No background tasks in Maui.  FYI IOS doesn't allow it.
-            RunTimer();
-        }
+        await JSRuntime.InvokeVoidAsync("pageEventHandlers.registerHandlers");
+        RunTimer();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    
+    [JSInvokable("OnPageFocus")]
+    public static async Task OnPageFocus()
     {
-        if (Bq.Events != null && firstRender)
+        if (_instance != null)
         {
-            Bq.Events.OnBlur += Events_OnBlur;
-            Bq.Events.OnFocusAsync += Events_OnFocus;
+            await _instance.OnPageFocusInstance();
         }
-
-        await base.OnAfterRenderAsync(firstRender);
     }
 
-    private async Task Events_OnFocus(FocusEventArgs obj)
+    [JSInvokable("OnPageBlur")]
+    public static void OnPageBlur()
+    {
+        _instance?.OnPageBlurInstance();
+    }
+
+
+    public async Task OnPageFocusInstance()
     {
         var userSuppliedCertificate = AppState.CertificationAndEndorsementInfo?.UserSuppliedCertificate;
         var clientCertificateLoadStatus = await CertificationService.ClientCertificateLoadStatus();
@@ -92,7 +99,7 @@ public partial class CertificationAndEndorsementLoader
         _checkServerSession = true;
     }
 
-    private void Events_OnBlur(FocusEventArgs obj)
+    public void OnPageBlurInstance()
     {
         _checkServerSession = false;
     }
@@ -219,6 +226,7 @@ public partial class CertificationAndEndorsementLoader
     public void Dispose()
     {
         _periodicTimer.Dispose();
+        JSRuntime.InvokeVoidAsync("pageEventHandlers.unregisterHandlers");
     }
 
     private async Task ClearCertificationAndEndorsementInfo()

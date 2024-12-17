@@ -86,25 +86,16 @@
         }
         
         
-        if (Bq.Events != null)
-        {
-            //No background tasks in Maui.  FYI IOS doesn't allow it.
-            RunTimer();
-        }
+        //No background tasks in Maui.  FYI IOS doesn't allow it.
+        RunTimer();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (Bq.Events != null && firstRender)
-        {
-            Bq.Events.OnBlur += Events_OnBlur;
-            Bq.Events.OnFocusAsync += Events_OnFocus;
-        }
-
         await base.OnAfterRenderAsync(firstRender);
     }
 
-    private async Task Events_OnFocus(FocusEventArgs obj)
+    private async Task OnFocus(FocusEventArgs obj)
     {
         var userSuppliedCertificate = AppState.UdapClientCertificateInfo?.UserSuppliedCertificate;
         var clientCertificateLoadStatus = await RegisterService.ClientCertificateLoadStatus();
