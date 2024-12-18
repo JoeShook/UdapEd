@@ -122,7 +122,7 @@ public static class MauiProgram
         builder.Services.AddScoped<IAccessService, AccessService>();
         builder.Services.AddTransient<IFhirService, FhirService>();
         builder.Services.AddScoped<IInfrastructure, Infrastructure>();
-        builder.Services.AddHttpClient<CdsService>();
+        builder.Services.AddHttpClient<ICdsService, CdsService>();
         builder.Services.AddHttpClient<IServiceExchange, ServiceExchange>();
 
         builder.Services.AddTransient<TrustChainValidator>();

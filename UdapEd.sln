@@ -26,8 +26,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UdapEdAppMaui", "UdapEdAppM
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UtilityTests", "_tests\UtilityTests\UtilityTests.csproj", "{364E6518-77F0-4AD8-9D45-556194C2DE2F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Udap.CdsHooks.Model", "..\udap-dotnet\Udap.CdsHooks.Model\Udap.CdsHooks.Model.csproj", "{6575F222-CE71-4057-8222-E13DCF4CFE8F}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,10 +54,6 @@ Global
 		{364E6518-77F0-4AD8-9D45-556194C2DE2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{364E6518-77F0-4AD8-9D45-556194C2DE2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{364E6518-77F0-4AD8-9D45-556194C2DE2F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6575F222-CE71-4057-8222-E13DCF4CFE8F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6575F222-CE71-4057-8222-E13DCF4CFE8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6575F222-CE71-4057-8222-E13DCF4CFE8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6575F222-CE71-4057-8222-E13DCF4CFE8F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
