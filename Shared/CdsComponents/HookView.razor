@@ -1,0 +1,53 @@
+﻿@using Hl7.Fhir.Model
+@using Microsoft.FluentUI.AspNetCore.Components
+@using Udap.CdsHooks.Model
+
+
+@inject NavigationManager Navigation
+@inject HttpClient Http
+
+@code {
+    private string? _firstQueryParam;
+
+    [Parameter]
+    public string Class { get; set; } = string.Empty;
+
+    [Parameter]
+    public Patient? Patient { get; set; }
+
+    [Parameter]
+    public CdsResponse? CdsResponse { get; set; }
+
+    protected override void OnInitialized()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+        _firstQueryParam = query.Keys.FirstOrDefault();
+    }
+
+    
+}
+
+<FluentCard class="@Class">
+    @if (_firstQueryParam == "PatientView")
+    {
+        <PatientView Patient="@Patient" />
+        <CardList CdsResponse="@CdsResponse" />
+    }
+    else if (_firstQueryParam == "RxView")
+    {
+        <PatientView />
+    }
+    else if (_firstQueryParam == "RxSign")
+    {
+        <PatientView />
+    }
+    else if (_firstQueryParam == "PamaImaging")
+    {
+        <PatientView />
+    }
+    else
+    {
+        <p>Component not found</p>
+    }
+</FluentCard>

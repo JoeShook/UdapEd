@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+
 <MudThemeProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -14,8 +16,20 @@
     }
     else
     {
-        <MudMainContent Style="font-family: Candara" Class="px-8" MaxWidth="MaxWidth.False">
+        <MudMainContent Style="font-family: Candara" Class="@GetClass()" MaxWidth="MaxWidth.False">
             @Body
         </MudMainContent>
     }
 </MudLayout>
+
+@code {
+    private string GetClass()
+    {
+        var uri = Navigation.Uri;
+        if (uri.Contains("cdshooks"))
+        {
+            return "px-0"; // No padding for specific page
+        }
+        return "px-8"; // Default padding
+    }
+}

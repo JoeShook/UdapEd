@@ -8,16 +8,17 @@
 #endregion
 
 using Blazored.LocalStorage;
-using BQuery;
 using Hl7.Fhir.FhirPath;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.FluentUI.AspNetCore.Components;
 using MudBlazor.Services;
 using UdapEd.Client.Services;
 using UdapEd.Client.Services.Search;
 using UdapEd.Shared;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Services.Search;
+using CdsService = UdapEd.Client.Services.CdsService;
 
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -43,8 +44,10 @@ builder.Services.AddScoped<IInfrastructure, UdapEd.Client.Services.Infrastructur
 builder.Services.AddSingleton<ICapabilityLookup, CapabilityLookup>();
 builder.Services.AddScoped<IClipboardService, ClipboardService>();
 builder.Services.AddScoped<IMutualTlsService, MutualTlsService>();
+builder.Services.AddScoped<ICdsService, CdsService>();
+builder.Services.AddFluentUIComponents();
 
 // Add this so that the resolve() extension will be available when including in FhirPath
 Hl7.FhirPath.FhirPathCompiler.DefaultSymbolTable.AddFhirExtensions();
 
-await builder.Build().UseBQuery().RunAsync();
+await builder.Build().RunAsync();

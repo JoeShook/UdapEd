@@ -13,7 +13,7 @@ using Microsoft.Extensions.Options;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
-using Udap.Client.Authentication;
+using Udap.CdsHooks.Model;
 using Udap.Client.Client;
 using Udap.Client.Configuration;
 using Udap.Common.Certificates;
@@ -22,6 +22,8 @@ using UdapEd.Server.Rest;
 using UdapEd.Server.Services.Authentication;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Services.Authentication;
+using UdapEd.Shared.Services.Cds;
+using CdsService = UdapEd.Shared.Services.Cds.CdsService;
 using FhirClientWithUrlProvider = UdapEd.Shared.Services.FhirClientWithUrlProvider;
 using IBaseUrlProvider = UdapEd.Shared.Services.IBaseUrlProvider;
 var builder = WebApplication.CreateBuilder(args);
@@ -57,7 +59,9 @@ builder.Services.AddSession(options =>
 builder.Services.AddControllersWithViews(options =>
 {
     // options.Filters.Add(new UserPreferenceFilter());
-});
+})
+.AddJsonOptions(options =>
+    options.JsonSerializerOptions.Converters.Add(new FhirResourceConverter()));
 
 builder.Services.AddRazorPages();
 // builder.Services.AddBff();
@@ -111,7 +115,10 @@ builder.Services.AddHttpClient<FhirClientWithUrlProvider>((sp, httpClient) =>
     .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()));
 
 builder.Services.AddTransient<IClientCertificateProvider, ClientCertificateProvider>();
-builder.Services.AddScoped<IInfrastructure, UdapEd.Shared.Services.Infrastructure>();
+builder.Services.AddScoped<IInfrastructure, Infrastructure>();
+builder.Services.AddHttpClient<ICdsService, CdsService>();
+builder.Services.AddHttpClient<IServiceExchange, ServiceExchange>();
+
 
 //
 // This does not allow you to let the client dynamically load new mTLS certificates.  The HttpHandler doesn't reenter.

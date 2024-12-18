@@ -1,0 +1,19 @@
+﻿@using Udap.CdsHooks.Model
+@using Microsoft.FluentUI.AspNetCore.Components
+
+@code {
+    [Parameter]
+    public CdsResponse? CdsResponse { get; set; }
+    [Parameter]
+    public EventCallback TakeSuggestion { get; set; }
+}
+
+<FluentStack>
+    @if (CdsResponse?.Cards != null)
+    {
+        foreach (var cdsCard in CdsResponse.Cards)
+        {
+            <FhirLabsCard CdsCard="cdsCard"/>
+        }
+    }
+</FluentStack>

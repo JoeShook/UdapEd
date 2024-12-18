@@ -25,4 +25,6 @@ public interface IFhirService
     Task<FhirResultModel<Hl7.Fhir.Model.Bundle>> SearchGet(string queryParameters);
 
     Task<FhirResultModel<Hl7.Fhir.Model.Bundle>> SearchPost(SearchForm searchForm);
+
+    Task<FhirResultModel<Hl7.Fhir.Model.Resource>> Get(string resourcePath);
 }

@@ -1,0 +1,41 @@
+﻿@using Microsoft.FluentUI.AspNetCore.Components
+@code {
+    [Parameter]
+    public string Class { get; set; } = string.Empty;
+
+    [Parameter]
+    public string RequestJson { get; set; } = string.Empty;
+
+    [Parameter]
+    public string ResponseJson { get; set; } = string.Empty;
+
+    [Parameter]
+    public string MessagesJson { get; set; } = string.Empty;
+}
+
+<FluentCard Class="@Class" Style="display: flex; flex-direction: column; height: 100%;">
+    <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+        <h1>CDS Developer Panel</h1>
+
+        <FluentAccordion Style="flex: 1; overflow: hidden;">
+            <FluentAccordionItem Expanded="true">
+                <h3 slot="heading">Request</h3>
+                <div style="flex: 1; overflow: auto;">
+                    <pre style="background-color:#3e4e76;color:white;padding: .2% 2%;white-space:pre;overflow:auto;max-height:100%;">@RequestJson</pre>
+                </div>
+            </FluentAccordionItem>
+            <FluentAccordionItem Expanded="true">
+                <h3 slot="heading">Response</h3>
+                <div style="flex: 1; overflow: auto;">
+                    <pre style="background-color:#3e4e76;color:white;padding: .2% 2%;white-space:pre;overflow:auto;max-height:100%;">@ResponseJson</pre>
+                </div>
+            </FluentAccordionItem>
+            <FluentAccordionItem Expanded="true">
+                <h3 slot="heading">Messages</h3>
+                <div style="flex: 1; overflow: auto;">
+                    <pre style="background-color:#3e4e76;color:white;padding: .2% 2%;white-space:pre;overflow:auto;max-height:100%;">@MessagesJson</pre>
+                </div>
+            </FluentAccordionItem>
+        </FluentAccordion>
+    </div>
+</FluentCard>

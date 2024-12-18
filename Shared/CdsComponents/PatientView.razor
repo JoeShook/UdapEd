@@ -1,0 +1,21 @@
+﻿@using Hl7.Fhir.Model
+
+@code {
+    [Parameter]
+    public Patient Patient { get; set; }
+
+    private string Name => Patient?.Name?.FirstOrDefault()?.Given.FirstOrDefault() ?? "Missing Name";
+    private string Dob => Patient?.BirthDate ?? "Missing DOB";
+    private string Pid => Patient?.Id ?? "Missing Patient ID";
+}
+
+<div style="border-left-color: #0079be;">
+    <h1 class="view-title">Patient View</h1>
+    <h2>@Name</h2>
+    <div class="patient-data-text">
+        <p>
+            <strong>ID: </strong> @Pid <strong>Birthdate: </strong> @Dob
+        </p>
+    </div>
+    <CardList TakeSuggestion="() => {}" />
+</div>

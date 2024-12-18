@@ -1,0 +1,54 @@
+﻿@using UdapEd.Shared.Model.CdsHooks
+
+<MudGrid>
+    <MudItem xs="6" Style="margin-top: auto;">
+        <MudText Typo="Typo.h6">@CdsServiceModel.Url</MudText>
+    </MudItem>
+    <MudItem xs="6" Class="d-flex flex-column align-items-end">
+        <MudCheckBox  LabelPosition="LabelPosition.Start" @bind-Value="CdsServiceModel.CdsService.Enabled" Color="Color.Primary" Label="Enabled?" Class="ml-auto"  />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RemoveService" Class="ml-auto mt-2">
+            Delete
+        </MudButton>
+    </MudItem>
+</MudGrid>
+<MudPaper Outlined="true" Square="true"><pre>@_serviceMetadata</pre></MudPaper>
+    
+
+
+@code {
+    string? _serviceMetadata;
+
+    [Parameter]
+    public CdsServiceViewModel CdsServiceModel { get; set; }
+
+    [Parameter]
+    public EventCallback<string> Toggle { get; set; }
+
+    [Parameter]
+    public EventCallback<string> Remove { get; set; }
+
+    private ElementReference _definitionBody;
+    
+    protected override void OnInitialized()
+    {
+        var definitionCopy = JsonSerializer.Serialize(CdsServiceModel.CdsService, new JsonSerializerOptions { WriteIndented = true });
+        _serviceMetadata = definitionCopy; 
+        base.OnInitialized();
+    }
+
+    private async Task ToggleService()
+    {
+        if (Toggle.HasDelegate)
+        {
+            await Toggle.InvokeAsync(CdsServiceModel.Url);
+        }
+    }
+
+    private async Task RemoveService()
+    {
+        if (Remove.HasDelegate)
+        {
+            await Remove.InvokeAsync(CdsServiceModel.Url);
+        }
+    }
+}

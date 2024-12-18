@@ -19,6 +19,8 @@ using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Registration;
 using UdapEd.Shared.Services;
+using Microsoft.Maui.Storage;
+using Microsoft.Maui.ApplicationModel.Communication;
 
 namespace UdapEdAppMaui.Services;
 public class CertificationService : ICertificationService

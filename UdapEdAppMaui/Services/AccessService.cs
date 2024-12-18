@@ -19,6 +19,8 @@ using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Mappers;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
+using Microsoft.Maui.Storage;
+using Microsoft.Maui.Devices.Sensors;
 
 namespace UdapEdAppMaui.Services;
 internal class AccessService : IAccessService
@@ -76,7 +78,7 @@ internal class AccessService : IAccessService
 
     public async Task<UdapAuthorizationCodeTokenRequestModel?> BuildRequestAccessTokenForAuthCode(AuthorizationCodeTokenRequestModel tokenRequestModel, string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -107,7 +109,7 @@ internal class AccessService : IAccessService
     public async Task<UdapClientCredentialsTokenRequestModel?> BuildRequestAccessTokenForClientCredentials(ClientCredentialsTokenRequestModel tokenRequestModel,
         string signingAlgorithm)
     {
-        var clientCertWithKey = await SecureStorage.Default.GetAsync(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -202,4 +204,30 @@ internal class AccessService : IAccessService
         SecureStorage.Default.Remove(UdapEdConstants.TOKEN);
         return Task.FromResult(true);
     }
+
+    private async Task<string?> RetrieveFromChunks(string baseKey)
+    {
+        string? totalChunksStr = await SecureStorage.Default.GetAsync($"{baseKey}_totalChunks");
+        if (totalChunksStr == null)
+        {
+            return null;
+        }
+
+        int totalChunks = int.Parse(totalChunksStr);
+        var data = new List<byte>();
+
+        for (int i = 0; i < totalChunks; i++)
+        {
+            string chunkKey = $"{baseKey}_chunk_{i}";
+            string? chunkBase64 = await SecureStorage.Default.GetAsync(chunkKey);
+            if (chunkBase64 != null)
+            {
+                byte[] chunk = Convert.FromBase64String(chunkBase64);
+                data.AddRange(chunk);
+            }
+        }
+
+        return Convert.ToBase64String(data.ToArray());
+    }
+
 }
