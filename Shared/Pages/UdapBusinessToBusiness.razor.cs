@@ -519,6 +519,9 @@ public partial class UdapBusinessToBusiness
         }
         _webAuthenticorResponseProps = sb.ToString();
 
+        var mainPageService = DependencyService.Get<IMainPageService>();
+        mainPageService?.BringToFront();
+
 #else
         await JsRuntime.InvokeVoidAsync("open", @AuthCodeRequestLink, "_self");
 #endif

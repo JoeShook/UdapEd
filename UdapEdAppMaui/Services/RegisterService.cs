@@ -26,6 +26,8 @@ using UdapEd.Shared.Model.Registration;
 using IdentityModel;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Maui.Storage;
+using Microsoft.Maui.ApplicationModel.Communication;
 
 namespace UdapEdAppMaui.Services;
 internal class RegisterService : IRegisterService

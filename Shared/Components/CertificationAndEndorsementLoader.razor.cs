@@ -7,7 +7,6 @@
 // */
 #endregion
 
-// using BQuery;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
@@ -15,7 +14,7 @@ using MudBlazor;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 using Color = MudBlazor.Color;
-using FocusEventArgs = Microsoft.AspNetCore.Components.Web.FocusEventArgs;
+
 
 namespace UdapEd.Shared.Components;
 
@@ -58,7 +57,7 @@ public partial class CertificationAndEndorsementLoader
     }
 
     
-    [JSInvokable("OnPageFocus")]
+    [JSInvokable("CertificationAndEndorsementLoader_OnPageFocus")]
     public static async Task OnPageFocus()
     {
         if (_instance != null)
@@ -67,7 +66,7 @@ public partial class CertificationAndEndorsementLoader
         }
     }
 
-    [JSInvokable("OnPageBlur")]
+    [JSInvokable("CertificationAndEndorsementLoader_OnPageBlur")]
     public static void OnPageBlur()
     {
         _instance?.OnPageBlurInstance();
