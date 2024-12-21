@@ -45,7 +45,7 @@ public class MutualTlsController : Controller
 
         try
         {
-            var certificate = new X509Certificate2(testClientCert, "udap-test", X509KeyStorageFlags.Exportable);
+            var certificate = X509CertificateLoader.LoadPkcs12FromFile(testClientCert, "udap-test", X509KeyStorageFlags.Exportable);
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             HttpContext.Session.SetString(UdapEdConstants.MTLS_CLIENT_CERTIFICATE_WITH_KEY,
                 Convert.ToBase64String(clientCertWithKeyBytes));
@@ -99,7 +99,7 @@ public class MutualTlsController : Controller
         var certBytes = Convert.FromBase64String(clientCertSession);
         try
         {
-            var certificate = new X509Certificate2(certBytes, password, X509KeyStorageFlags.Exportable);
+            var certificate = X509CertificateLoader.LoadPkcs12(certBytes, password, X509KeyStorageFlags.Exportable);
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             HttpContext.Session.SetString(UdapEdConstants.MTLS_CLIENT_CERTIFICATE_WITH_KEY,
@@ -157,7 +157,7 @@ public class MutualTlsController : Controller
             if (certBytesWithKey != null)
             {
                 var certBytes = Convert.FromBase64String(certBytesWithKey);
-                var certificate = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+                var certificate = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
                 result.DistinguishedName = certificate.SubjectName.Name;
                 result.Thumbprint = certificate.Thumbprint;
                 result.CertLoaded = CertLoadedEnum.Positive;
@@ -195,7 +195,7 @@ public class MutualTlsController : Controller
         try
         {
             var certBytes = Convert.FromBase64String(base64String);
-            var certificate = new X509Certificate2(certBytes);
+            var certificate = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -224,7 +224,7 @@ public class MutualTlsController : Controller
             var response = await _httpClient.GetAsync(new Uri(anchorCertificate));
             response.EnsureSuccessStatusCode();
             var certBytes = await response.Content.ReadAsByteArrayAsync();
-            var certificate = new X509Certificate2(certBytes);
+            var certificate = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -258,7 +258,7 @@ public class MutualTlsController : Controller
             if (base64String != null)
             {
                 var certBytes = Convert.FromBase64String(base64String);
-                var certificate = new X509Certificate2(certBytes);
+                var certificate = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
                 result.DistinguishedName = certificate.SubjectName.Name;
                 result.Thumbprint = certificate.Thumbprint;
                 result.CertLoaded = CertLoadedEnum.Positive;
@@ -284,7 +284,7 @@ public class MutualTlsController : Controller
     public IActionResult VerifyMtlsTrust([FromBody] string publicCertificate)
     {
         var clientCertBytes = Convert.FromBase64String(publicCertificate);
-        var clientCertificate = new X509Certificate2(clientCertBytes);
+        var clientCertificate = X509CertificateLoader.LoadCertificate(clientCertBytes);
 
         var base64String = HttpContext.Session.GetString(UdapEdConstants.MTLS_ANCHOR_CERTIFICATE);
         
@@ -294,7 +294,7 @@ public class MutualTlsController : Controller
         }
            
         var certBytes = Convert.FromBase64String(base64String);
-        var certificate = new X509Certificate2(certBytes);
+        var certificate = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
 
         var notifications = new List<string>();
         _trustChainValidator.Problem += element => notifications.Add($"Validation Problem: {element.ChainElementStatus.Summarize(TrustChainValidator.DefaultProblemFlags)}");

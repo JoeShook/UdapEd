@@ -32,7 +32,7 @@ public class ClientCertificateProvider : IClientCertificateProvider
         if (certBytesWithKey != null)
         {
             var certBytes = Convert.FromBase64String(certBytesWithKey);
-            var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+            var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
             return clientCert;
         }
 
@@ -48,7 +48,7 @@ public class ClientCertificateProvider : IClientCertificateProvider
         if (anchorBytes != null)
         {
             var certBytes = Convert.FromBase64String(anchorBytes);
-            var anchorCerts = new X509Certificate2Collection() { new(certBytes) };
+            var anchorCerts = new X509Certificate2Collection(X509CertificateLoader.LoadCertificate(certBytes));
             return anchorCerts;
         }
 

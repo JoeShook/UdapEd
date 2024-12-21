@@ -234,7 +234,7 @@ else
 }
 
 app.UseBlazorFrameworkFiles();
-app.UseStaticFiles();
+app.MapStaticAssets();
 
 app.UseRouting();
 app.UseRateLimiter(); //after routing

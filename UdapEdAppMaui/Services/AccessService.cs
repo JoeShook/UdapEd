@@ -87,7 +87,7 @@ internal class AccessService : IAccessService
         }
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
-        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+        var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
         var tokenRequestBuilder = AccessTokenRequestForAuthorizationCodeBuilder.Create(
             tokenRequestModel.ClientId,
@@ -118,7 +118,7 @@ internal class AccessService : IAccessService
         }
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
-        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+        var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
         var tokenRequestBuilder = AccessTokenRequestForClientCredentialsBuilder.Create(
             tokenRequestModel.ClientId,

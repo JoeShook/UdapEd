@@ -206,7 +206,7 @@ public class FhirUtilityTests
     public async T.Task mTLS_Call()
     {
         using var httpClientHandler = new HttpClientHandler();
-        var clientCert = new X509Certificate2("FhirLabs_mTLS_Client.pfx", "udap-test", X509KeyStorageFlags.Exportable);
+        var clientCert = X509CertificateLoader.LoadPkcs12FromFile("FhirLabs_mTLS_Client.pfx", "udap-test", X509KeyStorageFlags.Exportable);
         httpClientHandler.ClientCertificates.Add(clientCert);
         var httpClient = new HttpClient(httpClientHandler);
         var weather = await httpClient.GetStringAsync("https://localhost:7057/weatherforecast");

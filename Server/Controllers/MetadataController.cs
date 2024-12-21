@@ -24,6 +24,7 @@ using Udap.Smart.Model;
 using Udap.Util.Extensions;
 using UdapEd.Server.Extensions;
 using UdapEd.Shared;
+using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Discovery;
 
@@ -57,7 +58,7 @@ public class MetadataController : Controller
             var result = new MetadataVerificationModel();
 
             var certBytes = Convert.FromBase64String(anchorString);
-            var anchorCert = new X509Certificate2(certBytes);
+            var anchorCert = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
             var trustAnchorStore = new TrustAnchorMemoryStore()
             {
                 AnchorCertificates = new HashSet<Anchor>
@@ -178,7 +179,7 @@ public class MetadataController : Controller
         try
         {
             var certBytes = Convert.FromBase64String(base64String);
-            var certificate = new X509Certificate2(certBytes);
+            var certificate = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -207,7 +208,7 @@ public class MetadataController : Controller
             var response = await _httpClient.GetAsync(new Uri(anchorCertificate));
             response.EnsureSuccessStatusCode();
             var certBytes = await response.Content.ReadAsByteArrayAsync();
-            var certificate = new X509Certificate2(certBytes);
+            var certificate =  X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -241,7 +242,7 @@ public class MetadataController : Controller
             if (base64String != null)
             {
                 var certBytes = Convert.FromBase64String(base64String);
-                var certificate = new X509Certificate2(certBytes);
+                var certificate = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
                 result.DistinguishedName = certificate.SubjectName.Name;
                 result.Thumbprint = certificate.Thumbprint;
                 result.CertLoaded = CertLoadedEnum.Positive;
@@ -318,7 +319,7 @@ public class MetadataController : Controller
     public IActionResult BuildCertificateDisplay([FromBody] List<string> certificates)
     {
         var certBytes = Convert.FromBase64String(certificates.First());
-        var cert = new X509Certificate2(certBytes);
+        var cert = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
         var result = new CertificateDisplayBuilder(cert).BuildCertificateDisplayData();
 
         return Ok(result);
@@ -328,7 +329,7 @@ public class MetadataController : Controller
     public IActionResult BuildCertificateDisplay([FromBody] string certificate)
     {
         var certBytes = Convert.FromBase64String(certificate);
-        var cert = new X509Certificate2(certBytes);
+        var cert = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
         var result = new CertificateDisplayBuilder(cert).BuildCertificateDisplayData();
 
         return Ok(result);
