@@ -40,7 +40,7 @@ namespace UtilityTests
             
             var contentBase64 = await response.Content.ReadAsStringAsync();
             var bytes = Convert.FromBase64String(contentBase64);
-            var certificate = new X509Certificate2(bytes, "udap-test");
+            var certificate = X509CertificateLoader.LoadPkcs12(bytes, "udap-test");
 
             var subjectAltNames = certificate.GetSubjectAltNames()
                 .Where(s => s.Item1 == "URI")
@@ -62,7 +62,7 @@ namespace UtilityTests
                 Substitute.For<ILogger<Infrastructure>>());
             var bytes = await infrastructure.JitFhirlabsCommunityCertificate(subjAltNames, "udap-test");
 
-            var certificate = new X509Certificate2(bytes, "udap-test");
+            var certificate = X509CertificateLoader.LoadPkcs12(bytes, "udap-test");
 
             var subjectAltNames = certificate.GetSubjectAltNames()
                 .Where(s => s.Item1 == "URI")

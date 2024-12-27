@@ -11,6 +11,7 @@ using System.Collections;
 using System.Collections.Specialized;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.WebUtilities;
@@ -53,7 +54,12 @@ public partial class UdapDiscovery
                 return _result ?? string.Empty;
             }
 
-            return JsonSerializer.Serialize(AppState.MetadataVerificationModel.UdapServerMetaData, new JsonSerializerOptions { WriteIndented = true });
+            return JsonSerializer.Serialize(AppState.MetadataVerificationModel.UdapServerMetaData, 
+                new JsonSerializerOptions
+                {
+                    WriteIndented = true, 
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                });
         }
         set => _result = value;
     }
@@ -149,7 +155,12 @@ public partial class UdapDiscovery
             }
 
             Result = AppState.MetadataVerificationModel?.UdapServerMetaData != null
-                ? JsonSerializer.Serialize(AppState.MetadataVerificationModel.UdapServerMetaData, new JsonSerializerOptions { WriteIndented = true })
+                ? JsonSerializer.Serialize(AppState.MetadataVerificationModel.UdapServerMetaData, 
+                    new JsonSerializerOptions
+                    {
+                        WriteIndented = true,
+                        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                    })
                 : string.Empty;
             await AppState.SetPropertyAsync(this, nameof(AppState.BaseUrl), BaseUrl);
 

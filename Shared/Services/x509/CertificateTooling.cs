@@ -14,7 +14,7 @@ using System.Text;
 namespace UdapEd.Shared.Services.x509;
 public class CertificateTooling
 {
-    public byte[] BuildUdapClientCertificate(
+    public byte[]? BuildUdapClientCertificate(
             X509Certificate2 intermediateCert,
             X509Certificate2 caCert,
             RSA intermediateKey,
@@ -95,15 +95,17 @@ public class CertificateTooling
         var clientCertWithKey = clientCert.CopyWithPrivateKey(rsaKey);
 
 
-        var certPackage = new X509Certificate2Collection();
-        certPackage.Add(clientCertWithKey);
-        certPackage.Add(new X509Certificate2(intermediateCert.Export(X509ContentType.Cert)));
-        certPackage.Add(new X509Certificate2(caCert.Export(X509ContentType.Cert)));
+        var certPackage = new X509Certificate2Collection
+        {
+            clientCertWithKey,
+            X509CertificateLoader.LoadCertificate(intermediateCert.Export(X509ContentType.Cert)),
+            X509CertificateLoader.LoadCertificate(caCert.Export(X509ContentType.Cert))
+        };
 
         return certPackage.Export(X509ContentType.Pkcs12, password);
     }
 
-    public byte[] BuildClientCertificateECDSA(
+    public byte[]? BuildClientCertificateECDSA(
         X509Certificate2 intermediateCert,
         X509Certificate2 caCert,
         RSA intermediateKey,
@@ -184,10 +186,12 @@ public class CertificateTooling
         var clientCertWithKey = clientCert.CopyWithPrivateKey(ecdsa);
 
 
-        var certPackage = new X509Certificate2Collection();
-        certPackage.Add(clientCertWithKey);
-        certPackage.Add(new X509Certificate2(intermediateCert.Export(X509ContentType.Cert)));
-        certPackage.Add(new X509Certificate2(caCert.Export(X509ContentType.Cert)));
+        var certPackage = new X509Certificate2Collection
+        {
+            clientCertWithKey,
+            X509CertificateLoader.LoadCertificate(intermediateCert.Export(X509ContentType.Cert)),
+            X509CertificateLoader.LoadCertificate(caCert.Export(X509ContentType.Cert))
+        };
 
 
         return certPackage.Export(X509ContentType.Pkcs12, password);

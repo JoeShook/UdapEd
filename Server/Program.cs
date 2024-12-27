@@ -8,6 +8,7 @@
 #endregion
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Hl7.Fhir.Rest;
 using Microsoft.Extensions.Options;
 using Serilog;
@@ -61,7 +62,10 @@ builder.Services.AddControllersWithViews(options =>
     // options.Filters.Add(new UserPreferenceFilter());
 })
 .AddJsonOptions(options =>
-    options.JsonSerializerOptions.Converters.Add(new FhirResourceConverter()));
+{
+    options.JsonSerializerOptions.Converters.Add(new FhirResourceConverter());
+    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+});
 
 builder.Services.AddRazorPages();
 // builder.Services.AddBff();
@@ -230,7 +234,7 @@ else
 }
 
 app.UseBlazorFrameworkFiles();
-app.UseStaticFiles();
+app.MapStaticAssets();
 
 app.UseRouting();
 app.UseRateLimiter(); //after routing

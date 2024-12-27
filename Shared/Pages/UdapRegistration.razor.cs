@@ -11,6 +11,7 @@ using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Google.Api.Gax;
 using Hl7.Fhir.Rest;
@@ -204,7 +205,8 @@ public partial class UdapRegistration
                 jsonStatement = JsonNode.Parse(AppState.SoftwareStatementBeforeEncoding.SoftwareStatement)
                 ?.ToJsonString(new JsonSerializerOptions()
                 {
-                    WriteIndented = true
+                    WriteIndented = true,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
                 });
             }
             catch
@@ -240,7 +242,8 @@ public partial class UdapRegistration
                 jsonStatement = JsonNode.Parse(AppState.CertSoftwareStatementBeforeEncoding.SoftwareStatement)
                     ?.ToJsonString(new JsonSerializerOptions()
                     {
-                        WriteIndented = true
+                        WriteIndented = true,
+                        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
                     });
             }
             catch
@@ -334,7 +337,11 @@ public partial class UdapRegistration
             }
 
             return JsonSerializer.Serialize(AppState
-                .RegistrationDocument, new JsonSerializerOptions { WriteIndented = true });
+                .RegistrationDocument, new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            });
         }
         set => _registrationResult = value;
     }
@@ -363,7 +370,11 @@ public partial class UdapRegistration
 
             return JsonSerializer.Serialize(
                 AppState.UdapRegistrationRequest, 
-                new JsonSerializerOptions { WriteIndented = true });
+                new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                });
         }
         set => _requestBody = value;
     }
@@ -716,7 +727,11 @@ public partial class UdapRegistration
     
         RequestBody = JsonSerializer.Serialize(
             registerRequest,
-            new JsonSerializerOptions { WriteIndented = true });
+            new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            });
 
     }
 
@@ -731,7 +746,11 @@ public partial class UdapRegistration
 
         RequestBody = JsonSerializer.Serialize(
             registerRequest,
-            new JsonSerializerOptions { WriteIndented = true });
+            new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            });
     }
 
 
@@ -760,7 +779,11 @@ public partial class UdapRegistration
                                  $"{Environment.NewLine}{Environment.NewLine}"; 
             RegistrationResult += JsonSerializer.Serialize(
                 resultModel.Result,
-                new JsonSerializerOptions { WriteIndented = true });
+                new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                });
 
             if (_cancelRegistration)
             { // cancel registration

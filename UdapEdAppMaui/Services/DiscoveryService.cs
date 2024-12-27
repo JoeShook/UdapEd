@@ -28,6 +28,7 @@ using UdapEd.Shared.Model.Discovery;
 using UdapEd.Shared.Services;
 using Task = System.Threading.Tasks.Task;
 using Microsoft.Maui.Storage;
+using UdapEd.Shared.Extensions;
 
 namespace UdapEdAppMaui.Services;
 internal class DiscoveryService : IDiscoveryService
@@ -61,7 +62,7 @@ internal class DiscoveryService : IDiscoveryService
                     var result = new MetadataVerificationModel();
 
                     var certBytes = Convert.FromBase64String(anchorString);
-                    var anchorCert = new X509Certificate2(certBytes);
+                    var anchorCert = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
                     var trustAnchorStore = new TrustAnchorMemoryStore()
                     {
                         AnchorCertificates = new HashSet<Anchor>
@@ -167,7 +168,7 @@ internal class DiscoveryService : IDiscoveryService
         try
         {
             var certBytes = Convert.FromBase64String(base64String);
-            var certificate = new X509Certificate2(certBytes);
+            var certificate = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -196,7 +197,7 @@ internal class DiscoveryService : IDiscoveryService
             var response = await _httpClient.GetAsync(new Uri(anchorCertificate));
             response.EnsureSuccessStatusCode();
             var certBytes = await response.Content.ReadAsByteArrayAsync();
-            var certificate = new X509Certificate2(certBytes);
+            var certificate = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -226,7 +227,7 @@ internal class DiscoveryService : IDiscoveryService
             var response = await _httpClient.GetAsync(new Uri(anchorCertificate));
             response.EnsureSuccessStatusCode();
             var certBytes = await response.Content.ReadAsByteArrayAsync();
-            var certificate = new X509Certificate2(certBytes);
+            var certificate = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -260,7 +261,7 @@ internal class DiscoveryService : IDiscoveryService
             if (base64String != null)
             {
                 var certBytes = Convert.FromBase64String(base64String);
-                var certificate = new X509Certificate2(certBytes);
+                var certificate = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
                 result.DistinguishedName = certificate.SubjectName.Name;
                 result.Thumbprint = certificate.Thumbprint;
                 result.CertLoaded = CertLoadedEnum.Positive;
@@ -311,7 +312,7 @@ internal class DiscoveryService : IDiscoveryService
         {
             await Task.Delay(1, token);
             var certBytes = Convert.FromBase64String(base64EncodedCertificate!.First());
-            var cert = new X509Certificate2(certBytes);
+            var cert = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
             var result = new CertificateDisplayBuilder(cert).BuildCertificateDisplayData();
 
             return result;
@@ -329,7 +330,7 @@ internal class DiscoveryService : IDiscoveryService
         {
             await Task.Delay(1, token);
             var certBytes = Convert.FromBase64String(base64EncodedCertificate!);
-            var cert = new X509Certificate2(certBytes);
+            var cert = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
             var result = new CertificateDisplayBuilder(cert).BuildCertificateDisplayData();
 
             return result;

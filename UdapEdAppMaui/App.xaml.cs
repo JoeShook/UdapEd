@@ -10,8 +10,13 @@ public partial class App : Application
     {
         _crlCacheService = crlCacheService;
         InitializeComponent();
+    }
 
-        MainPage = new MainPage();
+    protected override Window CreateWindow(IActivationState? activationState)
+    {
+        var window = base.CreateWindow(activationState);
+        window.Page = new MainPage();
+        return window;
     }
 
     protected override void OnStart()
