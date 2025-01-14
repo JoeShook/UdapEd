@@ -22,10 +22,10 @@
     <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
     <PackageReference Include="MudBlazor" Version="7.15.0" />
-    <PackageReference Include="Udap.Smart.Model" Version="0.4.0" />
-    <PackageReference Include="Udap.CdsHooks.Model" Version="0.4.0" />
-    <PackageReference Include="Udap.Model" Version="0.4.0" />
-    <PackageReference Include="Udap.Common" Version="0.4.0" />
+    <PackageReference Include="Udap.Smart.Model" Version="0.4.1" />
+    <PackageReference Include="Udap.CdsHooks.Model" Version="0.4.1" />
+    <PackageReference Include="Udap.Model" Version="0.4.1" />
+    <PackageReference Include="Udap.Common" Version="0.4.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.0" />
@@ -35,10 +35,10 @@
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup Condition="'$(UseMauiEssentials)' != 'false'">
-    <PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.21" />
+    <PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.22" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFrameworks)' != 'net8.0'">
-    <PackageReference Include="CommunityToolkit.Maui" Version="9.1.1" />
+    <PackageReference Include="CommunityToolkit.Maui" Version="10.0.0" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="wwwroot\images\UdapEdLogobyDesigner.png">

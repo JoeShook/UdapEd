@@ -8,7 +8,7 @@
 #endregion
 
 using AutoMapper;
-using IdentityModel.Client;
+using Duende.IdentityModel.Client;
 using UdapEd.Shared.Model;
 
 namespace UdapEd.Shared.Mappers;

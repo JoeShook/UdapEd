@@ -9,7 +9,7 @@
 
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
-using IdentityModel.Client;
+using Duende.IdentityModel.Client;
 using Microsoft.AspNetCore.Components;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;

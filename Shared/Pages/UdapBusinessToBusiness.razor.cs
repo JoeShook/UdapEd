@@ -12,7 +12,7 @@ using System.IdentityModel.Tokens.Jwt;
 
 using System.Text;
 
-using IdentityModel;
+using Duende.IdentityModel;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.WebUtilities;

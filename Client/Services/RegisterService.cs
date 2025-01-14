@@ -12,7 +12,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using IdentityModel;
+using Duende.IdentityModel;
 using Udap.Model;
 using Udap.Model.Registration;
 using Udap.Util.Extensions;

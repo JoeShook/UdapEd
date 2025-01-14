@@ -23,7 +23,7 @@ using UdapEd.Shared.Services;
 using Udap.Model.Statement;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model.Registration;
-using IdentityModel;
+using Duende.IdentityModel;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Maui.Storage;
