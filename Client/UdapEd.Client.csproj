@@ -21,8 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Udap.CdsHooks.Model" Version="0.4.0" />
-    <PackageReference Include="Udap.Common" Version="0.4.0" />
+    <PackageReference Include="Udap.CdsHooks.Model" Version="0.4.4" />
+    <PackageReference Include="Udap.Common" Version="0.4.4" />
   </ItemGroup>
 
   <!-- From:: https://jonhilton.net/visual-studio-2022-blazor-css-intellisense/ -->

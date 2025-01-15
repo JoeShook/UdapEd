@@ -2,6 +2,7 @@
 
 public static class UdapEdConstants
 {
+    public static string UDAP_INTERMEDIATE_CERTIFICATES = "udap_intermediateCertificates";
     public const string UDAP_CLIENT_CERTIFICATE_WITH_KEY = "udap_clientCertificateWithKey";
     public const string UDAP_CLIENT_CERTIFICATE = "udap_clientCertificate";
     public const string UDAP_CLIENT_UPLOADED_CERTIFICATE = "udap_client_upladed_cert";

@@ -7,10 +7,13 @@
 // */
 #endregion
 
-using System.Text;
+using System.Security.Cryptography.X509Certificates;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using UdapEd.Server.Extensions;
+using UdapEd.Shared;
+using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Services;
 
 namespace UdapEd.Server.Controllers;
@@ -62,13 +65,42 @@ public class InfrastructureController : Controller
         }
     }
 
-    [HttpGet("GetX509data")]
-    public async Task<IActionResult> GetX509data(string url, CancellationToken token)
+    [HttpGet("GetX509ViewModel")]
+    public async Task<IActionResult> GetX509ViewModel(string url, CancellationToken token)
     {
         try
         {
-            var viewModel = await _infrastructure.GetX509data(url);
+            var viewModel = await _infrastructure.GetX509ViewModel(url);
             return Ok(viewModel);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get X509 data");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpGet("AddIntermediateX509")]
+    public async Task<IActionResult> AddIntermediateX509(string url, CancellationToken token)
+    {
+        try
+        {
+            var encodedCertificate = await _infrastructure.GetIntermediateX509(url);
+            
+            if (encodedCertificate != null)
+            {
+                byte[] certificateBytes = Convert.FromBase64String(encodedCertificate);
+                var certificate = new X509Certificate2(certificateBytes);
+                var intermediatesStored = HttpContext.Session.GetString(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
+                var intermediateCerts = intermediatesStored.DeserializeCertificates();
+                if (intermediateCerts.All(i => i.Thumbprint != certificate.Thumbprint))
+                {
+                    intermediateCerts.Add(certificate);
+                    HttpContext.Session.SetString(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES, intermediateCerts.SerializeCertificates());
+                }
+            }
+
+            return Ok(encodedCertificate);
         }
         catch (Exception ex)
         {

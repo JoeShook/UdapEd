@@ -32,10 +32,10 @@
     <PackageReference Include="MudBlazor" Version="7.15.0" />
 
 
-    <PackageReference Include="Udap.Smart.Model" Version="0.4.0" />
-    <PackageReference Include="Udap.CdsHooks.Model" Version="0.4.0" />
-    <PackageReference Include="Udap.Model" Version="0.4.0" />
-    <PackageReference Include="Udap.Common" Version="0.4.0" />
+    <PackageReference Include="Udap.Smart.Model" Version="0.4.4" />
+    <PackageReference Include="Udap.CdsHooks.Model" Version="0.4.4" />
+    <PackageReference Include="Udap.Model" Version="0.4.4" />
+    <PackageReference Include="Udap.Common" Version="0.4.4" />
 
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
     <PackageReference Include="Microsoft.Fast.Components.FluentUI" Version="3.8.0" />

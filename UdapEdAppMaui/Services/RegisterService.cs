@@ -23,9 +23,10 @@ using UdapEd.Shared.Services;
 using Udap.Model.Statement;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model.Registration;
-using IdentityModel;
+using Duende.IdentityModel;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
+using UdapEdAppMaui.Extensions;
 
 namespace UdapEdAppMaui.Services;
 internal class RegisterService : IRegisterService
@@ -33,7 +34,7 @@ internal class RegisterService : IRegisterService
     private readonly HttpClient _httpClient;
     private readonly ILogger<RegisterService> _logger;
     private readonly IConfiguration _configuration;
-    private const int ChunkSize = 4000; // Define a suitable chunk size per each Platform 
+    
 
     public RegisterService(HttpClient httpClient, ILogger<RegisterService> logger, IConfiguration configuration)
     {
@@ -45,13 +46,13 @@ internal class RegisterService : IRegisterService
     public async Task UploadClientCertificate(string base64EncodedBytes)
     {
         var certBytes = Convert.FromBase64String(base64EncodedBytes);
-        await StoreInChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE, certBytes);
+        await SessionExtensions.StoreInChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE, certBytes);
     }
 
     public async Task<RawSoftwareStatementAndHeader?> BuildSoftwareStatementForClientCredentials(
         UdapDynamicClientRegistrationDocument request, string signingAlgorithm)
     {
-        var clientCertWithKey = await RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -60,6 +61,14 @@ internal class RegisterService : IRegisterService
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
         var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+        var x5cCerts = new List<X509Certificate2> { clientCert };
+        var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
+        var intermediateCerts = intermediatesStored.DeserializeCertificates();
+
+        if (intermediateCerts != null && intermediateCerts.Any())
+        {
+            x5cCerts.AddRange(intermediateCerts);
+        }
 
         UdapDcrBuilderForClientCredentialsUnchecked dcrBuilder;
 
@@ -71,7 +80,7 @@ internal class RegisterService : IRegisterService
         else
         {
             dcrBuilder = UdapDcrBuilderForClientCredentialsUnchecked
-                .Create(clientCert);
+                .Create(x5cCerts);
         }
 
         dcrBuilder.Document.Issuer = request.Issuer;
@@ -119,7 +128,7 @@ internal class RegisterService : IRegisterService
 
     public async Task<RawSoftwareStatementAndHeader?> BuildSoftwareStatementForAuthorizationCode(UdapDynamicClientRegistrationDocument request, string signingAlgorithm)
     {
-        var clientCertWithKey = await RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -128,6 +137,14 @@ internal class RegisterService : IRegisterService
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
         var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+        var x5cCerts = new List<X509Certificate2> { clientCert };
+        var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
+        var intermediateCerts = intermediatesStored.DeserializeCertificates();
+
+        if (intermediateCerts != null && intermediateCerts.Any())
+        {
+            x5cCerts.AddRange(intermediateCerts);
+        }
 
         UdapDcrBuilderForAuthorizationCodeUnchecked dcrBuilder;
 
@@ -139,7 +156,7 @@ internal class RegisterService : IRegisterService
         else
         {
             dcrBuilder = UdapDcrBuilderForAuthorizationCodeUnchecked
-                .Create(clientCert);
+                .Create(x5cCerts);
         }
 
         dcrBuilder.Document.Issuer = request.Issuer;
@@ -190,7 +207,7 @@ internal class RegisterService : IRegisterService
 
     public async Task<UdapRegisterRequest?> BuildRequestBodyForClientCredentials(RawSoftwareStatementAndHeader? request, string signingAlgorithm)
     {
-        var clientCertWithKey = await RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -199,6 +216,14 @@ internal class RegisterService : IRegisterService
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
         var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+        var x5cCerts = new List<X509Certificate2> { clientCert };
+        var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
+        var intermediateCerts = intermediatesStored.DeserializeCertificates();
+
+        if (intermediateCerts != null && intermediateCerts.Any())
+        {
+            x5cCerts.AddRange(intermediateCerts);
+        }
 
         var document = JsonSerializer
             .Deserialize<UdapDynamicClientRegistrationDocument>(request.SoftwareStatement)!;
@@ -213,7 +238,7 @@ internal class RegisterService : IRegisterService
         else
         {
             dcrBuilder = UdapDcrBuilderForClientCredentialsUnchecked
-                .Create(clientCert);
+                .Create(x5cCerts);
         }
 
 
@@ -252,7 +277,7 @@ internal class RegisterService : IRegisterService
 
     public async Task<UdapRegisterRequest?> BuildRequestBodyForAuthorizationCode(RawSoftwareStatementAndHeader? request, string signingAlgorithm)
     {
-        var clientCertWithKey = await RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
+        var clientCertWithKey = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
         if (clientCertWithKey == null)
         {
@@ -261,6 +286,14 @@ internal class RegisterService : IRegisterService
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
         var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+        var x5cCerts = new List<X509Certificate2> { clientCert };
+        var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
+        var intermediateCerts = intermediatesStored.DeserializeCertificates();
+
+        if (intermediateCerts != null && intermediateCerts.Any())
+        {
+            x5cCerts.AddRange(intermediateCerts);
+        }
 
         var document = JsonSerializer
             .Deserialize<UdapDynamicClientRegistrationDocument>(request.SoftwareStatement)!;
@@ -275,7 +308,7 @@ internal class RegisterService : IRegisterService
         else
         {
             dcrBuilder = UdapDcrBuilderForAuthorizationCodeUnchecked
-                .Create(clientCert);
+                .Create(x5cCerts);
 
             dcrBuilder.Document.GrantTypes = document.GrantTypes;
         }
@@ -368,7 +401,7 @@ internal class RegisterService : IRegisterService
             CertLoaded = CertLoadedEnum.Negative
         };
 
-        var clientCertSession = await RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE);
+        var clientCertSession = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE);
 
         if (clientCertSession == null)
         {
@@ -384,7 +417,7 @@ internal class RegisterService : IRegisterService
             var certificate = new X509Certificate2(certBytes, password, X509KeyStorageFlags.Exportable);
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
-            await StoreInChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, clientCertWithKeyBytes);
+            await SessionExtensions.StoreInChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, clientCertWithKeyBytes);
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -422,7 +455,7 @@ internal class RegisterService : IRegisterService
 
         try
         {
-            var clientCertSession = await RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE);
+            var clientCertSession = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE);
 
             if (clientCertSession != null)
             {
@@ -433,7 +466,7 @@ internal class RegisterService : IRegisterService
                 result.CertLoaded = CertLoadedEnum.Negative;
             }
 
-            var certBytesWithKey = await RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
+            var certBytesWithKey = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
 
             if (certBytesWithKey != null)
             {
@@ -494,7 +527,7 @@ internal class RegisterService : IRegisterService
             }
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
-            await StoreInChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, clientCertWithKeyBytes);
+            await SessionExtensions.StoreInChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, clientCertWithKeyBytes);
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -625,48 +658,5 @@ internal class RegisterService : IRegisterService
         }
 
         return true;
-    }
-
-
-    private async Task StoreInChunks(string baseKey, byte[] data)
-    {
-        int totalChunks = (int)Math.Ceiling((double)data.Length / ChunkSize);
-
-        for (int i = 0; i < totalChunks; i++)
-        {
-            int chunkSize = Math.Min(ChunkSize, data.Length - (i * ChunkSize));
-            var chunk = new byte[chunkSize];
-            Array.Copy(data, i * ChunkSize, chunk, 0, chunkSize);
-
-            string chunkKey = $"{baseKey}_chunk_{i}";
-            await SecureStorage.Default.SetAsync(chunkKey, Convert.ToBase64String(chunk));
-        }
-
-        // Store the total number of chunks
-        await SecureStorage.Default.SetAsync($"{baseKey}_totalChunks", totalChunks.ToString());
-    }
-    private async Task<string?> RetrieveFromChunks(string baseKey)
-    {
-        string? totalChunksStr = await SecureStorage.Default.GetAsync($"{baseKey}_totalChunks");
-        if (totalChunksStr == null)
-        {
-            return null;
-        }
-
-        int totalChunks = int.Parse(totalChunksStr);
-        var data = new List<byte>();
-
-        for (int i = 0; i < totalChunks; i++)
-        {
-            string chunkKey = $"{baseKey}_chunk_{i}";
-            string? chunkBase64 = await SecureStorage.Default.GetAsync(chunkKey);
-            if (chunkBase64 != null)
-            {
-                byte[] chunk = Convert.FromBase64String(chunkBase64);
-                data.AddRange(chunk);
-            }
-        }
-
-        return Convert.ToBase64String(data.ToArray());
     }
 }

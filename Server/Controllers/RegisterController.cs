@@ -70,6 +70,7 @@ public class RegisterController : Controller
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             HttpContext.Session.SetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
             HttpContext.Session.SetInt32(UdapEdConstants.UDAP_CLIENT_UPLOADED_CERTIFICATE, 0);
+            HttpContext.Session.Remove(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -98,6 +99,7 @@ public class RegisterController : Controller
     {
         HttpContext.Session.SetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE, base64String);
         HttpContext.Session.SetInt32(UdapEdConstants.UDAP_CLIENT_UPLOADED_CERTIFICATE, 1);
+        HttpContext.Session.Remove(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
 
         return Ok();
     }
@@ -224,6 +226,14 @@ public class RegisterController : Controller
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
         var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+        var x5cCerts = new List<X509Certificate2> { clientCert };
+        var intermediatesStored = HttpContext.Session.GetString(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
+        var intermediateCerts = intermediatesStored.DeserializeCertificates();
+
+        if (intermediateCerts != null && intermediateCerts.Any())
+        {
+            x5cCerts.AddRange(intermediateCerts);
+        }
 
         UdapDcrBuilderForClientCredentialsUnchecked dcrBuilder;
 
@@ -234,7 +244,7 @@ public class RegisterController : Controller
         }
         else{
             dcrBuilder = UdapDcrBuilderForClientCredentialsUnchecked
-                .Create(clientCert);
+                .Create(x5cCerts);
         }
 
         dcrBuilder.Document.Issuer = request.Issuer;
@@ -259,7 +269,7 @@ public class RegisterController : Controller
 
         var signedSoftwareStatement =
             SignedSoftwareStatementBuilder<UdapDynamicClientRegistrationDocument>
-                .Create(clientCert, document)
+                .Create(x5cCerts, document)
                 .Build(alg);
 
         var tokenHandler = new JsonWebTokenHandler();
@@ -297,6 +307,14 @@ public class RegisterController : Controller
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
         var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+        var x5cCerts = new List<X509Certificate2> { clientCert };
+        var intermediatesStored = HttpContext.Session.GetString(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
+        var intermediateCerts = intermediatesStored.DeserializeCertificates();
+
+        if (intermediateCerts != null && intermediateCerts.Any())
+        {
+            x5cCerts.AddRange(intermediateCerts);
+        }
 
         UdapDcrBuilderForAuthorizationCodeUnchecked dcrBuilder;
         
@@ -308,7 +326,7 @@ public class RegisterController : Controller
         else
         {
             dcrBuilder = UdapDcrBuilderForAuthorizationCodeUnchecked
-                .Create(clientCert);
+                .Create(x5cCerts);
         }
         
         dcrBuilder.Document.Issuer = request.Issuer;
@@ -336,7 +354,7 @@ public class RegisterController : Controller
 
         var signedSoftwareStatement =
             SignedSoftwareStatementBuilder<UdapDynamicClientRegistrationDocument>
-                .Create(clientCert, document)
+                .Create(x5cCerts, document)
                 .Build(alg);
 
         var tokenHandler = new JsonWebTokenHandler();
@@ -372,7 +390,15 @@ public class RegisterController : Controller
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
         var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
-        
+        var x5cCerts = new List<X509Certificate2> { clientCert };
+        var intermediatesStored = HttpContext.Session.GetString(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
+        var intermediateCerts = intermediatesStored.DeserializeCertificates();
+
+        if (intermediateCerts != null && intermediateCerts.Any())
+        {
+            x5cCerts.AddRange(intermediateCerts);
+        }
+
         var document = JsonSerializer
             .Deserialize<UdapDynamicClientRegistrationDocument>(request.SoftwareStatement)!;
 
@@ -386,7 +412,7 @@ public class RegisterController : Controller
         else
         {
             dcrBuilder = UdapDcrBuilderForClientCredentialsUnchecked
-                .Create(clientCert);
+                .Create(x5cCerts);
         }
         
 
@@ -437,6 +463,14 @@ public class RegisterController : Controller
     
         var certBytes = Convert.FromBase64String(clientCertWithKey);
         var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+        var x5cCerts = new List<X509Certificate2> { clientCert };
+        var intermediatesStored = HttpContext.Session.GetString(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
+        var intermediateCerts = intermediatesStored.DeserializeCertificates();
+
+        if (intermediateCerts != null && intermediateCerts.Any())
+        {
+            x5cCerts.AddRange(intermediateCerts);
+        }
 
         var document = JsonSerializer
             .Deserialize<UdapDynamicClientRegistrationDocument>(request.SoftwareStatement)!;
@@ -451,7 +485,7 @@ public class RegisterController : Controller
         else
         {
             dcrBuilder = UdapDcrBuilderForAuthorizationCodeUnchecked
-                .Create(clientCert);
+                .Create(x5cCerts);
 
             dcrBuilder.Document.GrantTypes = document.GrantTypes;
         }
@@ -520,12 +554,24 @@ public class RegisterController : Controller
 
         try
         {
-            var result = new ResultModel<RegistrationDocument?>(
-                JsonSerializer.Deserialize<RegistrationDocument>(resultRaw),
-                response.StatusCode,
-                response.Version);
+            var udapRegistrationDocument = JsonSerializer.Deserialize<UdapDynamicClientRegistrationDocument>(resultRaw);
+            var normalizedRaw = udapRegistrationDocument.SerializeToJson();
+            try
+            {
+                var result = new ResultModel<RegistrationDocument?>(
+                    JsonSerializer.Deserialize<RegistrationDocument>(normalizedRaw),
+                    response.StatusCode,
+                    response.Version);
 
-            return Ok(result);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed Serialization");
+                _logger.LogError(normalizedRaw);
+
+                return BadRequest(ex);
+            }
         }
 
         catch (Exception ex)

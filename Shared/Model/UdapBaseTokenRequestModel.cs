@@ -7,7 +7,7 @@
 // */
 #endregion
 
-using IdentityModel.Client;
+using Duende.IdentityModel.Client;
 
 namespace UdapEd.Shared.Model;
 

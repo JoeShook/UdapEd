@@ -25,7 +25,9 @@ public interface IInfrastructure
 
     Task<byte[]> JitFhirlabsCommunityCertificate(List<string> subjAltNames, string password);
 
-    Task<CertificateViewModel?> GetX509data(string url);
+    Task<CertificateViewModel?> GetX509ViewModel(string url);
+
+    Task<string?> GetIntermediateX509(string url);
 
     Task<string?> GetCrldata(string url);
     Task<X509CacheSettings?> GetX509StoreCache(string thumbprint);

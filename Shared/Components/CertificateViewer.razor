@@ -89,6 +89,12 @@
                                            OnClick="@(() => ResolveIntermediate(keyValuePair.Value))">
                                            <MudText Color="Color.Info">Resolve</MudText>
                                        </MudButton>
+                                        <MudButton IconColor="Color.Info"
+                                                   StartIcon=@Icons.Material.Filled.Launch
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => AddIntermediateToX5c(keyValuePair.Value))">
+                                            <MudText Color="Color.Info">Include in header x5c claim</MudText>
+                                        </MudButton>
                                    }
                                    else
                                    {

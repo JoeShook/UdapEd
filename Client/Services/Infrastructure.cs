@@ -8,6 +8,7 @@
 #endregion
 
 using System.Net.Http.Json;
+using System.Security.Cryptography.X509Certificates;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 
@@ -63,10 +64,10 @@ public class Infrastructure : IInfrastructure
         throw new NotImplementedException();
     }
 
-    public async Task<CertificateViewModel?> GetX509data(string url)
+    public async Task<CertificateViewModel?> GetX509ViewModel(string url)
     {
         try{
-            var response = await _httpClient.GetAsync($"Infrastructure/GetX509data?url={url}");
+            var response = await _httpClient.GetAsync($"Infrastructure/GetX509ViewModel?url={url}");
 
             return await response.Content.ReadFromJsonAsync<CertificateViewModel>();
         }
@@ -74,6 +75,21 @@ public class Infrastructure : IInfrastructure
         {
             _logger.LogError(ex, "Failed GetCertificateData from list");
             return null;
+        }
+    }
+
+    public async Task<string?> GetIntermediateX509(string url)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"Infrastructure/AddIntermediateX509?url={url}");
+
+            return await response.Content.ReadAsStringAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to remove from X509 store");
+            throw;
         }
     }
 
