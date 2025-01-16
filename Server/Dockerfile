@@ -9,6 +9,8 @@ COPY ./Server/EMRDirectTestCA.crt /etc/ssl/certs
 COPY ./Server/EMRDirectTestClientSubCA.crt /etc/ssl/certs
 COPY ./Server/SureFhirLabs_CA.cer /etc/ssl/certs
 COPY ./Server/ngnix-proxy-TestCA.cer /etc/ssl/certs
+COPY ./USERTrust-RSA-Certification-Authority.crt /etc/ssl/certs
+COPY ./Sectigo-AAA.crt /etc/ssl/certs
 RUN update-ca-certificates
 
 

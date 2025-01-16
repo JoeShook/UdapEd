@@ -16,6 +16,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Dockerfile = Dockerfile
 		global.json = global.json
 		nuget.config = nuget.config
+		USERTrust-RSA-Certification-Authority.crt = USERTrust-RSA-Certification-Authority.crt
+		Sectigo-AAA.crt = Sectigo-AAA.crt
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UdapEd.Server", "Server\UdapEd.Server.csproj", "{F884EF04-1DE3-4325-B898-9FB9CD00945E}"
