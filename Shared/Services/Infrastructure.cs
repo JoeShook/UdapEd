@@ -19,16 +19,16 @@ using UdapEd.Shared.Services.x509;
 namespace UdapEd.Shared.Services;
 public class Infrastructure : IInfrastructure
 {
-    private HttpClient _httpClient;
+    protected readonly HttpClient HttpClient;
     private readonly CrlCacheService _crlCacheService;
     private readonly ILogger<Infrastructure> _logger;
 
     public Infrastructure(HttpClient httpClient, CrlCacheService crlCacheService, ILogger<Infrastructure> logger)
     {
-        _httpClient = httpClient;
+        HttpClient = httpClient;
         _crlCacheService = crlCacheService;
         _logger = logger;
-        _httpClient.Timeout = TimeSpan.FromSeconds(2);
+        HttpClient.Timeout = TimeSpan.FromSeconds(2);
     }
 
     public Task<string> GetMyIp()
@@ -138,11 +138,11 @@ public class Infrastructure : IInfrastructure
 
     }
 
-    public async Task<CertificateViewModel?> GetX509data(string url)
+    public async Task<CertificateViewModel?> GetX509ViewModel(string url)
     {
         try
         {
-            var bytes = await _httpClient.GetByteArrayAsync(url);
+            var bytes = await HttpClient.GetByteArrayAsync(url);
 
             var cert = X509CertificateLoader.LoadCertificate(bytes);
             return new CertificateDisplayBuilder(cert).BuildCertificateDisplayData();
@@ -156,11 +156,23 @@ public class Infrastructure : IInfrastructure
         }
     }
 
+    /// <summary>
+    /// Resolve certificate
+    /// </summary>
+    /// <param name="url"></param>
+    /// <returns></returns>
+    public virtual async Task<string?> GetIntermediateX509(string url)
+    {
+        var bytes = await HttpClient.GetByteArrayAsync(url);
+
+        return Convert.ToBase64String(bytes);
+    }
+
     public async Task<string?> GetCrldata(string url)
     {
         try
         {
-            var bytes = await _httpClient.GetByteArrayAsync(url);
+            var bytes = await HttpClient.GetByteArrayAsync(url);
             var crl = new X509Crl(bytes);
 
             return crl.ToString();

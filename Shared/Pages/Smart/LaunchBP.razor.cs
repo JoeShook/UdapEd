@@ -1,6 +1,4 @@
-﻿using System.CodeDom.Compiler;
-using System.Net.Http;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -9,9 +7,7 @@ using Duende.IdentityModel;
 using Duende.IdentityModel.Client;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
-using Org.BouncyCastle.Pkcs;
 using UdapEd.Shared.Components;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;

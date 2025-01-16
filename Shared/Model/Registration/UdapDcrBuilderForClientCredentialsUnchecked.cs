@@ -25,13 +25,18 @@ public class UdapDcrBuilderForClientCredentialsUnchecked : UdapDcrBuilderForClie
         base.WithCertificate(certificate);
     }
 
+    protected UdapDcrBuilderForClientCredentialsUnchecked(List<X509Certificate2> certificates, bool cancelRegistration) : base(cancelRegistration)
+    {
+        base.WithCertificates(certificates);
+    }
+
     protected UdapDcrBuilderForClientCredentialsUnchecked(bool cancelRegistration) :base(cancelRegistration)
     {
     }
 
-    public new static UdapDcrBuilderForClientCredentialsUnchecked Create(X509Certificate2 cert)
+    public new static UdapDcrBuilderForClientCredentialsUnchecked Create(List<X509Certificate2> certs)
     {
-        return new UdapDcrBuilderForClientCredentialsUnchecked(cert, false);
+        return new UdapDcrBuilderForClientCredentialsUnchecked(certs, false);
     }
    
     public new static UdapDcrBuilderForClientCredentialsUnchecked Create()

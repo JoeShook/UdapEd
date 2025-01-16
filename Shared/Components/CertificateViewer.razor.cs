@@ -105,8 +105,13 @@ public partial class CertificateViewer : ComponentBase
 
     private async Task ResolveIntermediate(string url)
     {
-        var viewModel = await Infrastructure.GetX509data(url);
+        var viewModel = await Infrastructure.GetX509ViewModel(url);
         await IntermediateResolvedEvent.InvokeAsync(viewModel);
+    }
+
+    private async Task AddIntermediateToX5c(string url)
+    {
+        await Infrastructure.GetIntermediateX509(url);
     }
 
     private async Task ResolveCrl(string url)

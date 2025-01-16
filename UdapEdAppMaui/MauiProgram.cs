@@ -15,16 +15,12 @@ using Hl7.Fhir.Rest;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Maui.LifecycleEvents;
 using MudBlazor.Services;
 using Serilog;
 using Serilog.Events;
-using Udap.Client.Authentication;
 using Udap.Client.Client;
 using Udap.Client.Configuration;
 using Udap.Common.Certificates;
-using UdapEd.Shared.Pages;
-using UdapEd.Shared.Search;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Services.Authentication;
 using UdapEd.Shared.Services.Cds;
@@ -48,7 +44,7 @@ using UdapEdAppMaui.Services.Authentication;
 using UdapEdAppMaui.Services.Search;
 using AuthTokenHttpMessageHandler = UdapEd.Shared.Services.Authentication.AuthTokenHttpMessageHandler;
 using IAccessTokenProvider = UdapEd.Shared.Services.Authentication.IAccessTokenProvider;
-using Microsoft.Maui.Storage;
+using Infrastructure = UdapEdAppMaui.Services.Infrastructure;
 
 
 
