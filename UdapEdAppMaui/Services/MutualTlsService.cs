@@ -52,7 +52,7 @@ public class MutualTlsService : IMutualTlsService
             var certBytes = new byte[fileStream.Length];
             await fileStream.ReadAsync(certBytes, 0, certBytes.Length);
 
-            var certificate = X509CertificateLoader.LoadPkcs12(certBytes, "udap-test", X509KeyStorageFlags.Exportable);
+            var certificate = new X509Certificate2(certBytes, "udap-test", X509KeyStorageFlags.Exportable);
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             await SecureStorage.Default.SetAsync(UdapEdConstants.MTLS_CLIENT_CERTIFICATE_WITH_KEY,
                 Convert.ToBase64String(clientCertWithKeyBytes));
@@ -100,7 +100,7 @@ public class MutualTlsService : IMutualTlsService
         var certBytes = Convert.FromBase64String(clientCertSession);
         try
         {
-            var certificate = X509CertificateLoader.LoadPkcs12(certBytes, password, X509KeyStorageFlags.Exportable);
+            var certificate = new X509Certificate2(certBytes, password, X509KeyStorageFlags.Exportable);
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             await SecureStorage.Default.SetAsync(UdapEdConstants.MTLS_CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
@@ -153,7 +153,7 @@ public class MutualTlsService : IMutualTlsService
             if (certBytesWithKey != null)
             {
                 var certBytes = Convert.FromBase64String(certBytesWithKey);
-                var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+                var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
                 result.DistinguishedName = clientCert.SubjectName.Name;
                 result.Thumbprint = clientCert.Thumbprint;
                 result.CertLoaded = CertLoadedEnum.Positive;
@@ -270,7 +270,7 @@ public class MutualTlsService : IMutualTlsService
     public async Task<List<string>?> VerifyMtlsTrust(string publicCertificate)
     {
         var clientCertBytes = Convert.FromBase64String(publicCertificate);
-        var clientCertificate = X509CertificateLoader.LoadCertificate(clientCertBytes);
+        var clientCertificate = new X509Certificate2(clientCertBytes);
 
         var base64String = await SecureStorage.Default.GetAsync(UdapEdConstants.MTLS_ANCHOR_CERTIFICATE);
 

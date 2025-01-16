@@ -98,8 +98,8 @@ public class CertificateTooling
         var certPackage = new X509Certificate2Collection
         {
             clientCertWithKey,
-            X509CertificateLoader.LoadCertificate(intermediateCert.Export(X509ContentType.Cert)),
-            X509CertificateLoader.LoadCertificate(caCert.Export(X509ContentType.Cert))
+            new X509Certificate2(intermediateCert.Export(X509ContentType.Cert)),
+            new X509Certificate2(caCert.Export(X509ContentType.Cert))
         };
 
         return certPackage.Export(X509ContentType.Pkcs12, password);
@@ -189,8 +189,8 @@ public class CertificateTooling
         var certPackage = new X509Certificate2Collection
         {
             clientCertWithKey,
-            X509CertificateLoader.LoadCertificate(intermediateCert.Export(X509ContentType.Cert)),
-            X509CertificateLoader.LoadCertificate(caCert.Export(X509ContentType.Cert))
+            new X509Certificate2(intermediateCert.Export(X509ContentType.Cert)),
+            new X509Certificate2(caCert.Export(X509ContentType.Cert))
         };
 
 

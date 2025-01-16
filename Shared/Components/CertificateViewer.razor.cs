@@ -7,7 +7,6 @@
 // */
 #endregion
 
-using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using Duende.IdentityModel.Client;
 using Microsoft.AspNetCore.Components;

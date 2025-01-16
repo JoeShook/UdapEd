@@ -45,7 +45,7 @@ public class MutualTlsController : Controller
 
         try
         {
-            var certificate = X509CertificateLoader.LoadPkcs12FromFile(testClientCert, "udap-test", X509KeyStorageFlags.Exportable);
+            var certificate = new X509Certificate2(testClientCert, "udap-test", X509KeyStorageFlags.Exportable);
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             HttpContext.Session.SetString(UdapEdConstants.MTLS_CLIENT_CERTIFICATE_WITH_KEY,
                 Convert.ToBase64String(clientCertWithKeyBytes));
@@ -99,7 +99,7 @@ public class MutualTlsController : Controller
         var certBytes = Convert.FromBase64String(clientCertSession);
         try
         {
-            var certificate = X509CertificateLoader.LoadPkcs12(certBytes, password, X509KeyStorageFlags.Exportable);
+            var certificate = new X509Certificate2(certBytes, password, X509KeyStorageFlags.Exportable);
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             HttpContext.Session.SetString(UdapEdConstants.MTLS_CLIENT_CERTIFICATE_WITH_KEY,
@@ -157,7 +157,7 @@ public class MutualTlsController : Controller
             if (certBytesWithKey != null)
             {
                 var certBytes = Convert.FromBase64String(certBytesWithKey);
-                var certificate = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+                var certificate = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
                 result.DistinguishedName = certificate.SubjectName.Name;
                 result.Thumbprint = certificate.Thumbprint;
                 result.CertLoaded = CertLoadedEnum.Positive;
@@ -284,7 +284,7 @@ public class MutualTlsController : Controller
     public IActionResult VerifyMtlsTrust([FromBody] string publicCertificate)
     {
         var clientCertBytes = Convert.FromBase64String(publicCertificate);
-        var clientCertificate = X509CertificateLoader.LoadCertificate(clientCertBytes);
+        var clientCertificate = new X509Certificate2(clientCertBytes);
 
         var base64String = HttpContext.Session.GetString(UdapEdConstants.MTLS_ANCHOR_CERTIFICATE);
         
