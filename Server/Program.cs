@@ -21,9 +21,11 @@ using Udap.Common.Certificates;
 using UdapEd.Server.Extensions;
 using UdapEd.Server.Rest;
 using UdapEd.Server.Services.Authentication;
+using UdapEd.Server.Services.Fhir;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Services.Authentication;
 using UdapEd.Shared.Services.Cds;
+using UdapEd.Shared.Services.Fhir;
 using CdsService = UdapEd.Shared.Services.Cds.CdsService;
 using FhirClientWithUrlProvider = UdapEd.Shared.Services.FhirClientWithUrlProvider;
 using IBaseUrlProvider = UdapEd.Shared.Services.IBaseUrlProvider;
@@ -112,11 +114,13 @@ builder.Services.AddHttpClient<IUdapClient, UdapClient>()
 
 builder.Services.AddScoped<IBaseUrlProvider, BaseUrlProvider>();
 builder.Services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
+builder.Services.AddSingleton<IFhirClientOptionsProvider, FhirClientOptionsProvider>();
 
 builder.Services.AddHttpClient<FhirClientWithUrlProvider>((sp, httpClient) =>
 { })
     .AddHttpMessageHandler(sp => new AuthTokenHttpMessageHandler(sp.GetRequiredService<IAccessTokenProvider>()))
-    .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()));
+    .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()))
+    .AddHttpMessageHandler(sp => new CustomDecompressionHandler(sp.GetRequiredService<IFhirClientOptionsProvider>()));
 
 builder.Services.AddTransient<IClientCertificateProvider, ClientCertificateProvider>();
 builder.Services.AddScoped<IInfrastructure, Infrastructure>();

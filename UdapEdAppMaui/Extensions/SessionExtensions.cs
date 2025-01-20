@@ -1,13 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿#region (c) 2025 Joseph Shook. All rights reserved.
+// /*
+//  Authors:
+//     Joseph Shook   Joseph.Shook@Surescripts.com
+// 
+//  See LICENSE in the project root for license information.
+// */
+#endregion
+
 using System.Text;
-using System.Threading.Tasks;
 
 namespace UdapEdAppMaui.Extensions;
 public static class SessionExtensions
 {
     private const int ChunkSize = 4000; // Define a suitable chunk size per each Platform 
+
+    public static async Task StoreInChunks(string baseKey, string data)
+    {
+        await StoreInChunks(baseKey, Encoding.UTF8.GetBytes(data));
+    }
 
     public static async Task StoreInChunks(string baseKey, byte[] data)
     {
@@ -26,6 +36,7 @@ public static class SessionExtensions
         // Store the total number of chunks
         await SecureStorage.Default.SetAsync($"{baseKey}_totalChunks", totalChunks.ToString());
     }
+
     public static async Task<string?> RetrieveFromChunks(string baseKey)
     {
         string? totalChunksStr = await SecureStorage.Default.GetAsync($"{baseKey}_totalChunks");
@@ -49,5 +60,25 @@ public static class SessionExtensions
         }
 
         return Convert.ToBase64String(data.ToArray());
+    }
+
+    public static async Task RemoveChunks(string baseKey)
+    {
+        string? totalChunksStr = await SecureStorage.Default.GetAsync($"{baseKey}_totalChunks");
+        if (totalChunksStr == null)
+        {
+            return;
+        }
+
+        int totalChunks = int.Parse(totalChunksStr);
+
+        for (int i = 0; i < totalChunks; i++)
+        {
+            string chunkKey = $"{baseKey}_chunk_{i}";
+            SecureStorage.Default.Remove(chunkKey);
+        }
+
+        // Remove the entry that stores the total number of chunks
+        SecureStorage.Default.Remove($"{baseKey}_totalChunks");
     }
 }

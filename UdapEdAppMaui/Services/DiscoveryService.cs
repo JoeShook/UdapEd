@@ -27,7 +27,6 @@ using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Discovery;
 using UdapEd.Shared.Services;
 using Task = System.Threading.Tasks.Task;
-using Microsoft.Maui.Storage;
 using UdapEd.Shared.Extensions;
 
 namespace UdapEdAppMaui.Services;

@@ -46,4 +46,9 @@ public static class UdapEdConstants
             public const string SEARCH = "search";
         }
     }
+
+    public static class FhirClient
+    {
+        public const string EnableDecompression = "Enable_Decompression";
+    }
 }

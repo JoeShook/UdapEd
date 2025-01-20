@@ -7,10 +7,12 @@
 // */
 #endregion
 
+using System;
 using System.Net.Http.Json;
 using System.Security.Cryptography.X509Certificates;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
+using static MudBlazor.CategoryTypes;
 
 namespace UdapEd.Client.Services;
 
@@ -174,6 +176,45 @@ public class Infrastructure : IInfrastructure
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to remove from file cache");
+            throw;
+        }
+    }
+
+    public async Task EnableFhirCompression(bool enable)
+    {
+        try
+        {
+            var response = await _httpClient.PutAsJsonAsync($"Infrastructure/SetFhirCompression", enable);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError($"Failed to set FHIR compression setting. Status code: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Failed SetFhirCompression to {enable}");
+            throw;
+        }
+    }
+
+    public async Task<bool> GetFhirCompression()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"Infrastructure/GetFhirCompression");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var enabled = await response.Content.ReadFromJsonAsync<bool>();
+                return enabled;
+            }
+
+            _logger.LogError($"Failed to get FHIR compression setting. Status code: {response.StatusCode}");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Failed GetFhirCompression");
             throw;
         }
     }

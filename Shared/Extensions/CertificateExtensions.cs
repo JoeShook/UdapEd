@@ -10,7 +10,10 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Unicode;
 
 namespace UdapEd.Shared.Extensions;
 
@@ -88,7 +91,24 @@ public static class CertificateExtensions
             .Select(cert => Convert.ToBase64String(cert.Export(X509ContentType.Cert)))
             .ToList();
 
-        return JsonSerializer.Serialize(serializedCertificates);
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append("[");
+
+        for (int i = 0; i < serializedCertificates.Count; i++)
+        {
+            stringBuilder.Append("\"");
+            stringBuilder.Append(serializedCertificates[i]);
+            stringBuilder.Append("\"");
+
+            if (i < serializedCertificates.Count - 1)
+            {
+                stringBuilder.Append(",");
+            }
+        }
+
+        stringBuilder.Append("]");
+
+        return stringBuilder.ToString();
     }
 
     public static X509Certificate2Collection DeserializeCertificates(this string? serializedCertificates)
@@ -111,4 +131,3 @@ public static class CertificateExtensions
         return certificates;
     }
 }
-

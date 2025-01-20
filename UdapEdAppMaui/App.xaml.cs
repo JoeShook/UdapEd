@@ -14,9 +14,7 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        var window = base.CreateWindow(activationState);
-        window.Page = new MainPage();
-        return window;
+        return new Window(new MainPage()) { Title = "UdapEd" };
     }
 
     protected override void OnStart()

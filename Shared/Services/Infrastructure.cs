@@ -14,19 +14,23 @@ using Google.Cloud.Storage.V1;
 using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.X509;
 using UdapEd.Shared.Model;
+using UdapEd.Shared.Services.Fhir;
 using UdapEd.Shared.Services.x509;
+using static MudBlazor.CategoryTypes;
 
 namespace UdapEd.Shared.Services;
 public class Infrastructure : IInfrastructure
 {
     protected readonly HttpClient HttpClient;
     private readonly CrlCacheService _crlCacheService;
+    private readonly IFhirClientOptionsProvider _fhirClientOptionsProvider;
     private readonly ILogger<Infrastructure> _logger;
 
-    public Infrastructure(HttpClient httpClient, CrlCacheService crlCacheService, ILogger<Infrastructure> logger)
+    public Infrastructure(HttpClient httpClient, CrlCacheService crlCacheService, IFhirClientOptionsProvider fhirClientOptionsProvider, ILogger<Infrastructure> logger)
     {
         HttpClient = httpClient;
         _crlCacheService = crlCacheService;
+        _fhirClientOptionsProvider = fhirClientOptionsProvider;
         _logger = logger;
         HttpClient.Timeout = TimeSpan.FromSeconds(2);
     }
@@ -368,9 +372,20 @@ public class Infrastructure : IInfrastructure
         {
             _crlCacheService.Remove(settings);
         }
-        
 
         return Task.CompletedTask;
+    }
+
+    public virtual Task EnableFhirCompression(bool enable)
+    {
+        _fhirClientOptionsProvider.SetDecompression(enable);
+
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> GetFhirCompression()
+    {
+        return _fhirClientOptionsProvider.GetDecompression();
     }
 
     private async Task<(byte[] caData, byte[] intermediateData)> GetSigningCertificates()

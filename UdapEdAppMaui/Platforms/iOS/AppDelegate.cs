@@ -1,7 +1,7 @@
 ﻿using Foundation;
-using Microsoft.Maui;
 
 namespace UdapEdAppMaui;
+
 [Register("AppDelegate")]
 public class AppDelegate : MauiUIApplicationDelegate
 {

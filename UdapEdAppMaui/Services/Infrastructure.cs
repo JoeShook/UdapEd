@@ -1,15 +1,26 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿#region (c) 2025 Joseph Shook. All rights reserved.
+// /*
+//  Authors:
+//     Joseph Shook   Joseph.Shook@Surescripts.com
+// 
+//  See LICENSE in the project root for license information.
+// */
+#endregion
+
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using UdapEd.Shared;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Services;
+using UdapEd.Shared.Services.Fhir;
 using UdapEdAppMaui.Extensions;
 
 namespace UdapEdAppMaui.Services;
 public class Infrastructure : UdapEd.Shared.Services.Infrastructure
 {
-    public Infrastructure(HttpClient httpClient, CrlCacheService crlCacheService, ILogger<UdapEd.Shared.Services.Infrastructure> logger) 
-        : base(httpClient, crlCacheService, logger)
+    public Infrastructure(HttpClient httpClient, CrlCacheService crlCacheService, IFhirClientOptionsProvider fhirClientOptionsProvider, ILogger<UdapEd.Shared.Services.Infrastructure> logger) 
+        : base(httpClient, crlCacheService, fhirClientOptionsProvider, logger)
     {
     }
 
@@ -21,17 +32,22 @@ public class Infrastructure : UdapEd.Shared.Services.Infrastructure
             var bytes = await HttpClient.GetByteArrayAsync(url);
 
             var certificate = new X509Certificate2(bytes);
-            var intermediatesStored =
-                await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
-            var intermediateCerts = intermediatesStored.DeserializeCertificates();
+            var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
+            var intermediateCerts = Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
 
-            if (intermediateCerts != null && intermediateCerts.Any())
+            if (intermediateCerts.All(i => i.Thumbprint != certificate.Thumbprint))
             {
                 intermediateCerts.Add(certificate);
+                await SessionExtensions.StoreInChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES, intermediateCerts.SerializeCertificates());
             }
 
-            await SessionExtensions.StoreInChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES,
-                certificate.RawData);
+            // if (intermediateCerts != null && intermediateCerts.Any())
+            // {
+            //     intermediateCerts.Add(certificate);
+            // }
+            //
+            // await SessionExtensions.StoreInChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES,
+            //     certificate.RawData);
 
             return certificate.GetRawCertDataString();
         }

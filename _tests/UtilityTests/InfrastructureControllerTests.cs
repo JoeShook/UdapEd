@@ -14,6 +14,7 @@ using Udap.Util.Extensions;
 using UdapEd.Shared.Services;
 using Xunit.Abstractions;
 using Microsoft.Extensions.Logging;
+using UdapEd.Shared.Services.Fhir;
 
 namespace UtilityTests
 {
@@ -59,6 +60,7 @@ namespace UtilityTests
             var infrastructure = new Infrastructure(
                 Substitute.For<HttpClient>(), 
                 Substitute.For<CrlCacheService>(Substitute.For<ILogger<CrlCacheService>>()),
+                Substitute.For<IFhirClientOptionsProvider>(),
                 Substitute.For<ILogger<Infrastructure>>());
             var bytes = await infrastructure.JitFhirlabsCommunityCertificate(subjAltNames, "udap-test");
 

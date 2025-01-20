@@ -24,6 +24,7 @@ using Udap.Common.Certificates;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Services.Authentication;
 using UdapEd.Shared.Services.Cds;
+using UdapEd.Shared.Services.Fhir;
 using UdapEd.Shared.Services.Search;
 /* Unmerged change from project 'UdapEdAppMaui (net8.0-windows10.0.19041.0)'
 Before:
@@ -41,6 +42,7 @@ using UdapEdAppMaui.Services.Authentication;
 */
 using UdapEdAppMaui.Services;
 using UdapEdAppMaui.Services.Authentication;
+using UdapEdAppMaui.Services.Fhir;
 using UdapEdAppMaui.Services.Search;
 using AuthTokenHttpMessageHandler = UdapEd.Shared.Services.Authentication.AuthTokenHttpMessageHandler;
 using IAccessTokenProvider = UdapEd.Shared.Services.Authentication.IAccessTokenProvider;
@@ -131,12 +133,14 @@ public static class MauiProgram
 
         builder.Services.AddTransient<IBaseUrlProvider, BaseUrlProvider>();
         builder.Services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
+        builder.Services.AddSingleton<IFhirClientOptionsProvider, FhirClientOptionsProvider>();
         builder.Services.AddTransient<HttpResponseHandler>();
-        
+
         builder.Services.AddHttpClient<FhirClientWithUrlProvider>((sp, httpClient) =>
                 { })
             .AddHttpMessageHandler(sp => new AuthTokenHttpMessageHandler(sp.GetRequiredService<IAccessTokenProvider>()))
             .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()))
+            .AddHttpMessageHandler(sp => new CustomDecompressionHandler(sp.GetRequiredService<IFhirClientOptionsProvider>()))
             .AddHttpMessageHandler<HttpResponseHandler>();
 
         builder.Services.AddTransient<IClientCertificateProvider, ClientCertificateProvider>();

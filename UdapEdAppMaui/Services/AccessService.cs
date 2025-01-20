@@ -13,14 +13,11 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Udap.Client.Client.Extensions;
 using Udap.Model.Access;
-using Udap.Model.UdapAuthenticationExtensions;
 using UdapEd.Shared;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Mappers;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
-using Microsoft.Maui.Storage;
-using Microsoft.Maui.Devices.Sensors;
 
 namespace UdapEdAppMaui.Services;
 internal class AccessService : IAccessService

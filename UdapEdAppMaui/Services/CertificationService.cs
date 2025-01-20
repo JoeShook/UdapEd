@@ -19,8 +19,7 @@ using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Registration;
 using UdapEd.Shared.Services;
-using Microsoft.Maui.Storage;
-using Microsoft.Maui.ApplicationModel.Communication;
+using UdapEdAppMaui.Extensions;
 
 namespace UdapEdAppMaui.Services;
 public class CertificationService : ICertificationService
@@ -199,8 +198,8 @@ public class CertificationService : ICertificationService
 
     public async Task<bool> RemoveCertificate()
     {
-        await RemoveChunks(UdapEdConstants.CERTIFICATION_CERTIFICATE);
-        await RemoveChunks(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY);
+        await SessionExtensions.RemoveChunks(UdapEdConstants.CERTIFICATION_CERTIFICATE);
+        await SessionExtensions.RemoveChunks(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY);
         
         return true;
     }
@@ -344,24 +343,5 @@ public class CertificationService : ICertificationService
         }
 
         return Convert.ToBase64String(data.ToArray());
-    }
-    private async Task RemoveChunks(string baseKey)
-    {
-        string? totalChunksStr = await SecureStorage.Default.GetAsync($"{baseKey}_totalChunks");
-        if (totalChunksStr == null)
-        {
-            return;
-        }
-
-        int totalChunks = int.Parse(totalChunksStr);
-
-        for (int i = 0; i < totalChunks; i++)
-        {
-            string chunkKey = $"{baseKey}_chunk_{i}";
-            SecureStorage.Default.Remove(chunkKey);
-        }
-
-        // Remove the entry that stores the total number of chunks
-        SecureStorage.Default.Remove($"{baseKey}_totalChunks");
     }
 }

@@ -196,4 +196,20 @@ public class InfrastructureController : Controller
             return StatusCode(500, "Internal server error");
         }
     }
+
+    [HttpPut("SetFhirCompression")]
+    public async Task<IActionResult> SetFhirCompression([FromBody] bool enable)
+    {
+        await _infrastructure.EnableFhirCompression(enable);
+
+        return Ok();
+    }
+
+    [HttpGet("GetFhirCompression")]
+    public async Task<IActionResult> GetFhirCompression()
+    {
+        var enabled = await _infrastructure.GetFhirCompression();
+
+        return Ok(enabled);
+    }
 }

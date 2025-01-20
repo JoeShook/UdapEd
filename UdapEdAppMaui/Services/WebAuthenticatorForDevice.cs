@@ -8,7 +8,6 @@
 #endregion
 
 using UdapEd.Shared.Services;
-using Microsoft.Maui.Authentication;
 
 namespace UdapEdAppMaui.Services;
 

@@ -1,0 +1,26 @@
+﻿@page "/settings"
+@inject IInfrastructure Infrastructure
+
+<MudContainer MaxWidth="MaxWidth.Small" class="mt-4">
+    <MudPaper Class="p-3">
+        <MudText Typo="Typo.h5">Settings</MudText>
+        <MudSwitch T="bool" @bind-Value="_enableCompression"
+                   @bind-Value:after="SaveSettings"
+                   Color="Color.Primary"
+                   Label="Enable FHIR Client Compression"/>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private bool _enableCompression;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _enableCompression = await Infrastructure.GetFhirCompression();
+    }
+
+    private async Task SaveSettings()
+    {
+        await Infrastructure.EnableFhirCompression(_enableCompression);
+    }
+}

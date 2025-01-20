@@ -34,6 +34,10 @@ public interface IInfrastructure
     Task<CrlFileCacheSettings?> GetCryptNetUrlCache(string? path);
     Task RemoveFromX509Store(X509CacheSettings? settings);
     Task RemoveFromFileCache(CrlFileCacheSettings? settings);
+
+    Task EnableFhirCompression(bool enable);
+
+    Task<bool> GetFhirCompression();
 }
 
 public class X509CacheSettings
