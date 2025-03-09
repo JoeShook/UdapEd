@@ -235,7 +235,7 @@ public partial class ClientCertLoader
 
     private async Task LoadEmrTestCertificate()
     {
-        var certViewModel = await RegisterService.LoadTestCertificate("udap-sandbox-surescripts-2.p12");
+        var certViewModel = await RegisterService.LoadTestCertificate("udap.emrdirect.client.certificate.p12");
         await SetCertLoadedColorForDefaultCommunity(certViewModel?.CertLoaded);
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), certViewModel);
         await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);

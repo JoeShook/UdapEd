@@ -52,7 +52,7 @@
     <None Update="SureFhirLabs_CA.cer">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="udap-sandbox-surescripts-2.p12">
+    <None Update="udap.emrdirect.client.certificate.p12">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
