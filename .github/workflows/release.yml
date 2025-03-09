@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -25,7 +26,7 @@ jobs:
 
     - name: Convert repository name to lowercase
       id: to_lowercase
-      run: echo "::set-output name=lower_repo::${{ github.repository | toJSON | fromJSON | toLowerCase }}"
+      run: echo "::set-output name=lower_repo::${GITHUB_REPOSITORY,,}"
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
