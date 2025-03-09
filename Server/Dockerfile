@@ -18,7 +18,7 @@ ENV UseMauiEssentials=false
 ARG TAG_NAME
 ENV TAG_NAME_ENV=$TAG_NAME
 
-COPY ["nuget.config", "."]
+COPY ["nuget.config*", "."]
 COPY ["Server/UdapEd.Server.csproj", "Server/"]
 COPY ["Client/UdapEd.Client.csproj", "Client/"]
 COPY ["Shared/UdapEd.Shared.csproj", "Shared/"]
