@@ -22,10 +22,15 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Extract tag
+      id: extract_tag
+      run: echo "::set-output name=tag::${GITHUB_REF#refs/tags/}"
+
+
     # Build and push Docker image
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
         context: .  # Build context (current directory)
         push: true  # Push to registry after building
-        tags: ghcr.io/${{ github.repository }}:latest  # Tag as latest
+        tags: ghcr.io/${{ github.repository.toLowerCase() }}:${{ steps.extract_tag.outputs.tag }}
