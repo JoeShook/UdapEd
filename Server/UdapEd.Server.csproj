@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerImageLabels>FhriLabs.UdapEd</DockerImageLabels>
-    <DockerfileRunArguments>-p "5171:8080" -p "7041:443" -e ASPNETCORE_HTTPS_PORT=7041 </DockerfileRunArguments>
+    <DockerfileRunArguments>-p "5171:8080" -p "7041:8081" -e ASPNETCORE_HTTPS_PORT=7041 </DockerfileRunArguments>
     <DockerfileContext>..</DockerfileContext>
     <UserSecretsId>e17eb5d1-fcd6-4149-b420-26b7e7d50e28</UserSecretsId>
   </PropertyGroup>

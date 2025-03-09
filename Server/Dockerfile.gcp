@@ -4,7 +4,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 ARG TAG_NAME
 WORKDIR /app
 EXPOSE 8080
-EXPOSE 8081
+EXPOSE 443
 COPY ./Server/SureFhirLabs_CA.cer /etc/ssl/certs
 COPY ./Server/ngnix-proxy-TestCA.cer /etc/ssl/certs
 RUN update-ca-certificates
@@ -39,4 +39,5 @@ RUN dotnet publish "Server/UdapEd.Server.csproj" -p:TargetFramework=net8.0  -c R
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+ENV ASPNETCORE_URLS=http://*:8080
 ENTRYPOINT ["dotnet", "UdapEd.Server.dll"]
