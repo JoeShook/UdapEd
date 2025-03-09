@@ -192,7 +192,7 @@ public partial class CertificationAndEndorsementLoader
 
     private async Task LoadFhirLabsExampleCertificatationCertificate()
     {
-        var certViewModel = await CertificationService.LoadTestCertificate("FhirLabsAdminCertification.pfx");
+        var certViewModel = await CertificationService.LoadTestCertificate("./CertificateStore/FhirLabsAdminCertification.pfx");
         await SetCertLoadedColorFoExample(certViewModel?.CertLoaded);
         await AppState.SetPropertyAsync(this, nameof(AppState.CertificationAndEndorsementInfo), certViewModel);
         await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);

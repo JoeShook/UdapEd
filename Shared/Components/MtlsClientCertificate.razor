@@ -124,7 +124,7 @@
 
     private async Task LoadFhirLabsTestCertificate()
     {
-        var certViewModel = await mTlsService.LoadTestCertificate("FhirLabs_mTLS_Client.pfx");
+        var certViewModel = await mTlsService.LoadTestCertificate("./CertificateStore/FhirLabs_mTLS_Client.pfx");
         await SetClientCertLoadedColor(certViewModel?.CertLoaded);
         await AppState.SetPropertyAsync(this, nameof(AppState.MtlsClientCertificateInfo), certViewModel);
         await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.mTLS);

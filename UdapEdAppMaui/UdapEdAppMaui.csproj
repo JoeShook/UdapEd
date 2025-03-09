@@ -67,11 +67,6 @@
     <Content Remove="hl7.fhir.us.identity-matching-2.0.0-draft-expanded.json" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Remove="fhirlabs.net.client.pfx" />
-    <None Remove="udap-sandbox-surescripts-2.p12" />
-    <None Remove="FhirLabs_mTLS_Client.pfx" />
-  </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="appsettings.json" />
@@ -81,9 +76,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <MauiAsset Include="fhirlabs.net.client.pfx" Condition="Exists('fhirlabs.net.client.pfx')" />
-    <MauiAsset Include="udap-sandbox-surescripts-2.p12" Condition="Exists('udap-sandbox-surescripts-2.p12')" />
-    <MauiAsset Include="FhirLabs_mTLS_Client.pfx" Condition="Exists('FhirLabs_mTLS_Client.pfx')" />
+    <MauiAsset Include="./CertificateStore/fhirlabs.net.client.pfx" Condition="Exists('./CertificateStore/fhirlabs.net.client.pfx')" />
+    <MauiAsset Include="CertificateStore\udap.emrdirect.client.certificate.p12" Condition="Exists('./CertificateStore/udap-sandbox-surescripts-2.p12')" />
+    <MauiAsset Include="./CertificateStore/FhirLabs_mTLS_Client.pfx" Condition="Exists('./CertificateStore/FhirLabs_mTLS_Client.pfx')" />
   </ItemGroup>
 
 
@@ -128,9 +123,25 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="FhirLabsAdminCertification.pfx">
+    <None Update="CertificateStore\fhirlabs.net.client.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="CertificateStore\FhirLabsAdminCertification.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="CertificateStore\FhirLabs_mTLS_Client.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="CertificateStore\udap-sandbox-surescripts-2.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="CertificateStore\udap.emrdirect.client.certificate.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>   
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="CertificateStore\" />
   </ItemGroup>
 
 </Project>

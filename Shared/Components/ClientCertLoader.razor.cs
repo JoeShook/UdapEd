@@ -226,7 +226,7 @@ public partial class ClientCertLoader
 
     private async Task LoadFhirLabsTestCertificate()
     {
-        var certViewModel = await RegisterService.LoadTestCertificate("fhirlabs.net.client.pfx");
+        var certViewModel = await RegisterService.LoadTestCertificate("./CertificateStore/fhirlabs.net.client.pfx");
         await SetCertLoadedColorForFhirLabs(certViewModel?.CertLoaded);
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), certViewModel);
         await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);

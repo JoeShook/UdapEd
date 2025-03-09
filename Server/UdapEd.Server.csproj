@@ -34,13 +34,13 @@
     <PackageReference Include="Udap.Common" Version="0.4.4" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="fhirlabs.net.client.pfx">
+    <None Update="CertificateStore\fhirlabs.net.client.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="FhirLabsAdminCertification.pfx">
+    <None Update="CertificateStore\FhirLabsAdminCertification.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="FhirLabs_mTLS_Client.pfx">
+    <None Update="CertificateStore\FhirLabs_mTLS_Client.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="host.docker.internal.pfx">
