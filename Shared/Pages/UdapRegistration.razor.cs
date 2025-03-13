@@ -943,27 +943,33 @@ public partial class UdapRegistration
         RequestBody = RequestBody.Replace($"<div id=\"expandableText\" class=\"expandable\" onclick=\"toggleText()\">", "").Replace("</mark>", "");
         RequestBody = RequestBody.Replace($"<span id=\"indicator\" class=\"indicator\">[+]</span></div>", "").Replace("</mark>", "");
 
-        var jsonDocument = JsonDocument.Parse(RequestBody);
-        if (jsonDocument.RootElement.TryGetProperty("software_statement", out var softwareStatementElement))
-        {
-            var softwareStatement = softwareStatementElement.GetString();
-            RequestBody = RequestBody.Replace(softwareStatement, $"<mark>{softwareStatement}</mark>");
-        }
-
-        if (jsonDocument.RootElement.TryGetProperty("certifications", out var certificationsElement) &&
-            certificationsElement.ValueKind == JsonValueKind.Array &&
-            certificationsElement.GetArrayLength() > 0)
-        {
-            var firstCertification = certificationsElement[0];
-            if (firstCertification.ValueKind == JsonValueKind.String)
+        try { 
+            var jsonDocument = JsonDocument.Parse(RequestBody);
+            if (jsonDocument.RootElement.TryGetProperty("software_statement", out var softwareStatementElement))
             {
-                var certificationValue = firstCertification.GetString();
-                RequestBody = RequestBody
-                    .Replace(certificationValue,
-                        $"<div id=\"expandableText\" class=\"expandable\" onclick=\"toggleText()\">" +
-                        $"{certificationValue}" +
-                        $"<span id=\"indicator\" class=\"indicator\">[+]</span></div>");
+                var softwareStatement = softwareStatementElement.GetString();
+                RequestBody = RequestBody.Replace(softwareStatement, $"<mark>{softwareStatement}</mark>");
             }
+
+            if (jsonDocument.RootElement.TryGetProperty("certifications", out var certificationsElement) &&
+                certificationsElement.ValueKind == JsonValueKind.Array &&
+                certificationsElement.GetArrayLength() > 0)
+            {
+                var firstCertification = certificationsElement[0];
+                if (firstCertification.ValueKind == JsonValueKind.String)
+                {
+                    var certificationValue = firstCertification.GetString();
+                    RequestBody = RequestBody
+                        .Replace(certificationValue,
+                            $"<div id=\"expandableText\" class=\"expandable\" onclick=\"toggleText()\">" +
+                            $"{certificationValue}" +
+                            $"<span id=\"indicator\" class=\"indicator\">[+]</span></div>");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
         }
     }
 

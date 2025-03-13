@@ -14,48 +14,49 @@
             </TitleContent>
            
             <ChildContent >
-               
-               @if (StoreCache != null && StoreCache.Cached)
-               {
-                   <MudGrid Spacing="1">
-                       <MudItem Style="display: flex; align-items: center;" >
-                           <MudIcon Icon="@Icons.Material.Filled.Cached" Color="Color.Warning" Size="Size.Small" />
-                           <MudText Class="ml-2" Color="Color.Warning">Cached in Windows Certificate Store</MudText>
-                       </MudItem>
-                       <MudSpacer/>
-                       <MudItem>
-                           <MudButton
-                               IconColor="Color.Info"
-                               StartIcon=@Icons.Material.Filled.Remove
-                               Size="Size.Small"
-                               OnClick="@(() => RemoveFromStore())">
-                               <MudText Color="Color.Info">Remove from Certificate Store</MudText>
-                           </MudButton>
-                       </MudItem>
-                       <MudItem xs="1"/>
-                       <MudItem xs="11">
-                            <ul >
-                                <li class="tertiary-bullet" ><MudText Color="Color.Warning">@($"Store: {StoreCache.StoreLocation.ToString()}")</MudText> </li>
-                                <li class="tertiary-bullet"><MudText Color="Color.Warning">@($"Folder: {StoreCache.StoreNameDescription}")</MudText></li>
-                           </ul>
-                       </MudItem>
-                   </MudGrid>
-               }
 
-                @if (FileCache != null && FileCache.Cached)
+                @if (StoreCache != null && StoreCache.Any(c => c.Cached))
+                {
+                    <MudGrid Spacing="1">
+                        <MudItem Style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.Cached" Color="Color.Warning" Size="Size.Small" />
+                            <MudText Class="ml-2" Color="Color.Warning">Cached in Windows Certificate Store</MudText>
+                        </MudItem>
+                        <MudSpacer />
+                        <MudItem>
+                            <MudButton IconColor="Color.Info"
+                                       StartIcon=@Icons.Material.Filled.Remove
+                                       Size="Size.Small"
+                                       OnClick="@(() => RemoveFromStore())">
+                                <MudText Color="Color.Info">Remove from Certificate Store</MudText>
+                            </MudButton>
+                        </MudItem>
+                        <MudItem xs="1" />
+                        <MudItem xs="11">
+                            <ul>
+                                @foreach (var cache in StoreCache)
+                                {
+                                    <li class="tertiary-bullet"><MudText Color="Color.Warning">@($"Store: {cache.StoreLocation.ToString()}")</MudText></li>
+                                    <li class="tertiary-bullet"><MudText Color="Color.Warning">@($"Folder: {cache.StoreNameDescription}")</MudText></li>
+                                }
+                            </ul>
+                        </MudItem>
+                    </MudGrid>
+                }
+
+                @if (FileCache != null && FileCache.Any(c => c.Cached))
                 {
                     <MudGrid>
                         <MudItem Style="display: flex; align-items: center;">
                             <MudIcon Icon="@Icons.Material.Filled.Cached" Color="Color.Warning" Size="Size.Small" />
                             <MudText Class="mr-2" Color="Color.Warning">Cached with Windows CryptnetUrlCache on File System</MudText>
                         </MudItem>
-                        <MudSpacer/>
+                        <MudSpacer />
                         <MudItem>
-                            <MudButton
-                                IconColor="Color.Info"
-                                StartIcon=@Icons.Material.Filled.Remove
-                                Size="Size.Small"
-                                OnClick="@(() => RemoveFromFileCache())">
+                            <MudButton IconColor="Color.Info"
+                                       StartIcon=@Icons.Material.Filled.Remove
+                                       Size="Size.Small"
+                                       OnClick="@(() => RemoveFromFileCache())">
                                 <MudText Color="Color.Info">Remove from FileCache</MudText>
                             </MudButton>
                         </MudItem>
@@ -80,6 +81,7 @@
                            {
                                <MudItem Class="pa-2" Style="@color" md="6" sm="12" xs="12">
                                    <strong>@keyValuePair.Key</strong>
+                                   
                                    @if (!string.IsNullOrEmpty(@keyValuePair.Value))
                                    {
                                        <MudButton

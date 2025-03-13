@@ -20,23 +20,32 @@ public class CertificateDisplayBuilder
 
     public CertificateViewModel? BuildCertificateDisplayData()
     {
-        var data = new Dictionary<string, string>();
+        var data = new List<KeyValuePair<string, string>>();
 
-        data.Add("Serial Number", GetSerialNumber(_cert));
-        data.Add("Subject", _cert.Subject);
-        data.Add("Subject Alternative Names", GetSANs(_cert));
-        data.Add("Public Key Alogorithm", GetPublicKeyAlgorithm(_cert));
-        data.Add("Certificate Policy", BuildPolicyInfo(_cert));
-        data.Add("Start Date", _cert.GetEffectiveDateString());
-        data.Add("End Date", _cert.GetExpirationDateString());
-        data.Add("Key Usage", GetKeyUsage(_cert));
-        // data.Add("Extended Key Usage", GetExtendedKeyUsage(cert));
-        data.Add("Issuer", _cert.Issuer);
-        data.Add("Subject Key Identifier", GetSubjectKeyIdentifier(_cert));
-        data.Add("Authority Key Identifier", GetAuthorityKeyIdentifier(_cert));
-        data.Add("Authority Information Access", GetAIAUrls(_cert));
-        data.Add("CRL Distribution", GetCrlDistributionPoint(_cert));
-        data.Add("Thumbprint SHA1", _cert.Thumbprint);
+        data.Add(new KeyValuePair<string, string>("Serial Number", GetSerialNumber(_cert)));
+        data.Add(new KeyValuePair<string, string>("Subject", _cert.Subject));
+        data.Add(new KeyValuePair<string, string>("Subject Alternative Names", GetSANs(_cert)));
+        data.Add(new KeyValuePair<string, string>("Public Key Algorithm", GetPublicKeyAlgorithm(_cert)));
+        data.Add(new KeyValuePair<string, string>("Certificate Policy", BuildPolicyInfo(_cert)));
+        data.Add(new KeyValuePair<string, string>("Start Date", _cert.GetEffectiveDateString()));
+        data.Add(new KeyValuePair<string, string>("End Date", _cert.GetExpirationDateString()));
+        data.Add(new KeyValuePair<string, string>("Key Usage", GetKeyUsage(_cert)));
+        // data.Add(new KeyValuePair<string, string>("Extended Key Usage", GetExtendedKeyUsage(cert)));
+        data.Add(new KeyValuePair<string, string>("Issuer", _cert.Issuer));
+        data.Add(new KeyValuePair<string, string>("Subject Key Identifier", GetSubjectKeyIdentifier(_cert)));
+        data.Add(new KeyValuePair<string, string>("Authority Key Identifier", GetAuthorityKeyIdentifier(_cert)));
+
+        foreach (var url in GetAIAUrls(_cert) ?? new List<string>())
+        {
+            data.Add(new KeyValuePair<string, string>("Authority Information Access", url));
+        }
+
+        foreach (var url in GetCrlDistributionPoints(_cert) ?? new List<string>())
+        {
+            data.Add(new KeyValuePair<string, string>("CRL Distribution", url));
+        }
+
+        data.Add(new KeyValuePair<string, string>("Thumbprint SHA1", _cert.Thumbprint));
 
         var result = new CertificateViewModel();
 
@@ -44,22 +53,23 @@ public class CertificateDisplayBuilder
         return result;
     }
 
-    private string GetAIAUrls(X509Certificate2 cert)
+    private static List<string>? GetAIAUrls(X509Certificate2 cert)
     {
         var aiaExtensions =
             cert.Extensions["1.3.6.1.5.5.7.1.1"] as X509AuthorityInformationAccessExtension;
 
         if (aiaExtensions == null)
         {
-            return string.Empty;
-        }
-        var sb = new StringBuilder();
-        foreach (var url in aiaExtensions!.EnumerateCAIssuersUris())
-        {
-            sb.AppendLine(url);
+            return null;
         }
 
-        return sb.ToString();
+        var urls = new List<string>();
+        foreach (var url in aiaExtensions!.EnumerateCAIssuersUris())
+        {
+            urls.Add(url);
+        }
+
+        return urls;
     }
 
     private string GetPublicKeyAlgorithm(X509Certificate2 cert)
@@ -171,17 +181,17 @@ public class CertificateDisplayBuilder
         return CreateByteStringRep(bytes);
     }
 
-    private string GetCrlDistributionPoint(X509Certificate2 cert)
+    private static List<string>? GetCrlDistributionPoints(X509Certificate2 cert)
     {
         var ext = cert.GetExtensionValue(X509Extensions.CrlDistributionPoints.Id);
 
         if (ext == null)
         {
-            return string.Empty;
+            return null;
         }
 
         var distPoints = CrlDistPoint.GetInstance(ext);
-        var retVal = new List<string>();
+        var urls = new List<string>();
 
         foreach (var distPoint in distPoints.GetDistributionPoints())
         {
@@ -195,13 +205,13 @@ public class CertificateDisplayBuilder
                     var name = generalName.Name.ToString();
                     if (name != null)
                     {
-                        retVal.Add(name);
+                        urls.Add(name);
                     }
                 }
             }
         }
 
-        return string.Join("\r\n", retVal);
+        return urls;
     }
 
     private static string CreateByteStringRep(byte[] bytes)

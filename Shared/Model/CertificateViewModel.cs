@@ -13,7 +13,7 @@ public  class CertificateViewModel
     /// <summary>
     /// Dissect certificate into most used properties
     /// </summary>
-    public List<Dictionary<string, string>> TableDisplay { get; set; } = new List<Dictionary<string, string>>();
+    public List<List<KeyValuePair<string, string>>> TableDisplay { get; set; } = new List<List<KeyValuePair<string, string>>>();
 
     /// <summary>
     /// OpenSSL or CertUtil verbose display

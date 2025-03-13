@@ -154,7 +154,7 @@ public class Infrastructure : IInfrastructure
         catch (Exception ex)
         {
             var model = new CertificateViewModel();
-            var errorEntry = new Dictionary<string, string> { { "Error", ex.Message } };
+            var errorEntry = new List<KeyValuePair<string, string>> { new("Error", ex.Message) };
             model.TableDisplay.Add(errorEntry);
             return model;
         }

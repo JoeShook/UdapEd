@@ -42,8 +42,8 @@ public partial class CertificateViewer : ComponentBase
     [Inject] private IInfrastructure Infrastructure { get; set; } = null!;
     private Dictionary<string, string> _certificateMetadata = new Dictionary<string, string>();
     private CertificateViewModel? _certificateView;
-    private string? _thumbPrint;
-    private string? _aiaPath;
+    private List<string>? _thumbPrints;
+    private List<string>? _aiaPaths;
 
     [Parameter]
     public EventCallback<CertificateViewModel?> IntermediateResolvedEvent { get; set; }
@@ -54,8 +54,8 @@ public partial class CertificateViewer : ComponentBase
     [Parameter]
     public EventCallback<CrlFileCacheSettings?> CrlCachedEvent { get; set; }
 
-    public X509CacheSettings? StoreCache { get; set; }
-    public CrlFileCacheSettings? FileCache { get; set; }
+    public List<X509CacheSettings>? StoreCache { get; set; }
+    public List<CrlFileCacheSettings>? FileCache { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -64,13 +64,42 @@ public partial class CertificateViewer : ComponentBase
 
     private async Task FindX509StoreCache()
     {
-        _thumbPrint = _certificateView?.TableDisplay.FirstOrDefault(x => x.ContainsKey("Thumbprint SHA1"))?["Thumbprint SHA1"];
-        _aiaPath = _certificateView?.TableDisplay.FirstOrDefault(x => x.ContainsKey("Authority Information Access"))?["Authority Information Access"];
+        _thumbPrints = _certificateView?.TableDisplay
+            .SelectMany(list => list)
+            .Where(x => x.Key == "Thumbprint SHA1")
+            .Select(x => x.Value)
+            .ToList();
 
-        if (_thumbPrint != null)
+        _aiaPaths = _certificateView?.TableDisplay
+            .SelectMany(list => list)
+            .Where(x => x.Key == "Authority Information Access")
+            .Select(x => x.Value)
+            .ToList();
+
+        if (_thumbPrints != null)
         {
-            StoreCache = await Infrastructure.GetX509StoreCache(_thumbPrint);
-            FileCache = await Infrastructure.GetCryptNetUrlCache(_aiaPath);
+            StoreCache = new List<X509CacheSettings>();
+            foreach (var thumbPrint in _thumbPrints)
+            {
+                var cache = await Infrastructure.GetX509StoreCache(thumbPrint);
+                if (cache != null)
+                {
+                    StoreCache.Add(cache);
+                }
+            }
+        }
+
+        if (_aiaPaths != null)
+        {
+            FileCache = new List<CrlFileCacheSettings>();
+            foreach (var aiaPath in _aiaPaths)
+            {
+                var cache = await Infrastructure.GetCryptNetUrlCache(aiaPath);
+                if (cache != null)
+                {
+                    FileCache.Add(cache);
+                }
+            }
         }
     }
 
@@ -123,18 +152,32 @@ public partial class CertificateViewer : ComponentBase
 
     private async Task RemoveFromStore()
     {
-        if (_thumbPrint != null)
+        if (_thumbPrints != null && StoreCache != null)
         {
-            await Infrastructure.RemoveFromX509Store(StoreCache);
+            foreach (var thumbPrint in _thumbPrints)
+            {
+                var cache = StoreCache.FirstOrDefault(c => c.Thumbprint == thumbPrint);
+                if (cache != null)
+                {
+                    await Infrastructure.RemoveFromX509Store(cache);
+                }
+            }
             await FindX509StoreCache();
         }
     }
 
     private async Task RemoveFromFileCache()
     {
-        if (_thumbPrint != null)
+        if (_aiaPaths != null && FileCache != null)
         {
-            await Infrastructure.RemoveFromFileCache(FileCache);
+            foreach (var aiaPath in _aiaPaths)
+            {
+                var cache = FileCache.FirstOrDefault(c => c.UrlPath == aiaPath);
+                if (cache != null)
+                {
+                    await Infrastructure.RemoveFromFileCache(cache);
+                }
+            }
             FileCache = null;
         }
     }
