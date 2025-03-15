@@ -7,8 +7,8 @@ EXPOSE 8080
 EXPOSE 8081
 COPY ./Server/SureFhirLabs_CA.cer /etc/ssl/certs
 COPY ./Server/ngnix-proxy-TestCA.cer /etc/ssl/certs
+COPY ./Server/DevDaysCA_1.crt /etc/ssl/certs
 RUN update-ca-certificates
-
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -18,17 +18,14 @@ ENV UseMauiEssentials=false
 ARG TAG_NAME
 ENV TAG_NAME_ENV=$TAG_NAME
 
-COPY ["nuget.config*", "."]
-COPY ["Server/UdapEd.Server.csproj", "Server/"]
-COPY ["Client/UdapEd.Client.csproj", "Client/"]
-COPY ["Shared/UdapEd.Shared.csproj", "Shared/"]
+COPY ["nuget.config", "."]
+COPY ["Server", "Server/"]
+COPY ["Client", "Client/"]
+COPY ["Shared", "Shared/"]
 
-RUN dotnet restore -p:TargetFramework=net8.0 "Shared/UdapEd.Shared.csproj"
 RUN dotnet restore -p:TargetFramework=net8.0 "Server/UdapEd.Server.csproj"
-RUN dotnet restore -p:TargetFramework=net8.0 "Client/UdapEd.Client.csproj" 
-COPY . .
 
-RUN dotnet build "Server/UdapEd.Server.csproj" -p:TargetFramework=net8.0 -c Release --no-restore -o /app/build 
+RUN dotnet build "Server/UdapEd.Server.csproj" -p:TargetFramework=net8.0 -c Release --no-restore -o /app/build -v diag
 
 
 FROM build AS publish

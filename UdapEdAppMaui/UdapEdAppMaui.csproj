@@ -79,6 +79,9 @@
     <MauiAsset Include="./CertificateStore/fhirlabs.net.client.pfx" Condition="Exists('./CertificateStore/fhirlabs.net.client.pfx')" />
     <MauiAsset Include="CertificateStore\udap.emrdirect.client.certificate.p12" Condition="Exists('./CertificateStore/udap-sandbox-surescripts-2.p12')" />
     <MauiAsset Include="./CertificateStore/FhirLabs_mTLS_Client.pfx" Condition="Exists('./CertificateStore/FhirLabs_mTLS_Client.pfx')" />
+
+    <MauiAsset Include="..\Shared\wwwroot\Packages\udap_urls.json" LogicalName="udap_urls.json" />
+    
   </ItemGroup>
 
 

@@ -1,0 +1,10 @@
+{
+  "CertDefaultBaseUrls": [
+    "https://fhirlabs.net/fhir/r4"    
+  ],
+  "IdPBaseUrls": [
+    "https://udap.zimt.work/oauth2/aus5wvee13EWm169M1d7",
+    "https://idp1.securedcontrols.net",
+    "https://idp2.securedcontrols.net"
+  ]
+}

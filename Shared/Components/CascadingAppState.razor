@@ -1,16 +1,13 @@
-﻿@using Microsoft.IdentityModel.Tokens;
-@using Udap.Model.Registration
-@using Udap.Model.Access
-@using UdapEd.Shared.Model
+﻿@using Udap.Model.Registration
 @using System.Collections.Specialized
 @using UdapEd.Shared.Model.AuthExtObjects
 @using UdapEd.Shared.Model.Discovery
-@using UdapEd.Shared.Services
 @using UdapEd.Shared.Model.Smart;
 @using UdapEd.Shared.Services.Fhir
 
 @implements UdapEd.Shared.Services.IAppState
 @inject ILocalStorageService LocalStorageService
+@inject HttpClient Http
 
 <CascadingValue Value="this">
     @ChildContent
@@ -20,7 +17,53 @@
 
     [Parameter] public RenderFragment ChildContent { get; set; } = null!;
 
+    private List<string> _certDefaultBaseUrls = new List<string>();
+    private List<string> _idPBaseUrls  = new List<string>();
+
     private string _caller = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUrlsFromConfiguration();
+    }
+
+
+    private async Task LoadUrlsFromConfiguration()
+    {
+        try
+        {
+            // var json = await Http.GetStringAsync("wwwroot/Packages/udap_urls.json");
+
+#if ANDROID || IOS || MACCATALYST || WINDOWS
+        // For .NET MAUI
+        using var stream = await FileSystem.OpenAppPackageFileAsync("udap_urls.json");
+        using var reader = new StreamReader(stream);
+        var json = await reader.ReadToEndAsync();
+#else
+            // For Blazor WebAssembly
+            // var json = await Http.GetStringAsync("_content/UdapEd.Shared/Packages/udap_urls.json");  This is statically compiled in
+            var json = await Http.GetStringAsync("Packages/udap_urls.json"); // this can be dynamic and replaced, like in a Docker Conttainer.
+#endif
+
+            var config = JsonSerializer.Deserialize<UrlConfig>(json);
+
+            if (config != null)
+            {
+                _certDefaultBaseUrls = config.CertDefaultBaseUrls;
+                _idPBaseUrls = config.IdPBaseUrls;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading configuration: {ex.Message}");
+        }
+    }
+
+    private class UrlConfig
+    {
+        public List<string> CertDefaultBaseUrls { get; set; } = new();
+        public List<string> IdPBaseUrls { get; set; } = new();
+    }
 
     public void SetProperty(
         ComponentBase caller,
@@ -88,19 +131,6 @@
         }
     }
 
-    private static List<string> _certDefaultBaseUrLs = new List<string>
-    {
-        "https://fhirlabs.net/fhir/r4",
-        "https://stage.healthtogo.me:8181/fhir/r4/stage",
-        "https://dev-mtx-interop.meditech.com",
-        "https://securefhir.zimt.work/udap-public",
-        "https://identity-matching.fast.hl7.org/fhir",
-        "https://national-directory.fast.hl7.org/fhir",
-        "https://udap.fhir.poolnook.me/evernorth",
-        "https://fhir-udap.azurewebsites.net",
-        "https://ihe-nimbus.epic.com/Interconnect-FHIR/api/fhir/r4"
-    };
-
     private string? _baseUrl;
 
     public string? BaseUrl
@@ -116,14 +146,6 @@
         }
     }
 
-    private static List<string> _idPBaseUrLs = new List<string>
-    {
-        "https://udap.zimt.work/oauth2/aus5wvee13EWm169M1d7",
-        "https://idp1.securedcontrols.net",
-        "https://idp2.securedcontrols.net"
-    };
-    
-
     public string Community { get; private set; }
 
     private OrderedDictionary? _baseUrls;
@@ -135,7 +157,7 @@
             if (_baseUrls == null || !(_baseUrls.Count > 0))
             {
                 _baseUrls = new OrderedDictionary();
-                foreach (var certDefaultBaseUrL in _certDefaultBaseUrLs)
+                foreach (var certDefaultBaseUrL in _certDefaultBaseUrls)
                 {
                     _baseUrls.Add(certDefaultBaseUrL, null);
                 }
@@ -155,7 +177,7 @@
             if (_idPDictionary == null || !(_idPDictionary.Count > 0))
             {
                 _idPDictionary = new OrderedDictionary();
-                foreach (var idPBaseUrL in _idPBaseUrLs)
+                foreach (var idPBaseUrL in _idPBaseUrls)
                 {
                     _idPDictionary.Add(idPBaseUrL, idPBaseUrL);
                 }
