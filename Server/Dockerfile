@@ -7,7 +7,6 @@ EXPOSE 8080
 EXPOSE 8081
 COPY ./Server/SureFhirLabs_CA.cer /etc/ssl/certs
 COPY ./Server/ngnix-proxy-TestCA.cer /etc/ssl/certs
-COPY ./Server/DevDaysCA_1.crt /etc/ssl/certs
 RUN update-ca-certificates
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
