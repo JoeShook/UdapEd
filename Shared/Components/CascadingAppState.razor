@@ -42,7 +42,7 @@
 #else
             // For Blazor WebAssembly
             // var json = await Http.GetStringAsync("_content/UdapEd.Shared/Packages/udap_urls.json");  This is statically compiled in
-            var json = await Http.GetStringAsync("Packages/udap_urls.json"); // this can be dynamic and replaced, like in a Docker Conttainer.
+            var json = await Http.GetStringAsync("Packages/udap_urls.json"); // this can be dynamic and replaced, like in a Docker Container.
 #endif
 
             var config = JsonSerializer.Deserialize<UrlConfig>(json);
