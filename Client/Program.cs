@@ -34,6 +34,7 @@ builder.Services.AddSingleton(sp => new HttpClient
 builder.Services.AddMudServices();
 builder.Services.AddBlazoredLocalStorage();
 
+builder.Services.AddSingleton<IExternalWebAuthenticator, NullExternalWebAuthenticator>();
 builder.Services.AddSingleton<AppSharedState>();
 builder.Services.AddScoped<IRegisterService, RegisterService>();
 builder.Services.AddScoped<ICertificationService, CertificationService>();

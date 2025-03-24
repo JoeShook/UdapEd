@@ -41,7 +41,10 @@
     <UserSecretsId>b678e5df-a635-4894-8a62-136392d8dbc5</UserSecretsId>
 
     <WindowsPackageType>None</WindowsPackageType>
+  
 
+    <DefaultLanguage>en</DefaultLanguage>
+    
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-android'">

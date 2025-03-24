@@ -32,9 +32,7 @@ public partial class UdapConsumer
 
     private ErrorBoundary? ErrorBoundary { get; set; }
 
-#if ANDROID || IOS || MACCATALYST || WINDOWS
-    [Inject] IExternalWebAuthenticator ExternalWebAuthenticator { get; set; } = null!;
-#endif
+    [Inject] IExternalWebAuthenticator? ExternalWebAuthenticator { get; set; }
 
     [Inject] IAccessService AccessService { get; set; } = null!;
     [Inject] NavigationManager NavManager { get; set; } = null!;
@@ -419,31 +417,31 @@ public partial class UdapConsumer
     {
         BuildAuthorizeLink();
 
-#if ANDROID || IOS || MACCATALYST || WINDOWS
-
-        var result = await ExternalWebAuthenticator.AuthenticateAsync(AuthCodeRequestLink, NavManager.Uri.RemoveQueryParameters().ToPlatformScheme());
-
-        var loginCallbackResult = new LoginCallBackResult
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsMacCatalyst() || OperatingSystem.IsWindows())
         {
-            Code = result.Properties.GetValueOrDefault("code"),
-            Scope = result.Properties.GetValueOrDefault("scope"),
-            State = result.Properties.GetValueOrDefault("state"),
-            SessionState = result.Properties.GetValueOrDefault("session_state"),
-            Issuer = result.Properties.GetValueOrDefault("iss")
-        };
-        await AppState.SetPropertyAsync(this, nameof(AppState.LoginCallBackResult), loginCallbackResult, true, false);
+            var result = await ExternalWebAuthenticator.AuthenticateAsync(AuthCodeRequestLink, NavManager.Uri.RemoveQueryParameters().ToPlatformScheme());
 
-        var sb = new StringBuilder();
-        foreach (var resultProperty in result.Properties)
-        {
-            sb.AppendLine($"{resultProperty.Key}={resultProperty.Value}");
+            var loginCallbackResult = new LoginCallBackResult
+            {
+                Code = result.Properties.GetValueOrDefault("code"),
+                Scope = result.Properties.GetValueOrDefault("scope"),
+                State = result.Properties.GetValueOrDefault("state"),
+                SessionState = result.Properties.GetValueOrDefault("session_state"),
+                Issuer = result.Properties.GetValueOrDefault("iss")
+            };
+            await AppState.SetPropertyAsync(this, nameof(AppState.LoginCallBackResult), loginCallbackResult, true, false);
+
+            var sb = new StringBuilder();
+            foreach (var resultProperty in result.Properties)
+            {
+                sb.AppendLine($"{resultProperty.Key}={resultProperty.Value}");
+            }
+            _webAuthenticorResponseProps = sb.ToString();
         }
-        _webAuthenticorResponseProps = sb.ToString();
-
-#else
-        await JsRuntime.InvokeVoidAsync("open", @AuthCodeRequestLink, "_self");
-#endif
-
+        else
+        {
+            await JsRuntime.InvokeVoidAsync("open", @AuthCodeRequestLink, "_self");
+        }
     }
 
     public string DeviceLoginCallback(bool reset = false)

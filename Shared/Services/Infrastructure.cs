@@ -32,7 +32,6 @@ public class Infrastructure : IInfrastructure
         _crlCacheService = crlCacheService;
         _fhirClientOptionsProvider = fhirClientOptionsProvider;
         _logger = logger;
-        HttpClient.Timeout = TimeSpan.FromSeconds(2);
     }
 
     public Task<string> GetMyIp()

@@ -30,16 +30,19 @@ public static class StringExtensions
 
     public static string ToPlatformScheme(this string uriString)
     {
-#if ANDROID || IOS || MACCATALYST || WINDOWS
-        var uri = new Uri(uriString);
-
-        if (uri.Scheme == "http" || uri.Scheme == "https")
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsMacCatalyst() || OperatingSystem.IsWindows())
         {
-            return $"mauiapp{Uri.SchemeDelimiter}{uri.Authority}{uri.AbsolutePath}";
+            var uri = new Uri(uriString);
+
+            if (uri.Scheme == "http" || uri.Scheme == "https")
+            {
+                return $"mauiapp{Uri.SchemeDelimiter}{uri.Authority}{uri.AbsolutePath}";
+            }
         }
-#endif
-        return uriString;
+     
+        return uriString;        
     }
+
 
     public static ICollection<string> ToPlatformSchemes(this IEnumerable<string> uriStrings)
     {

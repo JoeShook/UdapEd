@@ -34,16 +34,20 @@
         {
             // var json = await Http.GetStringAsync("wwwroot/Packages/udap_urls.json");
 
-#if ANDROID || IOS || MACCATALYST || WINDOWS
-        // For .NET MAUI
-        using var stream = await FileSystem.OpenAppPackageFileAsync("udap_urls.json");
-        using var reader = new StreamReader(stream);
-        var json = await reader.ReadToEndAsync();
-#else
-            // For Blazor WebAssembly
-            // var json = await Http.GetStringAsync("_content/UdapEd.Shared/Packages/udap_urls.json");  This is statically compiled in
-            var json = await Http.GetStringAsync("Packages/udap_urls.json"); // this can be dynamic and replaced, like in a Docker Container.
-#endif
+            string json;
+            if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsMacCatalyst() || OperatingSystem.IsWindows())
+            {
+                // For .NET MAUI
+                using var stream = await FileSystem.OpenAppPackageFileAsync("udap_urls.json");
+                using var reader = new StreamReader(stream);
+                json = await reader.ReadToEndAsync();
+            }
+            else
+            {
+                // For Blazor WebAssembly
+                // var json = await Http.GetStringAsync("_content/UdapEd.Shared/Packages/udap_urls.json");  This is statically compiled in
+                json = await Http.GetStringAsync("Packages/udap_urls.json"); // this can be dynamic and replaced, like in a Docker Container.
+            }
 
             var config = JsonSerializer.Deserialize<UrlConfig>(json);
 

@@ -2,11 +2,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using UdapEd.Shared.Components;
 using UdapEd.Shared.Model;
-#if ANDROID || IOS || MACCATALYST || WINDOWS
-using CommunityToolkit.Maui.Storage;
-#else
 using Microsoft.JSInterop;
-#endif
 
 namespace UdapEd.Shared.Pages;
 
@@ -99,14 +95,15 @@ public partial class Index
     {
         byte[] zipFile = await Infrastructure.BuildMyTestCertificatePackage(SubjectAltNames);
 
-
-#if ANDROID || IOS || MACCATALYST || WINDOWS
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsMacCatalyst() || OperatingSystem.IsWindows())
+        {
             using var stream = new MemoryStream(zipFile);
-            await FileSaver.Default.SaveAsync("UdapEdCertificatePack.zip", stream);
-#else
-        await JSRuntime.InvokeVoidAsync("downloadFileFromBytes", zipFile, "application/zip",
-            "UdapEdCertificatePack.zip");
-#endif
+            await CommunityToolkit.Maui.Storage.FileSaver.Default.SaveAsync("UdapEdCertificatePack.zip", stream);
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("downloadFileFromBytes", zipFile, "application/zip", "UdapEdCertificatePack.zip");
+        }
     }
 
     private void Callback(string obj)

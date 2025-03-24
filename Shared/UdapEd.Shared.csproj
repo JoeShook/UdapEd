@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net8.0-android;net8.0-ios;net8.0-maccatalyst</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net8.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <!-- <TAG_NAME Condition="'$(TAG_NAME)' == ''">0.1</TAG_NAME> -->
@@ -12,16 +11,7 @@
     <EnableDefaultStaticWebAssets>true</EnableDefaultStaticWebAssets>
     
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.13" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.13" />
-  </ItemGroup>
-  
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-android'">
-    <DefineConstants>$(DefineConstants);ANDROID</DefineConstants>
-  </PropertyGroup>
-   
+    
   <ItemGroup>
     <Content Include="CdsComponents\ecprivkey.pem">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

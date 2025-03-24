@@ -266,16 +266,13 @@
                             <MudPaper Class="udap-input" Elevation="3">
                   <MudText Align="Align.Right" Color="Color.Tertiary">3.1 Authorization Code Flow (part 3)</MudText>
                                 <pre>HTTP/1.1 302 Found</pre>
-                                @{
-#if ANDROID || IOS || MACCATALYST || WINDOWS
+                                @if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsMacCatalyst() || OperatingSystem.IsWindows())
+                                {
+                                    <pre style="padding-left: 10px">@DeviceLoginCallback()</pre>
                                 }
-                                <pre style="padding-left: 10px">@DeviceLoginCallback()</pre>
-                                @{
-#else
-                                }
-                                <pre style="padding-left: 10px">@LoginCallback()</pre>
-                                @{
-#endif
+                                else
+                                {
+                                    <pre style="padding-left: 10px">@LoginCallback()</pre>
                                 }
                             </MudPaper>
                         </MudItem>
