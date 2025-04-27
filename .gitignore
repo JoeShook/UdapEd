@@ -224,3 +224,4 @@ examples/clients/UdapEd/Client/wwwroot/temp/MudBlazor.min.css
 .tye/docker_store
 /Client/Program.cs
 /.idea
+/Client/wwwroot/temp

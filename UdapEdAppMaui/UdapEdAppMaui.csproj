@@ -35,12 +35,12 @@
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
-    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
-    <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.19041.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.19041.0</TargetPlatformMinVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
     <UserSecretsId>b678e5df-a635-4894-8a62-136392d8dbc5</UserSecretsId>
 
-    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsPackageType>MSIX</WindowsPackageType>
   
 
     <DefaultLanguage>en</DefaultLanguage>
@@ -83,9 +83,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <MauiAsset Include="./CertificateStore/fhirlabs.net.client.pfx" Condition="Exists('./CertificateStore/fhirlabs.net.client.pfx')" />
-    <MauiAsset Include="CertificateStore\udap.emrdirect.client.certificate.p12" Condition="Exists('./CertificateStore/udap-sandbox-surescripts-2.p12')" />
-    <MauiAsset Include="./CertificateStore/FhirLabs_mTLS_Client.pfx" Condition="Exists('./CertificateStore/FhirLabs_mTLS_Client.pfx')" />
+    <MauiAsset LogicalName="fhirlabs.net.client.pfx" Include="./CertificateStore/fhirlabs.net.client.pfx" Condition="Exists('./CertificateStore/fhirlabs.net.client.pfx')" />
+    <MauiAsset LogicalName="udap.emrdirect.client.certificate.p12" Include="./CertificateStore/udap.emrdirect.client.certificate.p12" Condition="Exists('./CertificateStore/udap.emrdirect.client.certificate.p12')" />
+    <MauiAsset LogicalName="FhirLabs_mTLS_Client.pfx" Include="./CertificateStore/FhirLabs_mTLS_Client.pfx" Condition="Exists('./CertificateStore/FhirLabs_mTLS_Client.pfx')" />
 
     <MauiAsset Include="..\Shared\wwwroot\Packages\udap_urls.json" LogicalName="udap_urls.json" />
     
@@ -149,9 +149,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>   
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="CertificateStore\" />
-  </ItemGroup>
-
+	
+	<ItemGroup>
+		<Folder Include="CertificateStore\" />
+	</ItemGroup>
+	
 </Project>

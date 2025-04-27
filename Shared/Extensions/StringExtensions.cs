@@ -36,7 +36,7 @@ public static class StringExtensions
 
             if (uri.Scheme == "http" || uri.Scheme == "https")
             {
-                return $"mauiapp{Uri.SchemeDelimiter}{uri.Authority}{uri.AbsolutePath}";
+                return $"udaped-maui.app{Uri.SchemeDelimiter}{uri.Authority}{uri.AbsolutePath}";
             }
         }
      
@@ -54,7 +54,7 @@ public static class StringExtensions
 
             if (uri.Scheme == "http" || uri.Scheme == "https")
             {
-                var redirectUri = $"mauiapp{Uri.SchemeDelimiter}{uri.Authority}{uri.AbsolutePath}";
+                var redirectUri = $"udaped-maui.app{Uri.SchemeDelimiter}{uri.Authority}{uri.AbsolutePath}";
                 mauiAppSchemes.Add(redirectUri);
             }
             else

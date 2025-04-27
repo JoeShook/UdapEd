@@ -29,7 +29,7 @@
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">   
       <Extensions>
         <uap:Extension Category="windows.protocol">
-          <uap:Protocol Name="UdapEdAppMaui">
+          <uap:Protocol Name="udaped-maui.app">
             <uap:DisplayName>UdapEd</uap:DisplayName>
           </uap:Protocol>
         </uap:Extension>
