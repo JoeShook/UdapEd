@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
-  <PropertyGroup>
-    <TargetFrameworks>net8.0-android;net8.0-ios;net8.0-maccatalyst</TargetFrameworks>
+  <PropertyGroup>  
+    <TargetFrameworks>net8.0-android;net8.0-ios;net8.0-maccatalyst</TargetFrameworks> 
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net8.0-windows10.0.19041.0</TargetFrameworks>
     <!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
     <!-- <TargetFrameworks>$(TargetFrameworks);net8.0-tizen</TargetFrameworks> -->
@@ -22,8 +22,8 @@
     <EnableDefaultCssItems>false</EnableDefaultCssItems>
     <Nullable>enable</Nullable>
 
-    <!-- Display name -->
-    <ApplicationTitle>UdapEd</ApplicationTitle>
+    <!-- Display name using the bundleId becaue the logs default to here ~/Library/Containers/net.fhirlabs.udaped/Library/Application Support/ -->
+    <ApplicationTitle>net.fhirlabs.udaped</ApplicationTitle>
 
     <!-- App Identifier -->
     <ApplicationId>net.fhirlabs.udaped</ApplicationId>
@@ -44,9 +44,40 @@
   
 
     <DefaultLanguage>en</DefaultLanguage>
+    <NullabilityInfoContextSupport>true</NullabilityInfoContextSupport>
+
+  
     
   </PropertyGroup>
 
+<!--  <PropertyGroup Condition="'$(Configuration)' == 'Release'">-->
+<!--    <SelfContained>true</SelfContained>-->
+<!--    <RuntimeIdentifier>maccatalyst-x64</RuntimeIdentifier>-->
+<!--  </PropertyGroup>-->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <SelfContained>false</SelfContained>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-maccatalyst'">
+    <MtouchLink>SdkOnly</MtouchLink>
+    <EnableCodeSigning>true</EnableCodeSigning>
+    <!-- <CreatePackage>true</CreatePackage> -->
+    <CodesignKey>Apple Development: Joseph Shook (NQ7TBP9M9R)</CodesignKey>
+    <CodesignProvision>UdapEdAdHock</CodesignProvision>
+    <CodesignEntitlements>Platforms/MacCatalyst/Entitlements.plist</CodesignEntitlements>
+    <UseHardenedRuntime>true</UseHardenedRuntime>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-ios'">
+    <MtouchLink>None</MtouchLink>
+    <PublishTrimmed>true</PublishTrimmed>
+    <EnableCodeSigning>true</EnableCodeSigning>
+    <!-- <CreatePackage>true</CreatePackage> -->
+    <CodesignKey>Apple Development: Joseph Shook (NQ7TBP9M9R)</CodesignKey>
+    <CodesignProvision>iPhoneUdapEd</CodesignProvision>
+    <CodesignEntitlements>Platforms/iOS/Entitlements.plist</CodesignEntitlements>
+  </PropertyGroup>
+  
   <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-android'">
     <DefineConstants>$(DefineConstants);ANDROID</DefineConstants>
   </PropertyGroup>
@@ -67,11 +98,22 @@
 
     <!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
     <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Remove="CertificateStore\FhirLabs_mTLS_Client.pfx" />
+    <MauiAsset Include="CertificateStore\FhirLabs_mTLS_Client.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </MauiAsset>
+    <None Remove="CertificateStore\fhirlabs.net.client.pfx" />
+    <MauiAsset Include="CertificateStore\fhirlabs.net.client.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </MauiAsset>
   </ItemGroup>
 
   <ItemGroup>
     <Content Remove="appsettings.json" />
     <Content Remove="hl7.fhir.us.identity-matching-2.0.0-draft-expanded.json" />
+    <Content Update="wwwroot\index.html">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 
@@ -133,13 +175,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="CertificateStore\fhirlabs.net.client.pfx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="CertificateStore\FhirLabsAdminCertification.pfx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="CertificateStore\FhirLabs_mTLS_Client.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="CertificateStore\udap-sandbox-surescripts-2.p12">

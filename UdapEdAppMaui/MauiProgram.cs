@@ -58,12 +58,16 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiCommunityToolkit();
         var flushInterval = new TimeSpan(0, 0, 1);
-        var file = Path.Combine(FileSystem.AppDataDirectory, "UdapEdAppMaui.log");
-
+        
+        #if MACCATALYST
+            var file = Path.Combine(FileSystem.AppDataDirectory, "Application Support", "UdapEdAppMaui.log");    
+        #else
+            var file = Path.Combine(FileSystem.AppDataDirectory, "UdapEdAppMaui.log");
+        #endif
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Verbose()
             .MinimumLevel.Override("Microsoft.AspNetCore.Components.RenderTree.Renderer", LogEventLevel.Warning)
-                .MinimumLevel.Override("Microsoft.AspNetCore.Components.WebView", LogEventLevel.Verbose)
+            .MinimumLevel.Override("Microsoft.AspNetCore.Components.WebView", LogEventLevel.Verbose)
             .Enrich.FromLogContext()
             // .WriteTo.Console(
             //     outputTemplate:
@@ -84,14 +88,16 @@ public static class MauiProgram
 
         builder.Services.AddLogging(logging => { logging.AddDebug(); });
 
-#if WINDOWS
-            // Just so I can use the secrets.json on Windows.  Convenient for loading EMR Direct cert quickly.
-            builder
+        builder
             .UseMauiApp<App>()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
             });
+
+#if WINDOWS
+            // Just so I can use the secrets.json on Windows.  Convenient for loading EMR Direct cert quickly.
+            
 
         var a = Assembly.GetExecutingAssembly();
         using var stream = a.GetManifestResourceStream("UdapEdAppMaui.appsettings.json");

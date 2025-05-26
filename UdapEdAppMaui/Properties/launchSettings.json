@@ -1,8 +1,14 @@
 {
   "profiles": {
-    "Windows Machine": {
+
+    "WindowsMachine": {
       "commandName": "MsixPackage",
       "nativeDebugging": false
+    },
+    "UdapEdAppMaui": {
+      "commandName": "Project",
+      "nativeDebugging": false,
+      "dotnetRunMessages": true
     }
   }
 }
