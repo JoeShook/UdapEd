@@ -10,13 +10,14 @@
 using System.Net.Http.Json;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
+using Microsoft.Extensions.Logging;
 using Udap.Model;
 using Udap.Smart.Model;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Discovery;
 using UdapEd.Shared.Services;
 
-namespace UdapEd.Client.Services;
+namespace UdapEdAppMaui.Services.IOS;
 
 public class DiscoveryService : IDiscoveryService
 {
@@ -90,9 +91,9 @@ public class DiscoveryService : IDiscoveryService
         }
     }
 
-    public async Task<SmartMetadata?> GetSmartMetadata(string metadataUrl, CancellationToken token)
+    public Task<SmartMetadata?> GetSmartMetadata(string metadataUrl, CancellationToken token)
     {
-        return await _httpClient.GetFromJsonAsync<SmartMetadata>($"Metadata/Smart/?metadataUrl={metadataUrl}", token);
+        return _httpClient.GetFromJsonAsync<SmartMetadata>($"Metadata/Smart/?metadataUrl={metadataUrl}", token);
     }
 
     public async Task<CertificateStatusViewModel?> UploadAnchorCertificate(string certBytes)
@@ -158,8 +159,7 @@ public class DiscoveryService : IDiscoveryService
         return false;
     }
 
-    public async Task<CertificateViewModel?> GetCertificateData(IEnumerable<string>? base64EncodedCertificate,
-        CancellationToken token)
+    public async Task<CertificateViewModel?> GetCertificateData(IEnumerable<string>? base64EncodedCertificate, CancellationToken token)
     {
         try
         {
@@ -168,7 +168,17 @@ public class DiscoveryService : IDiscoveryService
 
             result.EnsureSuccessStatusCode();
 
-            return await result.Content.ReadFromJsonAsync<CertificateViewModel>(cancellationToken: token);
+            var contentString = await result.Content.ReadAsStringAsync(token);
+
+            try
+            {
+                return await result.Content.ReadFromJsonAsync<CertificateViewModel>(cancellationToken: token);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to deserialize CertificateViewModel. Response content: {Content}", contentString);
+                return null;
+            }
         }
         catch (Exception ex)
         {
@@ -177,8 +187,7 @@ public class DiscoveryService : IDiscoveryService
         }
     }
 
-    public async Task<CertificateViewModel?> GetCertificateData(string? base64EncodedCertificate,
-        CancellationToken token)
+    public async Task<CertificateViewModel?> GetCertificateData(string? base64EncodedCertificate, CancellationToken token)
     {
         try
         {
@@ -187,7 +196,17 @@ public class DiscoveryService : IDiscoveryService
 
             result.EnsureSuccessStatusCode();
 
-            return await result.Content.ReadFromJsonAsync<CertificateViewModel>(cancellationToken: token);
+            var contentString = await result.Content.ReadAsStringAsync(token);
+
+            try
+            {
+                return await result.Content.ReadFromJsonAsync<CertificateViewModel>(cancellationToken: token);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to deserialize CertificateViewModel. Response content: {Content}", contentString);
+                return null;
+            }
         }
         catch (Exception ex)
         {

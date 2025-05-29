@@ -13,6 +13,7 @@ using Blazored.LocalStorage;
 using CommunityToolkit.Maui;
 using Hl7.Fhir.Rest;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MudBlazor.Services;
@@ -122,10 +123,31 @@ public static class MauiProgram
         builder.Services.AddSingleton<UdapClientState>(); //Singleton in Blazor wasm and Scoped in Blazor Server
         builder.Services.AddScoped<IRegisterService, RegisterService>();
         builder.Services.AddScoped<ICertificationService, CertificationService>();
-        builder.Services.AddScoped<IDiscoveryService, DiscoveryService>();
         builder.Services.AddScoped<IAccessService, AccessService>();
         builder.Services.AddTransient<IFhirService, FhirService>();
-        builder.Services.AddScoped<IInfrastructure, Infrastructure>();
+
+        // builder.Services.AddScoped<IInfrastructure, Infrastructure>();
+
+        builder.Services.AddHttpClient("UdapEdServer", client =>
+        {
+            client.BaseAddress = new Uri("https://udaped.fhirlabs.net/");
+        });
+
+        builder.Services.AddScoped<IInfrastructure>(sp =>
+            new UdapEdAppMaui.Services.IOS.Infrastructure(
+                sp.GetRequiredService<IHttpClientFactory>().CreateClient("UdapEdServer"),
+                sp.GetRequiredService<ILogger<UdapEdAppMaui.Services.IOS.Infrastructure>>()
+            )
+        );
+
+        builder.Services.AddScoped<IDiscoveryService>(sp =>
+            new UdapEdAppMaui.Services.IOS.DiscoveryService(
+                sp.GetRequiredService<IHttpClientFactory>().CreateClient("UdapEdServer"),
+                sp.GetRequiredService<ILogger<UdapEdAppMaui.Services.IOS.DiscoveryService>>()
+            )
+        );
+
+
         builder.Services.AddHttpClient<ICdsService, CdsService>();
         builder.Services.AddHttpClient<IServiceExchange, ServiceExchange>();
 

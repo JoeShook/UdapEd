@@ -20,32 +20,32 @@ public class CertificateDisplayBuilder
 
     public CertificateViewModel? BuildCertificateDisplayData()
     {
-        var data = new List<KeyValuePair<string, string>>();
+        var data = new Dictionary<string, string>();
 
-        data.Add(new KeyValuePair<string, string>("Serial Number", GetSerialNumber(_cert)));
-        data.Add(new KeyValuePair<string, string>("Subject", _cert.Subject));
-        data.Add(new KeyValuePair<string, string>("Subject Alternative Names", GetSANs(_cert)));
-        data.Add(new KeyValuePair<string, string>("Public Key Algorithm", GetPublicKeyAlgorithm(_cert)));
-        data.Add(new KeyValuePair<string, string>("Certificate Policy", BuildPolicyInfo(_cert)));
-        data.Add(new KeyValuePair<string, string>("Start Date", _cert.GetEffectiveDateString()));
-        data.Add(new KeyValuePair<string, string>("End Date", _cert.GetExpirationDateString()));
-        data.Add(new KeyValuePair<string, string>("Key Usage", GetKeyUsage(_cert)));
-        // data.Add(new KeyValuePair<string, string>("Extended Key Usage", GetExtendedKeyUsage(cert)));
-        data.Add(new KeyValuePair<string, string>("Issuer", _cert.Issuer));
-        data.Add(new KeyValuePair<string, string>("Subject Key Identifier", GetSubjectKeyIdentifier(_cert)));
-        data.Add(new KeyValuePair<string, string>("Authority Key Identifier", GetAuthorityKeyIdentifier(_cert)));
+        data.Add("Serial Number", GetSerialNumber(_cert));
+        data.Add("Subject", _cert.Subject);
+        data.Add("Subject Alternative Names", GetSANs(_cert));
+        data.Add("Public Key Algorithm", GetPublicKeyAlgorithm(_cert));
+        data.Add("Certificate Policy", BuildPolicyInfo(_cert));
+        data.Add("Start Date", _cert.GetEffectiveDateString());
+        data.Add("End Date", _cert.GetExpirationDateString());
+        data.Add("Key Usage", GetKeyUsage(_cert));
+        // data.Add("Extended Key Usage", GetExtendedKeyUsage(cert));
+        data.Add("Issuer", _cert.Issuer);
+        data.Add("Subject Key Identifier", GetSubjectKeyIdentifier(_cert));
+        data.Add("Authority Key Identifier", GetAuthorityKeyIdentifier(_cert));
 
         foreach (var url in GetAIAUrls(_cert) ?? new List<string>())
         {
-            data.Add(new KeyValuePair<string, string>("Authority Information Access", url));
+            data.Add("Authority Information Access", url);
         }
 
         foreach (var url in GetCrlDistributionPoints(_cert) ?? new List<string>())
         {
-            data.Add(new KeyValuePair<string, string>("CRL Distribution", url));
+            data.Add("CRL Distribution", url);
         }
 
-        data.Add(new KeyValuePair<string, string>("Thumbprint SHA1", _cert.Thumbprint));
+        data.Add("Thumbprint SHA1", _cert.Thumbprint);
 
         var result = new CertificateViewModel();
 

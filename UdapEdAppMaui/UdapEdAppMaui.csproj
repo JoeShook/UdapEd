@@ -41,22 +41,12 @@
     <UserSecretsId>b678e5df-a635-4894-8a62-136392d8dbc5</UserSecretsId>
 
     <WindowsPackageType>MSIX</WindowsPackageType>
-  
 
     <DefaultLanguage>en</DefaultLanguage>
     <NullabilityInfoContextSupport>true</NullabilityInfoContextSupport>
-
-  
     
   </PropertyGroup>
 
-<!--  <PropertyGroup Condition="'$(Configuration)' == 'Release'">-->
-<!--    <SelfContained>true</SelfContained>-->
-<!--    <RuntimeIdentifier>maccatalyst-x64</RuntimeIdentifier>-->
-<!--  </PropertyGroup>-->
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <SelfContained>false</SelfContained>
-  </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-maccatalyst'">
     <MtouchLink>SdkOnly</MtouchLink>

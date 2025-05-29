@@ -1,5 +1,7 @@
-﻿
+﻿using Microsoft.Maui.Controls.PlatformConfiguration;
+using Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;
 using UdapEd.Shared.Services;
+using TabbedPage = Microsoft.Maui.Controls.TabbedPage;
 #if WINDOWS
 using UdapEdAppMaui.Services;
 using WinUIEx;
@@ -16,6 +18,15 @@ public partial class MainPage : TabbedPage, IMainPageService
         DependencyService.RegisterSingleton<IMainPageService>(this);
     }
 
+    protected override void OnAppearing()
+    {
+#if IOS
+        // Use the safe area insets if available
+        var insets = this.On<iOS>().SafeAreaInsets();
+        this.Padding = this.On<iOS>().SafeAreaInsets();        
+#endif
+    }
+    
     private void OnMaximizeClicked(object sender, EventArgs e)
     {
 
