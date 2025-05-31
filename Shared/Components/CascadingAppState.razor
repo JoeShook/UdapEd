@@ -1,5 +1,6 @@
 ﻿@using Udap.Model.Registration
 @using System.Collections.Specialized
+@using System.Text.Json.Serialization
 @using UdapEd.Shared.Model.AuthExtObjects
 @using UdapEd.Shared.Model.Discovery
 @using UdapEd.Shared.Model.Smart;
@@ -368,7 +369,8 @@
                 {
                     Converters = { new FhirContextJsonConverter() }
                 };
-                var appStateData = JsonSerializer.Deserialize<UdapClientState>(json, options);
+                var context = new UdapJsonContext(options);
+                var appStateData = JsonSerializer.Deserialize(json, context.UdapClientState);
 
                 var properties = appStateData?.GetType().GetProperties();
                 if (properties != null)
@@ -397,7 +399,9 @@
         {
             Converters = { new FhirContextJsonConverter() }
         };
-        var json = JsonSerializer.Serialize(appState, options);
+        var context = new UdapJsonContext(options);
+        var json = JsonSerializer.Serialize(appState, context.IAppState);
+        
         await LocalStorageService.SetItemAsStringAsync(UdapStateKeyName, json);
     }
 }

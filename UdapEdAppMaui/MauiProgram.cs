@@ -95,7 +95,22 @@ public static class MauiProgram
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
             });
-
+        
+#if MACCATALYST
+    using var stream = FileSystem.OpenAppPackageFileAsync("appsettings.json").Result;
+    var config = new ConfigurationBuilder()
+        .AddJsonStream(stream)
+        .Build();
+    builder.Configuration.AddConfiguration(config);
+#endif
+#if IOS
+        var assembly = Assembly.GetExecutingAssembly();
+        using var stream = assembly.GetManifestResourceStream("UdapEdAppMaui.appsettings.json");
+        var config = new ConfigurationBuilder()
+            .AddJsonStream(stream)
+            .Build();
+        builder.Configuration.AddConfiguration(config);
+#endif
 #if WINDOWS
             // Just so I can use the secrets.json on Windows.  Convenient for loading EMR Direct cert quickly.
             
