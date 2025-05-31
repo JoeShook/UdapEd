@@ -126,6 +126,7 @@ public static class MauiProgram
         builder.Services.AddScoped<IAccessService, AccessService>();
         builder.Services.AddTransient<IFhirService, FhirService>();
 
+        
         // builder.Services.AddScoped<IInfrastructure, Infrastructure>();
 
         builder.Services.AddHttpClient("UdapEdServer", client =>
@@ -147,7 +148,10 @@ public static class MauiProgram
             )
         );
 
-
+#if IOS
+        builder.Services.AddSingleton<IDeviceOrientationService, DeviceOrientationService>();
+#endif
+        
         builder.Services.AddHttpClient<ICdsService, CdsService>();
         builder.Services.AddHttpClient<IServiceExchange, ServiceExchange>();
 

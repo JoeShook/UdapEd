@@ -84,7 +84,12 @@ internal class AccessService : IAccessService
         }
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
-        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+        var flags = X509KeyStorageFlags.DefaultKeySet;
+        if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+        {
+            flags |= X509KeyStorageFlags.Exportable;
+        }
+        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", flags);
 
         var tokenRequestBuilder = AccessTokenRequestForAuthorizationCodeBuilder.Create(
             tokenRequestModel.ClientId,
@@ -115,7 +120,12 @@ internal class AccessService : IAccessService
         }
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
-        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+        var flags = X509KeyStorageFlags.DefaultKeySet;
+        if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+        {
+            flags |= X509KeyStorageFlags.Exportable;
+        }
+        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", flags);
 
         var tokenRequestBuilder = AccessTokenRequestForClientCredentialsBuilder.Create(
             tokenRequestModel.ClientId,
@@ -157,9 +167,11 @@ internal class AccessService : IAccessService
             ExpiresAt = DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn),
             Scope = tokenResponse.Raw,
             TokenType = tokenResponse.TokenType,
-            Headers = JsonSerializer.Serialize(
-                tokenResponse.HttpResponse?.Headers,
-                new JsonSerializerOptions { WriteIndented = true })
+            Headers = tokenResponse.HttpResponse?.Headers
+                    .ToDictionary(h => h.Key, h => h.Value.ToArray())
+                is { } dict
+                ? JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = true })
+                : null
         };
 
         if (tokenResponseModel.AccessToken != null)

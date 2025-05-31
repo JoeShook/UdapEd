@@ -61,7 +61,12 @@ internal class RegisterService : IRegisterService
         }
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
-        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+        var flags = X509KeyStorageFlags.DefaultKeySet;
+        if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+        {
+            flags |= X509KeyStorageFlags.Exportable;
+        }
+        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", flags);
         var x5cCerts = new List<X509Certificate2> { clientCert };
         var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
         var intermediateCerts = intermediatesStored == null ? null : Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
@@ -137,7 +142,12 @@ internal class RegisterService : IRegisterService
         }
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
-        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+        var flags = X509KeyStorageFlags.DefaultKeySet;
+        if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+        {
+            flags |= X509KeyStorageFlags.Exportable;
+        }
+        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", flags);
         var x5cCerts = new List<X509Certificate2> { clientCert };
         var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
         var intermediateCerts = intermediatesStored == null ? null : Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
@@ -216,7 +226,12 @@ internal class RegisterService : IRegisterService
         }
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
-        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+        var flags = X509KeyStorageFlags.DefaultKeySet;
+        if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+        {
+            flags |= X509KeyStorageFlags.Exportable;
+        }
+        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", flags);
         var x5cCerts = new List<X509Certificate2> { clientCert };
         var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
         var intermediateCerts = intermediatesStored == null ? null : Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
@@ -286,7 +301,12 @@ internal class RegisterService : IRegisterService
         }
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
-        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+        var flags = X509KeyStorageFlags.DefaultKeySet;
+        if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+        {
+            flags |= X509KeyStorageFlags.Exportable;
+        }
+        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", flags);
         var x5cCerts = new List<X509Certificate2> { clientCert };
         var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
         var intermediateCerts = intermediatesStored == null? null: Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
@@ -415,7 +435,12 @@ internal class RegisterService : IRegisterService
         var certBytes = Convert.FromBase64String(clientCertSession);
         try
         {
-            var certificate = new X509Certificate2(certBytes, password, X509KeyStorageFlags.Exportable);
+            var flags = X509KeyStorageFlags.DefaultKeySet;
+            if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+            {
+                flags |= X509KeyStorageFlags.Exportable;
+            }
+            var certificate = new X509Certificate2(certBytes, password, flags);
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             await SessionExtensions.StoreInChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, clientCertWithKeyBytes);
@@ -472,7 +497,12 @@ internal class RegisterService : IRegisterService
             if (certBytesWithKey != null)
             {
                 var certBytes = Convert.FromBase64String(certBytesWithKey);
-                var certificate = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+                var flags = X509KeyStorageFlags.DefaultKeySet;
+                if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+                {
+                    flags |= X509KeyStorageFlags.Exportable;
+                }
+                var certificate = new X509Certificate2(certBytes, "ILikePasswords", flags);
                 result.DistinguishedName = certificate.SubjectName.Name;
                 result.Thumbprint = certificate.Thumbprint;
                 result.CertLoaded = CertLoadedEnum.Positive;
@@ -518,13 +548,19 @@ internal class RegisterService : IRegisterService
 
             X509Certificate2 certificate;
 
+            var flags = X509KeyStorageFlags.DefaultKeySet;
+            if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+            {
+                flags |= X509KeyStorageFlags.Exportable;
+            }
+            
             try
             {
-                certificate = new X509Certificate2(certBytes, "udap-test", X509KeyStorageFlags.Exportable);
+                certificate = new X509Certificate2(certBytes, "udap-test", flags);
             }
             catch
             {
-                certificate = new X509Certificate2(certBytes, _configuration["sampleKeyC"], X509KeyStorageFlags.Exportable);
+                certificate = new X509Certificate2(certBytes, _configuration["sampleKeyC"], flags);
             }
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");

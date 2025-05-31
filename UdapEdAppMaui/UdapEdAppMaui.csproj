@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
-  <PropertyGroup>  
-    <TargetFrameworks>net8.0-android;net8.0-ios;net8.0-maccatalyst</TargetFrameworks> 
+  <PropertyGroup>
+    <TargetFrameworks>net8.0-android;net8.0-ios;net8.0-maccatalyst</TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net8.0-windows10.0.19041.0</TargetFrameworks>
     <!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
     <!-- <TargetFrameworks>$(TargetFrameworks);net8.0-tizen</TargetFrameworks> -->
@@ -58,15 +58,13 @@
     <UseHardenedRuntime>true</UseHardenedRuntime>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-ios'">
-    <MtouchLink>None</MtouchLink>
-    <PublishTrimmed>true</PublishTrimmed>
-    <EnableCodeSigning>true</EnableCodeSigning>
-    <!-- <CreatePackage>true</CreatePackage> -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-ios' and '$(Platform)' == 'iPhone'">
     <CodesignKey>Apple Development: Joseph Shook (NQ7TBP9M9R)</CodesignKey>
     <CodesignProvision>iPhoneUdapEd</CodesignProvision>
     <CodesignEntitlements>Platforms/iOS/Entitlements.plist</CodesignEntitlements>
   </PropertyGroup>
+
+ 
   
   <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-android'">
     <DefineConstants>$(DefineConstants);ANDROID</DefineConstants>
