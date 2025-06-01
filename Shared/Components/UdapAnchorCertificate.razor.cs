@@ -7,7 +7,7 @@ using Color = MudBlazor.Color;
 
 namespace UdapEd.Shared.Components;
 
-public partial class UdapAnchorCertificate
+public partial class UdapAnchorCertificate: ComponentBase, IDisposable
 {
     private static UdapAnchorCertificate? _instance;
     [CascadingParameter] private CascadingAppState AppState { get; set; } = null!;

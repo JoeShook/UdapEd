@@ -9,7 +9,7 @@ using FocusEventArgs = Microsoft.AspNetCore.Components.Web.FocusEventArgs;
 
 namespace UdapEd.Shared.Components;
 
-public partial class ClientCertLoader
+public partial class ClientCertLoader: ComponentBase, IDisposable
 {
     private static ClientCertLoader? _instance;
     [Inject] private IRegisterService RegisterService { get; set; } = null!;

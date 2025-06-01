@@ -542,8 +542,9 @@ internal class RegisterService : IRegisterService
         try
         {
             await using var fileStream = await FileSystem.Current.OpenAppPackageFileAsync(certificateName);
-            var certBytes = new byte[fileStream.Length];
-            await fileStream.ReadAsync(certBytes, 0, certBytes.Length);
+            using var ms = new MemoryStream();
+            await fileStream.CopyToAsync(ms);
+            var certBytes = ms.ToArray();
 
 
             X509Certificate2 certificate;

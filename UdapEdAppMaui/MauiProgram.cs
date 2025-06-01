@@ -96,7 +96,7 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
             });
         
-#if MACCATALYST
+#if MACCATALYST || ANDROID
     using var stream = FileSystem.OpenAppPackageFileAsync("appsettings.json").Result;
     var config = new ConfigurationBuilder()
         .AddJsonStream(stream)
@@ -166,7 +166,7 @@ public static class MauiProgram
 #if IOS
         builder.Services.AddSingleton<IDeviceOrientationService, DeviceOrientationService>();
 #endif
-        
+
         builder.Services.AddHttpClient<ICdsService, CdsService>();
         builder.Services.AddHttpClient<IServiceExchange, ServiceExchange>();
 

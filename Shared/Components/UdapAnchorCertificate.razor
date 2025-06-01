@@ -1,6 +1,6 @@
-﻿@inherits ComponentBase
+﻿<InputFile id="fileInput" OnChange="UploadFilesAsync" hidden />
 
-<InputFile id="anchorFileInput" OnChange="UploadFilesAsync" hidden />
+<InputFile id="anchorFileInput" OnChange="UploadFilesAsync" hidden/>
 
 <MudCard Class="pa-2 ma-2" Elevation="0">
     <MudCardHeader>
@@ -19,7 +19,6 @@
                     Title="Upload Anchor Certificate"
                     IconSize="Size.Small"
                     for="anchorFileInput"/>
-                
             <MudFab Class="ma-2 " Style="float: right; white-space: nowrap;"
                     HtmlTag="label"
                     Size="Size.Small"
@@ -27,7 +26,7 @@
                     StartIcon="@AppState.CertificateIcon"
                     Label="Load FhirLabs Test CA"
                     IconSize="Size.Small"
-                    OnClick="@LoadFhirLabsAnchor" />
+                    OnClick="@LoadFhirLabsAnchor"/>
 
             <MudFab Class="ma-2 " Style="float: right; white-space: nowrap;"
                     HtmlTag="label"
@@ -36,7 +35,7 @@
                     StartIcon="@AppState.CertificateIcon"
                     Label="Load EMR Direct Test CA"
                     IconSize="Size.Small"
-                    OnClick="@LoadUdapOrgAnchor" />
+                    OnClick="@LoadUdapOrgAnchor"/>
         </MudStack>
     </MudCardActions>
     <MudCardContent style="float: left">
