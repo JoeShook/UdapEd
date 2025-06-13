@@ -255,8 +255,8 @@ public class RegisterController : Controller
 
         var document = dcrBuilder
             .WithAudience(request.Audience)
-            .WithIssuedAt(request.IssuedAt)
-            .WithExpiration(request.Expiration)
+            .WithIssuedAt(request.IssuedAt.GetValueOrDefault())
+            .WithExpiration(request.Expiration.GetValueOrDefault())
             .WithJwtId(request.JwtId)
             .WithClientName(request.ClientName ?? UdapEdConstants.CLIENT_NAME)
             .WithContacts(request.Contacts)
@@ -338,8 +338,8 @@ public class RegisterController : Controller
 
         var document = dcrBuilder
             .WithAudience(request.Audience)
-            .WithIssuedAt(request.IssuedAt)
-            .WithExpiration(request.Expiration)
+            .WithIssuedAt(request.IssuedAt.GetValueOrDefault())
+            .WithExpiration(request.Expiration.GetValueOrDefault())
             .WithJwtId(request.JwtId)
             .WithClientName(request.ClientName ?? UdapEdConstants.CLIENT_NAME)
             .WithContacts(request.Contacts)
@@ -423,8 +423,8 @@ public class RegisterController : Controller
         dcrBuilder.Document.Subject = document.Subject;
 
         dcrBuilder.WithAudience(document.Audience)
-            .WithIssuedAt(document.IssuedAt)
-            .WithExpiration(document.Expiration)
+            .WithIssuedAt(document.IssuedAt.GetValueOrDefault())
+            .WithExpiration(document.Expiration.GetValueOrDefault())
             .WithJwtId(document.JwtId)
             .WithClientName(document.ClientName!)
             .WithContacts(document.Contacts)
@@ -497,8 +497,8 @@ public class RegisterController : Controller
         dcrBuilder.Document.Subject = document.Subject;
 
         dcrBuilder.WithAudience(document.Audience)
-            .WithIssuedAt(document.IssuedAt)
-            .WithExpiration(document.Expiration)
+            .WithIssuedAt(document.IssuedAt.GetValueOrDefault())
+            .WithExpiration(document.Expiration.GetValueOrDefault())
             .WithJwtId(document.JwtId)
             .WithClientName(document.ClientName!)
             .WithContacts(document.Contacts)
@@ -554,11 +554,11 @@ public class RegisterController : Controller
         }
         
         var resultRaw = await response.Content.ReadAsStringAsync();
-
         try
         {
             var udapRegistrationDocument = JsonSerializer.Deserialize<UdapDynamicClientRegistrationDocument>(resultRaw);
             var normalizedRaw = udapRegistrationDocument.SerializeToJson();
+            
             try
             {
                 var result = new ResultModel<RegistrationDocument?>(

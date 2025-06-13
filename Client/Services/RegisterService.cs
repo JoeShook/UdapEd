@@ -7,12 +7,13 @@
 // */
 #endregion
 
+using Duende.IdentityModel;
+using Microsoft.JSInterop;
 using System.Net.Http.Json;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using Duende.IdentityModel;
 using Udap.Model;
 using Udap.Model.Registration;
 using Udap.Util.Extensions;
@@ -26,10 +27,12 @@ namespace UdapEd.Client.Services;
 public class RegisterService : IRegisterService
 {
     readonly HttpClient _httpClient;
+    private readonly IJSRuntime _jsRuntime;
 
-    public RegisterService(HttpClient httpClientClient)
+    public RegisterService(HttpClient httpClientClient, IJSRuntime jsRuntime)
     {
         _httpClient = httpClientClient;
+        _jsRuntime = jsRuntime;
     }
 
     public async Task UploadClientCertificate(string certBytes)

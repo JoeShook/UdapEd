@@ -95,7 +95,7 @@ internal class RegisterService : IRegisterService
 
         var document = dcrBuilder
             .WithAudience(request.Audience)
-            .WithExpiration(request.Expiration)
+            .WithExpiration(request.Expiration.GetValueOrDefault())
             .WithJwtId(request.JwtId)
             .WithClientName(request.ClientName ?? UdapEdConstants.CLIENT_NAME)
             .WithContacts(request.Contacts)
@@ -176,7 +176,7 @@ internal class RegisterService : IRegisterService
 
         var document = dcrBuilder
             .WithAudience(request.Audience)
-            .WithExpiration(request.Expiration)
+            .WithExpiration(request.Expiration.GetValueOrDefault())
             .WithJwtId(request.JwtId)
             .WithClientName(request.ClientName ?? UdapEdConstants.CLIENT_NAME)
             .WithContacts(request.Contacts)
@@ -262,8 +262,8 @@ internal class RegisterService : IRegisterService
         dcrBuilder.Document.Subject = document.Subject;
 
         dcrBuilder.WithAudience(document.Audience)
-            .WithIssuedAt(document.IssuedAt)
-            .WithExpiration(document.Expiration)
+            .WithIssuedAt(document.IssuedAt.GetValueOrDefault())
+            .WithExpiration(document.Expiration.GetValueOrDefault())
             .WithJwtId(document.JwtId)
             .WithClientName(document.ClientName!)
             .WithContacts(document.Contacts)
@@ -338,8 +338,8 @@ internal class RegisterService : IRegisterService
         dcrBuilder.Document.Subject = document.Subject;
 
         dcrBuilder.WithAudience(document.Audience)
-            .WithIssuedAt(document.IssuedAt)
-            .WithExpiration(document.Expiration)
+            .WithIssuedAt(document.IssuedAt.GetValueOrDefault())
+            .WithExpiration(document.Expiration.GetValueOrDefault())
             .WithJwtId(document.JwtId)
             .WithClientName(document.ClientName!)
             .WithContacts(document.Contacts)

@@ -8,15 +8,16 @@
 #endregion
 
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace UdapEd.Shared;
 public static class JsonExtensions
 {
-    public static string AsJson<T>(this T source)
+    public static string AsJson<T>(this T source )
     {
         var options = new JsonSerializerOptions();
         options.WriteIndented = true;
-        
+        options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault;
 
         return JsonSerializer.Serialize(source, options);
     }

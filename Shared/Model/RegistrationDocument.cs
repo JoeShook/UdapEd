@@ -47,13 +47,13 @@ public class RegistrationDocument
     /// the value of the iat claim.
     /// </summary>
     [JsonPropertyName(UdapConstants.RegistrationDocumentValues.Expiration)]
-    public long Expiration { get; set; }
+    public long? Expiration { get; set; }
 
     /// <summary>
     /// Issued time integer for this software statement, expressed in seconds since the "Epoch"
     /// </summary>
     [JsonPropertyName(UdapConstants.RegistrationDocumentValues.IssuedAt)]
-    public long IssuedAt { get; set; }
+    public long? IssuedAt { get; set; }
 
     /// <summary>
     /// A nonce string value that uniquely identifies this software statement. This value
@@ -84,7 +84,7 @@ public class RegistrationDocument
     /// Clients using flows with redirection must register their redirection URI values.
     /// </remarks>
     [JsonPropertyName(UdapConstants.RegistrationDocumentValues.RedirectUris)]
-    public ICollection<string> RedirectUris { get; set; } = new List<string>();
+    public ICollection<string>? RedirectUris { get; set; }
 
     // /// <summary>
     // /// URL string that references a logo for the client.  If present, the
@@ -100,7 +100,7 @@ public class RegistrationDocument
     /// A string containing the human readable name of the client application
     /// </summary>
     [JsonPropertyName(UdapConstants.RegistrationDocumentValues.Contacts)]
-    public ICollection<string> Contacts { get; set; } = new List<string>();
+    public ICollection<string>? Contacts { get; set; }
 
     /// <summary>
     /// List of OAuth 2.0 grant type strings that the client can use at the token endpoint.
@@ -109,14 +109,14 @@ public class RegistrationDocument
     /// Example: "authorization_code", "client_credentials", "refresh_token".
     /// </remarks>
     [JsonPropertyName(UdapConstants.RegistrationDocumentValues.GrantTypes)]
-    public ICollection<string> GrantTypes { get; set; } = new HashSet<string>();
+    public ICollection<string>? GrantTypes { get; set; }
 
     /// <summary>
     /// Array of strings. If grant_types contains "authorization_code", then this element SHALL
     /// have a fixed value of ["code"], and SHALL be omitted otherwise
     /// </summary>
     [JsonPropertyName(UdapConstants.RegistrationDocumentValues.ResponseTypes)]
-    public ICollection<string> ResponseTypes { get; set; } = new HashSet<string>();
+    public ICollection<string>? ResponseTypes { get; set; }
 
 
     [JsonPropertyName(UdapConstants.RegistrationDocumentValues.TokenEndpointAuthMethod)]

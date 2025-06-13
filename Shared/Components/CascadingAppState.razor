@@ -397,7 +397,8 @@
         var appState = (IAppState)this;
         var options = new JsonSerializerOptions
         {
-            Converters = { new FhirContextJsonConverter() }
+            Converters = { new FhirContextJsonConverter() },
+			DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
         };
         var context = new UdapJsonContext(options);
         var json = JsonSerializer.Serialize(appState, context.IAppState);

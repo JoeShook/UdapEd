@@ -6,17 +6,17 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.13" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.0.2" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.2" />
-    <PackageReference Include="MudBlazor" Version="8.3.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.17" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.0.6" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.6" />
+    <PackageReference Include="MudBlazor" Version="8.7.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shared\UdapEd.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Udap.CdsHooks.Model" Version="0.4.5" />
-    <PackageReference Include="Udap.Common" Version="0.4.5" />
+    <PackageReference Include="Udap.CdsHooks.Model" Version="0.4.11" />
+    <PackageReference Include="Udap.Common" Version="0.4.11" />
   </ItemGroup>
   <!-- From:: https://jonhilton.net/visual-studio-2022-blazor-css-intellisense/ -->
   <Target Name="CollectMudBlazorStaticAssets" DependsOnTargets="ResolveStaticWebAssetsInputs" AfterTargets="Build" Condition=" '$(Configuration)' == 'Debug' ">
