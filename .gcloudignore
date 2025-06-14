@@ -8,3 +8,4 @@ launchSettings.json
 UdapEdAppMaui\**
 appsetting.json
 appsettings.Development.json
+_tests\**
