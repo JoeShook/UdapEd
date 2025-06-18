@@ -389,74 +389,80 @@
 
 @if (_entries != null || _outComeMessage != null)
 {
-
     <MudCard Elevation="3" Style="margin-top: 10px">
         <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
             <MudTabPanel Text="Patient List">
-                <MudCardContent>
-                    <MudTable @ref="_table"
-                              T="Hl7.Fhir.Model.Bundle.EntryComponent"
-                              Items="@_entries"
-                              MultiSelection="false"
-                              Dense="@false"
-                              Hover="@true"
-                              ReadOnly="@true"
-                              SortLabel="Name"
-                              CommitEditTooltip="Commit Edit"
-                              IsEditRowSwitchingBlocked="@true"
-                              ApplyButtonPosition="@TableApplyButtonPosition.Start"
-                              OnRowClick="@OnRowClick">
-                        <HeaderContent>
-                            <MudTh>Name</MudTh>
-                            <MudTh>BirthDate</MudTh>
-                            <MudTh>Id</MudTh>
-                            <MudTh>Identifier</MudTh>
-                            <MudTh>Score / Grade</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Name">@(new MarkupString(string.Join("<br/> ", ((Patient)context.Resource).Name.Select(hn => $"{hn.Given.First()}, {hn.Family}"))))</MudTd>
-                            <MudTd DataLabel="BirthDate">@(((Patient)context.Resource).BirthDate)</MudTd>
-                            <MudTd DataLabel="Id">@(((Patient)context.Resource).Id)</MudTd>
-                            <MudTd DataLabel="Identifier">@(new MarkupString(string.Join("<br/> ", ((Patient)context.Resource).Identifier.Select(identifier => $"{identifier.System}|{identifier.Value}"))))</MudTd>
-                            <MudTd DataLabel="Score / Grade">@(FormatScoreAndGrade(context))</MudTd>
-                        </RowTemplate>
-                        <PagerContent>
-                            <MudTablePager PageSizeOptions="new[] { 50, 100 }" />
-                        </PagerContent>
+	            <MudCardContent>
+		            <FhirWireData CompressedSize="_compressedSize" DecompressedSize="_decompressedSize" />
+		            <MudTable @ref="_table"
+		                      T="Hl7.Fhir.Model.Bundle.EntryComponent"
+		                      Items="@_entries"
+		                      MultiSelection="false"
+		                      Dense="@false"
+		                      Hover="@true"
+		                      ReadOnly="@true"
+		                      SortLabel="Name"
+		                      CommitEditTooltip="Commit Edit"
+		                      IsEditRowSwitchingBlocked="@true"
+		                      ApplyButtonPosition="@TableApplyButtonPosition.Start"
+		                      OnRowClick="@OnRowClick">
+			            <HeaderContent>
+				            <MudTh>Name</MudTh>
+				            <MudTh>BirthDate</MudTh>
+				            <MudTh>Id</MudTh>
+				            <MudTh>Identifier</MudTh>
+				            <MudTh>Score / Grade</MudTh>
+				            <MudTh/>
+			            </HeaderContent>
+			            <RowTemplate>
+				            <MudTd DataLabel="Name">@(new MarkupString(string.Join("<br/> ", ((Patient)context.Resource).Name.Select(hn => $"{hn.Given.First()}, {hn.Family}"))))</MudTd>
+				            <MudTd DataLabel="BirthDate">@(((Patient)context.Resource).BirthDate)</MudTd>
+				            <MudTd DataLabel="Id">@(((Patient)context.Resource).Id)</MudTd>
+				            <MudTd DataLabel="Identifier">@(new MarkupString(string.Join("<br/> ", ((Patient)context.Resource).Identifier.Select(identifier => $"{identifier.System}|{identifier.Value}"))))</MudTd>
+				            <MudTd DataLabel="Score / Grade">@(FormatScoreAndGrade(context))</MudTd>
+				            <MudTd>
+					            <MudTooltip Text="Set Context">
+						            <MudMenu AriaLabel="Set Context" Icon="@Icons.Material.Outlined.PersonPin" Color="Color.Secondary" Variant="Variant.Text">
+                                        <MudMenuItem OnClick="@(() => SetPatientContext((Patient)context.Resource))">Set Patient Context</MudMenuItem>
+                                        <MudMenuItem OnClick="@(() => SetRelatedPersonContext((Patient)context.Resource))">Set Related Person Context</MudMenuItem>
+                                        <MudMenuItem OnClick="@(() => SetPersonContext((Patient)context.Resource))">Set Person Context</MudMenuItem>
+                                        <MudMenuItem OnClick="@(() => SetLaunchContext((Patient)context.Resource))">Set Launch Context</MudMenuItem>
+						            </MudMenu>
+					            </MudTooltip>
+				            </MudTd>
+			            </RowTemplate>
+			            <PagerContent>
+				            <MudTablePager PageSizeOptions="new[] { 50, 100 }"/>
+			            </PagerContent>
+		            </MudTable>
 
-                    </MudTable>
-
-                    @if (_outComeMessage != null)
-                    {
-                        <MudAlert Severity="Severity.Error">@(new MarkupString(_outComeMessage))</MudAlert>
-                    }
-                </MudCardContent>
+		            @if (_outComeMessage != null)
+		            {
+			            <MudAlert Severity="Severity.Error">@(new MarkupString(_outComeMessage))</MudAlert>
+		            }
+	            </MudCardContent>
             </MudTabPanel>
             <MudTabPanel Text="Bundle Response">
-                <MudExpansionPanels>
-                    <MudExpansionPanel Text="Bundle Response" Expanded="true">
-                        <InputTextArea Class="@ValidPatientResourceStyle"
-                                       rows="@(_matchResultRaw?.Count(s => s == '\n') + 1)"
-                                       @bind-Value="_matchResultRaw"
-                                       @onfocusout="PersistSoftwareStatement" />
-                    </MudExpansionPanel>
-                </MudExpansionPanels>
+	            <MudCardContent>
+		            <FhirWireData CompressedSize="_compressedSize" DecompressedSize="_decompressedSize"/>
+		            <MudExpansionPanels>
+			            <MudExpansionPanel Text="Bundle Response" Expanded="true">
+				            <InputTextArea Class="@ValidPatientResourceStyle"
+				                           rows="@(_matchResultRaw?.Count(s => s == '\n') + 1)"
+				                           @bind-Value="_matchResultRaw"
+				                           @onfocusout="PersistSoftwareStatement"/>
+			            </MudExpansionPanel>
+		            </MudExpansionPanels>
+	            </MudCardContent>
             </MudTabPanel>
         </MudTabs>
     </MudCard>
-
-    @if (!string.IsNullOrEmpty(_selectedItemText))
-    {
-        @if (showPatientResourceIndicator)
-        {
-            <div style="height:4px; background-color:yellow; width:100%; border-radius:2px 2px 0 0; margin-bottom:0;"></div>
-        }
-        <MudExpansionPanels>
-            <MudExpansionPanel Text="Patient Resource" Expanded="true">
-                <pre>@_selectedItemText</pre>
-            </MudExpansionPanel>
-        </MudExpansionPanels>
-    }
+    
+    <MudCard>
+	    <MudCardContent>
+			<RawResourcePanel @ref="rawResourcePanel"/>
+	    </MudCardContent>
+    </MudCard>
 }
 
 </ChildContent>

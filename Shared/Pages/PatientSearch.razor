@@ -92,17 +92,7 @@
 		        <MudTabPanel Text="Patient List">
 		        <MudCardContent>
 			        <CascadingValue Value="CurrentBundle">
-				        @if (_compressedSize != null)
-				        {
-					        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" ContentAlignment="HorizontalAlignment.Right">
-						        <span><b>Compressed Size:</b> @_compressedSize bytes</span>
-						        @if (_decompressedSize != null)
-						        {
-							        <span style="margin: 0 12px; color: #888;">|</span>
-							        <span><b>Decompressed Size:</b> @_decompressedSize bytes</span>
-						        }
-					        </MudAlert>
-				        }
+                        <FhirWireData CompressedSize="_compressedSize" DecompressedSize="_decompressedSize" />
 				        <MudTable @ref="PatientTable"
 				                  @bind-RowsPerPage="AppState.PatientSearchPref.RowsPerPage"
 				                  T="Patient"
@@ -144,7 +134,6 @@
 					        <PagerContent>
 						        <FhirTablePager PageSizeOptions="new[] { 5, 10, 20, 50, 100 }" @ref="_pager"/>
 					        </PagerContent>
-
 				        </MudTable>
 			        </CascadingValue>
 
@@ -154,31 +143,26 @@
 			        }
 		        </MudCardContent>
 		        </MudTabPanel>
-				<MudTabPanel Text="Bundle Response">
-                    <MudExpansionPanels>
-                        <MudExpansionPanel Text="Bundle Response" Expanded="true">
-                            <InputTextArea Class="pre udap-indent-1"
-                                           rows="@(_fhirResultRaw?.Count(s => s == '\n') + 1)"
-                                           @bind-Value="_fhirResultRaw" />
-                        </MudExpansionPanel>
-                    </MudExpansionPanels>
-				</MudTabPanel>
+		        <MudTabPanel Text="Bundle Response">
+			        <MudCardContent>
+				        <FhirWireData CompressedSize="_compressedSize" DecompressedSize="_decompressedSize"/>
+				        <MudExpansionPanels>
+					        <MudExpansionPanel Text="Bundle Response" Expanded="true">
+						        <InputTextArea Class="pre udap-indent-1"
+						                       rows="@(_fhirResultRaw?.Count(s => s == '\n') + 1)"
+						                       @bind-Value="_fhirResultRaw"/>
+					        </MudExpansionPanel>
+				        </MudExpansionPanels>
+			        </MudCardContent>
+		        </MudTabPanel>
 	        </MudTabs>
         </MudCard>
-
-
-        @if (!string.IsNullOrEmpty(_selectedItemText))
-        {
-	        @if (showPatientResourceIndicator)
-	        {
-		        <div style="height:4px; background-color:yellow; width:100%; border-radius:2px 2px 0 0; margin-bottom:0;"></div>
-	        }
-	        <MudExpansionPanels>
-		        <MudExpansionPanel Text="Patient Resource" Expanded="true">
-			        <pre>@_selectedItemText</pre>
-		        </MudExpansionPanel>
-	        </MudExpansionPanels>
-        }
+		
+        <MudCard>
+	        <MudCardContent>
+				<RawResourcePanel @ref="rawResourcePanel" />
+	        </MudCardContent>
+        </MudCard>
 
     </ChildContent>
     <ErrorContent Context="ex">

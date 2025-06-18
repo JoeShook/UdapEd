@@ -228,12 +228,12 @@ private readonly List<string> _supportedResources = new List<string>()
             _outComeMessage = "PreconditionFailed";
         }
 
-        else if (result.OperationOutCome != null)
+        else if (result.OperationOutcome != null)
         {
             _fhirResults.Entries = null;
             string? errorMessage = null;
 
-            foreach (var issue in result.OperationOutCome.Issue)
+            foreach (var issue in result.OperationOutcome.Issue)
             {
                 errorMessage += $"Error:: Details: {issue.Details?.Text}.<br/>"
                                 + $"Diagnostics: {issue.Diagnostics}.<br/>"

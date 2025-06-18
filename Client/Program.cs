@@ -8,6 +8,7 @@
 #endregion
 
 using Blazored.LocalStorage;
+using Ganss.Xss;
 using Hl7.Fhir.FhirPath;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -47,6 +48,7 @@ builder.Services.AddScoped<IClipboardService, ClipboardService>();
 builder.Services.AddScoped<IMutualTlsService, MutualTlsService>();
 builder.Services.AddScoped<ICdsService, CdsService>();
 builder.Services.AddFluentUIComponents();
+builder.Services.AddSingleton<HtmlSanitizer>();
 
 // Add this so that the resolve() extension will be available when including in FhirPath
 Hl7.FhirPath.FhirPathCompiler.DefaultSymbolTable.AddFhirExtensions();

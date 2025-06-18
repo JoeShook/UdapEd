@@ -178,7 +178,7 @@ public class FhirBaseController<T> : ControllerBase
             var parametersResource = await new FhirJsonParser().ParseAsync<Parameters>(parametersJson);
             var bundle = await _fhirClient.TypeOperationAsync<Patient>("match", parametersResource);
             var bundleJson = await new FhirJsonSerializer().SerializeToStringAsync(bundle);
-
+            CopyCustomHeadersToResponse();
             return Ok(bundleJson);
         }
         catch (FhirOperationException ex)

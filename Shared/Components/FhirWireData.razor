@@ -1,0 +1,20 @@
+@* FhirWireData.razor *@
+@namespace UdapEd.Shared.Components
+
+@* Parameters *@
+@code {
+    [Parameter] public int? CompressedSize { get; set; }
+    [Parameter] public int? DecompressedSize { get; set; }
+}
+
+@if (CompressedSize != null)
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" ContentAlignment="HorizontalAlignment.Right">
+        <span><b>Compressed Size:</b> @CompressedSize bytes</span>
+        @if (DecompressedSize != null)
+        {
+            <span style="margin: 0 12px; color: #888;">|</span>
+            <span><b>Decompressed Size:</b> @DecompressedSize bytes</span>
+        }
+    </MudAlert>
+}

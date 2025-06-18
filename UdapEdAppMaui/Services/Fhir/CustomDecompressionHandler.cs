@@ -9,19 +9,23 @@
 
 using System.IO.Compression;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using UdapEd.Shared;
 using UdapEd.Shared.Services.Fhir;
 
-namespace UdapEd.Server.Services.Fhir;
+namespace UdapEdAppMaui.Services.Fhir;
 
 public class CustomDecompressionHandler : DelegatingHandler
 {
     private readonly IFhirClientOptionsProvider _provider;
+    private readonly ILogger<CustomDecompressionHandler> _logger;
 
     public CustomDecompressionHandler(
-        IFhirClientOptionsProvider provider)
+        IFhirClientOptionsProvider provider,
+        ILogger<CustomDecompressionHandler> logger)
     {
         _provider = provider;
+        _logger = logger;
     }
     
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -36,6 +40,22 @@ public class CustomDecompressionHandler : DelegatingHandler
             request.Headers.AcceptEncoding.Clear();
             request.Headers.AcceptEncoding.Add(new System.Net.Http.Headers.StringWithQualityHeaderValue("identity"));
         }
+
+        // Log request details
+        var sb = new StringBuilder();
+        sb.AppendLine($"HTTP {request.Method} {request.RequestUri}");
+        foreach (var header in request.Headers)
+        {
+            sb.AppendLine($"{header.Key}: {string.Join(", ", header.Value)}");
+        }
+        if (request.Content != null)
+        {
+            foreach (var header in request.Content.Headers)
+            {
+                sb.AppendLine($"{header.Key}: {string.Join(", ", header.Value)}");
+            }
+        }
+        _logger.LogInformation("[CustomDecompressionHandler] Outgoing request details:\n{RequestDetails}", sb.ToString());
 
         var response = await base.SendAsync(request, cancellationToken);
 
@@ -67,11 +87,6 @@ public class CustomDecompressionHandler : DelegatingHandler
         
         return response;
     }
-}
-
-public class FhirResponseHeaderStore
-{
-    public Dictionary<string, string> Headers { get; } = new();
 }
 
 public class CountingStream : Stream

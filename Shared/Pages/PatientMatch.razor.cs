@@ -1,4 +1,4 @@
-﻿using System.Net;
+﻿using Ganss.Xss;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Components;
@@ -6,9 +6,11 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
 using MudBlazor;
+using System.Net;
 using UdapEd.Shared.Components;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
+using UdapEd.Shared.Model.Smart;
 using UdapEd.Shared.Services;
 using Address = UdapEd.Shared.Model.Address;
 using Task = System.Threading.Tasks.Task;
@@ -21,6 +23,8 @@ public partial class PatientMatch
     private MudTable<Hl7.Fhir.Model.Bundle.EntryComponent> _table = null!;
     private PatientMatchModel _model = new(); //starting point for building $match fields
     private List<Hl7.Fhir.Model.Bundle.EntryComponent?>? _entries;
+    private int? _compressedSize;
+    private int? _decompressedSize;
     private string? _matchResultRaw;
     private string? _outComeMessage;
     private string _parametersJson = string.Empty;
@@ -30,6 +34,7 @@ public partial class PatientMatch
     [Inject] private IJSRuntime Js { get; set; } = null!;
     [Inject] private IFhirService FhirService { get; set; } = null!;
     [Inject] private IDiscoveryService DiscoveryService { get; set; } = null!;
+    [Inject] public HtmlSanitizer HtmlSanitizer { get; set; }
     private ErrorBoundary? ErrorBoundary { get; set; }
     private const string ValidStyle = "pre udap-indent-1";
     private const string InvalidStyle = "pre udap-indent-1 jwt-invalid";
@@ -39,8 +44,6 @@ public partial class PatientMatch
     private bool _v2IdentifierSystemIsInEditMode;
     private Hl7.Fhir.Model.ValueSet? _identityValueSet;
     private Hl7.Fhir.Model.ValueSet? IdentityValueSet => _identityValueSet;
-    private bool showPatientResourceIndicator = false;
-    private System.Timers.Timer? _indicatorTimer;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -75,12 +78,12 @@ public partial class PatientMatch
     {
         var result = await FhirService.GetValueSet("http://hl7.org/fhir/us/identity-matching/ValueSet/Identity-Identifier-vs");
 
-        if (result.OperationOutCome != null)
+        if (result.OperationOutcome != null)
         {
             _entries = null;
             string? errorMessage = null;
 
-            foreach (var issue in result.OperationOutCome.Issue)
+            foreach (var issue in result.OperationOutcome.Issue)
             {
                 errorMessage += $"Error:: Details: {issue.Details?.Text}.<br/>"
                                 + $"Diagnostics: {issue.Diagnostics}.<br/>"
@@ -141,26 +144,101 @@ public partial class PatientMatch
         _model = new();
     }
 
+    private RawResourcePanel? rawResourcePanel;
+    
     private void OnRowClick(TableRowClickEventArgs<Hl7.Fhir.Model.Bundle.EntryComponent> args)
     {
-        _selectedItemText = new FhirJsonSerializer(new SerializerSettings { Pretty = true })
-            .SerializeToString(args.Item);
-
-        showPatientResourceIndicator = true;
-        _indicatorTimer?.Stop();
-        _indicatorTimer = new System.Timers.Timer(1500); // 1.5 seconds
-        _indicatorTimer.Elapsed += (s, e) =>
-        {
-            showPatientResourceIndicator = false;
-            InvokeAsync(StateHasChanged);
-            _indicatorTimer?.Stop();
-        };
-        _indicatorTimer.AutoReset = false;
-        _indicatorTimer.Start();
-
-        StateHasChanged();
+        rawResourcePanel?.ShowResource(
+            new FhirJsonSerializer(new SerializerSettings { Pretty = true })
+                .SerializeToString(args.Item)
+        );
     }
 
+    private async Task SetLaunchContext(Patient patient)
+    {
+        var launchContext = new LaunchContext
+        {
+            Patient = patient.Id
+        };
+        
+        await AppState.SetPropertyAsync(this, nameof(AppState.LaunchContext), launchContext);
+    }
+
+    private async Task SetPatientContext(Patient patient)
+    {
+        AppState.FhirContext.CurrentPatient = patient;
+        await AppState.SetPropertyAsync(this, nameof(AppState.FhirContext), AppState.FhirContext);
+    }
+
+    private async Task SetRelatedPersonContext(Patient patient)
+    {
+        var relatedPerson = new RelatedPerson
+        {
+            Id = patient.Id,
+            Meta = patient.Meta,
+            Identifier = patient.Identifier,
+            Active = patient.Active,
+            Name = patient.Name,
+            Telecom = patient.Telecom,
+            Gender = patient.Gender,
+            BirthDate = patient.BirthDate,
+            Address = patient.Address,
+            Photo = patient.Photo,
+            Communication = new List<RelatedPerson.CommunicationComponent>()
+        };
+
+        foreach (var patientCommunication in patient.Communication)
+        {
+            var relatedPersonCommunication = new RelatedPerson.CommunicationComponent()
+            {
+                Language = patientCommunication.Language,
+                Preferred = patientCommunication.Preferred
+            };
+
+            relatedPerson.Communication.Add(relatedPersonCommunication);
+        }
+
+        AppState.FhirContext.CurrentRelatedPerson = relatedPerson;
+        await AppState.SetPropertyAsync(this, nameof(AppState.FhirContext), AppState.FhirContext);
+    }
+
+    private async Task SetPersonContext(Patient patient)
+    {
+        var person = new Person
+        {
+            Id = patient.Id,
+            Meta = patient.Meta,
+            Identifier = patient.Identifier,
+            Active = patient.Active,
+            Name = patient.Name,
+            Telecom = patient.Telecom,
+            Gender = patient.Gender,
+            BirthDate = patient.BirthDate,
+            Address = patient.Address
+            // Link = new List<Person.LinkComponent>()
+        };
+
+        if (patient.Photo.Any())
+        {
+            person.Photo = patient.Photo.FirstOrDefault();
+        }
+
+        // Map any additional fields as needed
+        // foreach (var patientLink in patient.Link)
+        // {
+        //     var personLink = new Person.LinkComponent
+        //     {
+        //         
+        //         Other = patientLink.Other,
+        //         Type = patientLink.Type
+        //     };
+        //
+        //     person.Link.Add(personLink);
+        // }
+
+        AppState.FhirContext.CurrentPerson = person;
+        await AppState.SetPropertyAsync(this, nameof(AppState.FhirContext), AppState.FhirContext);
+    }
     private void AddressEditComplete(object address)
     {
         var addressView = (Address)address;
@@ -403,6 +481,16 @@ public partial class PatientMatch
         {
             var result = await FhirService.MatchPatient(_parametersJson);
 
+            if (result.FhirCompressedSize != null)
+            {
+                _compressedSize = result.FhirCompressedSize;
+            }
+
+            if (result.FhirDecompressedSize != null)
+            {
+                _decompressedSize = result.FhirDecompressedSize;
+            }
+
             if (result.UnAuthorized)
             {
                 _outComeMessage = HttpStatusCode.Unauthorized.ToString();
@@ -413,15 +501,15 @@ public partial class PatientMatch
                 _outComeMessage = "BaseUrl was reset.  Try again";
             }
 
-            else if (result.OperationOutCome != null)
+            else if (result.OperationOutcome != null)
             {
                 _entries = null;
                 string? errorMessage = null;
 
-                foreach (var issue in result.OperationOutCome.Issue)
+                foreach (var issue in result.OperationOutcome.Issue)
                 {
                     errorMessage += $"Error:: Details: {issue.Details?.Text}.<br/>"
-                                    + $"Diagnostics: {issue.Diagnostics}.<br/>"
+                                    + $"Diagnostics: {HtmlSanitizer.Sanitize(issue.Diagnostics)}.<br/>"
                                     + $"IssueType: {issue.Code}.<br/>";
                 }
 

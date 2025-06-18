@@ -173,11 +173,11 @@ public partial class PatientSearch
                 var setResult = await DiscoveryService.SetBaseFhirUrl(AppState.BaseUrl);
                 _outComeMessage = "BaseUrl was reset.  Try again";
             }
-            else if (result.OperationOutCome != null)
+            else if (result.OperationOutcome != null)
             {
                 string? errorMessage = null;
 
-                foreach (var issue in result.OperationOutCome.Issue)
+                foreach (var issue in result.OperationOutcome.Issue)
                 {
                     errorMessage += $"Error:: Details: {issue.Details?.Text}.<br/>"
                                     + $"Diagnostics: {issue.Diagnostics}.<br/>"
@@ -215,27 +215,14 @@ public partial class PatientSearch
         return new TableData<Patient>(){Items = new List<Patient>()};
     }
     
-    private bool showPatientResourceIndicator = false;
-    private System.Timers.Timer? _indicatorTimer;
-
+    private RawResourcePanel? rawResourcePanel;
+    
     private void OnRowClick(TableRowClickEventArgs<Patient> args)
     {
-        _selectedItemText = new FhirJsonSerializer(new SerializerSettings { Pretty = true })
-            .SerializeToString(args.Item);
-
-        showPatientResourceIndicator = true;
-        _indicatorTimer?.Stop();
-        _indicatorTimer = new System.Timers.Timer(1500); // 1.5 seconds
-        _indicatorTimer.Elapsed += (s, e) =>
-        {
-            showPatientResourceIndicator = false;
-            InvokeAsync(StateHasChanged);
-            _indicatorTimer?.Stop();
-        };
-        _indicatorTimer.AutoReset = false;
-        _indicatorTimer.Start();
-
-        StateHasChanged();
+        rawResourcePanel?.ShowResource(
+            new FhirJsonSerializer(new SerializerSettings { Pretty = true })
+                .SerializeToString(args.Item)
+        );
     }
 
     private async Task SetLaunchContext(Patient patient)

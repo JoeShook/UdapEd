@@ -17,7 +17,7 @@
         {
             foreach (var suggestion in CdsCard.Suggestions)
             {
-                <FluentButton Appearance="Appearance.Filled" Class="Button-module__emphasis">
+                <FluentButton Appearance="Appearance.Accent" Class="Button-module__emphasis">
                     @suggestion.Label
                 </FluentButton>
             }
@@ -27,7 +27,7 @@
     <FluentDivider Class="cds-divider" Style="width: 100%;" Role="@DividerRole.Presentation"></FluentDivider>
     <div class="_DropdownButtonBase-module__dropdown-button-base">
 
-        <FluentButton Appearance="Appearance.Filled" OnClick="HandleDismiss">
+        <FluentButton Appearance="Appearance.Accent" OnClick="HandleDismiss">
             Dismiss
         </FluentButton>
         @* <FluentButton Appearance="Appearance.Neutral" aria-haspopup="menu" aria-expanded="false" aria-label="More Options" OnClick="HandleMoreOptions"> *@

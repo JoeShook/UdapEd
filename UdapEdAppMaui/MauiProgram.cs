@@ -7,41 +7,27 @@
 // */
 #endregion
 
-using System.Net;
-using System.Reflection;
 using Blazored.LocalStorage;
 using CommunityToolkit.Maui;
+using Ganss.Xss;
 using Hl7.Fhir.Rest;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.FluentUI.AspNetCore.Components;
 using MudBlazor.Services;
 using Serilog;
 using Serilog.Events;
+using System.Net;
+using System.Reflection;
 using Udap.Client.Client;
 using Udap.Client.Configuration;
 using Udap.Common.Certificates;
-using UdapEd.Server.Services.Fhir;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Services.Authentication;
 using UdapEd.Shared.Services.Cds;
 using UdapEd.Shared.Services.Fhir;
 using UdapEd.Shared.Services.Search;
-/* Unmerged change from project 'UdapEdAppMaui (net8.0-windows10.0.19041.0)'
-Before:
-using UdapEdAppMaui.Services;
-
-
-#if WINDOWS
-After:
-using UdapEdAppMaui.Services;
-using UdapEdAppMaui.Services.Authentication;
-
-
-
-#if WINDOWS
-*/
 using UdapEdAppMaui.Services;
 using UdapEdAppMaui.Services.Authentication;
 using UdapEdAppMaui.Services.Fhir;
@@ -49,8 +35,6 @@ using UdapEdAppMaui.Services.Search;
 using AuthTokenHttpMessageHandler = UdapEd.Shared.Services.Authentication.AuthTokenHttpMessageHandler;
 using IAccessTokenProvider = UdapEd.Shared.Services.Authentication.IAccessTokenProvider;
 using Infrastructure = UdapEdAppMaui.Services.Infrastructure;
-
-
 
 namespace UdapEdAppMaui;
 public static class MauiProgram
@@ -143,13 +127,16 @@ public static class MauiProgram
         builder.Services.AddTransient<IFhirService, FhirService>();
 
         
-        // builder.Services.AddScoped<IInfrastructure, Infrastructure>();
+        
 
         builder.Services.AddHttpClient("UdapEdServer", client =>
         {
             client.BaseAddress = new Uri("https://udaped.fhirlabs.net/");
         });
 
+
+
+#if IOS
         builder.Services.AddScoped<IInfrastructure>(sp =>
             new UdapEdAppMaui.Services.IOS.Infrastructure(
                 sp.GetRequiredService<IHttpClientFactory>().CreateClient("UdapEdServer"),
@@ -164,8 +151,10 @@ public static class MauiProgram
             )
         );
 
-#if IOS
         builder.Services.AddSingleton<IDeviceOrientationService, DeviceOrientationService>();
+#else
+        builder.Services.AddScoped<IInfrastructure, Infrastructure>();
+        builder.Services.AddScoped<IDiscoveryService, DiscoveryService>();
 #endif
 
         builder.Services.AddHttpClient<ICdsService, CdsService>();
@@ -188,7 +177,10 @@ public static class MauiProgram
                 { })
             .AddHttpMessageHandler(sp => new AuthTokenHttpMessageHandler(sp.GetRequiredService<IAccessTokenProvider>()))
             .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()))
-            .AddHttpMessageHandler(sp => new CustomDecompressionHandler(sp.GetRequiredService<IFhirClientOptionsProvider>()))
+            .AddHttpMessageHandler(sp => new CustomDecompressionHandler(
+                sp.GetRequiredService<IFhirClientOptionsProvider>(),
+                sp.GetRequiredService<ILogger<CustomDecompressionHandler>>()
+            ))
             .AddHttpMessageHandler<HttpResponseHandler>();
 
         builder.Services.AddTransient<IClientCertificateProvider, ClientCertificateProvider>();
@@ -245,7 +237,8 @@ public static class MauiProgram
             return new FhirClient(url, httpClient, settings);
         });
 
-
+        builder.Services.AddFluentUIComponents();
+        builder.Services.AddSingleton<HtmlSanitizer>();
 
 #if WINDOWS
         builder.Services.AddSingleton<IExternalWebAuthenticator, WebAuthenticatorForWindows>();

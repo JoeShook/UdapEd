@@ -226,7 +226,7 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
 
     private async Task LoadFhirLabsTestCertificate()
     {
-        var certViewModel = await RegisterService.LoadTestCertificate("./CertificateStore/fhirlabs.net.client.pfx");
+        var certViewModel = await RegisterService.LoadTestCertificate("CertificateStore/fhirlabs.net.client.pfx");
         await SetCertLoadedColorForFhirLabs(certViewModel?.CertLoaded);
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), certViewModel);
         await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
@@ -235,7 +235,7 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
 
     private async Task LoadEmrTestCertificate()
     {
-        var certViewModel = await RegisterService.LoadTestCertificate("./CertificateStore/udap.emrdirect.client.certificate.p12");
+        var certViewModel = await RegisterService.LoadTestCertificate("CertificateStore/udap.emrdirect.client.certificate.p12");
         await SetCertLoadedColorForDefaultCommunity(certViewModel?.CertLoaded);
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), certViewModel);
         await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);

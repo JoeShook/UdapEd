@@ -22,6 +22,7 @@
     <PackageReference Include="AutoMapper" Version="14.0.0" />
     <PackageReference Include="BlazorMonaco" Version="3.3.0" IncludeAssets="all" />
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+    <PackageReference Include="HtmlSanitizer" Version="9.0.886" />
     <PackageReference Include="Microsoft.Bcl.Memory" Version="9.0.6" />
     <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
     <PackageReference Include="Google.Cloud.Storage.V1" Version="4.13.0" />

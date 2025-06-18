@@ -25,14 +25,14 @@ public class FhirResultModel<T>
         this.Version = version;
     }
 
-    public FhirResultModel(OperationOutcome? operationOutCome)
+    public FhirResultModel(OperationOutcome? operationOutcome)
     {
-        this.OperationOutCome = operationOutCome;
+        this.OperationOutcome = operationOutcome;
     }
 
-    public FhirResultModel(OperationOutcome? operationOutCome, HttpStatusCode httpStatusCode, Version version)
+    public FhirResultModel(OperationOutcome? operationOutcome, HttpStatusCode httpStatusCode, Version version)
     {
-        this.OperationOutCome = operationOutCome;
+        this.OperationOutcome = operationOutcome;
         this.HttpStatusCode = httpStatusCode;
         this.Version = version;
     }
@@ -42,7 +42,7 @@ public class FhirResultModel<T>
         UnAuthorized = unAuthorized;
     }
 
-    public OperationOutcome? OperationOutCome { get; }
+    public OperationOutcome? OperationOutcome { get; }
 
     public T? Result { get; }
     

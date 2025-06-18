@@ -1,0 +1,46 @@
+@using MudBlazor
+
+@if (!string.IsNullOrEmpty(ResourceText))
+{
+    @if (_showIndicator)
+    {
+        <div style="height:4px; background-color:yellow; width:100%; border-radius:2px 2px 0 0; margin-bottom:0;"></div>
+    }
+    <MudExpansionPanels>
+        <MudExpansionPanel Text="Patient Resource" Expanded="true">
+            <pre>@ResourceText</pre>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+}
+
+@code {
+    [Parameter] public string? ResourceText { get; set; }
+
+    private bool _showIndicator;
+    private System.Timers.Timer? _indicatorTimer;
+
+    public void ShowResource(string? resourceText)
+    {
+        ResourceText = resourceText;
+        _showIndicator = true;
+        StateHasChanged();
+
+        _indicatorTimer?.Stop();
+        _indicatorTimer?.Dispose();
+        _indicatorTimer = new System.Timers.Timer(1500);
+        _indicatorTimer.Elapsed += (s, e) =>
+        {
+            _showIndicator = false;
+            InvokeAsync(StateHasChanged);
+            _indicatorTimer?.Stop();
+            _indicatorTimer?.Dispose();
+        };
+        _indicatorTimer.AutoReset = false;
+        _indicatorTimer.Start();
+    }
+
+    protected override void OnInitialized()
+    {
+        _showIndicator = false;
+    }
+}

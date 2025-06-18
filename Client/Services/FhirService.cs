@@ -82,29 +82,9 @@ public class FhirService : IFhirService
         return await HandleResponseError(response);
     }
 
-    private void EnrichResult(HttpResponseMessage responseMessage, FhirResultModel<Bundle> resultModel)
-    {
-        int? compressedSize = null;
-        int? decompressedSize = null;
-
-        var headerValue = responseMessage.Headers.GetValues(UdapEdConstants.FhirClient.FhirCompressedSize).FirstOrDefault();
-        if (int.TryParse(headerValue, out var size))
-        {
-            compressedSize = size;
-        }
-
-        headerValue = responseMessage.Headers.GetValues(UdapEdConstants.FhirClient.FhirDecompressedSize).FirstOrDefault();
-        if (int.TryParse(headerValue, out size))
-        {
-            decompressedSize = size;
-        }
-
-        resultModel.FhirCompressedSize = compressedSize;
-        resultModel.FhirDecompressedSize = decompressedSize;
-    }
-
     public async Task<FhirResultModel<Bundle>> MatchPatient(string parametersJson)
     {
+        FhirResultModel<Bundle> resultModel;
         var parameters = await new FhirJsonParser().ParseAsync<Parameters>(parametersJson);
         var json = await new FhirJsonSerializer().SerializeToStringAsync(parameters); // removing line feeds
         var jsonMessage = JsonSerializer.Serialize(json); // needs to be json
@@ -118,10 +98,10 @@ public class FhirService : IFhirService
             var bundle = new FhirJsonParser().Parse<Bundle>(result);
             // var patients = bundle.Entry.Select(e => e.Resource as Patient).ToList();
 
-            return new FhirResultModel<Bundle>(bundle, response.StatusCode, response.Version);
+            resultModel =  new FhirResultModel<Bundle>(bundle, response.StatusCode, response.Version);
+            EnrichResult(response, resultModel);
+            return resultModel;
         }
-        
-        Console.WriteLine(response.StatusCode);
         
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
@@ -171,7 +151,9 @@ public class FhirService : IFhirService
             var result = await response.Content.ReadAsStringAsync();
             var operationOutcome = new FhirJsonParser().Parse<OperationOutcome>(result);
 
-            return new FhirResultModel<Bundle>(operationOutcome, response.StatusCode, response.Version);
+            resultModel = new FhirResultModel<Bundle>(operationOutcome, response.StatusCode, response.Version);
+            EnrichResult(response, resultModel);
+            return resultModel;
         }
     }
 
@@ -567,4 +549,24 @@ public class FhirService : IFhirService
         return controller;
     }
 
+    private void EnrichResult(HttpResponseMessage responseMessage, FhirResultModel<Bundle> resultModel)
+    {
+        int? compressedSize = null;
+        int? decompressedSize = null;
+
+        var headerValue = responseMessage.Headers.GetValues(UdapEdConstants.FhirClient.FhirCompressedSize).FirstOrDefault();
+        if (int.TryParse(headerValue, out var size))
+        {
+            compressedSize = size;
+        }
+
+        headerValue = responseMessage.Headers.GetValues(UdapEdConstants.FhirClient.FhirDecompressedSize).FirstOrDefault();
+        if (int.TryParse(headerValue, out size))
+        {
+            decompressedSize = size;
+        }
+
+        resultModel.FhirCompressedSize = compressedSize;
+        resultModel.FhirDecompressedSize = decompressedSize;
+    }
 }
