@@ -1,8 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
+	  <TargetFramework>net8.0</TargetFramework>
+	  <Nullable>enable</Nullable>
+	  <ImplicitUsings>enable</ImplicitUsings>
+	  <InvariantGlobalization>false</InvariantGlobalization>
+	  <BlazorWebAssemblyLoadAllGlobalizationData>false</BlazorWebAssemblyLoadAllGlobalizationData>
+	  <BlazorWebAssemblyCultures>en</BlazorWebAssemblyCultures>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />

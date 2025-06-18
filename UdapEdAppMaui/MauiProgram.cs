@@ -22,6 +22,7 @@ using Serilog.Events;
 using Udap.Client.Client;
 using Udap.Client.Configuration;
 using Udap.Common.Certificates;
+using UdapEd.Server.Services.Fhir;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Services.Authentication;
 using UdapEd.Shared.Services.Cds;

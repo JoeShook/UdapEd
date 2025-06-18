@@ -24,6 +24,7 @@ COPY ["Shared/UdapEd.Shared.csproj", "Shared/"]
 
 
 RUN dotnet restore -p:TargetFramework=net8.0 "Server/UdapEd.Server.csproj" 
+COPY . .
 
 RUN dotnet build "Server/UdapEd.Server.csproj" -p:TargetFramework=net8.0 -c Release --no-restore -o /app/build 
 

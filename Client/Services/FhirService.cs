@@ -7,15 +7,18 @@
 // */
 #endregion
 
+using Blazored.LocalStorage;
+using Hl7.Fhir.Model;
+using Hl7.Fhir.Model.CdsHooks;
+using Hl7.Fhir.Serialization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Authentication;
 using System.Text;
 using System.Text.Json;
-using Blazored.LocalStorage;
-using Hl7.Fhir.Model;
-using Hl7.Fhir.Serialization;
+using UdapEd.Shared;
+using UdapEd.Shared.Components;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Services.Fhir;
@@ -41,7 +44,9 @@ public class FhirService : IFhirService
 
         if (response.IsSuccessStatusCode)
         {
-            var result = await response.Content.ReadAsStringAsync();
+            FhirResultModel<Bundle> resultModel;
+
+            var result = await response.Content.ReadAsStringAsync(ct);
             if (model.GetResource)
             {
                 var patient = new FhirJsonParser().Parse<Patient>(result);
@@ -54,7 +59,9 @@ public class FhirService : IFhirService
 
                 singlePatientBundle.Entry.Add(bundleEntry);
 
-                return new FhirResultModel<Bundle>(singlePatientBundle, response.StatusCode, response.Version);
+                resultModel = new FhirResultModel<Bundle>(singlePatientBundle, response.StatusCode, response.Version);
+                EnrichResult(response, resultModel);
+                return resultModel;
             }
 
             var bundle = new FhirJsonParser().Parse<Bundle>(result);
@@ -62,13 +69,38 @@ public class FhirService : IFhirService
             
             if (operationOutcome.Any(o => o != null))
             {
-                return new FhirResultModel<Bundle>(operationOutcome.First(), response.StatusCode, response.Version);
+                resultModel = new FhirResultModel<Bundle>(operationOutcome.First(), response.StatusCode, response.Version);
+                EnrichResult(response, resultModel);
+                return resultModel;
             }
-            
-            return new FhirResultModel<Bundle>(bundle, response.StatusCode, response.Version);
+
+            resultModel = new FhirResultModel<Bundle>(bundle, response.StatusCode, response.Version);
+            EnrichResult(response, resultModel);
+            return resultModel;
         }
 
         return await HandleResponseError(response);
+    }
+
+    private void EnrichResult(HttpResponseMessage responseMessage, FhirResultModel<Bundle> resultModel)
+    {
+        int? compressedSize = null;
+        int? decompressedSize = null;
+
+        var headerValue = responseMessage.Headers.GetValues(UdapEdConstants.FhirClient.FhirCompressedSize).FirstOrDefault();
+        if (int.TryParse(headerValue, out var size))
+        {
+            compressedSize = size;
+        }
+
+        headerValue = responseMessage.Headers.GetValues(UdapEdConstants.FhirClient.FhirDecompressedSize).FirstOrDefault();
+        if (int.TryParse(headerValue, out size))
+        {
+            decompressedSize = size;
+        }
+
+        resultModel.FhirCompressedSize = compressedSize;
+        resultModel.FhirDecompressedSize = decompressedSize;
     }
 
     public async Task<FhirResultModel<Bundle>> MatchPatient(string parametersJson)
@@ -528,13 +560,8 @@ public class FhirService : IFhirService
         {
             return "Fhir";
         }
-
-        var options = new JsonSerializerOptions
-        {
-            Converters = { new FhirContextJsonConverter() }
-        };
-
-        var appState = JsonSerializer.Deserialize<UdapClientState>(json, options);
+        
+        var appState = JsonSerializer.Deserialize<UdapClientState>(json,  UdapJsonContext.UdapDefault.UdapClientState);
         var controller = appState?.ClientMode == ClientSecureMode.mTLS ? "FhirMtls" : "Fhir";
         
         return controller;

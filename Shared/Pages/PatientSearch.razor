@@ -8,7 +8,7 @@
 <ErrorBoundary @ref="ErrorBoundary">
     <ChildContent>
         <MudCard Elevation="3" Style="margin-top: 10px">
-            <MudForm Model="_model" @ref="form" />
+            <MudForm Model="_model" @ref="_form" />
             <MudCardContent>
                 <MudGrid Justify="Justify.FlexStart">
                     <MudItem md="4" sm="6" xs="12">
@@ -88,68 +88,96 @@
         </MudCard>
 
         <MudCard Elevation="3" Style="margin-top: 10px">
-            <MudCardContent>
-                <CascadingValue Value="CurrentBundle">
-                    <MudTable @ref="PatientTable"
-                              @bind-RowsPerPage="AppState.PatientSearchPref.RowsPerPage"
-                              T="Patient"
-                              ServerData="Reload"
-                              MultiSelection="false"
-                              Dense="@false"
-                              Hover="@true"
-                              ReadOnly="@true"
-                              SortLabel="Name"
-                              CommitEditTooltip="Commit Edit"
-                              IsEditRowSwitchingBlocked="@true"
-                              ApplyButtonPosition="@TableApplyButtonPosition.Start"
-                              OnRowClick="@OnRowClick">
-                        <HeaderContent>
-                            <MudTh>Name</MudTh>
-                            <MudTh>BirthDate</MudTh>
-                            <MudTh>Id</MudTh>
-                            <MudTh>Identifier</MudTh>
-                            <MudTh/>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Name">@(new MarkupString(string.Join("<br/> ", context.Name.Select(hn => $"{hn.Given.First()}, {hn.Family}"))))</MudTd>
-                            <MudTd DataLabel="BirthDate">@context.BirthDate</MudTd>
-                            <MudTd DataLabel="Id">@context.Id</MudTd>
-                            <MudTd DataLabel="Identifier">@(new MarkupString(string.Join("<br/> ", context.Identifier.Select(identifier => $"{identifier.System}|{identifier.Value}"))))</MudTd>
-                            <MudTd>
-                                
-                                <MudTooltip Text="Set Context">
-                                    <MudMenu AriaLabel="Set Context" Icon="@Icons.Material.Outlined.PersonPin" Color="Color.Secondary" Variant="Variant.Text">
-                                        <MudMenuItem OnClick="@(() => SetPatientContext(context))">Set Patient Context</MudMenuItem>
-                                        <MudMenuItem OnClick="@(() => SetRelatedPersonContext(context))">Set Related Person Context</MudMenuItem>
-                                        <MudMenuItem OnClick="@(() => SetPersonContext(context))">Set Person Context</MudMenuItem>
-                                        <MudMenuItem OnClick="@(() => SetLaunchContext(context))">Set Launch Context</MudMenuItem>
-                                    </MudMenu>
-                                </MudTooltip>
+	        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+		        <MudTabPanel Text="Patient List">
+		        <MudCardContent>
+			        <CascadingValue Value="CurrentBundle">
+				        @if (_compressedSize != null)
+				        {
+					        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" ContentAlignment="HorizontalAlignment.Right">
+						        <span><b>Compressed Size:</b> @_compressedSize bytes</span>
+						        @if (_decompressedSize != null)
+						        {
+							        <span style="margin: 0 12px; color: #888;">|</span>
+							        <span><b>Decompressed Size:</b> @_decompressedSize bytes</span>
+						        }
+					        </MudAlert>
+				        }
+				        <MudTable @ref="PatientTable"
+				                  @bind-RowsPerPage="AppState.PatientSearchPref.RowsPerPage"
+				                  T="Patient"
+				                  ServerData="Reload"
+				                  MultiSelection="false"
+				                  Dense="@false"
+				                  Hover="@true"
+				                  ReadOnly="@true"
+				                  SortLabel="Name"
+				                  CommitEditTooltip="Commit Edit"
+				                  IsEditRowSwitchingBlocked="@true"
+				                  ApplyButtonPosition="@TableApplyButtonPosition.Start"
+				                  OnRowClick="@OnRowClick">
+					        <HeaderContent>
+						        <MudTh>Name</MudTh>
+						        <MudTh>BirthDate</MudTh>
+						        <MudTh>Id</MudTh>
+						        <MudTh>Identifier</MudTh>
+						        <MudTh/>
+					        </HeaderContent>
+					        <RowTemplate>
+						        <MudTd DataLabel="Name">@(new MarkupString(string.Join("<br/> ", context.Name.Select(hn => $"{hn.Given.First()}, {hn.Family}"))))</MudTd>
+						        <MudTd DataLabel="BirthDate">@context.BirthDate</MudTd>
+						        <MudTd DataLabel="Id">@context.Id</MudTd>
+						        <MudTd DataLabel="Identifier">@(new MarkupString(string.Join("<br/> ", context.Identifier.Select(identifier => $"{identifier.System}|{identifier.Value}"))))</MudTd>
+						        <MudTd>
 
-                            </MudTd>
-                        </RowTemplate>
-                        <PagerContent>
-                            <FhirTablePager PageSizeOptions="new[] { 5, 10, 20, 50, 100 }" @ref="_pager" />
-                        </PagerContent>
+							        <MudTooltip Text="Set Context">
+								        <MudMenu AriaLabel="Set Context" Icon="@Icons.Material.Outlined.PersonPin" Color="Color.Secondary" Variant="Variant.Text">
+									        <MudMenuItem OnClick="@(() => SetPatientContext(context))">Set Patient Context</MudMenuItem>
+									        <MudMenuItem OnClick="@(() => SetRelatedPersonContext(context))">Set Related Person Context</MudMenuItem>
+									        <MudMenuItem OnClick="@(() => SetPersonContext(context))">Set Person Context</MudMenuItem>
+									        <MudMenuItem OnClick="@(() => SetLaunchContext(context))">Set Launch Context</MudMenuItem>
+								        </MudMenu>
+							        </MudTooltip>
 
-                    </MudTable>
-                </CascadingValue>
+						        </MudTd>
+					        </RowTemplate>
+					        <PagerContent>
+						        <FhirTablePager PageSizeOptions="new[] { 5, 10, 20, 50, 100 }" @ref="_pager"/>
+					        </PagerContent>
 
-                @if (_outComeMessage != null)
-                {
-                    <MudAlert Severity="Severity.Error"><pre>@(new MarkupString(_outComeMessage))</pre></MudAlert>
-                }
-            </MudCardContent>
+				        </MudTable>
+			        </CascadingValue>
+
+			        @if (_outComeMessage != null)
+			        {
+				        <MudAlert Severity="Severity.Error"><pre>@(new MarkupString(_outComeMessage))</pre></MudAlert>
+			        }
+		        </MudCardContent>
+		        </MudTabPanel>
+				<MudTabPanel Text="Bundle Response">
+                    <MudExpansionPanels>
+                        <MudExpansionPanel Text="Bundle Response" Expanded="true">
+                            <InputTextArea Class="pre udap-indent-1"
+                                           rows="@(_fhirResultRaw?.Count(s => s == '\n') + 1)"
+                                           @bind-Value="_fhirResultRaw" />
+                        </MudExpansionPanel>
+                    </MudExpansionPanels>
+				</MudTabPanel>
+	        </MudTabs>
         </MudCard>
 
 
         @if (!string.IsNullOrEmpty(_selectedItemText))
         {
-            <MudCard Elevation="3" Style="margin-top: 10px">
-                <MudCardContent>
-                    <pre>@_selectedItemText</pre>
-                </MudCardContent>
-            </MudCard>
+	        @if (showPatientResourceIndicator)
+	        {
+		        <div style="height:4px; background-color:yellow; width:100%; border-radius:2px 2px 0 0; margin-bottom:0;"></div>
+	        }
+	        <MudExpansionPanels>
+		        <MudExpansionPanel Text="Patient Resource" Expanded="true">
+			        <pre>@_selectedItemText</pre>
+		        </MudExpansionPanel>
+	        </MudExpansionPanels>
         }
 
     </ChildContent>

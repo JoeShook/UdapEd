@@ -15,7 +15,7 @@ namespace UdapEd.Shared.Pages;
 
 public partial class PatientSearch
 {
-    private MudForm form = null!;
+    private MudForm _form = null!;
     private MudTable<Patient>? PatientTable { get; set; }
     public PatientSearchModel _model  = new();
     public FhirTablePager? _pager = null!;
@@ -23,6 +23,9 @@ public partial class PatientSearch
 
     private Hl7.Fhir.Model.Bundle? _currentBundle;
     public Hl7.Fhir.Model.Bundle? CurrentBundle => _currentBundle;
+    private int? _compressedSize;
+    private int? _decompressedSize;
+    private string? _fhirResultRaw;
 
     private string? _outComeMessage;
     private string _selectedItemText = string.Empty;
@@ -33,6 +36,8 @@ public partial class PatientSearch
     [Inject] private IDiscoveryService DiscoveryService { get; set; } = null!;
     private ErrorBoundary? ErrorBoundary { get; set; }
     private string? _baseUrlOverride = string.Empty;
+
+    private bool _shouldReloadTable = false;
 
     protected override Task OnInitializedAsync()
     {
@@ -93,11 +98,17 @@ public partial class PatientSearch
 
     private async Task Search()
     {
+        _shouldReloadTable = true;
+        await Search(false);
+    }
+
+    private async Task Search(bool getRequest)
+    {
         _searchEnabled = true;
         _selectedItemText = string.Empty;
         _currentBundle = null;
         _model.Bundle = null;
-        _model.GetResource = false;
+        _model.GetResource = getRequest;
 
         if (PatientTable != null)
         {
@@ -109,9 +120,8 @@ public partial class PatientSearch
 
     private async Task Get()
     {
-        _model.GetResource = true;
-
-        await Search();
+        _shouldReloadTable = true;
+        await Search(true);
     }
 
     private void Cancel()
@@ -122,7 +132,13 @@ public partial class PatientSearch
     
     private async Task<TableData<Patient>> Reload(TableState state, CancellationToken ct)
     {
-        _selectedItemText = "";
+        if (!_shouldReloadTable)
+        {
+            // Return cached data if available
+            var patients = _currentBundle?.Entry.Select(entry => entry.Resource).Cast<Patient>().ToList() ?? new List<Patient>();
+            return new TableData<Patient>() { TotalItems = _currentBundle?.Total ?? 0, Items = patients };
+        }
+        _shouldReloadTable = false;
 
         if (AppState.BaseUrl != null && _searchEnabled)
         {
@@ -137,6 +153,16 @@ public partial class PatientSearch
             if (_pager != null) { _model.PageDirection = _pager.PageDirection; }
             
             var result = await FhirService.SearchPatient(_model, ct);
+
+            if (result.FhirCompressedSize != null)
+            {
+                _compressedSize = result.FhirCompressedSize;
+            }
+
+            if(result.FhirDecompressedSize != null)
+            {
+                _decompressedSize = result.FhirDecompressedSize;
+            }
 
             if (result.UnAuthorized)
             {
@@ -164,22 +190,52 @@ public partial class PatientSearch
             {
                 _outComeMessage = null;
                 _currentBundle = result.Result;
+
+                if (result.HttpStatusCode != null)
+                {
+                    _fhirResultRaw = $"HTTP/{result.Version} {(int)result.HttpStatusCode} {result.HttpStatusCode}";
+                    _fhirResultRaw += Environment.NewLine + Environment.NewLine;
+                }
+
+                if (_currentBundle != null)
+                {
+                    _fhirResultRaw += await new FhirJsonSerializer(new SerializerSettings { Pretty = true })
+                        .SerializeToStringAsync(_currentBundle);
+                }
+
                 _model.Page = state.Page;
 
-                var patients = _currentBundle?.Entry.Select(entry => entry.Resource).Cast<Patient>().ToList();
+                    var patients = _currentBundle?.Entry.Select(entry => entry.Resource).Cast<Patient>().ToList();
+
+                    return new TableData<Patient>() { TotalItems = _currentBundle?.Total ?? 0, Items = patients };
                 
-                return new TableData<Patient>() { TotalItems = _currentBundle?.Total ?? 0, Items = patients };
             }
         }
 
         return new TableData<Patient>(){Items = new List<Patient>()};
     }
     
+    private bool showPatientResourceIndicator = false;
+    private System.Timers.Timer? _indicatorTimer;
+
     private void OnRowClick(TableRowClickEventArgs<Patient> args)
     {
         _selectedItemText = new FhirJsonSerializer(new SerializerSettings { Pretty = true })
             .SerializeToString(args.Item);
-        
+
+        showPatientResourceIndicator = true;
+        _indicatorTimer?.Stop();
+        _indicatorTimer = new System.Timers.Timer(1500); // 1.5 seconds
+        _indicatorTimer.Elapsed += (s, e) =>
+        {
+            showPatientResourceIndicator = false;
+            InvokeAsync(StateHasChanged);
+            _indicatorTimer?.Stop();
+        };
+        _indicatorTimer.AutoReset = false;
+        _indicatorTimer.Start();
+
+        StateHasChanged();
     }
 
     private async Task SetLaunchContext(Patient patient)

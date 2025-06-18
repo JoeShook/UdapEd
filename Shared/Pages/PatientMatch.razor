@@ -433,26 +433,29 @@
                 </MudCardContent>
             </MudTabPanel>
             <MudTabPanel Text="Bundle Response">
-                <InputTextArea Class="@ValidPatientResourceStyle"
-                               rows="@(_matchResultRaw?.Count(s => s == '\n') + 1)"
-                               @bind-Value="_matchResultRaw"
-                               @onfocusout="PersistSoftwareStatement" />
+                <MudExpansionPanels>
+                    <MudExpansionPanel Text="Bundle Response" Expanded="true">
+                        <InputTextArea Class="@ValidPatientResourceStyle"
+                                       rows="@(_matchResultRaw?.Count(s => s == '\n') + 1)"
+                                       @bind-Value="_matchResultRaw"
+                                       @onfocusout="PersistSoftwareStatement" />
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
             </MudTabPanel>
         </MudTabs>
     </MudCard>
 
     @if (!string.IsNullOrEmpty(_selectedItemText))
     {
-        <MudCard Elevation="3" Style="margin: 10px">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h6">Patient Resource</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent>
+        @if (showPatientResourceIndicator)
+        {
+            <div style="height:4px; background-color:yellow; width:100%; border-radius:2px 2px 0 0; margin-bottom:0;"></div>
+        }
+        <MudExpansionPanels>
+            <MudExpansionPanel Text="Patient Resource" Expanded="true">
                 <pre>@_selectedItemText</pre>
-            </MudCardContent>
-        </MudCard>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
     }
 }
 

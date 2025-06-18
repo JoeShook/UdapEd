@@ -7,16 +7,18 @@
 // */
 #endregion
 
-using System.Net;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Net;
 using UdapEd.Server.Extensions;
+using UdapEd.Server.Services.Fhir;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
+using UdapEd.Shared.Services.Fhir;
 using FhirClientWithUrlProvider = UdapEd.Shared.Services.FhirClientWithUrlProvider;
 
 namespace UdapEd.Server.Controllers;
@@ -26,8 +28,10 @@ namespace UdapEd.Server.Controllers;
 [EnableRateLimiting(RateLimitExtensions.Policy)]
 public class FhirController : FhirBaseController<FhirController>
 {
-
-    public FhirController(FhirClientWithUrlProvider fhirClient, FhirClient fhirTerminologyClient, ILogger<FhirController> logger)
+   public FhirController(
+        FhirClientWithUrlProvider fhirClient, 
+        FhirClient fhirTerminologyClient, 
+        ILogger<FhirController> logger)
         : base(fhirClient, fhirTerminologyClient, logger)
     { }
 }
@@ -37,7 +41,12 @@ public class FhirController : FhirBaseController<FhirController>
 [EnableRateLimiting(RateLimitExtensions.Policy)]
 public class FhirMtlsController : FhirBaseController<FhirMtlsController>
 {
-    public FhirMtlsController(FhirMTlsClientWithUrlProvider fhirClient, FhirClient fhirTerminologyClient, ILogger<FhirMtlsController> logger)
+    private readonly FhirResponseHeaderStore _headerStore;
+
+    public FhirMtlsController(
+        FhirMTlsClientWithUrlProvider fhirClient, 
+        FhirClient fhirTerminologyClient,
+        ILogger<FhirMtlsController> logger)
         : base(fhirClient, fhirTerminologyClient, logger)
     { }
 }
@@ -48,7 +57,10 @@ public class FhirBaseController<T> : ControllerBase
     private readonly FhirClient _fhirTerminologyClient;
     private readonly ILogger<T> _logger;
 
-    public FhirBaseController(FhirClient fhirClient, FhirClient fhirTerminologyClient, ILogger<T> logger)
+    public FhirBaseController(
+        FhirClient fhirClient, 
+        FhirClient fhirTerminologyClient,
+        ILogger<T> logger)
     {
         _fhirClient = fhirClient;
         _fhirTerminologyClient = fhirTerminologyClient;
@@ -71,6 +83,7 @@ public class FhirBaseController<T> : ControllerBase
             {
                 var patient = await _fhirClient.ReadAsync<Patient>($"Patient/{model.Id}");
                 var patientJson = await new FhirJsonSerializer().SerializeToStringAsync(patient);
+                CopyCustomHeadersToResponse();
                 return Ok(patientJson);
             }
 
@@ -78,10 +91,12 @@ public class FhirBaseController<T> : ControllerBase
             {
                 var bundle = await _fhirClient.SearchAsync<Patient>(SearchParamsExtensions.OrderBy(BuildSearchParams(model), "given"));
                 var bundleJson = await new FhirJsonSerializer().SerializeToStringAsync(bundle);
+                CopyCustomHeadersToResponse();
                 return Ok(bundleJson);
             }
             var links = new FhirJsonParser().Parse<Bundle>(model.Bundle);
             var nextBundle = await _fhirClient.ContinueAsync(links, model.PageDirection);
+            CopyCustomHeadersToResponse();
             return Ok(await new FhirJsonSerializer().SerializeToStringAsync(nextBundle));
         }
         catch (FhirOperationException ex)
@@ -400,6 +415,14 @@ public class FhirBaseController<T> : ControllerBase
         {
             _logger.LogError(ex.Message);
             throw;
+        }
+    }
+
+    private void CopyCustomHeadersToResponse()
+    {
+        foreach (var kvp in HttpContext.Items.Where(i => i.Key is string key && key.StartsWith("X-")))
+        {
+            Response.Headers[(string)kvp.Key] = kvp.Value?.ToString();
         }
     }
 }

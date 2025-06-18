@@ -7,18 +7,21 @@
 // */
 #endregion
 
+using Hl7.Fhir.Model;
+using Hl7.Fhir.Model.CdsHooks;
+using Hl7.Fhir.Rest;
+using Hl7.Fhir.Serialization;
+using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Security.Authentication;
-using Hl7.Fhir.Model;
-using Hl7.Fhir.Rest;
-using Hl7.Fhir.Serialization;
-using Microsoft.Extensions.Logging;
+using UdapEd.Shared;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 using CodeSystem = Hl7.Fhir.Model.CodeSystem;
+using Task = System.Threading.Tasks.Task;
 
 namespace UdapEdAppMaui.Services;
 internal class FhirService : IFhirService
@@ -37,6 +40,8 @@ internal class FhirService : IFhirService
 
     public async Task<FhirResultModel<Hl7.Fhir.Model.Bundle>> SearchPatient(PatientSearchModel model, CancellationToken ct)
     {
+        FhirResultModel<Bundle> resultModel;
+
         try
         {
             _fhirClient.Settings.PreferredFormat = ResourceFormat.Json;
@@ -58,7 +63,9 @@ internal class FhirService : IFhirService
 
                 singlePatientBundle.Entry.Add(bundleEntry);
 
-                return new FhirResultModel<Bundle>(singlePatientBundle);
+                resultModel = new FhirResultModel<Bundle>(singlePatientBundle);
+                await EnrichResult(resultModel);
+                return resultModel;
             }
 
             
@@ -68,7 +75,9 @@ internal class FhirService : IFhirService
             if (model.Bundle.IsNullOrEmpty())
             {
                 bundle = await _fhirClient.SearchAsync<Patient>(SearchParamsExtensions.OrderBy(BuildSearchParams(model), "given"));
-                return new FhirResultModel<Bundle>(bundle);
+                resultModel = new FhirResultModel<Bundle>(bundle);
+                await EnrichResult(resultModel);
+                return resultModel;
             }
 
             var links = new FhirJsonParser().Parse<Bundle>(model.Bundle);
@@ -78,7 +87,9 @@ internal class FhirService : IFhirService
 
             if (operationOutcome != null && operationOutcome.Any(o => o != null))
             {
-                return new FhirResultModel<Bundle>(operationOutcome.First());
+                resultModel = new FhirResultModel<Bundle>(operationOutcome.First());
+                await EnrichResult(resultModel);
+                return resultModel;
             }
 
             if (bundle == null)
@@ -95,10 +106,14 @@ internal class FhirService : IFhirService
                     ]
                 };
 
-                return new FhirResultModel<Bundle>(operationOutCome);
+                resultModel = new FhirResultModel<Bundle>(operationOutCome);
+                await EnrichResult(resultModel);
+                return resultModel;
             }
 
-            return new FhirResultModel<Bundle>(bundle);
+            resultModel = new FhirResultModel<Bundle>(bundle);
+            await EnrichResult(resultModel);
+            return resultModel;
         }
         catch (FhirOperationException ex)
         {
@@ -106,12 +121,16 @@ internal class FhirService : IFhirService
 
             if (ex.Status == HttpStatusCode.Unauthorized)
             {
-                return new FhirResultModel<Bundle>(true);
+                resultModel = new FhirResultModel<Bundle>(true);
+                await EnrichResult(resultModel);
+                return resultModel;
             }
 
             if (ex.Outcome != null)
             {
-                return new FhirResultModel<Bundle>(ex.Outcome);
+                resultModel = new FhirResultModel<Bundle>(ex.Outcome);
+                await EnrichResult(resultModel);
+                return resultModel;
             }
             else
             {
@@ -127,7 +146,9 @@ internal class FhirService : IFhirService
                     ]
                 };
 
-                return new FhirResultModel<Bundle>(operationOutCome);
+                resultModel = new FhirResultModel<Bundle>(operationOutCome);
+                await EnrichResult(resultModel);
+                return resultModel;
             }
         }
         catch (Exception ex)
@@ -148,11 +169,34 @@ internal class FhirService : IFhirService
                     ]
                 };
 
-                return new FhirResultModel<Bundle>(operationOutCome);
+                resultModel = new FhirResultModel<Bundle>(operationOutCome);
+                await EnrichResult(resultModel);
+                return resultModel;
             }
 
             throw;
         }
+    }
+
+    private async Task EnrichResult(FhirResultModel<Bundle> resultModel)
+    {
+        int? compressedSize = null;
+        int? decompressedSize = null;
+
+        var headerValue = await SecureStorage.Default.GetAsync(UdapEdConstants.FhirClient.FhirCompressedSize); 
+        if (int.TryParse(headerValue, out var size))
+        {
+            compressedSize = size;
+        }
+
+        headerValue = await SecureStorage.Default.GetAsync(UdapEdConstants.FhirClient.FhirDecompressedSize);
+        if (int.TryParse(headerValue, out size))
+        {
+            decompressedSize = size;
+        }
+
+        resultModel.FhirCompressedSize = compressedSize;
+        resultModel.FhirDecompressedSize = decompressedSize;
     }
 
     public async Task<FhirResultModel<Hl7.Fhir.Model.Bundle>> MatchPatient(string parametersJson)

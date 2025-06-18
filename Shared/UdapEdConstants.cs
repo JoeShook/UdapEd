@@ -50,5 +50,8 @@ public static class UdapEdConstants
     public static class FhirClient
     {
         public const string EnableDecompression = "Enable_Decompression";
+
+        public const string FhirCompressedSize = "X-Fhir-Compressed-Size";
+        public const string FhirDecompressedSize = "X-Fhir-Decompressed-Size";
     }
 }

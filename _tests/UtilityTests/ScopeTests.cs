@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Castle.Core.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.JSInterop;
 using NSubstitute;
 using UdapEd.Client.Services;
 
@@ -14,7 +15,7 @@ public class ScopeTests
     [Fact]
     public void TestSmartSelectionTests()
     {
-       var registerService = new RegisterService(Substitute.For<HttpClient>());
+       var registerService = new RegisterService(Substitute.For<HttpClient>(), Substitute.For<IJSRuntime>());
 
        var scopes = new List<string>()
        {

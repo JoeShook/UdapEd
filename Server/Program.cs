@@ -115,12 +115,15 @@ builder.Services.AddHttpClient<IUdapClient, UdapClient>()
 builder.Services.AddScoped<IBaseUrlProvider, BaseUrlProvider>();
 builder.Services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
 builder.Services.AddSingleton<IFhirClientOptionsProvider, FhirClientOptionsProvider>();
+builder.Services.AddScoped<FhirResponseHeaderStore>();
 
 builder.Services.AddHttpClient<FhirClientWithUrlProvider>((sp, httpClient) =>
 { })
     .AddHttpMessageHandler(sp => new AuthTokenHttpMessageHandler(sp.GetRequiredService<IAccessTokenProvider>()))
     .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()))
-    .AddHttpMessageHandler(sp => new CustomDecompressionHandler(sp.GetRequiredService<IFhirClientOptionsProvider>()));
+    .AddHttpMessageHandler(sp => new CustomDecompressionHandler(
+        sp.GetRequiredService<IFhirClientOptionsProvider>(),
+        sp.GetRequiredService<IHttpContextAccessor>()));
 
 builder.Services.AddTransient<IClientCertificateProvider, ClientCertificateProvider>();
 builder.Services.AddScoped<IInfrastructure, Infrastructure>();
@@ -194,7 +197,7 @@ var url = builder.Configuration["FHIR_TERMINOLOGY_ROOT_URL"];
 var settings = new FhirClientSettings
 {
     PreferredFormat = ResourceFormat.Json,
-    VerifyFhirVersion = false
+    VerifyFhirVersion = false,
 };
 
 

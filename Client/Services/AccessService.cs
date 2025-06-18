@@ -10,6 +10,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.IdentityModel.Tokens;
+using UdapEd.Shared.Components;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 
@@ -49,12 +50,9 @@ public class AccessService : IAccessService
             return null;
         }
 
-        var response = JsonSerializer.Deserialize<UdapAuthorizationCodeTokenRequestModel>(
+        var response = JsonSerializer.Deserialize(
             await result.Content.ReadAsStringAsync(),
-            new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+            UdapJsonContext.UdapDefault.UdapAuthorizationCodeTokenRequestModel);
 
         return response;
     }
@@ -74,16 +72,15 @@ public class AccessService : IAccessService
             return null;
         }
 
-        return await result.Content.ReadFromJsonAsync<UdapClientCredentialsTokenRequestModel>(
-            new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+        return await result.Content.ReadFromJsonAsync<UdapClientCredentialsTokenRequestModel>(UdapJsonContext.UdapDefault.UdapClientCredentialsTokenRequestModel);
     }
 
     public async Task<TokenResponseModel?> RequestAccessTokenForClientCredentials(UdapClientCredentialsTokenRequestModel request)
     {
-        var result = await _httpClient.PostAsJsonAsync("Access/RequestToken/client_credentials", request);
+        var result = await _httpClient.PostAsJsonAsync(
+            "Access/RequestToken/client_credentials", 
+            request, 
+            UdapJsonContext.UdapDefault.UdapClientCredentialsTokenRequestModel);
 
         if (!result.IsSuccessStatusCode)
         {
@@ -97,7 +94,10 @@ public class AccessService : IAccessService
 
     public async Task<TokenResponseModel?> RequestAccessTokenForAuthorizationCode(UdapAuthorizationCodeTokenRequestModel request)
     {
-        var result = await _httpClient.PostAsJsonAsync("Access/RequestToken/authorization_code", request);
+        var result = await _httpClient.PostAsJsonAsync(
+            "Access/RequestToken/authorization_code", 
+            request,
+            UdapJsonContext.UdapDefault.UdapAuthorizationCodeTokenRequestModel);
         
         if (!result.IsSuccessStatusCode)
         {

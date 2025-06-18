@@ -51,4 +51,8 @@ public class FhirResultModel<T>
     public HttpStatusCode? HttpStatusCode { get; }
 
     public Version? Version { get; }
+
+    public int? FhirCompressedSize { get; set; }
+
+    public int? FhirDecompressedSize { get; set; }
 }

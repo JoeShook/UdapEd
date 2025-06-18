@@ -39,6 +39,8 @@ public partial class PatientMatch
     private bool _v2IdentifierSystemIsInEditMode;
     private Hl7.Fhir.Model.ValueSet? _identityValueSet;
     private Hl7.Fhir.Model.ValueSet? IdentityValueSet => _identityValueSet;
+    private bool showPatientResourceIndicator = false;
+    private System.Timers.Timer? _indicatorTimer;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -142,7 +144,21 @@ public partial class PatientMatch
     private void OnRowClick(TableRowClickEventArgs<Hl7.Fhir.Model.Bundle.EntryComponent> args)
     {
         _selectedItemText = new FhirJsonSerializer(new SerializerSettings { Pretty = true })
-                .SerializeToString(args.Item);
+            .SerializeToString(args.Item);
+
+        showPatientResourceIndicator = true;
+        _indicatorTimer?.Stop();
+        _indicatorTimer = new System.Timers.Timer(1500); // 1.5 seconds
+        _indicatorTimer.Elapsed += (s, e) =>
+        {
+            showPatientResourceIndicator = false;
+            InvokeAsync(StateHasChanged);
+            _indicatorTimer?.Stop();
+        };
+        _indicatorTimer.AutoReset = false;
+        _indicatorTimer.Start();
+
+        StateHasChanged();
     }
 
     private void AddressEditComplete(object address)
