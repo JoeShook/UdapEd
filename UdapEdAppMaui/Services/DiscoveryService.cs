@@ -305,14 +305,20 @@ internal class DiscoveryService : IDiscoveryService
         return Task.FromResult(true);
     }
 
-    public async Task<CertificateViewModel?> GetCertificateData(IEnumerable<string>? base64EncodedCertificate, CancellationToken token)
+    public async Task<CertificateViewModel?> GetCertificateData(IList<string> base64EncodedCertificate, CancellationToken token)
     {
         try
         {
             await Task.Delay(1, token);
-            var certBytes = Convert.FromBase64String(base64EncodedCertificate!.First());
+            long base64StringSize = System.Text.Encoding.UTF8.GetByteCount(base64EncodedCertificate.First());
+            var certBytes = Convert.FromBase64String(base64EncodedCertificate.First());
             var cert = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
             var result = new CertificateDisplayBuilder(cert).BuildCertificateDisplayData();
+
+            if (result != null)
+            {
+                result.Size = base64StringSize;
+            }
 
             return result;
         }

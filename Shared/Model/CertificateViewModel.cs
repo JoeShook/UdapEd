@@ -15,6 +15,8 @@ public  class CertificateViewModel
     /// </summary>
     public List<Dictionary<string, string>> TableDisplay { get; set; } = new List<Dictionary<string, string>>();
 
+    public long Size { get; set; }
+
     /// <summary>
     /// OpenSSL or CertUtil verbose display
     /// </summary>

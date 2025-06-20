@@ -18,7 +18,11 @@ namespace UdapEd.Shared.Components;
 public partial class CertificateViewer : ComponentBase
 {
     private CancellationTokenSource _cts = new();
-    
+
+    [Parameter] public bool EndCertificate { get; set; }
+    [Parameter ]public bool EnableAddToClaim { get; set; }
+
+
     [Parameter] public string Class { get; set; }
 
     [Parameter] public string? Title { get; set; }
@@ -120,7 +124,7 @@ public partial class CertificateViewer : ComponentBase
         {
             var document = JsonDocument.Parse(JwtHeader);
             var root = document.RootElement;
-            var certificates = root.TryGetStringArray("x5c");
+            var certificates = root.TryGetStringArray("x5c").ToList();
             _certificateView = await MetadataService.GetCertificateData(certificates, _cts.Token);
         }
     }
@@ -181,4 +185,7 @@ public partial class CertificateViewer : ComponentBase
             FileCache = null;
         }
     }
+
+
+    public string? JwtHeaderSizeFormatted => _certificateView?.Size.ToString("N0");
 }

@@ -10,7 +10,15 @@
     <MudExpansionPanels Class="@Class">
         <MudExpansionPanel Expanded="true" Style="background-color: #E8F5E9">
             <TitleContent>
-                <MudText Typo="Typo.h6">@Title</MudText>
+	            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+		            <MudText Typo="Typo.h6">@Title</MudText>
+                    @if (JwtHeaderSizeFormatted != null)
+		            {
+			            <MudAlert Severity="Severity.Info" Variant="Variant.Text" Dense="true" ContentAlignment="HorizontalAlignment.Right">
+				            <span><b>Size:</b> @JwtHeaderSizeFormatted bytes</span>
+			            </MudAlert>
+		            }
+	            </MudStack>
             </TitleContent>
            
             <ChildContent >
@@ -91,12 +99,16 @@
                                            OnClick="@(() => ResolveIntermediate(keyValuePair.Value))">
                                            <MudText Color="Color.Info">Resolve</MudText>
                                        </MudButton>
-                                        <MudButton IconColor="Color.Info"
-                                                   StartIcon=@Icons.Material.Filled.Launch
-                                                   Size="Size.Small"
-                                                   OnClick="@(() => AddIntermediateToX5c(keyValuePair.Value))">
-                                            <MudText Color="Color.Info">Include in header x5c claim</MudText>
-                                        </MudButton>
+
+                                       @if (!EndCertificate && EnableAddToClaim)
+                                       {
+	                                       <MudButton IconColor="Color.Info"
+	                                                  StartIcon=@Icons.Material.Filled.Launch
+	                                                  Size="Size.Small"
+	                                                  OnClick="@(() => AddIntermediateToX5c(keyValuePair.Value))">
+		                                       <MudText Color="Color.Info">Include in header x5c claim</MudText>
+	                                       </MudButton>
+                                       }
                                    }
                                    else
                                    {

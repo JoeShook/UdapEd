@@ -318,9 +318,15 @@ public class MetadataController : Controller
     [HttpPost("CertificateDisplayFromJwtHeader")]
     public IActionResult BuildCertificateDisplay([FromBody] List<string> certificates)
     {
+        long base64StringSize = System.Text.Encoding.UTF8.GetByteCount(certificates.First());
         var certBytes = Convert.FromBase64String(certificates.First());
         var cert = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
         var result = new CertificateDisplayBuilder(cert).BuildCertificateDisplayData();
+
+        if (result != null)
+        {
+            result.Size = base64StringSize;
+        }
 
         return Ok(result);
     }

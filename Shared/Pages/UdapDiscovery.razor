@@ -54,11 +54,30 @@
               }
           </MudItem>
           <MudGrid Spacing="1" Class="mt-8">
-              <MudItem sm="6" xs="12">
-                  <MudPaper Class="udap-input" Elevation="3">
-                      <pre>@Result</pre>
-                  </MudPaper>
-              </MudItem>
+	          <MudItem sm="6" xs="12">
+		          <MudPaper Class="udap-input" Elevation="3">
+                      @if (!_isLoading && ModelSizeInBytes.HasValue && !string.IsNullOrEmpty(Result))
+                      {
+                          <MudAlert Severity="Severity.Info" Variant="Variant.Text" Dense="true" ContentAlignment="HorizontalAlignment.Right">
+                              <span><b>Size:</b> @ModelSizeInBytesFormatted bytes</span>
+                          </MudAlert>
+                      
+                          <div style="position: relative;">
+	                          <MudIconButton Icon="@Icons.Material.TwoTone.ContentCopy"
+	                                         Color="Color.Surface"
+	                                         OnClick="CopyResultToClipboard"
+	                                         Disabled="@string.IsNullOrEmpty(Result)"
+	                                         Title="Copy to clipboard"
+	                                         style="position: absolute; right: 0.5rem; top: 0.5rem; z-index: 1;" />
+	                          <pre style="padding-right: 2.5rem;">@Result</pre>
+                          </div>
+                      }
+                      else
+                      {
+	                      <pre style="padding-right: 2.5rem;">@Result</pre>
+                      }
+		          </MudPaper>
+	          </MudItem>
               <MudItem sm="6" xs="12">
                   <MudPaper Class="udap-analyzed" Elevation="3">
                       <MudText Align="Align.Right" Color="Color.Tertiary">Discovery | Metadata | Signed | Communities</MudText>

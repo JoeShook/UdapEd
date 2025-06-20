@@ -25,7 +25,7 @@ public interface IDiscoveryService
     Task<bool> SetBaseFhirUrl(string? baseFhirUrl, bool resetToken = false);
     Task<bool> SetClientHeaders(Dictionary<string, string> headers);
 
-    Task<CertificateViewModel?> GetCertificateData(IEnumerable<string>? base64EncodedCertificate,
+    Task<CertificateViewModel?> GetCertificateData(IList<string> base64EncodedCertificate,
         CancellationToken token);
 
     Task<CertificateViewModel?> GetCertificateData(string? base64EncodedCertificate,

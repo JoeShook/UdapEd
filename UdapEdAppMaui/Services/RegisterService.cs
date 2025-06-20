@@ -54,6 +54,7 @@ internal class RegisterService : IRegisterService
         UdapDynamicClientRegistrationDocument request, string signingAlgorithm)
     {
         var clientCertWithKey = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
+        await SessionExtensions.RemoveChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
 
         if (clientCertWithKey == null)
         {
@@ -135,6 +136,7 @@ internal class RegisterService : IRegisterService
     public async Task<RawSoftwareStatementAndHeader?> BuildSoftwareStatementForAuthorizationCode(UdapDynamicClientRegistrationDocument request, string signingAlgorithm)
     {
         var clientCertWithKey = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
+        await SessionExtensions.RemoveChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
 
         if (clientCertWithKey == null)
         {

@@ -17,8 +17,10 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
+using Udap.Model;
 using UdapEd.Shared.Components;
 using UdapEd.Shared.Services;
+using UdapEd.Shared.Model.Discovery;
 
 namespace UdapEd.Shared.Pages;
 
@@ -53,6 +55,9 @@ public partial class UdapDiscovery
             {
                 return _result ?? string.Empty;
             }
+
+            // Calculate and update model size
+            UpdateModelSize(AppState.MetadataVerificationModel.UdapServerMetaData);
 
             return JsonSerializer.Serialize(AppState.MetadataVerificationModel.UdapServerMetaData, 
                 new JsonSerializerOptions
@@ -113,7 +118,18 @@ public partial class UdapDiscovery
         }
     }
 
+    private long? _modelSizeInBytes;
+    public long? ModelSizeInBytes
+    {
+        get => _modelSizeInBytes;
+        private set => _modelSizeInBytes = value;
+    }
+
+    public string ModelSizeInBytesFormatted => ModelSizeInBytes.HasValue ? ModelSizeInBytes.Value.ToString("N0") : string.Empty;
+
+    private bool _isLoading;
     
+
     protected override async Task OnInitializedAsync()
     {
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
@@ -144,6 +160,7 @@ public partial class UdapDiscovery
     {
         _certificateViewer?.Reset();
         Result = "Loading ...";
+        _isLoading = true;
         await Task.Delay(1000);
 
         try
@@ -152,6 +169,7 @@ public partial class UdapDiscovery
             {
                 var model = await MetadataService.GetUdapMetadataVerificationModel(BaseUrl, Community, default);
                 await AppState.SetPropertyAsync(this, nameof(AppState.MetadataVerificationModel), model);
+                UpdateModelSize(model.UdapServerMetaData);
             }
 
             Result = AppState.MetadataVerificationModel?.UdapServerMetaData != null
@@ -177,6 +195,11 @@ public partial class UdapDiscovery
         {
             Result = ex.Message;
             await AppState.SetPropertyAsync(this, nameof(AppState.MetadataVerificationModel), null);
+            UpdateModelSize(null);
+        }
+        finally
+        {
+            _isLoading = false;
         }
     }
 
@@ -207,6 +230,7 @@ public partial class UdapDiscovery
                 if (result != null)
                 {
                     await AppState.SetPropertyAsync(this, nameof(AppState.MetadataVerificationModel), result);
+                    UpdateModelSize(result.UdapServerMetaData);
                 }
 
                 if (result != null && result.UdapServerMetaData != null)
@@ -276,6 +300,29 @@ public partial class UdapDiscovery
         }
 
         var jwt = new JwtSecurityToken(jwtEncodedString);
-        return UdapEd.Shared.JsonExtensions.FormatJson(Base64UrlEncoder.Decode(jwt.EncodedHeader));
+        return JsonExtensions.FormatJson(Base64UrlEncoder.Decode(jwt.EncodedHeader));
+    }
+
+    private void UpdateModelSize(UdapMetadata? model)
+    {
+        if (model == null)
+        {
+            ModelSizeInBytes = null;
+            return;
+        }
+        var json = JsonSerializer.Serialize(model, new JsonSerializerOptions
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            // WriteIndented = true
+        });
+        ModelSizeInBytes = System.Text.Encoding.UTF8.GetByteCount(json);
+    }
+
+    private async Task CopyResultToClipboard()
+    {
+        if (!string.IsNullOrEmpty(Result))
+        {
+            await JsRuntime.InvokeVoidAsync("navigator.clipboard.writeText", Result);
+        }
     }
 }

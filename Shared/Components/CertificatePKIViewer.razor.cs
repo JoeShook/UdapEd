@@ -7,6 +7,9 @@ namespace UdapEd.Shared.Components;
 
 public partial class CertificatePKIViewer : ComponentBase
 {
+    [Parameter] public bool EndCertificate { get; set; }
+    [Parameter] public bool EnableAddToClaim { get; set; }
+
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
 

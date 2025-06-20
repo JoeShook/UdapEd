@@ -219,6 +219,7 @@ public class RegisterController : Controller
         [FromQuery] string alg)
     {
         var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
+        HttpContext.Session.Remove(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
 
         if (clientCertWithKey == null)
         {
@@ -301,6 +302,7 @@ public class RegisterController : Controller
         [FromQuery] string alg)
     {
         var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
+        HttpContext.Session.Remove(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
 
         if (clientCertWithKey == null)
         {

@@ -3,18 +3,21 @@
 
 @* Parameters *@
 @code {
-    [Parameter] public int? CompressedSize { get; set; }
-    [Parameter] public int? DecompressedSize { get; set; }
+    [Parameter] public long? CompressedSize { get; set; }
+    [Parameter] public long? DecompressedSize { get; set; }
+
+    public string CompressedSizeFormatted => CompressedSize.HasValue ? CompressedSize.Value.ToString("N0") : string.Empty;
+    public string DecompressedSizeFormatted => DecompressedSize.HasValue ? DecompressedSize.Value.ToString("N0") : string.Empty;
 }
 
 @if (CompressedSize != null)
 {
     <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" ContentAlignment="HorizontalAlignment.Right">
-        <span><b>Compressed Size:</b> @CompressedSize bytes</span>
+        <span><b>Compressed Size:</b> @CompressedSizeFormatted bytes</span>
         @if (DecompressedSize != null)
         {
             <span style="margin: 0 12px; color: #888;">|</span>
-            <span><b>Decompressed Size:</b> @DecompressedSize bytes</span>
+            <span><b>Decompressed Size:</b> @DecompressedSizeFormatted bytes</span>
         }
     </MudAlert>
 }

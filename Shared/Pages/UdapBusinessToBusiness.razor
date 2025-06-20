@@ -129,7 +129,11 @@
                                                          SignedSoftwareStatement="@AppState.ClientCredentialsTokenRequest?.ClientAssertion?.Value"/>
                                     </MudTabPanel>
                                     <MudTabPanel Text="Certificates">
-                                        <CertificatePKIViewer  @ref="_certificateViewer" JwtHeaderWithx5c="@GetJwtHeader(AppState.ClientCredentialsTokenRequest?.ClientAssertion?.Value)" />
+	                                    <CertificatePKIViewer 
+		                                    @ref="_certificateViewer"
+		                                    JwtHeaderWithx5c="@GetJwtHeader(AppState.ClientCredentialsTokenRequest?.ClientAssertion?.Value)"
+		                                    EnableAddToClaim="true"
+		                                    EndCertificate="true"/>
                                     </MudTabPanel>
                                 </MudTabs>
                             </MudPaper>

@@ -41,8 +41,6 @@ public class FhirController : FhirBaseController<FhirController>
 [EnableRateLimiting(RateLimitExtensions.Policy)]
 public class FhirMtlsController : FhirBaseController<FhirMtlsController>
 {
-    private readonly FhirResponseHeaderStore _headerStore;
-
     public FhirMtlsController(
         FhirMTlsClientWithUrlProvider fhirClient, 
         FhirClient fhirTerminologyClient,

@@ -158,7 +158,7 @@ public class DiscoveryService : IDiscoveryService
         return false;
     }
 
-    public async Task<CertificateViewModel?> GetCertificateData(IEnumerable<string>? base64EncodedCertificate,
+    public async Task<CertificateViewModel?> GetCertificateData(IList<string> base64EncodedCertificate,
         CancellationToken token)
     {
         try

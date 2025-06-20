@@ -72,11 +72,6 @@ public class CustomDecompressionHandler : DelegatingHandler
     }
 }
 
-public class FhirResponseHeaderStore
-{
-    public Dictionary<string, string> Headers { get; } = new();
-}
-
 public class CountingStream : Stream
 {
     private readonly Stream _inner;

@@ -116,7 +116,6 @@ builder.Services.AddHttpClient<IUdapClient, UdapClient>()
 builder.Services.AddScoped<IBaseUrlProvider, BaseUrlProvider>();
 builder.Services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
 builder.Services.AddSingleton<IFhirClientOptionsProvider, FhirClientOptionsProvider>();
-builder.Services.AddScoped<FhirResponseHeaderStore>();
 
 builder.Services.AddHttpClient<FhirClientWithUrlProvider>((sp, httpClient) =>
 { })

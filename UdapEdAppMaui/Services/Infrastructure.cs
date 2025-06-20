@@ -33,7 +33,9 @@ public class Infrastructure : UdapEd.Shared.Services.Infrastructure
 
             var certificate = new X509Certificate2(bytes);
             var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
-            var intermediateCerts = Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
+            var intermediateCerts =
+                intermediatesStored == null ? new X509Certificate2Collection() :
+                Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates() ?? new X509Certificate2Collection();
 
             if (intermediateCerts.All(i => i.Thumbprint != certificate.Thumbprint))
             {

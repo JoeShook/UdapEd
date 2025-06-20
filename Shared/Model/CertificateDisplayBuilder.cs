@@ -48,7 +48,7 @@ public class CertificateDisplayBuilder
         data.Add("Thumbprint SHA1", _cert.Thumbprint);
 
         var result = new CertificateViewModel();
-
+        result.Size = _cert.RawData.Length;
         result.TableDisplay.Add(data);
         return result;
     }
