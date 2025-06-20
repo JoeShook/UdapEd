@@ -86,7 +86,7 @@ public partial class PatientMatch
             foreach (var issue in result.OperationOutcome.Issue)
             {
                 errorMessage += $"Error:: Details: {issue.Details?.Text}.<br/>"
-                                + $"Diagnostics: {issue.Diagnostics}.<br/>"
+                                + $"Diagnostics: {HtmlSanitizer.Sanitize(issue.Diagnostics)}.<br/>"
                                 + $"IssueType: {issue.Code}.<br/>";
             }
 

@@ -7,7 +7,7 @@
 // */
 #endregion
 
-using System.Net;
+using Ganss.Xss;
 using Hl7.Fhir.ElementModel;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
@@ -16,10 +16,11 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using MudBlazor;
+using System.Net;
 using Udap.Common.Extensions;
 using Udap.Model;
-using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Components;
+using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Discovery;
 using UdapEd.Shared.Search;
@@ -40,7 +41,7 @@ public partial class Directory
     [Inject] IMutualTlsService MtlsService { get; set; } = null!;
     [Inject] private ICapabilityLookup CapabilityLookup { get; set; } = null!;
     [Inject] public required IDialogService DialogService { get; set; }
-
+    [Inject] public HtmlSanitizer HtmlSanitizer { get; set; }
     private ErrorBoundary? _errorBoundary;
     private readonly FhirSearch _fhirSearch = new(){BaseUrl = "https://national-directory.fast.hl7.org/fhir"};
     private string _searchString = string.Empty;
@@ -236,7 +237,7 @@ private readonly List<string> _supportedResources = new List<string>()
             foreach (var issue in result.OperationOutcome.Issue)
             {
                 errorMessage += $"Error:: Details: {issue.Details?.Text}.<br/>"
-                                + $"Diagnostics: {issue.Diagnostics}.<br/>"
+                                + $"Diagnostics: {HtmlSanitizer.Sanitize(issue.Diagnostics)}.<br/>"
                                 + $"IssueType: {issue.Code}.<br/>";
             }
 

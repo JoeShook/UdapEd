@@ -1,10 +1,11 @@
-﻿using System.Net;
+﻿using Ganss.Xss;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.WebUtilities;
 using MudBlazor;
+using System.Net;
 using UdapEd.Shared.Components;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Smart;
@@ -34,6 +35,7 @@ public partial class PatientSearch
     [Inject] NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IFhirService FhirService { get; set; } = null!;
     [Inject] private IDiscoveryService DiscoveryService { get; set; } = null!;
+    [Inject] public HtmlSanitizer HtmlSanitizer { get; set; }
     private ErrorBoundary? ErrorBoundary { get; set; }
     private string? _baseUrlOverride = string.Empty;
 
@@ -180,7 +182,7 @@ public partial class PatientSearch
                 foreach (var issue in result.OperationOutcome.Issue)
                 {
                     errorMessage += $"Error:: Details: {issue.Details?.Text}.<br/>"
-                                    + $"Diagnostics: {issue.Diagnostics}.<br/>"
+                                    + $"Diagnostics: {HtmlSanitizer.Sanitize(issue.Diagnostics)}.<br/>"
                                     + $"IssueType: {issue.Code}.<br/>";
                 }
 

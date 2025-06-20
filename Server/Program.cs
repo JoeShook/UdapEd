@@ -10,6 +10,7 @@
 using System.Net;
 using System.Text.Json.Serialization;
 using Hl7.Fhir.Rest;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Options;
 using Serilog;
 using Serilog.Events;
@@ -222,9 +223,21 @@ builder.AddRateLimiting();
 // Configure OpenTelemetry
 builder.AddOpenTelemetry();
 
+builder.Services.AddResponseCompression(options =>
+{
+    // If you want to reorder the compression providers, you can do so here.
+    // options.Providers.Clear();
+    // options.Providers.Add<GzipCompressionProvider>();
+    // options.Providers.Add<BrotliCompressionProvider>();
+
+    options.EnableForHttps = true;
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/json" });
+});
+
 var app = builder.Build();
 
 app.UseSerilogRequestLogging();
+app.UseResponseCompression();
 
 
 // Configure the HTTP request pipeline.
@@ -251,7 +264,7 @@ app.MapRazorPages();
 app.MapControllers().RequireRateLimiting(RateLimitExtensions.Policy);
 
 app.MapFallbackToFile("index.html");
-
+    
 
 //
 // Created to route traffic through AEGIS Touchstone via a Nginx reverse proxy in my cloud environment.
