@@ -102,59 +102,8 @@ public class FhirService : IFhirService
             EnrichResult(response, resultModel);
             return resultModel;
         }
-        
-        if (response.StatusCode == HttpStatusCode.Unauthorized)
-        {
-            return new FhirResultModel<Bundle>(true);
-        }
 
-        if (response.StatusCode == HttpStatusCode.InternalServerError)
-        {
-            var result = await response.Content.ReadAsStringAsync();
-
-            if (result.Contains(nameof(UriFormatException)))
-            {
-                var operationOutCome = new OperationOutcome()
-                {
-                    ResourceBase = null
-                };
-
-                return new FhirResultModel<Bundle>(operationOutCome, HttpStatusCode.PreconditionFailed, response.Version);
-            }
-        }
-
-        //todo constant :: and this whole routine is ugly.  Should move logic upstream to controller
-        //This code exists from testing various FHIR servers like MEDITECH.
-        if (response.StatusCode == HttpStatusCode.NotFound)
-        {
-            var result = await response.Content.ReadAsStringAsync();
-            if (result.Contains("Resource Server Error:"))
-            {
-                var operationOutCome = new OperationOutcome()
-                {
-                    ResourceBase = null,
-                    Issue = new List<OperationOutcome.IssueComponent>
-                    {
-                        new OperationOutcome.IssueComponent
-                        {
-                            Diagnostics = result
-                        }
-                    }
-                };
-
-                return new FhirResultModel<Bundle>(operationOutCome, HttpStatusCode.InternalServerError,
-                    response.Version);
-            }
-        }
-
-        {
-            var result = await response.Content.ReadAsStringAsync();
-            var operationOutcome = new FhirJsonParser().Parse<OperationOutcome>(result);
-
-            resultModel = new FhirResultModel<Bundle>(operationOutcome, response.StatusCode, response.Version);
-            EnrichResult(response, resultModel);
-            return resultModel;
-        }
+        return await HandleResponseError(response);
     }
 
     public async Task<FhirResultModel<CodeSystem>> GetCodeSystem(string location)
@@ -507,10 +456,22 @@ public class FhirService : IFhirService
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
             var result = await response.Content.ReadAsStringAsync();
-            
+
+            try
+            {
+                var operationOutcome = new FhirJsonParser().Parse<OperationOutcome>(result);
+
+                return new FhirResultModel<Bundle>(operationOutcome, HttpStatusCode.InternalServerError, response.Version);
+            }
+            catch
+            {
+                // ignored
+            }
+
+
             if (result.Contains("Resource Server Error:"))
             {
-                var operationOutCome = new OperationOutcome()
+                var operationOutcome = new OperationOutcome()
                 {
                     ResourceBase = null,
                     Issue =
@@ -522,7 +483,7 @@ public class FhirService : IFhirService
                     ]
                 };
                 
-                return new FhirResultModel<Bundle>(operationOutCome, HttpStatusCode.InternalServerError,
+                return new FhirResultModel<Bundle>(operationOutcome, HttpStatusCode.InternalServerError,
                     response.Version);
             }
         }

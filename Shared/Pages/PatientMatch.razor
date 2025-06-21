@@ -329,7 +329,7 @@
 
                                 @if (IdentityValueSet?.Expansion.Contains != null)
                                 {
-                                    foreach (var concept in IdentityValueSet.Expansion.Contains)
+                                    foreach (var concept in IdentityValueSet.Expansion.Contains.OrderBy(o => o.Code))
                                     {
                                         if (!concept.Display.IsNullOrEmpty())
                                         {
@@ -354,11 +354,15 @@
 </MudItem>
 </MudGrid>
 <MudCardActions>
-    <MudButton Class="mt-3"
-               Color="Color.Primary"
-               ButtonType="ButtonType.Button"
-               Variant="Variant.Text"
-               OnClick="Cancel">Reset</MudButton>
+	<MudButton Class="mt-3"
+	           Color="Color.Primary"
+	           ButtonType="ButtonType.Button"
+	           Variant="Variant.Text"
+	           OnClick="Cancel">Reset</MudButton>
+    <MudSpacer />
+	<MudText Align="Align.Right" Typo="Typo.subtitle2" Color="Color.Info">
+		Weighted Input: @CalculatePatientWeightedInput(_model)
+	</MudText>
 </MudCardActions>
 </MudCardContent>
 </MudCard>

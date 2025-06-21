@@ -3,7 +3,6 @@ using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
 using MudBlazor;
 using System.Net;
@@ -77,7 +76,7 @@ public partial class PatientMatch
     private async Task LoadIdentityValueSet()
     {
         var result = await FhirService.GetValueSet("http://hl7.org/fhir/us/identity-matching/ValueSet/Identity-Identifier-vs");
-
+        
         if (result.OperationOutcome != null)
         {
             _entries = null;
@@ -95,9 +94,59 @@ public partial class PatientMatch
         else
         {
             _outComeMessage = null;
-
+            EnrichIdentifierValueset(result.Result);
             _identityValueSet = result.Result;
         }
+    }
+
+    //
+    // Adding because of this: https://build.fhir.org/ig/HL7/fhir-identity-matching-ig/patient-matching.html#attribute-applicability
+    // But I don't think I understand the full intent the "Attribute Applicability" section of the IG yet.
+    //
+    private void EnrichIdentifierValueset(ValueSet? valueSet)
+    {
+        if (valueSet == null)
+        {
+            return;
+        }
+
+        valueSet.Expansion.Contains.Add(new ValueSet.ContainsComponent
+        {
+            System = "http://hl7.org/fhir/sid/us-mbi",
+            Code = "MBI",
+            Display = "Medicare Beneficiary Identifier (United States)"
+        });
+
+        valueSet.Expansion.Contains.Add(new ValueSet.ContainsComponent
+        {
+            System = "http://hl7.org/fhir/us/identity-matching/ns/HL7Identifier",
+            Code = "HL7Identifier",
+            Display = "Digital Identifier to assist in patient matching."
+        });
+
+        valueSet.Expansion.Contains.Add(new ValueSet.ContainsComponent
+        {
+            System = "http://terminology.hl7.org/CodeSystem/v2-0203",
+            Code = "MB",
+            Display = "Member Number (Insurance)"
+        });
+
+        valueSet.Expansion.Contains.Add(new ValueSet.ContainsComponent
+        {
+            System = "http://terminology.hl7.org/CodeSystem/v2-0203",
+            Code = "SN",
+            Display = "Subscriber Number (Insurance)"
+        });
+
+        // Organization.identifier.system
+        // and
+        // Practitioner.identifier.system
+        // valueSet.Expansion.Contains.Add(new ValueSet.ContainsComponent
+        // {
+        //     System = "'http://hl7.org/fhir/sid/us-npi",
+        //     Code = "NPI",
+        //     Display = "National Provider Identifier"
+        // });
     }
 
     private string? BaseUrlOverride
@@ -474,6 +523,7 @@ public partial class PatientMatch
     {
         _selectedItemText = string.Empty;
         _entries = null;
+        _matchResultRaw = null;
         StateHasChanged();
         await Task.Delay(100);
 
@@ -631,7 +681,82 @@ public partial class PatientMatch
         {"IDI-Patient", "http://hl7.org/fhir/us/identity-matching/StructureDefinition/IDI-Patient"},
         {"IDI-Patient-L0", "http://hl7.org/fhir/us/identity-matching/StructureDefinition/IDI-Patient-L0"},
         {"IDI-Patient-L1", "http://hl7.org/fhir/us/identity-matching/StructureDefinition/IDI-Patient-L1"},
+        {"IDI-Patient-L2", "http://hl7.org/fhir/us/identity-matching/StructureDefinition/IDI-Patient-L2"}
     };
 
     private string? _idiProfile;
+
+
+    /// <summary>
+    /// Calculates the weighted input score for patient matching based on the HL7 IG table.
+    /// </summary>
+    public static int CalculatePatientWeightedInput(PatientMatchModel model)
+    {
+        int total = 0;
+
+        // 5: Passport Number (PPN) and issuing country, Driver’s License Number (DL) or other State ID Number and (in either case) Issuing US State or Territory, or Digital Identifier
+        // (max weight of 10 for this category, even if multiple ID Numbers included)
+        int id5Count = 0;
+        
+        // Example: parse identifiers for PPN, DL, Digital Identifier, etc.
+        // You may need to parse model.IdentityValueSetList for more detail.
+        if (model.IdentityValueSetList != null)
+        {
+            foreach (var id in model.IdentityValueSetList)
+            {
+                // Adjust these codes to match your ValueSet
+                if (id.Code == "PPN" && !string.IsNullOrWhiteSpace(id.Value))
+                    id5Count++;
+                if (id.Code == "DL" && !string.IsNullOrWhiteSpace(id.Value))
+                    id5Count++;
+                if (id.Code == "HL7Identifier" && !string.IsNullOrWhiteSpace(id.Value))
+                    id5Count++;
+            }
+        }
+        
+        int id5Weight = Math.Min(id5Count * 5, 10);
+        total += id5Weight;
+
+        // 4: Address (line+zip or city+state), telecom email, telecom phone, identifier (other than above), or profile photo
+        // (max weight of 5 for inclusion of 2 or more of these)
+        int cat4Count = 0;
+        // Address (line+zip or city+state)
+        if (model.AddressList != null && model.AddressList.Any(a =>
+            (!string.IsNullOrWhiteSpace(a.Line1) && !string.IsNullOrWhiteSpace(a.PostalCode)) ||
+            (!string.IsNullOrWhiteSpace(a.City) && !string.IsNullOrWhiteSpace(a.State))))
+            cat4Count++;
+
+        // Telecom email or phone
+        if (model.ContactSystemList != null && model.ContactSystemList.Any(c =>
+            c.ContactPointSystem == Hl7.Fhir.Model.ContactPoint.ContactPointSystem.Email && !string.IsNullOrWhiteSpace(c.Value)))
+            cat4Count++;
+        if (model.ContactSystemList != null && model.ContactSystemList.Any(c =>
+            c.ContactPointSystem == Hl7.Fhir.Model.ContactPoint.ContactPointSystem.Phone && !string.IsNullOrWhiteSpace(c.Value)))
+            cat4Count++;
+
+        // Identifier (other than PPN, DL, Digital Identifier)
+        if (model.IdentityValueSetList != null && model.IdentityValueSetList.Any(id =>
+            id.Code != null &&
+            id.Code != "PPN" && id.Code != "DL" && id.Code != "DigitalIdentifier" &&
+            !string.IsNullOrWhiteSpace(id.Value)))
+            cat4Count++;
+
+        // Profile photo (not in your model, but add if available)
+        // if (model.Photo != null) cat4Count++;
+
+        int cat4Weight = Math.Min(cat4Count * 4, 5);
+        total += cat4Weight;
+
+        // 3: First Name and Last Name (must both be present)
+        if (!string.IsNullOrWhiteSpace(model.Given) && !string.IsNullOrWhiteSpace(model.Family))
+            total += 3;
+
+        // 2: Date of Birth
+        if (model.BirthDate.HasValue)
+            total += 2;
+
+        // All other fields in your table are 0 weight, so no need to check.
+
+        return total;
+    }
 }

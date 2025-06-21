@@ -84,7 +84,7 @@ public class FhirBaseController<T> : ControllerBase
                 CopyCustomHeadersToResponse();
                 return Ok(patientJson);
             }
-
+            // new bundle
             if (model.Bundle.IsNullOrEmpty())
             {
                 var bundle = await _fhirClient.SearchAsync<Patient>(SearchParamsExtensions.OrderBy(BuildSearchParams(model), "given"));
@@ -92,6 +92,7 @@ public class FhirBaseController<T> : ControllerBase
                 CopyCustomHeadersToResponse();
                 return Ok(bundleJson);
             }
+            // existing bundle... paging
             var links = new FhirJsonParser().Parse<Bundle>(model.Bundle);
             var nextBundle = await _fhirClient.ContinueAsync(links, model.PageDirection);
             CopyCustomHeadersToResponse();
