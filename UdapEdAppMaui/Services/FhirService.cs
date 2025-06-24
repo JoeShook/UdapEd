@@ -8,13 +8,11 @@
 #endregion
 
 using Hl7.Fhir.Model;
-using Hl7.Fhir.Model.CdsHooks;
 using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
 using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Reflection;
-using System.Reflection.Metadata;
 using System.Security.Authentication;
 using UdapEd.Shared;
 using UdapEd.Shared.Extensions;

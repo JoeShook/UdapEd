@@ -30,7 +30,7 @@ public partial class PatientMatch
     private string _selectedItemText = string.Empty;
 
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
-    [Inject] private IJSRuntime Js { get; set; } = null!;
+    [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
     [Inject] private IFhirService FhirService { get; set; } = null!;
     [Inject] private IDiscoveryService DiscoveryService { get; set; } = null!;
     [Inject] public HtmlSanitizer HtmlSanitizer { get; set; }
@@ -137,6 +137,14 @@ public partial class PatientMatch
             Code = "SN",
             Display = "Subscriber Number (Insurance)"
         });
+
+        valueSet.Expansion.Contains.Add(new ValueSet.ContainsComponent
+        {
+            System = "http://hl7.org/fhir/sid/us-ssn",
+            Code = "SSN",
+            Display = "Social Security Number"
+        });
+
 
         // Organization.identifier.system
         // and
@@ -608,7 +616,7 @@ public partial class PatientMatch
 
         await Task.Delay(1);
         StateHasChanged();
-        await Js.InvokeVoidAsync("UdapEd.setFocus", "AddressId:0");
+        await JsRuntime.InvokeVoidAsync("UdapEd.setFocus", "AddressId:0");
         StateHasChanged();
     }
 
@@ -624,7 +632,7 @@ public partial class PatientMatch
 
         await Task.Delay(1);
         StateHasChanged();
-        await Js.InvokeVoidAsync("UdapEd.setFocus", "ContactSystemId:0");
+        await JsRuntime.InvokeVoidAsync("UdapEd.setFocus", "ContactSystemId:0");
         StateHasChanged();
 
     }
@@ -640,7 +648,7 @@ public partial class PatientMatch
 
         await Task.Delay(1);
         StateHasChanged();
-        await Js.InvokeVoidAsync("UdapEd.setFocus", "IdentityValueSet:0");
+        await JsRuntime.InvokeVoidAsync("UdapEd.setFocus", "IdentityValueSet:0");
         StateHasChanged();
     }
 
@@ -685,6 +693,25 @@ public partial class PatientMatch
     };
 
     private string? _idiProfile;
+
+
+    private string? Operation
+    {
+        get => _operation;
+        set
+        {
+            _operation = value;
+            BuildMatch();
+        }
+    }
+
+    private Dictionary<string, string?> Operations = new Dictionary<string, string?>()
+    {
+        { "$match", "$match" },
+        { "$idi-match", "$idi-match" }
+    };
+
+    private string? _operation = "$match";
 
 
     /// <summary>
@@ -758,5 +785,10 @@ public partial class PatientMatch
         // All other fields in your table are 0 weight, so no need to check.
 
         return total;
+    }
+
+    private async Task GoToFhirIdentityMatchingIg()
+    {
+        await JsRuntime.InvokeVoidAsync("open", "https://build.fhir.org/ig/HL7/fhir-identity-matching-ig/", "_blank");
     }
 }
