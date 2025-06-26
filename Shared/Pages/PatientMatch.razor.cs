@@ -510,11 +510,19 @@ public partial class PatientMatch
 
 
         var parameters = new Parameters();
-        var paramName = _operation == "$idi-match"
-            ? UdapEdConstants.PatientMatch.InParameterNames.PATIENT
-            : UdapEdConstants.PatientMatch.InParameterNames.RESOURCE;
+        parameters.Id = $"UdapEd.{Guid.NewGuid():N}";
 
-        parameters.Add(paramName, patient);
+        if (_operation == "$idi-match")
+        {
+            parameters.Add(UdapEdConstants.PatientMatch.InParameterNames.PATIENT, patient);
+            parameters.Meta = new Meta();
+            parameters.Meta.ProfileElement.Add(new FhirUri("http://hl7.org/fhir/us/identity-matching/StructureDefinition/idi-match-input-parameters"));
+        }
+        else
+        {
+            parameters.Add(UdapEdConstants.PatientMatch.InParameterNames.RESOURCE, patient);
+        }
+            
 
         _parametersJson = new FhirJsonSerializer(new SerializerSettings { Pretty = true })
             .SerializeToString(parameters);
@@ -725,28 +733,30 @@ public partial class PatientMatch
     {
         int total = 0;
 
-        // 5: Passport Number (PPN) and issuing country, Driver’s License Number (DL) or other State ID Number and (in either case) Issuing US State or Territory, or Digital Identifier
+        // 5: Passport Number (PPN) and issuing country, Driver’s License Number (DL) or other State ID Number and (in either case) Issuing US State or Territory, or Digital Identifier is weighted 5.
+        // Others are weighted 4.
         // (max weight of 10 for this category, even if multiple ID Numbers included)
+        int id4Count = 0;
         int id5Count = 0;
         
-        // Example: parse identifiers for PPN, DL, Digital Identifier, etc.
-        // You may need to parse model.IdentityValueSetList for more detail.
         if (model.IdentityValueSetList != null)
         {
             foreach (var id in model.IdentityValueSetList)
             {
-                // Adjust these codes to match your ValueSet
-                if (id.Code == "PPN" && !string.IsNullOrWhiteSpace(id.Value))
+                if ((id.Code == "PPN" || id.Code == "DL" || id.Code == "HL7Identifier") && !string.IsNullOrWhiteSpace(id.Value))
+                {
                     id5Count++;
-                if (id.Code == "DL" && !string.IsNullOrWhiteSpace(id.Value))
-                    id5Count++;
-                if (id.Code == "HL7Identifier" && !string.IsNullOrWhiteSpace(id.Value))
-                    id5Count++;
+                }
+                else
+                {
+                    id4Count++;
+                }
             }
         }
-        
+
+        int id4Weight = Math.Min(id4Count * 4, 10);
         int id5Weight = Math.Min(id5Count * 5, 10);
-        total += id5Weight;
+        total += id5Weight + id4Weight;
 
         // 4: Address (line+zip or city+state), telecom email, telecom phone, identifier (other than above), or profile photo
         // (max weight of 5 for inclusion of 2 or more of these)
@@ -764,13 +774,7 @@ public partial class PatientMatch
         if (model.ContactSystemList != null && model.ContactSystemList.Any(c =>
             c.ContactPointSystem == Hl7.Fhir.Model.ContactPoint.ContactPointSystem.Phone && !string.IsNullOrWhiteSpace(c.Value)))
             cat4Count++;
-
-        // Identifier (other than PPN, DL, Digital Identifier)
-        if (model.IdentityValueSetList != null && model.IdentityValueSetList.Any(id =>
-            id.Code != null &&
-            id.Code != "PPN" && id.Code != "DL" && id.Code != "DigitalIdentifier" &&
-            !string.IsNullOrWhiteSpace(id.Value)))
-            cat4Count++;
+        
 
         // Profile photo (not in your model, but add if available)
         // if (model.Photo != null) cat4Count++;
@@ -804,7 +808,14 @@ public partial class PatientMatch
             "http://hl7.org/fhir/us/identity-matching/StructureDefinition/IDI-Patient-L0" => "(Level 0 weighting) The goal of this profile is to describe a data-minimized version of Patient used to convey information about the patient for Identity Matching utilizing the $match operation, and prescribe a minimum set of data elements which, when consistent with an identity verification event performed at IDIAL1.5 or higher, meet a combined 'weighted level' of at least 9",
             "http://hl7.org/fhir/us/identity-matching/StructureDefinition/IDI-Patient-L1" => "(Level 1 weighting) The goal of this profile is to describe a data-minimized version of Patient used to convey information about the patient for Identity Matching utilizing the $match operation, and prescribe a minimum set of data elements which, when consistent with an identity verification event performed at IDIAL1.8 or higher, meet a combined 'weighted level' of at least 10",
             "http://hl7.org/fhir/us/identity-matching/StructureDefinition/IDI-Patient-L2" => "(Level 2 weighting) The goal of this profile is to describe a data-minimized version of Patient used to convey information about the patient for Identity Matching utilizing the $match operation, and prescribe a minimum set of data elements which, when consistent with an identity verification event performed at IAL2/IDIAL2 or higher, meet a combined 'weighted level' of at least 10",
-            _ => "Select an IDI Profile to see more information."
+            _ => "Select an IDI-Patient Profile to see more information."
         };
+    }
+
+    private bool _showProfilePopover;
+
+    private void ToggleProfilePopover()
+    {
+        _showProfilePopover = !_showProfilePopover;
     }
 }

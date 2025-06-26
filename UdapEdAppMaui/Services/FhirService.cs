@@ -204,11 +204,59 @@ internal class FhirService : IFhirService
         {
             _fhirClient.Settings.PreferredFormat = ResourceFormat.Json;
             var parametersResource = await new FhirJsonParser().ParseAsync<Parameters>(parametersJson);
-            var bundle = await _fhirClient.TypeOperationAsync<Patient>(operation, parametersResource);
-            // var bundleJson = await new FhirJsonSerializer().SerializeToStringAsync(bundle);
+            var resource = await _fhirClient.TypeOperationAsync<Patient>(operation, parametersResource);
 
-            return new FhirResultModel<Bundle>(bundle as Bundle);
-
+            if (resource is Bundle bundle)
+            {
+                return new FhirResultModel<Bundle>(bundle);
+            }
+            else if (resource is Parameters parameters)
+            {
+                // Try to extract a Bundle from Parameters, if present
+                var bundlePart = parameters.Parameter?.FirstOrDefault(p => p.Resource is Bundle)?.Resource as Bundle;
+                if (bundlePart != null)
+                {
+                    return new FhirResultModel<Bundle>(bundlePart);
+                }
+                // Optionally, handle OperationOutcome in Parameters
+                var outcome = parameters.Parameter?.FirstOrDefault(p => p.Resource is OperationOutcome)?.Resource as OperationOutcome;
+                if (outcome != null)
+                {
+                    return new FhirResultModel<Bundle>(outcome);
+                }
+                // If neither, return error
+                var operationOutCome = new OperationOutcome()
+                {
+                    ResourceBase = null,
+                    Issue =
+                    [
+                        new OperationOutcome.IssueComponent
+                        {
+                            Diagnostics = "Parameters resource did not contain a Bundle or OperationOutcome."
+                        }
+                    ]
+                };
+                return new FhirResultModel<Bundle>(operationOutCome);
+            }
+            else if (resource is OperationOutcome opOutcome)
+            {
+                return new FhirResultModel<Bundle>(opOutcome);
+            }
+            else
+            {
+                var operationOutCome = new OperationOutcome()
+                {
+                    ResourceBase = null,
+                    Issue =
+                    [
+                        new OperationOutcome.IssueComponent
+                        {
+                            Diagnostics = $"Unexpected resource type: {resource?.TypeName ?? "null"}"
+                        }
+                    ]
+                };
+                return new FhirResultModel<Bundle>(operationOutCome);
+            }
         }
         catch (FhirOperationException ex)
         {

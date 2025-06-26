@@ -94,24 +94,37 @@
 
 <MudItem md="4" sm="6" xs="12">
 	<MudStack Row="true">
-		<MudSelect Label="IDI Profile" @bind-Value="IdiProfile">
+		<MudSelect Label="IDI-Patient Profile" @bind-Value="IdiProfile">
 			@foreach (var idiProfile in IdiProfiles)
 			{
 				<MudSelectItem Value="@idiProfile.Value">@idiProfile.Key</MudSelectItem>
 			}
 		</MudSelect>
-		<MudTooltip ShowOnClick="true"
-		            ShowOnHover="false"
-		            Placement="Placement.Left" >
-		    <ChildContent>
-		        <MudIconButton Icon="@Icons.Material.Filled.Info" Color="Color.Info"/>
-		    </ChildContent>
-		    <TooltipContent>
-		        <MudText Typo="Typo.caption" Align="Align.Left">
-		            @GetIdiProfileTooltip(IdiProfile)
-		        </MudText>
-		    </TooltipContent>
-		</MudTooltip>
+
+		<MudIconButton Icon="@Icons.Material.Filled.Info"
+					   Color="Color.Info"
+					   OnClick="ToggleProfilePopover"
+					   Style="margin-left: 8px;" />
+
+		<MudPopover Open="@_showProfilePopover"
+		            @onclick="ToggleProfilePopover"
+		            AnchorOrigin="Origin.TopCenter"
+		            TransformOrigin="Origin.TopLeft"
+		            Class="popover-content"
+					Style="margin-top:40px; padding:16px;">
+			<MudText 
+				Typo="Typo.h5"
+				Align="Align.Left"
+				Style="max-width:600px; min-width:220px; word-break:break-word;">
+				@GetIdiProfileTooltip(IdiProfile)
+			</MudText>
+			<MudLink Href="https://build.fhir.org/ig/HL7/fhir-identity-matching-ig/artifacts.html#structures-resource-profiles"
+			         Target="_blank"
+			         Color="Color.Primary"
+			         Style="cursor:pointer">
+				https://build.fhir.org/ig/HL7/fhir-identity-matching-ig/artifacts.html#structures-resource-profiles
+			</MudLink>
+		</MudPopover>
 	</MudStack>
 </MudItem>
 
