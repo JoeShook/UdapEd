@@ -168,14 +168,14 @@ public class FhirBaseController<T> : ControllerBase
         return searchParams;
     }
 
-    [HttpPost("MatchPatient")]
-    public async Task<IActionResult> MatchPatient([FromBody] string parametersJson)
+    [HttpPost("MatchPatient/{operation}")]
+    public async Task<IActionResult> MatchPatient([FromRoute] string operation, [FromBody] string parametersJson)
     {
         try
         {
             _fhirClient.Settings.PreferredFormat = ResourceFormat.Json;
             var parametersResource = await new FhirJsonParser().ParseAsync<Parameters>(parametersJson);
-            var bundle = await _fhirClient.TypeOperationAsync<Patient>("match", parametersResource);
+            var bundle = await _fhirClient.TypeOperationAsync<Patient>(operation, parametersResource);
             var bundleJson = await new FhirJsonSerializer().SerializeToStringAsync(bundle);
             CopyCustomHeadersToResponse();
             return Ok(bundleJson);
@@ -191,12 +191,27 @@ public class FhirBaseController<T> : ControllerBase
 
             if (ex.Outcome != null)
             {
-                var outcomeJson = await new FhirJsonSerializer().SerializeToStringAsync(ex.Outcome);
-                return NotFound(outcomeJson);
+                // Wrap OperationOutcome in a Bundle
+                var bundle = WrapOperationOutcomeInBundle(ex.Outcome);
+                var bundleJson = await new FhirJsonSerializer().SerializeToStringAsync(bundle);
+                return NotFound(bundleJson);
             }
             else
             {
-                return NotFound("Resource Server Error: " + ex.Message);
+                // Also wrap generic error in a Bundle
+                var outcome = new OperationOutcome
+                {
+                    Issue =
+                    [
+                        new OperationOutcome.IssueComponent
+                        {
+                            Diagnostics = "Resource Server Error: " + ex.Message
+                        }
+                    ]
+                };
+                var bundle = WrapOperationOutcomeInBundle(outcome);
+                var bundleJson = await new FhirJsonSerializer().SerializeToStringAsync(bundle);
+                return NotFound(bundleJson);
             }
         }
         catch (Exception ex)
@@ -204,6 +219,22 @@ public class FhirBaseController<T> : ControllerBase
             _logger.LogError(ex.Message);
             throw;
         }
+    }
+
+    private static Bundle WrapOperationOutcomeInBundle(OperationOutcome outcome)
+    {
+        var bundle = new Bundle
+        {
+            Type = Bundle.BundleType.Searchset,
+            Entry =
+            [
+                new Bundle.EntryComponent
+                {
+                    Resource = outcome
+                }
+            ]
+        };
+        return bundle;
     }
 
     /// <summary>

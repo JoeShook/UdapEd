@@ -18,6 +18,7 @@ using UdapEd.Shared;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
+using UdapEd.Shared.Services.Fhir;
 using CodeSystem = Hl7.Fhir.Model.CodeSystem;
 using Task = System.Threading.Tasks.Task;
 
@@ -197,13 +198,13 @@ internal class FhirService : IFhirService
         resultModel.FhirDecompressedSize = decompressedSize;
     }
 
-    public async Task<FhirResultModel<Hl7.Fhir.Model.Bundle>> MatchPatient(string parametersJson)
+    public async Task<FhirResultModel<Hl7.Fhir.Model.Bundle>> MatchPatient(string operation, string parametersJson)
     {
         try
         {
             _fhirClient.Settings.PreferredFormat = ResourceFormat.Json;
             var parametersResource = await new FhirJsonParser().ParseAsync<Parameters>(parametersJson);
-            var bundle = await _fhirClient.TypeOperationAsync<Patient>("match", parametersResource);
+            var bundle = await _fhirClient.TypeOperationAsync<Patient>(operation, parametersResource);
             // var bundleJson = await new FhirJsonSerializer().SerializeToStringAsync(bundle);
 
             return new FhirResultModel<Bundle>(bundle as Bundle);
@@ -651,7 +652,7 @@ internal class FhirService : IFhirService
 
         {
             var result = await response.Content.ReadAsStringAsync();
-            var operationOutcome = new FhirJsonParser().Parse<OperationOutcome>(result);
+            var operationOutcome = FhirResourceUtility.ExtractOperationOutcome(result);
 
             return new FhirResultModel<Bundle>(operationOutcome, response.StatusCode, response.Version);
         }

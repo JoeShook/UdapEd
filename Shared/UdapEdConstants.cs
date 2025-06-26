@@ -33,12 +33,21 @@ public static class UdapEdConstants
         {
             /// <summary>
             /// Note: One and only one resource where the name of the Parameter is "resource"
+            /// used for $match operation.
+            /// https://www.hl7.org/fhir/patient-operation-match.html#8.1.18.1
             /// </summary>
             public const string RESOURCE = "resource";
 
+            /// <summary>
+            /// Note: One and only one resource where the name of the Parameter is "IDIPatient"
+            /// used for $idi-match operation.
+            /// https://build.fhir.org/ig/HL7/fhir-identity-matching-ig/OperationDefinition-IDI-match.html
+            /// </summary>
+            public const string PATIENT = "patient"; // TODO change to "IDIPatient"
+
             public const string ONLY_CERTAIN_MATCHES = "onlyCertainMatches";
 
-            public const string COUNT = "count";
+            public const string COUNT = "count";    
         }
 
         public static class OutParameterNames

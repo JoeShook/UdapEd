@@ -510,7 +510,11 @@ public partial class PatientMatch
 
 
         var parameters = new Parameters();
-        parameters.Add(UdapEdConstants.PatientMatch.InParameterNames.RESOURCE, patient);
+        var paramName = _operation == "$idi-match"
+            ? UdapEdConstants.PatientMatch.InParameterNames.PATIENT
+            : UdapEdConstants.PatientMatch.InParameterNames.RESOURCE;
+
+        parameters.Add(paramName, patient);
 
         _parametersJson = new FhirJsonSerializer(new SerializerSettings { Pretty = true })
             .SerializeToString(parameters);
@@ -537,7 +541,7 @@ public partial class PatientMatch
 
         if (AppState.BaseUrl != null)
         {
-            var result = await FhirService.MatchPatient(_parametersJson);
+            var result = await FhirService.MatchPatient(Operations[Operation], _parametersJson);
 
             if (result.FhirCompressedSize != null)
             {
@@ -695,7 +699,7 @@ public partial class PatientMatch
     private string? _idiProfile;
 
 
-    private string? Operation
+    private string Operation
     {
         get => _operation;
         set
@@ -705,13 +709,13 @@ public partial class PatientMatch
         }
     }
 
-    private Dictionary<string, string?> Operations = new Dictionary<string, string?>()
+    private Dictionary<string, string> Operations = new Dictionary<string, string>()
     {
-        { "$match", "$match" },
-        { "$idi-match", "$idi-match" }
+        { "$match", "match" },
+        { "$idi-match", "idi-match" }
     };
 
-    private string? _operation = "$match";
+    private string _operation = "$match";
 
 
     /// <summary>
@@ -790,5 +794,17 @@ public partial class PatientMatch
     private async Task GoToFhirIdentityMatchingIg()
     {
         await JsRuntime.InvokeVoidAsync("open", "https://build.fhir.org/ig/HL7/fhir-identity-matching-ig/", "_blank");
+    }
+
+    private string GetIdiProfileTooltip(string? selectedProfile)
+    {
+        return selectedProfile switch
+        {
+            "http://hl7.org/fhir/us/identity-matching/StructureDefinition/IDI-Patient" => "(Base Level) The goal of this profile is to describe a data-minimized version of Patient used to convey information about the patient for Identity Matching utilizing the $match operation. Only requires that 'some valuable data' be populated within the Patient resource and utilizes no weighting of element values.",
+            "http://hl7.org/fhir/us/identity-matching/StructureDefinition/IDI-Patient-L0" => "(Level 0 weighting) The goal of this profile is to describe a data-minimized version of Patient used to convey information about the patient for Identity Matching utilizing the $match operation, and prescribe a minimum set of data elements which, when consistent with an identity verification event performed at IDIAL1.5 or higher, meet a combined 'weighted level' of at least 9",
+            "http://hl7.org/fhir/us/identity-matching/StructureDefinition/IDI-Patient-L1" => "(Level 1 weighting) The goal of this profile is to describe a data-minimized version of Patient used to convey information about the patient for Identity Matching utilizing the $match operation, and prescribe a minimum set of data elements which, when consistent with an identity verification event performed at IDIAL1.8 or higher, meet a combined 'weighted level' of at least 10",
+            "http://hl7.org/fhir/us/identity-matching/StructureDefinition/IDI-Patient-L2" => "(Level 2 weighting) The goal of this profile is to describe a data-minimized version of Patient used to convey information about the patient for Identity Matching utilizing the $match operation, and prescribe a minimum set of data elements which, when consistent with an identity verification event performed at IAL2/IDIAL2 or higher, meet a combined 'weighted level' of at least 10",
+            _ => "Select an IDI Profile to see more information."
+        };
     }
 }

@@ -51,7 +51,7 @@
 		<MudSelect Label="Operation" @bind-Value="Operation">
 			@foreach (var operation in Operations)
 			{
-				<MudSelectItem Value="@operation.Value">@operation.Key</MudSelectItem>
+				<MudSelectItem Value="@operation.Key">@operation.Key</MudSelectItem>
 			}
 		</MudSelect>
 
@@ -93,12 +93,26 @@
 </MudItem>
 
 <MudItem md="4" sm="6" xs="12">
-	<MudSelect Label="IDI Profile" @bind-Value="IdiProfile">
-		@foreach (var idiProfile in IdiProfiles)
-		{
-			<MudSelectItem Value="@idiProfile.Value">@idiProfile.Key</MudSelectItem>
-		}
-	</MudSelect>
+	<MudStack Row="true">
+		<MudSelect Label="IDI Profile" @bind-Value="IdiProfile">
+			@foreach (var idiProfile in IdiProfiles)
+			{
+				<MudSelectItem Value="@idiProfile.Value">@idiProfile.Key</MudSelectItem>
+			}
+		</MudSelect>
+		<MudTooltip ShowOnClick="true"
+		            ShowOnHover="false"
+		            Placement="Placement.Left" >
+		    <ChildContent>
+		        <MudIconButton Icon="@Icons.Material.Filled.Info" Color="Color.Info"/>
+		    </ChildContent>
+		    <TooltipContent>
+		        <MudText Typo="Typo.caption" Align="Align.Left">
+		            @GetIdiProfileTooltip(IdiProfile)
+		        </MudText>
+		    </TooltipContent>
+		</MudTooltip>
+	</MudStack>
 </MudItem>
 
 <MudItem xs="12">

@@ -9,7 +9,6 @@
 
 using Blazored.LocalStorage;
 using Hl7.Fhir.Model;
-using Hl7.Fhir.Model.CdsHooks;
 using Hl7.Fhir.Serialization;
 using System.Net;
 using System.Net.Http.Headers;
@@ -82,7 +81,7 @@ public class FhirService : IFhirService
         return await HandleResponseError(response);
     }
 
-    public async Task<FhirResultModel<Bundle>> MatchPatient(string parametersJson)
+    public async Task<FhirResultModel<Bundle>> MatchPatient(string operation, string parametersJson)
     {
         FhirResultModel<Bundle> resultModel;
         var parameters = await new FhirJsonParser().ParseAsync<Parameters>(parametersJson);
@@ -90,7 +89,7 @@ public class FhirService : IFhirService
         var jsonMessage = JsonSerializer.Serialize(json); // needs to be json
         var content = new StringContent(jsonMessage, Encoding.UTF8, new MediaTypeHeaderValue("application/json"));
         var controller = await GetControllerPath();
-        var response = await _httpClient.PostAsync($"{controller}/MatchPatient", content);
+        var response = await _httpClient.PostAsync($"{controller}/MatchPatient/{operation}", content);
 
         if (response.IsSuccessStatusCode)
         {
@@ -163,8 +162,7 @@ public class FhirService : IFhirService
 
         {
             var result = await response.Content.ReadAsStringAsync();
-            var operationOutcome = new FhirJsonParser().Parse<OperationOutcome>(result);
-
+            var operationOutcome = FhirResourceUtility.ExtractOperationOutcome(result);
             return new FhirResultModel<CodeSystem>(operationOutcome, response.StatusCode, response.Version);
         }
     }
@@ -226,8 +224,7 @@ public class FhirService : IFhirService
 
         {
             var result = await response.Content.ReadAsStringAsync();
-            var operationOutcome = new FhirJsonParser().Parse<OperationOutcome>(result);
-
+            var operationOutcome = FhirResourceUtility.ExtractOperationOutcome(result);
             return new FhirResultModel<ValueSet>(operationOutcome, response.StatusCode, response.Version);
         }
     }
@@ -274,7 +271,7 @@ public class FhirService : IFhirService
         return await HandleGetResponseError(response);
     }
 
-    private static async Task<FhirResultModel<Resource>> HandleGetResponseError(HttpResponseMessage response)
+    private async Task<FhirResultModel<Resource>> HandleGetResponseError(HttpResponseMessage response)
     {
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
@@ -364,8 +361,7 @@ public class FhirService : IFhirService
 
         {
             var result = await response.Content.ReadAsStringAsync();
-            var operationOutcome = new FhirJsonParser().Parse<OperationOutcome>(result);
-
+            var operationOutcome = FhirResourceUtility.ExtractOperationOutcome(result);
             return new FhirResultModel<Resource>(operationOutcome, response.StatusCode, response.Version);
         }
     }
@@ -388,7 +384,7 @@ public class FhirService : IFhirService
         return await HandleResponseError(response);
     }
 
-    private static async Task<FhirResultModel<Bundle>> HandleResponseError(HttpResponseMessage response)
+    private async Task<FhirResultModel<Bundle>> HandleResponseError(HttpResponseMessage response)
     {
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
@@ -459,7 +455,7 @@ public class FhirService : IFhirService
 
             try
             {
-                var operationOutcome = new FhirJsonParser().Parse<OperationOutcome>(result);
+                var operationOutcome = FhirResourceUtility.ExtractOperationOutcome(result);
 
                 return new FhirResultModel<Bundle>(operationOutcome, HttpStatusCode.InternalServerError, response.Version);
             }
@@ -490,7 +486,7 @@ public class FhirService : IFhirService
 
         {
             var result = await response.Content.ReadAsStringAsync();
-            var operationOutcome = new FhirJsonParser().Parse<OperationOutcome>(result);
+            var operationOutcome = FhirResourceUtility.ExtractOperationOutcome(result);
 
             return new FhirResultModel<Bundle>(operationOutcome, response.StatusCode, response.Version);
         }
