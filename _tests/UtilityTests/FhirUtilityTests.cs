@@ -30,8 +30,8 @@ public class FhirUtilityTests
     {
         FhirPackageSource _clientResolver = new(new ModelInspector(FhirRelease.R4), PACKAGESERVER, new string[] { "hl7.fhir.r4.core@4.0.1" });
         var termService = new LocalTerminologyService(resolver: _clientResolver);
-        var p = new ExpandParameters().WithValueSet(url: "http://hl7.org/fhir/us/identity-matching/ValueSet/Identity-Identifier-vs");
-        await termService.Expand(p); //Don't that is fails.  Just want the package to download
+        var p = new ExpandParameters().WithValueSet(url: "http://hl7.org/fhir/us/identity-matching/ValueSet/Identity-Identifier-vs#2.0.0-ballot");
+        await termService.Expand(p); //Note that is fails.  Just want the package to download
 
     }
 
@@ -49,7 +49,7 @@ public class FhirUtilityTests
         IAsyncResourceResolver coreSource = new FhirPackageSource(ModelInfo.ModelInspector, PACKAGESERVER, new string[] {  "hl7.fhir.r4.expansions@4.0.1" });
         var coreResolver = new CachedResolver(coreSource);
 
-        IAsyncResourceResolver localSource = new FhirPackageSource(ModelInfo.ModelInspector, @"hl7.fhir.us.identity-matching-2.0.0-draft.tgz");
+        IAsyncResourceResolver localSource = new FhirPackageSource(ModelInfo.ModelInspector, @"hl7.fhir.us.identity-matching-2.0.0-ballot.tgz");
         var resourceResolver = new CachedResolver(localSource);
 
         var multiResourceResolver = new MultiResolver(coreResolver, resourceResolver);
@@ -59,7 +59,7 @@ public class FhirUtilityTests
             .WithValueSet(url: "http://hl7.org/fhir/us/identity-matching/ValueSet/Identity-Identifier-vs");
         
         var idiValueSet = await termService.Expand(p, useGet:true) as ValueSet;
-        //_testOutputHelper.WriteLine(await new FhirJsonSerializer().SerializeToStringAsync(idiValueSet));
+        _testOutputHelper.WriteLine(await new FhirJsonSerializer().SerializeToStringAsync(idiValueSet));
 
     }
 

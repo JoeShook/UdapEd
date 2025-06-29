@@ -12,6 +12,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Firely.Fhir.Packages" Version="4.9.1" />
+    <PackageReference Include="Firely.Fhir.Validation" Version="2.6.7" />
+    <PackageReference Include="Firely.Fhir.Validation.R4B" Version="2.6.7" />
     <PackageReference Include="Hl7.Fhir.Conformance" Version="5.11.7" />
     <PackageReference Include="Hl7.Fhir.R4B" Version="5.11.7" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
@@ -37,10 +39,13 @@
     <None Update="FhirLabs_mTLS_Client.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="hl7.fhir.us.identity-matching-2.0.0-draft.tgz">
+    <None Update="hl7.fhir.us.identity-matching-2.0.0-ballot.tgz">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="hl7.fhir.us.ndh#1.0.0-ballot.tgz">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="idi-match-in-parameters.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
