@@ -2,6 +2,7 @@
 @using UdapEd.Shared.Extensions
 @using Task = System.Threading.Tasks.Task
 @using Hl7.Fhir.Model
+@using Hl7.Fhir.Serialization
 @using Microsoft.IdentityModel.Tokens
 
 <ErrorBoundary @ref="ErrorBoundary">
@@ -404,7 +405,7 @@
 	           OnClick="Cancel">Reset</MudButton>
     <MudSpacer />
 	<MudText Align="Align.Right" Typo="Typo.subtitle2" Color="Color.Info">
-		Weighted Input: @CalculatePatientWeightedInput(_model)
+						Weighted Input: @CalculatePatientWeightedInput()
 	</MudText>
 </MudCardActions>
 </MudCardContent>

@@ -4,6 +4,7 @@ using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
+using Microsoft.Maui.Graphics;
 using MudBlazor;
 using System.Net;
 using UdapEd.Shared.Components;
@@ -491,7 +492,8 @@ public partial class PatientMatch
                     if (parts.Length == 2)
                     {
                         identifier.System = parts.First();
-                        identifier.Value = parts.Last();
+                        var last = parts.Last();
+                        identifier.Value = string.IsNullOrWhiteSpace(last) ? null : last;
                     }
                     else
                     {
@@ -729,68 +731,92 @@ public partial class PatientMatch
     /// <summary>
     /// Calculates the weighted input score for patient matching based on the HL7 IG table.
     /// </summary>
-    public static int CalculatePatientWeightedInput(PatientMatchModel model)
+    public int CalculatePatientWeightedInput()
     {
         int total = 0;
 
-        // 5: Passport Number (PPN) and issuing country, Driver’s License Number (DL) or other State ID Number and (in either case) Issuing US State or Territory, or Digital Identifier is weighted 5.
-        // Others are weighted 4.
-        // (max weight of 10 for this category, even if multiple ID Numbers included)
-        int id4Count = 0;
-        int id5Count = 0;
-        
-        if (model.IdentityValueSetList != null)
+        try
         {
-            foreach (var id in model.IdentityValueSetList)
+            var parameters = new FhirJsonParser().Parse<Parameters>(_parametersJson);
+
+
+
+            Patient patient;
+
+            if (_operation == "$idi-match")
             {
-                if ((id.Code == "PPN" || id.Code == "DL" || id.Code == "HL7Identifier") && !string.IsNullOrWhiteSpace(id.Value))
+                var inputPatient = parameters.Parameter.FirstOrDefault(p => p.Name == "patient")?.Resource;
+                patient = inputPatient as Patient;
+            }
+            else
+            {
+                var inputPatient = parameters.Parameter.FirstOrDefault(p => p.Name == "resource")?.Resource;
+                patient = inputPatient as Patient;
+            }
+
+            if (patient == null)
+            {
+                return total;
+            }
+
+            // 5: Passport Number (PPN) and issuing country, Driver’s License Number (DL) or other State ID Number and (in either case) Issuing US State or Territory, or Digital Identifier is weighted 5.
+            // Others are weighted 4.
+            // (max weight of 10 for this category, even if multiple ID Numbers included)
+            int id4Count = 0;
+            int id5Count = 0;
+
+            if (patient?.Identifier != null)
+            {
+                foreach (var id in patient.Identifier)
                 {
-                    id5Count++;
-                }
-                else
-                {
-                    id4Count++;
+                    var code = id.Type?.Coding?.FirstOrDefault()?.Code;
+                    if ((code == "PPN" || code == "DL" || code == "HL7Identifier") &&
+                        !string.IsNullOrWhiteSpace(id.Value))
+                    {
+                        id5Count++;
+                    }
+                    else
+                    {
+                        id4Count++;
+                    }
                 }
             }
+
+            int id4Weight = Math.Min(id4Count * 4, 10);
+            int id5Weight = Math.Min(id5Count * 5, 10);
+            total += id5Weight + id4Weight;
+
+            // 4: Address, telecom email/phone, other identifier
+            int cat4Count = 0;
+            if (patient.Address != null && patient.Address.Any(a =>
+                    (!string.IsNullOrWhiteSpace(a.Line?.FirstOrDefault()) &&
+                     !string.IsNullOrWhiteSpace(a.PostalCode)) ||
+                    (!string.IsNullOrWhiteSpace(a.City) && !string.IsNullOrWhiteSpace(a.State))))
+                cat4Count++;
+
+            if (patient.Telecom != null && patient.Telecom.Any(c =>
+                    c.System == ContactPoint.ContactPointSystem.Email && !string.IsNullOrWhiteSpace(c.Value)))
+                cat4Count++;
+            if (patient.Telecom != null && patient.Telecom.Any(c =>
+                    c.System == ContactPoint.ContactPointSystem.Phone && !string.IsNullOrWhiteSpace(c.Value)))
+                cat4Count++;
+
+            int cat4Weight = Math.Min(cat4Count * 4, 5);
+            total += cat4Weight;
+
+            // 3: First Name and Last Name
+            var name = patient.Name?.FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(name?.Given?.FirstOrDefault()) && !string.IsNullOrWhiteSpace(name?.Family))
+                total += 3;
+
+            // 2: Date of Birth
+            if (!string.IsNullOrWhiteSpace(patient.BirthDate))
+                total += 2;
         }
-
-        int id4Weight = Math.Min(id4Count * 4, 10);
-        int id5Weight = Math.Min(id5Count * 5, 10);
-        total += id5Weight + id4Weight;
-
-        // 4: Address (line+zip or city+state), telecom email, telecom phone, identifier (other than above), or profile photo
-        // (max weight of 5 for inclusion of 2 or more of these)
-        int cat4Count = 0;
-        // Address (line+zip or city+state)
-        if (model.AddressList != null && model.AddressList.Any(a =>
-            (!string.IsNullOrWhiteSpace(a.Line1) && !string.IsNullOrWhiteSpace(a.PostalCode)) ||
-            (!string.IsNullOrWhiteSpace(a.City) && !string.IsNullOrWhiteSpace(a.State))))
-            cat4Count++;
-
-        // Telecom email or phone
-        if (model.ContactSystemList != null && model.ContactSystemList.Any(c =>
-            c.ContactPointSystem == Hl7.Fhir.Model.ContactPoint.ContactPointSystem.Email && !string.IsNullOrWhiteSpace(c.Value)))
-            cat4Count++;
-        if (model.ContactSystemList != null && model.ContactSystemList.Any(c =>
-            c.ContactPointSystem == Hl7.Fhir.Model.ContactPoint.ContactPointSystem.Phone && !string.IsNullOrWhiteSpace(c.Value)))
-            cat4Count++;
-        
-
-        // Profile photo (not in your model, but add if available)
-        // if (model.Photo != null) cat4Count++;
-
-        int cat4Weight = Math.Min(cat4Count * 4, 5);
-        total += cat4Weight;
-
-        // 3: First Name and Last Name (must both be present)
-        if (!string.IsNullOrWhiteSpace(model.Given) && !string.IsNullOrWhiteSpace(model.Family))
-            total += 3;
-
-        // 2: Date of Birth
-        if (model.BirthDate.HasValue)
-            total += 2;
-
-        // All other fields in your table are 0 weight, so no need to check.
+        catch (Exception)
+        {
+            return total; // Return 0 if the parameters cannot be parsed
+        }
 
         return total;
     }
