@@ -84,8 +84,8 @@ public class FhirService : IFhirService
     public async Task<FhirResultModel<Bundle>> MatchPatient(string operation, string parametersJson)
     {
         FhirResultModel<Bundle> resultModel;
-        var parameters = await new FhirJsonParser().ParseAsync<Parameters>(parametersJson);
-        var json = await new FhirJsonSerializer().SerializeToStringAsync(parameters); // removing line feeds
+        var inParameters = await new FhirJsonParser().ParseAsync<Parameters>(parametersJson);
+        var json = await new FhirJsonSerializer().SerializeToStringAsync(inParameters); // removing line feeds
         var jsonMessage = JsonSerializer.Serialize(json); // needs to be json
         var content = new StringContent(jsonMessage, Encoding.UTF8, new MediaTypeHeaderValue("application/json"));
         var controller = await GetControllerPath();
@@ -94,12 +94,54 @@ public class FhirService : IFhirService
         if (response.IsSuccessStatusCode)
         {
             var result = await response.Content.ReadAsStringAsync();
-            var bundle = new FhirJsonParser().Parse<Bundle>(result);
+            var resource = new FhirJsonParser().Parse<Resource>(result);
+
+
+            switch (resource)
+            {
+                case Bundle bundle:
+                    resultModel =  new FhirResultModel<Bundle>(bundle, response.StatusCode, response.Version);
+                    EnrichResult(response, resultModel);
+                    return resultModel;
+                    break;
+                case Parameters outParameters:
+                     var bundlePart = outParameters.Parameter?.FirstOrDefault(p => p.Resource is Bundle)?.Resource as Bundle;
+                    if (bundlePart != null)
+                    {
+                        return new FhirResultModel<Bundle>(bundlePart);
+                    }
+                    // Optionally, handle OperationOutcome in Parameters
+                    var outcome = outParameters.Parameter?.FirstOrDefault(p => p.Resource is OperationOutcome)?.Resource as OperationOutcome;
+                    if (outcome != null)
+                    {
+                        return new FhirResultModel<Bundle>(outcome);
+                    }
+                    // If neither, return error
+                    var opOutcome = new OperationOutcome()
+                    {
+                        ResourceBase = null,
+                        Issue =
+                        [
+                            new OperationOutcome.IssueComponent
+                            {
+                                Diagnostics = "Parameters resource did not contain a Bundle or OperationOutcome."
+                            }
+                        ]
+                    };
+                    return new FhirResultModel<Bundle>(opOutcome);
+                    break;
+                case OperationOutcome operationOutcome:
+                    return new FhirResultModel<Bundle>(operationOutcome);
+                    break;
+                default:
+                    // handle unexpected resource type
+                    break;
+            }
+
+
             // var patients = bundle.Entry.Select(e => e.Resource as Patient).ToList();
 
-            resultModel =  new FhirResultModel<Bundle>(bundle, response.StatusCode, response.Version);
-            EnrichResult(response, resultModel);
-            return resultModel;
+            
         }
 
         return await HandleResponseError(response);
