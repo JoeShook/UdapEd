@@ -405,4 +405,33 @@
         
         await LocalStorageService.SetItemAsStringAsync(UdapStateKeyName, json);
     }
+
+    public string GetJson()
+    {
+	    var options = new JsonSerializerOptions
+	    {
+		    WriteIndented = true,
+		    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+		    Converters = { new FhirContextJsonConverter() }
+	    };
+	    var context = new UdapJsonContext(options);
+	    return JsonSerializer.Serialize((IAppState)this, context.IAppState);
+    }
+
+    // Resets all public settable properties to their default values and saves the state
+    public async Task ResetStateAsync()
+    {
+        var properties = this.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+            .Where(p => p.CanWrite && p.Name != nameof(ChildContent)); // Don't reset ChildContent
+
+        foreach (var prop in properties)
+        {
+            var type = prop.PropertyType;
+            object? defaultValue = type.IsValueType ? Activator.CreateInstance(type) : null;
+            prop.SetValue(this, defaultValue);
+        }
+
+        await SaveChanges();
+        StateHasChanged();
+    }
 }

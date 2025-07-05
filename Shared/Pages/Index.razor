@@ -18,7 +18,7 @@
 
 <MudItem xs="12" sm="6" md="6">
     <MudCard>
-        <MudCardHeader><MudText Typo="Typo.subtitle1">Experiment with:</MudText></MudCardHeader>
+        <MudCardHeader><MudText Color="Color.Primary" Typo="Typo.h6">Experiment with:</MudText></MudCardHeader>
         <MudCardContent>
             <div class="ml-4">
                 <ul style="list-style:disc;">
@@ -35,7 +35,7 @@
 
 <MudItem xs="12" sm="6" md="6">
     <MudCard>
-        <MudCardHeader ><MudText>Client IP: </MudText></MudCardHeader>
+                    <MudCardHeader><MudText Color="Color.Primary" Typo="Typo.h6">Client IP: </MudText></MudCardHeader>
         <MudCardContent>
             <MudText Typo="Typo.body2" Color="Color.Primary">@_myIp</MudText>
             <MudText Typo="Typo.body2">Same as the User IP you may be asked for from certification and testing tools. This is because all redirects are redirected through the backend for this tool.</MudText>
@@ -48,7 +48,7 @@
 
 <MudItem xs="12" sm="6" md="6">
     <MudCard>
-        <MudCardHeader><MudText>Configure Http Client Headers: </MudText></MudCardHeader>
+        <MudCardHeader><MudText Color="Color.Primary" Typo="Typo.h6">Configure Http Client Headers: </MudText></MudCardHeader>
         <MudCardContent>
 
             <MudTable Items="@Headers" Hover Striped Dense="@false" ReadOnly="@false" CanCancelEdit="@true"
@@ -101,6 +101,40 @@
 
 </MudItem>
 
+<MudItem xs="12" sm="6" md="6">
+	<MudCard>
+                    <MudCardHeader><MudText Color="Color.Primary" Typo="Typo.h6">Clear local cache:</MudText></MudCardHeader>
+		<MudCardContent>
+			<MudGrid AlignItems="AlignItems.Center" Spacing="2">
+				<MudItem xs="12" sm="8">
+					<MudText Typo="Typo.body2" Class="ma-2">
+                                    UdapEd stores some data in the local browser store. Occasionally, version updates to the app can cause this data to become incompatible.  Click the "Clear Local Store" to reset the app state.
+					</MudText>
+				</MudItem>
+				<MudItem xs="12" sm="4">
+					<MudFab HtmlTag="label"
+					        Class="ma-2"
+					        Size="Size.Medium"
+					        Color="Color.Primary"
+					        StartIcon="@Icons.Material.Filled.FolderZip"
+					        Label="Clear Local Store"
+					        IconSize="Size.Medium"
+					        OnClick="@ClearLocalStore" />
+				</MudItem>
+			</MudGrid>
+			
+			<MudExpansionPanel Text="View AppState JSON" Class="mt-2">
+				<MudPaper Class="pa-2" Style="background-color: #23272f;">
+					<pre style="color: #fff; white-space: pre-wrap; word-break: break-all;">
+						@AppState.GetJson()
+			        </pre>
+				</MudPaper>
+			</MudExpansionPanel>
+		</MudCardContent>
+
+	</MudCard>
+
+</MudItem>
 
 <MudItem >
     <MudText Typo="Typo.subtitle2">This is a tool to experiment with the Security IG constrained on the UDAP profiles. See FHIR link in top right corner. Notice if you upload a client certificate (P12 format) it will be stored in the server’s session service. The session lifetime is set for one hour. The tool will ask for a password to access the private key, allowing it to generate a software statement used for registration and authorization requests. <MudText Typo="Typo.button" Color="Color.Primary">Do not use your production client certificates.</MudText> 

@@ -1,14 +1,16 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
+using MudBlazor;
 using UdapEd.Shared.Components;
 using UdapEd.Shared.Model;
-using Microsoft.JSInterop;
 
 namespace UdapEd.Shared.Pages;
 
 public partial class Index
 {
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
+    [Inject] ISnackbar Snackbar { get; set; } = null!;
 
     private ErrorBoundary? ErrorBoundary { get; set; }
     private string _myIp = string.Empty;
@@ -109,5 +111,12 @@ public partial class Index
     private void Callback(string obj)
     {
         throw new NotImplementedException();
+    }
+
+    // Clears a named entry from the browser's local storage
+    private async Task ClearLocalStore()
+    {
+        await AppState.ResetStateAsync();
+        Snackbar.Add("Local store cleared.", Severity.Success, config => { config.VisibleStateDuration = 2000; });
     }
 }

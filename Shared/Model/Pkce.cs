@@ -16,5 +16,5 @@ public class Pkce
     public string? CodeChallengeMethod { get; set; }
 
     public string? CodeVerifier { get; set; }
-    public bool EnablePkce { get; set; }
+    public bool EnablePkce { get; set; } = false;
 }
