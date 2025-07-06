@@ -9,6 +9,7 @@
 
 using AutoMapper;
 using Duende.IdentityModel.Client;
+using Microsoft.Extensions.Logging.Abstractions;
 using UdapEd.Shared.Model;
 
 namespace UdapEd.Shared.Mappers;
@@ -19,7 +20,7 @@ public static class ClientAssertionMapper
         Mapper = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<ClientAssertionProfile>();
-            })
+            }, new NullLoggerFactory())
             .CreateMapper();
     }
 

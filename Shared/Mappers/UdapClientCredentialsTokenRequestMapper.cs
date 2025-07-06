@@ -8,6 +8,7 @@
 #endregion
 
 using AutoMapper;
+using Microsoft.Extensions.Logging.Abstractions;
 using Udap.Model.Access;
 using UdapEd.Shared.Model;
 
@@ -20,7 +21,7 @@ public static class UdapClientCredentialsTokenRequestMapper
             {
                 cfg.AddProfile<UdapClientCredentialsTokenRequestProfile>();
                 cfg.AddProfile<ClientAssertionProfile>();
-            })
+            }, new NullLoggerFactory())
             .CreateMapper();
     }
 

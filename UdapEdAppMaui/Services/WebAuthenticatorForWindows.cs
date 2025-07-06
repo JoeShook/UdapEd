@@ -9,6 +9,7 @@
 
 #if WINDOWS
 using AutoMapper;
+using Microsoft.Extensions.Logging.Abstractions;
 using UdapEd.Shared.Services;
 
 namespace UdapEdAppMaui.Services;
@@ -31,7 +32,7 @@ public static class WebAuthenticatorResultMapper
         Mapper = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<WebAuthenticatorResultProfile>();
-            })
+            }, new NullLoggerFactory())
             .CreateMapper();
     }
 

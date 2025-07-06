@@ -19,7 +19,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="14.0.0" />
+    <PackageReference Include="AutoMapper" Version="15.0.0" />
     <PackageReference Include="BlazorMonaco" Version="3.3.0" IncludeAssets="all" />
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="HtmlSanitizer" Version="9.0.886" />
@@ -28,12 +28,12 @@
     <PackageReference Include="Google.Cloud.Storage.V1" Version="4.13.0" />
     <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.17" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.6" />
-    <PackageReference Include="MudBlazor" Version="8.7.0" />
+    <PackageReference Include="MudBlazor" Version="8.9.0" />
 
-    <PackageReference Include="Udap.Smart.Model" Version="0.4.11" />
-    <PackageReference Include="Udap.CdsHooks.Model" Version="0.4.11" />
-    <PackageReference Include="Udap.Model" Version="0.4.11" />
-    <PackageReference Include="Udap.Common" Version="0.4.11" />
+    <PackageReference Include="Udap.Smart.Model" Version="0.5.0" />
+    <PackageReference Include="Udap.CdsHooks.Model" Version="0.5.0" />
+    <PackageReference Include="Udap.Model" Version="0.5.0" />
+    <PackageReference Include="Udap.Common" Version="0.5.0" />
 
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.6" />
     <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="4.12.0" />
