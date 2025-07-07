@@ -40,17 +40,42 @@
                                        DebounceInterval="10000" />
                   </MudItem>
                   <MudItem xs="4">
-                      <MudTextField @bind-Value="Community" Label="Community" Variant="Variant.Text"></MudTextField>
+	                  <MudTextField
+		                  @bind-Value="Community" 
+		                  Label="Community" 
+		                  Variant="Variant.Text"
+		                  AdornmentIcon="@Icons.Material.Outlined.Input"
+		                  Adornment="@KnownCommunityAdornment"
+		                  OnAdornmentClick="SelectKnownCommunities"
+		                  ></MudTextField>
                   </MudItem>
               </MudGrid>
-              @if (AppState.MetadataVerificationModel != null && AppState.MetadataVerificationModel.Notifications.Any())
+              @if (AppState.MetadataVerificationModel != null && AppState.MetadataVerificationModel.Untrusted.Any())
               {
                   <MudAlert Severity="Severity.Error">
-                      @foreach (string note in AppState.MetadataVerificationModel.Notifications)
+                      @foreach (string note in AppState.MetadataVerificationModel.Untrusted)
                       {
                           <li>@note</li>
                       }
                   </MudAlert>
+              }
+              @if (AppState.MetadataVerificationModel != null && AppState.MetadataVerificationModel.TokenErrors.Any())
+              {
+	              <MudAlert Severity="Severity.Error">
+		              @foreach (string note in AppState.MetadataVerificationModel.TokenErrors)
+		              {
+			              <li>@note</li>
+		              }
+	              </MudAlert>
+              }
+              @if (AppState.MetadataVerificationModel != null && AppState.MetadataVerificationModel.Problems.Any())
+              {
+	              <MudAlert Severity="Severity.Warning">
+		              @foreach (string note in AppState.MetadataVerificationModel.Problems)
+		              {
+			              <li>@note</li>
+		              }
+	              </MudAlert>
               }
           </MudItem>
           <MudGrid Spacing="1" Class="mt-8">

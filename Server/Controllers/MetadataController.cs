@@ -69,9 +69,9 @@ public class MetadataController : Controller
 
             
             _udapClient.Problem += element =>
-                result.Notifications.Add(element.ChainElementStatus.Summarize(TrustChainValidator.DefaultProblemFlags));
-            _udapClient.Untrusted += certificate2 => result.Notifications.Add("Untrusted: " + certificate2.Subject);
-            _udapClient.TokenError += message => result.Notifications.Add("TokenError: " + message);
+                result.Problems.Add(element.ChainElementStatus.Summarize(TrustChainValidator.DefaultProblemFlags));
+            _udapClient.Untrusted += certificate2 => result.Untrusted.Add("Untrusted: " + certificate2.Subject);
+            _udapClient.TokenError += message => result.TokenErrors.Add("TokenError: " + message);
 
             await _udapClient.ValidateResource(
                 metadataUrl, 
@@ -148,7 +148,7 @@ public class MetadataController : Controller
 
         var model = new MetadataVerificationModel
         {
-            Notifications = new List<string>
+            Untrusted = new List<string>
             {
                 "UDAP anchor certificate is not loaded."
             }

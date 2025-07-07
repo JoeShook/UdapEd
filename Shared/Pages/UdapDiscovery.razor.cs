@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
+using MudBlazor;
 using Udap.Model;
 using UdapEd.Shared.Components;
 using UdapEd.Shared.Services;
@@ -34,10 +35,10 @@ public partial class UdapDiscovery
     [Inject] IDiscoveryService MetadataService { get; set; } = null!;
 
     [Inject] NavigationManager NavigationManager { get; set; } = null!;
-
-    [Inject] private IDiscoveryService DiscoveryService { get; set; } = null!;
-
+    
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
+
+    [Inject] IDialogService DialogService { get; set; } = null!;
 
     private string? _result;
 
@@ -126,6 +127,11 @@ public partial class UdapDiscovery
     }
 
     public string ModelSizeInBytesFormatted => ModelSizeInBytes.HasValue ? ModelSizeInBytes.Value.ToString("N0") : string.Empty;
+    
+    public Adornment KnownCommunityAdornment
+    {
+        get => BaseUrl.Equals("https://fhirlabs.net/fhir/r4", StringComparison.OrdinalIgnoreCase) ? Adornment.End : Adornment.None;
+    }
 
     private bool _isLoading;
     
@@ -141,7 +147,9 @@ public partial class UdapDiscovery
     {
         if (AppState.MetadataVerificationModel != null)
         {
-            AppState.MetadataVerificationModel.Notifications = new List<string>();
+            AppState.MetadataVerificationModel.Problems = new List<string>();
+            AppState.MetadataVerificationModel.Untrusted = new List<string>();
+            AppState.MetadataVerificationModel.TokenErrors = new List<string>();
         }
 
         if (AppState.MetadataVerificationModel != null)
@@ -324,5 +332,13 @@ public partial class UdapDiscovery
         {
             await JsRuntime.InvokeVoidAsync("navigator.clipboard.writeText", Result);
         }
+    }
+
+    private async Task SelectKnownCommunities()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<SelectKnownCommunity_Dialog>("Select a known community", options);
+        var result = await dialog.Result;
+        Community = result.Data?.ToString() ?? "";
     }
 }

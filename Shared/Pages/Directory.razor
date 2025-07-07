@@ -1,7 +1,6 @@
 ﻿@page "/ndh"
 @using Hl7.Fhir.Model
-@using Hl7.Fhir.Serialization
-@using Microsoft.IdentityModel.Tokens
+@using Udap.Common.Extensions
 @using UdapEd.Shared.Extensions
 @using UdapEd.Shared.Search
 
@@ -175,11 +174,22 @@
                                         </MudCardContent>
 
                                         <MudCardActions>
-                                            <MudButton Class="mt-3"
-                                                       Color="Color.Primary"
-                                                       ButtonType="ButtonType.Button"
-                                                       Variant="Variant.Filled"
-                                                       OnClick="SearchGet">Search</MudButton>
+	                                        <MudButton Class="mt-3"
+	                                                   Color="Color.Primary"
+	                                                   ButtonType="ButtonType.Button"
+	                                                   Variant="Variant.Filled"
+	                                                   OnClick="SearchGet"
+	                                                   Disabled="@IsSearching">
+                                                @if (IsSearching)
+		                                        {
+			                                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+			                                        <MudText Class="ms-2">Searching</MudText>
+		                                        }
+		                                        else
+		                                        {
+			                                        <MudText>Search</MudText>
+		                                        }
+	                                        </MudButton>
                                         </MudCardActions>
                                     </MudCard>
                                 </MudTabPanel>
@@ -191,11 +201,22 @@
                                         </MudCardContent>
 
                                         <MudCardActions>
-                                            <MudButton Class="mt-3"
-                                                       Color="Color.Primary"
-                                                       ButtonType="ButtonType.Button"
-                                                       Variant="Variant.Filled"
-                                                       OnClick="SearchPost">Search</MudButton>
+	                                        <MudButton Class="mt-3"
+	                                                   Color="Color.Primary"
+	                                                   ButtonType="ButtonType.Button"
+	                                                   Variant="Variant.Filled"
+	                                                   OnClick="SearchPost"
+	                                                   Disabled="@IsSearching">
+		                                        @if (IsSearching)
+		                                        {
+			                                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                                                    <MudText Class="ms-2">Searching</MudText>
+		                                        }
+		                                        else
+		                                        {
+			                                        <MudText>Search</MudText>
+		                                        }
+	                                        </MudButton>
                                         </MudCardActions>
                                     </MudCard>
                                 
@@ -267,16 +288,32 @@
                                                                         <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew"/>
                                                                     </MudLink>
 
-                                                                    @if (presenter.ErrorNotifications != null && presenter.ErrorNotifications.Any())
+                                                                    @if (presenter.Untrusted != null && presenter.Untrusted.Any())
                                                                     {
-
                                                                         <MudAlert Severity="Severity.Error">
-                                                                            @foreach (string note in presenter.ErrorNotifications)
+                                                                                @foreach (string note in presenter.Untrusted)
                                                                             {
                                                                                 <li>@note</li>
                                                                             }
                                                                         </MudAlert>
-
+                                                                    }
+                                                                    @if (presenter.TokenErrors != null && presenter.TokenErrors.Any())
+                                                                    {
+	                                                                    <MudAlert Severity="Severity.Error">
+		                                                                    @foreach (string note in presenter.TokenErrors)
+		                                                                    {
+			                                                                    <li>@note</li>
+		                                                                    }
+	                                                                    </MudAlert>
+                                                                    }
+                                                                    @if (presenter.Problems != null && presenter.Problems.Any())
+                                                                    {
+	                                                                    <MudAlert Severity="Severity.Info">
+		                                                                    @foreach (string note in presenter.Problems)
+		                                                                    {
+			                                                                    <li>@note</li>
+		                                                                    }
+	                                                                    </MudAlert>
                                                                     }
 
                                                                     
@@ -285,7 +322,7 @@
                                                                             <MudProgressCircular Color="Color.Secondary" Indeterminate="true" Size="Size.Small" />
                                                                         <span> (Validating  Metadata...)</span>
                                                                     }
-                                                                    else if (@presenter.ErrorNotifications != null && @presenter.ErrorNotifications.Any())
+                                                                    else if (@presenter.Untrusted != null && @presenter.Untrusted.Any())
                                                                     {
                                                                         <MudButton Class="mt-3" Style="justify-self: start;"
                                                                                    Color="Color.Primary"
@@ -322,7 +359,7 @@
 
                                                                     
                                                                     <MudLink Style="justify-self: start;"
-                                                                             Href="@($"{presenter.Link}/.well-known/smart-configuration")" Target="_blank">View Metadata
+                                                                             Href="@($"{presenter.Link.EnsureTrailingSlash()}.well-known/smart-configuration")" Target="_blank">View Metadata
                                                                         <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew"/>
                                                                     </MudLink>
                                                                     break;
@@ -342,12 +379,12 @@
                                                                     
                                                                     <MudText Typo="Typo.h6" Color="@presenter.IconColor"><b>@presenter.MtlsServerCertificate?.TrimForDisplay(30, "...")</b></MudText>
 
-                                                                    @if (presenter.ErrorNotifications != null && presenter.ErrorNotifications.Any())
+                                                                    @if (presenter.Untrusted != null && presenter.Untrusted.Any())
                                                                     {
 
                                                                         <MudAlert Severity="Severity.Error">
                                                                             <MudStack Wrap="Wrap.Wrap">
-                                                                                @foreach (string note in presenter.ErrorNotifications)
+                                                                                @foreach (string note in presenter.Untrusted)
                                                                                 {
                                                                                     <MudText Class="overflow-auto">@note</MudText>
                                                                                 }

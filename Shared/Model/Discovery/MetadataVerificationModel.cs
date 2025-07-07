@@ -16,7 +16,18 @@ public class MetadataVerificationModel
     public UdapMetadata? UdapServerMetaData { get; set; }
 
     /// <summary>
-    /// Information about why the metadata is not trusted.
+    /// Certificate problems
     /// </summary>
-    public List<string> Notifications { get; set; } = new List<string>();
+    public List<string> Problems { get; set; } = new List<string>();
+
+    /// <summary>
+    /// Certificate Untrusted
+    /// </summary>
+    public List<string> Untrusted { get; set; } = new List<string>();
+
+
+    /// <summary>
+    /// Jwt Token validation errors
+    /// </summary>
+    public List<string> TokenErrors { get; set; } = new List<string>();
 }

@@ -187,34 +187,56 @@ private readonly List<string> _supportedResources = new List<string>()
         _postSearchParams = obj.Split("\n").ToList();
     }
 
+    private bool IsSearching = false;
+
     private async T.Task SearchGet()
     {
-        _fhirResults = new FhirResults();
-        StateHasChanged();
-        await T.Task.Delay(100);
+        IsSearching = true;
+        try
+        {
+            _fhirResults = new FhirResults();
 
-        var result = await FhirService.SearchGet($" {_fhirSearch.BaseUrl}/{_fhirSearch.ResourceName}?{_searchString}");
-        await SearchHandler(result);
-        StateHasChanged();
-        await AugmentHandler();
+            StateHasChanged();
+            await T.Task.Delay(100);
+
+            var result =
+                await FhirService.SearchGet($" {_fhirSearch.BaseUrl}/{_fhirSearch.ResourceName}?{_searchString}");
+            await SearchHandler(result);
+            StateHasChanged();
+            await AugmentHandler();
+        }
+        finally
+        {
+            IsSearching = false;
+        }
     }
     
     private async T.Task SearchPost()
     {
-        _fhirResults = new FhirResults();
-        
-        StateHasChanged();
-        await T.Task.Delay(100);
-
-        var formSearch = new SearchForm()
+        IsSearching = true;
+        try
         {
-            Url = _fhirSearch.BaseUrl,
-            Resource = _fhirSearch.ResourceName,
-            FormUrlEncoded = _postSearchParams
-        };
+            _fhirResults = new FhirResults();
+        
+            StateHasChanged();
+            await T.Task.Delay(100);
 
-        var result = await FhirService.SearchPost(formSearch);
-        await SearchHandler(result);
+            var formSearch = new SearchForm()
+            {
+                Url = _fhirSearch.BaseUrl,
+                Resource = _fhirSearch.ResourceName,
+                FormUrlEncoded = _postSearchParams
+            };
+
+            var result = await FhirService.SearchPost(formSearch);
+            await SearchHandler(result);
+            StateHasChanged();
+            await AugmentHandler();
+        }
+        finally
+        {
+            IsSearching = false;
+        }
     }
 
     private async T.Task SearchHandler(FhirResultModel<Hl7.Fhir.Model.Bundle> result)
@@ -390,6 +412,8 @@ private readonly List<string> _supportedResources = new List<string>()
                     mTlsEndpointType.Select("extension.descendants().coding.code").First().Value?.ToString(),
                     null,
                     notifications,
+                    null,
+                    null,
                     mtlsEncodeCertificate
                     ));
             }
@@ -443,8 +467,9 @@ private readonly List<string> _supportedResources = new List<string>()
                     
                     fhirHierarchyEntry.IsLoading = false;
                     fhirHierarchyEntry.UdapMetadata = results;
-                    fhirHierarchyEntry.ErrorNotifications = results.Notifications;
-
+                    fhirHierarchyEntry.Untrusted = results.Untrusted;
+                    fhirHierarchyEntry.TokenErrors = results.TokenErrors;
+                    fhirHierarchyEntry.Problems = results.Problems;
                 });
             await T.Task.WhenAll(tasks);
         }
@@ -498,7 +523,9 @@ private readonly List<string> _supportedResources = new List<string>()
             string? icon = null, Color? iconColor = null,
             string? link = null, string? type = null, 
             MetadataVerificationModel? metadata = null, 
-            List<string>? errorNotifications = null,
+            List<string>? untrusted = null,
+            List<string>? tokenErrors = null,
+            List<string>? problems = null,
             string? mtlCertificate = null,
             bool isLoading = true) : base(new FhirHierarchyEntry())
         {
@@ -510,7 +537,9 @@ private readonly List<string> _supportedResources = new List<string>()
             Value.Link = link;
             Value.Type = type;
             Value.UdapMetadata = metadata;
-            Value.ErrorNotifications = errorNotifications;
+            Value.Untrusted = untrusted;
+            Value.TokenErrors = tokenErrors;
+            Value.Problems = problems;
             Value.MtlsServerCertificate = mtlCertificate;
             Value.IsLoading = isLoading;
         }
@@ -530,7 +559,9 @@ private readonly List<string> _supportedResources = new List<string>()
 
         public string? Metadata { get; set; }
 
-        public List<string>? ErrorNotifications { get; set; } = null;
+        public List<string>? Untrusted { get; set; } = null;
+        public List<string>? TokenErrors { get; set; } = null;
+        public List<string>? Problems { get; set; } = null;
         public MetadataVerificationModel? UdapMetadata { get; set; } = null;
         public string? MtlsServerCertificate { get; set; }
     }

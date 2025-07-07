@@ -13,6 +13,7 @@ using System.Text.Json;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Udap.Client.Client;
 using Udap.Client.Configuration;
@@ -32,17 +33,20 @@ using UdapEd.Shared.Extensions;
 namespace UdapEdAppMaui.Services;
 internal class DiscoveryService : IDiscoveryService
 {
-    private readonly IUdapClient _udapClient;
+    private readonly IOptionsMonitor<UdapClientOptions> _udapClientOptions;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<DiscoveryService> _logger;
-    private readonly HttpClient _httpClient;
-    private readonly UdapClientOptions _udapClientOptions;
+    private readonly ILoggerFactory _loggerFactory;
 
-    public DiscoveryService(IUdapClient udapClient, HttpClient httpClient, IOptionsMonitor<UdapClientOptions> udapClientOptions, ILogger<DiscoveryService> logger)
+    public DiscoveryService(
+        IHttpClientFactory httpClientFactory,
+        IOptionsMonitor<UdapClientOptions> udapClientOptions,
+        ILoggerFactory loggerFactory)
     {
-        _udapClient = udapClient;
-        _httpClient = httpClient;
-        _udapClientOptions = udapClientOptions.CurrentValue;
-        _logger = logger;
+        _udapClientOptions = udapClientOptions;
+        _httpClientFactory = httpClientFactory;
+        _logger = loggerFactory.CreateLogger<DiscoveryService>();
+        _loggerFactory = loggerFactory;
     }
 
 
@@ -50,6 +54,7 @@ internal class DiscoveryService : IDiscoveryService
     {
         try
         {
+            var httpClient = _httpClientFactory.CreateClient();
             var loadedStatus = await AnchorCertificateLoadStatus();
 
             if (loadedStatus != null && (loadedStatus.CertLoaded == CertLoadedEnum.Positive))
@@ -72,22 +77,34 @@ internal class DiscoveryService : IDiscoveryService
 
                     // Local functions to handle events
                     void OnProblem(X509ChainElement element) =>
-                        result.Notifications.Add(element.ChainElementStatus.Summarize(TrustChainValidator.DefaultProblemFlags));
+                        result.Problems.Add(element.ChainElementStatus.Summarize(TrustChainValidator.DefaultProblemFlags));
                     void OnUntrusted(X509Certificate2 certificate2) =>
-                        result.Notifications.Add("Untrusted: " + certificate2.Subject);
+                        result.Untrusted.Add("Untrusted: " + certificate2.Subject);
                     void OnTokenError(string message) =>
-                        result.Notifications.Add("TokenError: " + message);
+                        result.TokenErrors.Add("TokenError: " + message);
+
+                    var clientDiscovery = new UdapClientDiscoveryValidator(
+                        new TrustChainValidator(_loggerFactory.CreateLogger<TrustChainValidator>()),
+                        _loggerFactory.CreateLogger<UdapClientDiscoveryValidator>()
+                        );
+                    
+                    var udapClient = new UdapClient(
+                        httpClient,
+                        clientDiscovery,
+                        _udapClientOptions,
+                        new NullLogger<UdapClient>()
+                        );
 
                     // Register event handlers
-                    _udapClient.Problem += OnProblem;
-                    _udapClient.Untrusted += OnUntrusted;
-                    _udapClient.TokenError += OnTokenError;
+                    udapClient.Problem += OnProblem;
+                    udapClient.Untrusted += OnUntrusted;
+                    udapClient.TokenError += OnTokenError;
 
                     try
                     {
-                        await _udapClient.ValidateResource(metadataUrl, trustAnchorStore, community, token: token);
+                        await udapClient.ValidateResource(metadataUrl, trustAnchorStore, community, token: token);
 
-                        result.UdapServerMetaData = _udapClient.UdapServerMetaData;
+                        result.UdapServerMetaData = udapClient.UdapServerMetaData;
                         await SecureStorage.Default.SetAsync(UdapEdConstants.BASE_URL, metadataUrl);
 
                         return result;
@@ -95,9 +112,9 @@ internal class DiscoveryService : IDiscoveryService
                     finally
                     {
                         // Unregister event handlers
-                        _udapClient.Problem -= OnProblem;
-                        _udapClient.Untrusted -= OnUntrusted;
-                        _udapClient.TokenError -= OnTokenError;
+                        udapClient.Problem -= OnProblem;
+                        udapClient.Untrusted -= OnUntrusted;
+                        udapClient.TokenError -= OnTokenError;
                     }
                 }
 
@@ -114,14 +131,14 @@ internal class DiscoveryService : IDiscoveryService
                 }
 
                 _logger.LogDebug(baseUrl);
-                var response = await _httpClient.GetStringAsync(baseUrl, token);
+                var response = await httpClient.GetStringAsync(baseUrl, token);
                 var unvalidatedResult = JsonSerializer.Deserialize<UdapMetadata>(response);
                 await SecureStorage.Default.SetAsync(UdapEdConstants.BASE_URL, baseUrl.GetBaseUrlFromMetadataUrl());
 
                 var model = new MetadataVerificationModel
                 {
                     UdapServerMetaData = unvalidatedResult,
-                    Notifications = new List<string>
+                    Untrusted = new List<string>
                         {
                             "UDAP anchor certificate is not loaded."
                         }
@@ -143,7 +160,7 @@ internal class DiscoveryService : IDiscoveryService
         try
         {
             //var response = await _httpClient.GetStringAsync($"Metadata/metadata?metadataUrl={url}");
-            var response = await _httpClient.GetStringAsync(url);
+            var response = await _httpClientFactory.CreateClient().GetStringAsync(url);
             var statement = new FhirJsonParser().Parse<CapabilityStatement>(response);
 
             return statement;
@@ -157,7 +174,7 @@ internal class DiscoveryService : IDiscoveryService
 
     public async Task<SmartMetadata?> GetSmartMetadata(string metadataUrl, CancellationToken token)
     {
-        return await _httpClient.GetFromJsonAsync<SmartMetadata>(metadataUrl, token);
+        return await _httpClientFactory.CreateClient().GetFromJsonAsync<SmartMetadata>(metadataUrl, token);
     }
 
     public async Task<CertificateStatusViewModel?> UploadAnchorCertificate(string base64String)
@@ -193,7 +210,7 @@ internal class DiscoveryService : IDiscoveryService
 
         try
         {
-            var response = await _httpClient.GetAsync(new Uri(anchorCertificate));
+            var response = await _httpClientFactory.CreateClient().GetAsync(new Uri(anchorCertificate));
             response.EnsureSuccessStatusCode();
             var certBytes = await response.Content.ReadAsByteArrayAsync();
             var certificate = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
@@ -223,7 +240,7 @@ internal class DiscoveryService : IDiscoveryService
 
         try
         {
-            var response = await _httpClient.GetAsync(new Uri(anchorCertificate));
+            var response = await _httpClientFactory.CreateClient().GetAsync(new Uri(anchorCertificate));
             response.EnsureSuccessStatusCode();
             var certBytes = await response.Content.ReadAsByteArrayAsync();
             var certificate = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
@@ -300,7 +317,7 @@ internal class DiscoveryService : IDiscoveryService
 
     public Task<bool> SetClientHeaders(Dictionary<string, string> headers)
     {
-        _udapClientOptions.Headers = headers;
+        _udapClientOptions.CurrentValue.Headers = headers;
 
         return Task.FromResult(true);
     }
@@ -349,7 +366,7 @@ internal class DiscoveryService : IDiscoveryService
 
     public async Task<string> GetFhirLabsCommunityList()
     {
-        var communityResponse = await _httpClient.GetAsync("https://fhirlabs.net/fhir/r4/.well-known/udap/communities/ashtml");
+        var communityResponse = await _httpClientFactory.CreateClient().GetAsync("https://fhirlabs.net/fhir/r4/.well-known/udap/communities/ashtml");
 
         if (communityResponse.IsSuccessStatusCode)
         {

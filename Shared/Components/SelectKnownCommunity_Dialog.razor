@@ -1,0 +1,50 @@
+﻿<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            Select a known community
+            <MudIcon Icon="@Icons.Material.Filled.Input" Class="mr-3 mb-n1"/>
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm>
+            <MudSelect @bind-Value="Community"
+                       Label="Select Community"
+                       Placeholder="Please Select"
+                       AdornmentIcon="@Icons.Material.Outlined.ArrowDropDown"
+                       AdornmentColor="Color.Primary"
+                       Variant="Variant.Outlined"
+                       FullWidth=false >
+
+	            <MudSelectItem Value="@("udap://stage.healthtogo.me/")">udap://stage.healthtogo.me/</MudSelectItem>
+                <MudSelectItem Value="@("udap://fhirlabs.net/")">udap://fhirlabs.net/</MudSelectItem>
+                <MudSelectItem Value="@("udap://expired.fhirlabs.net/")">udap://expired.fhirlabs.net/</MudSelectItem>
+                <MudSelectItem Value="@("udap://revoked.fhirlabs.net/")">udap://revoked.fhirlabs.net/</MudSelectItem>
+                <MudSelectItem Value="@("udap://untrusted.fhirlabs.net/")">udap://untrusted.fhirlabs.net/</MudSelectItem>
+                <MudSelectItem Value="@("udap://Iss.Mismatch.To.SubjAltName/")">udap://Iss.Mismatch.To.SubjAltName/</MudSelectItem>
+                <MudSelectItem Value="@("udap://Iss.Mismatch.To.BaseUrl/")">udap://Iss.Mismatch.To.BaseUrl/</MudSelectItem>
+	            <MudSelectItem Value="@("udap://ECDSA/")">udap://ECDSA/</MudSelectItem>
+
+            </MudSelect>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [CascadingParameter]
+    public CascadingAppState AppState { get; set; } = null!;
+
+    private string? Community { get; set; }
+
+    void Submit() => MudDialog.Close(DialogResult.Ok(Community));
+    void Cancel() => MudDialog.Cancel();
+
+    
+}
