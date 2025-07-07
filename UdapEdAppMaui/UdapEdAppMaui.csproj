@@ -86,11 +86,11 @@
 
     <!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
     <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
-    <None Remove="CertificateStore\FhirLabs_mTLS_Client.pfx" />
+    <None Remove="CertificateStore\FhirLabs_mTLS_Client.pfx" Condition="'$(TargetFramework)' == 'net8.0-ios' Or '$(TargetFramework)' == 'net8.0-maccatalyst'" />
     <MauiAsset Include="CertificateStore\FhirLabs_mTLS_Client.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </MauiAsset>
-    <None Remove="CertificateStore\fhirlabs.net.client.pfx" />
+    <None Remove="CertificateStore\fhirlabs.net.client.pfx" Condition="'$(TargetFramework)' == 'net8.0-ios' Or '$(TargetFramework)' == 'net8.0-maccatalyst'" />
     <MauiAsset Include="CertificateStore\fhirlabs.net.client.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </MauiAsset>
