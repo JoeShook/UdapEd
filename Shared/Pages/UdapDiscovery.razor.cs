@@ -130,7 +130,7 @@ public partial class UdapDiscovery
     
     public Adornment KnownCommunityAdornment
     {
-        get => BaseUrl.Equals("https://fhirlabs.net/fhir/r4", StringComparison.OrdinalIgnoreCase) ? Adornment.End : Adornment.None;
+        get => BaseUrl != null && BaseUrl.Equals("https://fhirlabs.net/fhir/r4", StringComparison.OrdinalIgnoreCase) ? Adornment.End : Adornment.None;
     }
 
     private bool _isLoading;

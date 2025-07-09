@@ -7,16 +7,15 @@
 // */
 #endregion
 
+using Google.Cloud.Storage.V1;
+using Microsoft.Extensions.Logging;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
-using Google.Cloud.Storage.V1;
-using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.X509;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services.Fhir;
 using UdapEd.Shared.Services.x509;
-using static MudBlazor.CategoryTypes;
 
 namespace UdapEd.Shared.Services;
 public class Infrastructure : IInfrastructure
@@ -176,9 +175,22 @@ public class Infrastructure : IInfrastructure
     {
         try
         {
-            var bytes = await HttpClient.GetByteArrayAsync(url);
-            var crl = new X509Crl(bytes);
+            var crlUrl = url + (url.Contains("?") ? "&" : "?") + "nocache=" + Guid.NewGuid();
+            var request = new HttpRequestMessage(HttpMethod.Get, crlUrl);
+            request.Headers.CacheControl = new System.Net.Http.Headers.CacheControlHeaderValue
+            {
+                NoCache = true
+            };
+            request.Headers.Pragma.ParseAdd("no-cache");
+            request.Headers.Add("Cache-Control", "no-cache");
+            request.Headers.Add("Pragma", "no-cache");
 
+            using var response = await HttpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            var crlParser = new X509CrlParser();
+            var crl = crlParser.ReadCrl(bytes);
+            
             return crl.ToString();
         }
         catch (Exception ex)

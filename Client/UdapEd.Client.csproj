@@ -18,8 +18,8 @@
     <ProjectReference Include="..\Shared\UdapEd.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Udap.CdsHooks.Model" Version="0.5.0" />
-    <PackageReference Include="Udap.Common" Version="0.5.0" />
+    <PackageReference Include="Udap.CdsHooks.Model" Version="0.5.1" />
+    <PackageReference Include="Udap.Common" Version="0.5.1" />
   </ItemGroup>
   <!-- From:: https://jonhilton.net/visual-studio-2022-blazor-css-intellisense/ -->
   <Target Name="CollectMudBlazorStaticAssets" DependsOnTargets="ResolveStaticWebAssetsInputs" AfterTargets="Build" Condition=" '$(Configuration)' == 'Debug' ">
