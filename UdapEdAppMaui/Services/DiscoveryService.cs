@@ -77,7 +77,9 @@ internal class DiscoveryService : IDiscoveryService
 
                     // Local functions to handle events
                     void OnProblem(X509ChainElement element) =>
-                        result.Problems.Add(element.ChainElementStatus.Summarize(TrustChainValidator.DefaultProblemFlags));
+                        result.Problems.Add(
+                            $"{element.Certificate.SubjectName.Name} :: \n" +
+                            $"{element.ChainElementStatus.Summarize(TrustChainValidator.DefaultProblemFlags)}");
                     void OnUntrusted(X509Certificate2 certificate2) =>
                         result.Untrusted.Add("Untrusted: " + certificate2.Subject);
                     void OnTokenError(string message) =>

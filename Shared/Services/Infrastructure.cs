@@ -190,7 +190,6 @@ public class Infrastructure : IInfrastructure
             var bytes = await response.Content.ReadAsByteArrayAsync();
             var crlParser = new X509CrlParser();
             var crl = crlParser.ReadCrl(bytes);
-            
             return crl.ToString();
         }
         catch (Exception ex)
