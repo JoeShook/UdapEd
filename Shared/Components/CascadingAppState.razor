@@ -35,11 +35,15 @@
         {
             // var json = await Http.GetStringAsync("wwwroot/Packages/udap_urls.json");
 
+            bool isMaui = AppDomain.CurrentDomain.GetAssemblies()
+				.Any(a => a.GetName().Name.StartsWith("Microsoft.Maui"));
+
             string json;
-            if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsMacCatalyst() || OperatingSystem.IsWindows())
+            if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsMacCatalyst() || 
+                (isMaui && OperatingSystem.IsWindows()))
             {
                 // For .NET MAUI
-                using var stream = await FileSystem.OpenAppPackageFileAsync("udap_urls.json");
+                await using var stream = await FileSystem.OpenAppPackageFileAsync("udap_urls.json");
                 using var reader = new StreamReader(stream);
                 json = await reader.ReadToEndAsync();
             }

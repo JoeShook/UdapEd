@@ -7,14 +7,15 @@
 // */
 #endregion
 
-using System.Net;
-using System.Text.Json.Serialization;
 using Hl7.Fhir.Rest;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Options;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
+using System.Net;
+using System.Text.Json.Serialization;
 using Udap.CdsHooks.Model;
 using Udap.Client.Client;
 using Udap.Client.Configuration;
@@ -232,6 +233,10 @@ builder.Services.AddResponseCompression(options =>
     options.EnableForHttps = true;
     options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/json" });
 });
+
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(@"/var/keys/")) // Use a shared folder
+    .SetApplicationName("UdapEd"); // Use a consistent app name across instances
 
 var app = builder.Build();
 
