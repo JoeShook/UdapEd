@@ -76,7 +76,7 @@ public partial class CertificateViewer : ComponentBase
 
         _aiaPaths = _certificateView?.TableDisplay
             .SelectMany(list => list)
-            .Where(x => x.Key == "Authority Information Access")
+            .Where(x => x.Key.Contains("Authority Information Access"))
             .Select(x => x.Value)
             .ToList();
 

@@ -35,14 +35,28 @@ public class CertificateDisplayBuilder
         data.Add("Subject Key Identifier", GetSubjectKeyIdentifier(_cert));
         data.Add("Authority Key Identifier", GetAuthorityKeyIdentifier(_cert));
 
-        foreach (var url in GetAIAUrls(_cert) ?? new List<string>())
+        var aiaUrls = GetAIAUrls(_cert);
+        int i = 0;
+        
+        foreach (var url in aiaUrls ?? new List<string>())
         {
-            data.Add("Authority Information Access", url);
+            data.Add(aiaUrls?.Count > 1 ? 
+                $"[{i}] Authority Information Access" :
+                "Authority Information Access"
+                , url);
+            i++;
         }
 
-        foreach (var url in GetCrlDistributionPoints(_cert) ?? new List<string>())
+        var crlUrls = GetCrlDistributionPoints(_cert);
+        i = 0;
+
+        foreach (var url in crlUrls ?? new List<string>())
         {
-            data.Add("CRL Distribution", url);
+            data.Add(crlUrls?.Count > 1 ?
+                $"[{i}] CRL Distribution" :
+                "CRL Distribution"
+                , url);
+            i++;
         }
 
         data.Add("Thumbprint SHA1", _cert.Thumbprint);
