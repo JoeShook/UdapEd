@@ -6,26 +6,43 @@
         </MudText>
     </TitleContent>
     <DialogContent>
-        <MudForm>
-            <MudSelect @bind-Value="Community"
-                       Label="Select Community"
-                       Placeholder="Please Select"
-                       AdornmentIcon="@Icons.Material.Outlined.ArrowDropDown"
-                       AdornmentColor="Color.Primary"
-                       Variant="Variant.Outlined"
-                       FullWidth=false >
+	    <MudForm>
+            @if (BaseUrl != null && BaseUrl.Equals("https://fhirlabs.net/fhir/r4".TrimEnd('/'), StringComparison.Ordinal))
+            {
+	            <MudSelect @bind-Value="Community"
+	                       Label="Select Community"
+	                       Placeholder="Please Select"
+	                       AdornmentIcon="@Icons.Material.Outlined.ArrowDropDown"
+	                       AdornmentColor="Color.Primary"
+	                       Variant="Variant.Outlined"
+	                       FullWidth=false>
 
-	            <MudSelectItem Value="@("udap://stage.healthtogo.me/")">udap://stage.healthtogo.me/</MudSelectItem>
-                <MudSelectItem Value="@("udap://fhirlabs.net/")">udap://fhirlabs.net/</MudSelectItem>
-                <MudSelectItem Value="@("udap://expired.fhirlabs.net/")">udap://expired.fhirlabs.net/</MudSelectItem>
-                <MudSelectItem Value="@("udap://revoked.fhirlabs.net/")">udap://revoked.fhirlabs.net/</MudSelectItem>
-                <MudSelectItem Value="@("udap://untrusted.fhirlabs.net/")">udap://untrusted.fhirlabs.net/</MudSelectItem>
-                <MudSelectItem Value="@("udap://Iss.Mismatch.To.SubjAltName/")">udap://Iss.Mismatch.To.SubjAltName/</MudSelectItem>
-                <MudSelectItem Value="@("udap://Iss.Mismatch.To.BaseUrl/")">udap://Iss.Mismatch.To.BaseUrl/</MudSelectItem>
-	            <MudSelectItem Value="@("udap://ECDSA/")">udap://ECDSA/</MudSelectItem>
+		            <MudSelectItem Value="@("udap://stage.healthtogo.me/")">udap://stage.healthtogo.me/</MudSelectItem>
+		            <MudSelectItem Value="@("udap://fhirlabs.net/")">udap://fhirlabs.net/</MudSelectItem>
+		            <MudSelectItem Value="@("udap://expired.fhirlabs.net/")">udap://expired.fhirlabs.net/</MudSelectItem>
+		            <MudSelectItem Value="@("udap://revoked.fhirlabs.net/")">udap://revoked.fhirlabs.net/</MudSelectItem>
+		            <MudSelectItem Value="@("udap://untrusted.fhirlabs.net/")">udap://untrusted.fhirlabs.net/</MudSelectItem>
+		            <MudSelectItem Value="@("udap://Iss.Mismatch.To.SubjAltName/")">udap://Iss.Mismatch.To.SubjAltName/</MudSelectItem>
+		            <MudSelectItem Value="@("udap://Iss.Mismatch.To.BaseUrl/")">udap://Iss.Mismatch.To.BaseUrl/</MudSelectItem>
+		            <MudSelectItem Value="@("udap://ECDSA/")">udap://ECDSA/</MudSelectItem>
 
-            </MudSelect>
-        </MudForm>
+	            </MudSelect>
+            }
+			@if (BaseUrl != null && BaseUrl.Equals("https://dev-mtx-interop.meditech.com".TrimEnd('/'), StringComparison.Ordinal))
+            {
+	            <MudSelect @bind-Value="Community"
+	                       Label="Select Community"
+	                       Placeholder="Please Select"
+	                       AdornmentIcon="@Icons.Material.Outlined.ArrowDropDown"
+	                       AdornmentColor="Color.Primary"
+	                       Variant="Variant.Outlined"
+	                       FullWidth=false>
+
+					<MudSelectItem Value="@("urn:oid:4.5.6")">urn:oid:4.5.6</MudSelectItem>
+
+	            </MudSelect>
+            }
+	    </MudForm>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
@@ -40,6 +57,9 @@
 
     [CascadingParameter]
     public CascadingAppState AppState { get; set; } = null!;
+
+    [Parameter]
+	public string? BaseUrl { get; set; }
 
     private string? Community { get; set; }
 

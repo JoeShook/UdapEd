@@ -27,11 +27,11 @@
     <ProjectReference Include="..\Shared\UdapEd.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Udap.CdsHooks.Model" Version="0.5.2" />
-    <PackageReference Include="Udap.Smart.Model" Version="0.5.2" />
-    <PackageReference Include="Udap.Client" Version="0.5.2" />
-    <PackageReference Include="Udap.Model" Version="0.5.2" />
-    <PackageReference Include="Udap.Common" Version="0.5.2" />
+    <PackageReference Include="Udap.CdsHooks.Model" Version="0.5.4" />
+    <PackageReference Include="Udap.Smart.Model" Version="0.5.4" />
+    <PackageReference Include="Udap.Client" Version="0.5.4" />
+    <PackageReference Include="Udap.Model" Version="0.5.4" />
+    <PackageReference Include="Udap.Common" Version="0.5.4" />
   </ItemGroup>
   <ItemGroup>
     <None Update="CertificateStore\fhirlabs.net.client.pfx">

@@ -130,7 +130,9 @@ public partial class UdapDiscovery
     
     public Adornment KnownCommunityAdornment
     {
-        get => BaseUrl != null && BaseUrl.Equals("https://fhirlabs.net/fhir/r4", StringComparison.OrdinalIgnoreCase) ? Adornment.End : Adornment.None;
+        get => BaseUrl != null && (BaseUrl.Equals("https://fhirlabs.net/fhir/r4", StringComparison.OrdinalIgnoreCase) 
+            || BaseUrl.StartsWith("https://dev-mtx-interop.meditech.com", StringComparison.OrdinalIgnoreCase))
+            ? Adornment.End : Adornment.None;
     }
 
     private bool _isLoading;
@@ -156,7 +158,7 @@ public partial class UdapDiscovery
         {
             AppState.MetadataVerificationModel.UdapServerMetaData = null;
         }
-
+        Community = null;
         Result = string.Empty;
         StateHasChanged();
     }
@@ -336,8 +338,13 @@ public partial class UdapDiscovery
 
     private async Task SelectKnownCommunities()
     {
+        var parameters = new DialogParameters
+        {
+            { "BaseUrl", BaseUrl }
+        };
+
         var options = new DialogOptions { CloseOnEscapeKey = true };
-        var dialog = await DialogService.ShowAsync<SelectKnownCommunity_Dialog>("Select a known community", options);
+        var dialog = await DialogService.ShowAsync<SelectKnownCommunity_Dialog>("Select a known community", parameters, options);
         var result = await dialog.Result;
         Community = result.Data?.ToString() ?? "";
     }
