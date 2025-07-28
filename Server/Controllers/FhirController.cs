@@ -28,11 +28,12 @@ namespace UdapEd.Server.Controllers;
 [EnableRateLimiting(RateLimitExtensions.Policy)]
 public class FhirController : FhirBaseController<FhirController>
 {
-   public FhirController(
+    public FhirController(
         FhirClientWithUrlProvider fhirClient, 
         FhirClient fhirTerminologyClient, 
-        ILogger<FhirController> logger)
-        : base(fhirClient, fhirTerminologyClient, logger)
+        ILogger<FhirController> logger,
+        CustomDecompressionHandler customDecompressionHandler)
+        : base(fhirClient, fhirTerminologyClient, logger, customDecompressionHandler)
     { }
 }
 
@@ -44,8 +45,9 @@ public class FhirMtlsController : FhirBaseController<FhirMtlsController>
     public FhirMtlsController(
         FhirMTlsClientWithUrlProvider fhirClient, 
         FhirClient fhirTerminologyClient,
-        ILogger<FhirMtlsController> logger)
-        : base(fhirClient, fhirTerminologyClient, logger)
+        ILogger<FhirMtlsController> logger,
+        CustomDecompressionHandler customDecompressionHandler)
+        : base(fhirClient, fhirTerminologyClient, logger, customDecompressionHandler)
     { }
 }
 
@@ -54,15 +56,18 @@ public class FhirBaseController<T> : ControllerBase
     private readonly FhirClient _fhirClient;
     private readonly FhirClient _fhirTerminologyClient;
     private readonly ILogger<T> _logger;
+    private readonly CustomDecompressionHandler _customDecompressionHandler;
 
     public FhirBaseController(
         FhirClient fhirClient, 
         FhirClient fhirTerminologyClient,
-        ILogger<T> logger)
+        ILogger<T> logger,
+        CustomDecompressionHandler customDecompressionHandler)
     {
         _fhirClient = fhirClient;
         _fhirTerminologyClient = fhirTerminologyClient;
         _logger = logger;
+        _customDecompressionHandler = customDecompressionHandler;
     }
 
     [HttpPost("SearchForPatient")]
@@ -331,7 +336,9 @@ public class FhirBaseController<T> : ControllerBase
         try
         {
             //Todo maybe inject in the future, so we don't exhaust underlying HttpClient
-            var fhirClient = new FhirClient(fullSearch, new FhirClientSettings() { PreferredFormat = ResourceFormat.Json });
+            var httpClient = new HttpClient(_customDecompressionHandler);
+            var fhirClient = new FhirClient(fullSearch, httpClient, new FhirClientSettings() { PreferredFormat = ResourceFormat.Json });
+
             Console.WriteLine(fullSearch);
             var bundle = await fhirClient.GetAsync(fullSearch);
             var bundleJson = await new FhirJsonSerializer().SerializeToStringAsync(bundle);
@@ -370,7 +377,8 @@ public class FhirBaseController<T> : ControllerBase
         try
         {
             //Todo maybe inject in the future, so we don't exhaust underlying HttpClient
-            var fhirClient = new FhirClient(searchForm.Url, new FhirClientSettings() { PreferredFormat = ResourceFormat.Json });
+            var httpClient = new HttpClient(_customDecompressionHandler);
+            var fhirClient = new FhirClient(searchForm.Url, httpClient, new FhirClientSettings() { PreferredFormat = ResourceFormat.Json });
             var searchParams = new SearchParams();
 
             foreach (var pair in searchForm.FormUrlEncoded)
@@ -415,7 +423,9 @@ public class FhirBaseController<T> : ControllerBase
     {
         try
         {
-            var fhirClient = new FhirClient(resourcePath, new FhirClientSettings() { PreferredFormat = ResourceFormat.Json });
+            var httpClient = new HttpClient(_customDecompressionHandler);
+            var fhirClient = new FhirClient(resourcePath, httpClient, new FhirClientSettings() { PreferredFormat = ResourceFormat.Json });
+            
             Console.WriteLine(resourcePath);
             var resource = await fhirClient.GetAsync(resourcePath);
             var resourceJson = await new FhirJsonSerializer().SerializeToStringAsync(resource);

@@ -117,6 +117,17 @@ builder.Services.AddHttpClient<IUdapClient, UdapClient>()
 builder.Services.AddScoped<IBaseUrlProvider, BaseUrlProvider>();
 builder.Services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
 builder.Services.AddSingleton<IFhirClientOptionsProvider, FhirClientOptionsProvider>();
+builder.Services.AddSingleton<CustomDecompressionHandler>(sp =>
+{
+    var handler = new CustomDecompressionHandler(
+        sp.GetRequiredService<IFhirClientOptionsProvider>(),
+        sp.GetRequiredService<IHttpContextAccessor>());
+    handler.InnerHandler = new HttpClientHandler();
+    return handler;
+});
+
+// builder.Services.AddHttpClient("FhirClient")
+//     .AddHttpMessageHandler<CustomDecompressionHandler>();
 
 builder.Services.AddHttpClient<FhirClientWithUrlProvider>((sp, httpClient) =>
 { })
