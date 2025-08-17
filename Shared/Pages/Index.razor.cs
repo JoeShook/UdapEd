@@ -1,9 +1,19 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿#region (c) 2023-2025 Joseph Shook. All rights reserved.
+// /*
+//  Authors:
+//     Joseph Shook   Joseph.Shook@Surescripts.com
+// 
+//  See LICENSE in the project root for license information.
+// */
+#endregion
+
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using MudBlazor;
 using UdapEd.Shared.Components;
 using UdapEd.Shared.Model;
+using UdapEd.Shared.Services;
 
 namespace UdapEd.Shared.Pages;
 
@@ -11,6 +21,8 @@ public partial class Index
 {
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
     [Inject] ISnackbar Snackbar { get; set; } = null!;
+    [Inject] IFileSaveService FileSaveService { get; set; } = null!;
+    [Inject] IJSRuntime JSRuntime { get; set; } = null!;
 
     private ErrorBoundary? ErrorBoundary { get; set; }
     private string _myIp = string.Empty;
@@ -22,7 +34,6 @@ public partial class Index
         _myIp = await Infrastructure.GetMyIp();
 
         await GetCommunities();
-        // await GetClientCertificates();
         Headers = AppState.ClientHeaders?.Headers ?? new List<ClientHeader>();
     }
 
@@ -36,7 +47,7 @@ public partial class Index
         _fhirLabsCommunityList = await DiscoveryService.GetFhirLabsCommunityList();
     }
 
-    private List<ClientHeader> Headers { get; set; }
+    private List<ClientHeader> Headers { get; set; } = new();
 
     private void AddRow()
     {
@@ -85,27 +96,13 @@ public partial class Index
         SubjectAltNames.Remove(item);
         StateHasChanged();
     }
-
-    private async Task CommitSubjectAltNames()
-    {
-        // Save the updated SubjectAltNames list to the AppState or any other storage
-        // await AppState.SetPropertyAsync(this, nameof(AppState.SubjectAltNames), SubjectAltNames);
-        await Task.Delay(1);
-    }
-
+    
     private async Task BuildMyTestCertificatePackage()
     {
         byte[] zipFile = await Infrastructure.BuildMyTestCertificatePackage(SubjectAltNames);
 
-        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsMacCatalyst() || OperatingSystem.IsWindows())
-        {
-            using var stream = new MemoryStream(zipFile);
-            await CommunityToolkit.Maui.Storage.FileSaver.Default.SaveAsync("UdapEdCertificatePack.zip", stream);
-        }
-        else
-        {
-            await JSRuntime.InvokeVoidAsync("downloadFileFromBytes", zipFile, "application/zip", "UdapEdCertificatePack.zip");
-        }
+        // Delegate saving to a platform-specific service
+        await FileSaveService.SaveAsync("UdapEdCertificatePack.zip", zipFile, "application/zip");
     }
 
     private void Callback(string obj)

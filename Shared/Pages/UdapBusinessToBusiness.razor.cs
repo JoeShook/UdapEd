@@ -47,6 +47,8 @@ public partial class UdapBusinessToBusiness
     
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
 
+    [Inject] IMainPageService? MainPageService { get; set; } = null!;
+
     private string AuthCodeRequestLink { get; set; } = string.Empty;
 
     private bool _enablePkce;
@@ -519,8 +521,7 @@ public partial class UdapBusinessToBusiness
             }
             _webAuthenticorResponseProps = sb.ToString();
 
-            var mainPageService = DependencyService.Get<IMainPageService>();
-            mainPageService?.BringToFront();
+            MainPageService?.BringToFront();
         }
         else
         {

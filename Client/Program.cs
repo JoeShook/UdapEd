@@ -1,4 +1,4 @@
-#region (c) 2023 Joseph Shook. All rights reserved.
+#region (c) 2023-2025 Joseph Shook. All rights reserved.
 // /*
 //  Authors:
 //     Joseph Shook   Joseph.Shook@Surescripts.com
@@ -49,6 +49,9 @@ builder.Services.AddScoped<IMutualTlsService, MutualTlsService>();
 builder.Services.AddScoped<ICdsService, CdsService>();
 builder.Services.AddFluentUIComponents();
 builder.Services.AddSingleton<HtmlSanitizer>();
+builder.Services.AddScoped<IPlatformResourceLoader, WasmPlatformResourceLoader>();
+builder.Services.AddSingleton<IMainPageService, NullMainPageService>();
+builder.Services.AddScoped<IFileSaveService, FileSaveService>();
 
 // Add this so that the resolve() extension will be available when including in FhirPath
 Hl7.FhirPath.FhirPathCompiler.DefaultSymbolTable.AddFhirExtensions();

@@ -1,4 +1,4 @@
-﻿#region (c) 2024 Joseph Shook. All rights reserved.
+﻿#region (c) 2024-2025 Joseph Shook. All rights reserved.
 // /*
 //  Authors:
 //     Joseph Shook   Joseph.Shook@Surescripts.com
@@ -242,6 +242,7 @@ public static class MauiProgram
 
 #if WINDOWS
         builder.Services.AddSingleton<IExternalWebAuthenticator, WebAuthenticatorForWindows>();
+        builder.Services.AddSingleton<IPlatformResourceLoader, MauiPlatformResourceLoader>();
 #else
         builder.Services.AddSingleton<IExternalWebAuthenticator, WebAuthenticatorForDevice>();
 #endif
@@ -250,6 +251,10 @@ public static class MauiProgram
         builder.Services.AddBlazorWebViewDeveloperTools();
 		builder.Logging.AddDebug();
 #endif
+        
+        builder.Services.AddSingleton<IMainPageService, UdapEdAppMaui.Services.MainPageService>();
+        builder.Services.AddSingleton<IFileSaveService, FileSaveService>();
+
         return builder.Build();
     }
 }

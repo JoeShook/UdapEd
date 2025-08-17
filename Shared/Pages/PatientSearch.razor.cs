@@ -1,4 +1,13 @@
-﻿using Ganss.Xss;
+﻿#region (c) 2023-2025 Joseph Shook. All rights reserved.
+// /*
+//  Authors:
+//     Joseph Shook   Joseph.Shook@Surescripts.com
+// 
+//  See LICENSE in the project root for license information.
+// */
+#endregion
+
+using Ganss.Xss;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Components;

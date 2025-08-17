@@ -5,10 +5,12 @@
 @using UdapEd.Shared.Model.Discovery
 @using UdapEd.Shared.Model.Smart;
 @using UdapEd.Shared.Services.Fhir
+@using UdapEd.Shared.Services
 
 @implements UdapEd.Shared.Services.IAppState
 @inject ILocalStorageService LocalStorageService
 @inject HttpClient Http
+@inject IPlatformResourceLoader PlatformResourceLoader
 
 <CascadingValue Value="this">
     @ChildContent
@@ -28,40 +30,21 @@
         await LoadUrlsFromConfiguration();
     }
 
-
     private async Task LoadUrlsFromConfiguration()
     {
         try
         {
-            bool isMauiExe = false;
+            string json;
+
             try
             {
-			    if (OperatingSystem.IsWindows())
-			    {
-			        var exeName = System.Diagnostics.Process.GetCurrentProcess().ProcessName;
-			        isMauiExe = exeName.Equals("UdapEdAppMaui", StringComparison.OrdinalIgnoreCase);
-			    }
+                // Prefer platform loader (MAUI or WASM implementation will supply this)
+                json = await PlatformResourceLoader.LoadTextAsync("udap_urls.json");
             }
-            catch (PlatformNotSupportedException)
+            catch
             {
-	            // Not supported in this environment (e.g., Blazor WASM)
-	            isMauiExe = false;
-            }
-
-            string json;
-            if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsMacCatalyst() || 
-                (isMauiExe && OperatingSystem.IsWindows()))
-            {
-                // For .NET MAUI
-                await using var stream = await FileSystem.OpenAppPackageFileAsync("udap_urls.json");
-                using var reader = new StreamReader(stream);
-                json = await reader.ReadToEndAsync();
-            }
-            else
-            {
-                // For Blazor WebAssembly
-                // var json = await Http.GetStringAsync("_content/UdapEd.Shared/Packages/udap_urls.json");  This is statically compiled in
-                json = await Http.GetStringAsync("Packages/udap_urls.json"); // this can be dynamic and replaced, like in a Docker Container.
+                // Fallback for environments where the platform loader pulls from web root
+                json = await Http.GetStringAsync("Packages/udap_urls.json");
             }
 
             var config = JsonSerializer.Deserialize<UrlConfig>(json);

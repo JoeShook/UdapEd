@@ -1,13 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
   <PropertyGroup>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <!-- <TAG_NAME Condition="'$(TAG_NAME)' == ''">0.1</TAG_NAME> -->
     <!-- <Version>$(TAG_NAME)</Version> -->
-    <UseMauiEssentials Condition="'$(UseMauiEssentials)' != 'false'">true</UseMauiEssentials>
-    <SkipValidateMauiImplicitPackageReferences>true</SkipValidateMauiImplicitPackageReferences>
-
+    
     <EnableDefaultStaticWebAssets>true</EnableDefaultStaticWebAssets>
     
   </PropertyGroup>
@@ -44,12 +42,7 @@
   <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
-  <ItemGroup Condition="'$(UseMauiEssentials)' != 'false'">
-    <PackageReference Include="Microsoft.Maui.Essentials" Version="8.0.100" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Maui" Version="9.1.1" />
-  </ItemGroup>
+  
   <ItemGroup>
     <Content Update="wwwroot\images\UdapEdLogobyDesigner.png">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>

@@ -8,11 +8,22 @@
 #endregion
 
 
-using Microsoft.Maui.Authentication;
-
 namespace UdapEd.Shared.Services;
+
 public interface IExternalWebAuthenticator
 {
-    Task<WebAuthenticatorResult> AuthenticateAsync(string url, string callbackUrl);
+    Task<ExternalWebAuthenticatorResult> AuthenticateAsync(string url, string callbackUrl);
 }
 
+public sealed class ExternalWebAuthenticatorResult
+{
+    public ExternalWebAuthenticatorResult(IDictionary<string, string?> properties)
+    {
+        Properties = new Dictionary<string, string?>(properties, StringComparer.OrdinalIgnoreCase);
+    }
+
+    public IReadOnlyDictionary<string, string?> Properties { get; }
+
+    public string? Get(string key) =>
+        Properties.TryGetValue(key, out var value) ? value : null;
+}

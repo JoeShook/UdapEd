@@ -15,13 +15,12 @@ using UdapEd.Shared.Services;
 namespace UdapEdAppMaui.Services;
 public class WebAuthenticatorForWindows : IExternalWebAuthenticator
 {
-    public async Task<WebAuthenticatorResult> AuthenticateAsync(string url, string callbackUrl)
+    public async Task<ExternalWebAuthenticatorResult> AuthenticateAsync(string url, string callbackUrl)
     {
-        var result = await WinUIEx.WebAuthenticator.AuthenticateAsync(
-            new Uri(url),
-            new Uri(callbackUrl));
-
-        return result.Map();
+        var result = await WinUIEx.WebAuthenticator.AuthenticateAsync(new Uri(url), new Uri(callbackUrl));
+        var dict = result.Properties.ToDictionary(k => k.Key, v => (string?)v.Value, StringComparer.OrdinalIgnoreCase);
+       
+        return new ExternalWebAuthenticatorResult(dict);
     }
 }
 
