@@ -470,12 +470,8 @@ public partial class UdapConsumer
 
     private IDictionary<string, ClientRegistration?> FilterRegistrations()
     {
-        return AppState.ClientRegistrations.Registrations
-            .Where(r => r.Value != null &&
-                        r.Value.UserFlowSelected.Equals("authorization_code") &&
-                        AppState.UdapClientCertificateInfo != null &&
-                        AppState.UdapClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
-                        AppState.BaseUrl == r.Value.ResourceServer)
-            .ToImmutableDictionary();
+        return AppState.ClientRegistrations.FilterRegistrations(
+            AppState,
+            r => r.UserFlowSelected.Equals("authorization_code")); ;
     }
 }

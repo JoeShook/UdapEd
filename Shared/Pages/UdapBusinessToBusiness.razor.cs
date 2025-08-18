@@ -393,7 +393,7 @@ public partial class UdapBusinessToBusiness
         var sb = new StringBuilder();
         sb.AppendLine("POST /token HTTP/1.1");
         sb.AppendLine("Content-Type: application/x-www-form-urlencoded");
-        sb.AppendLine($"Host: {AppState.MetadataVerificationModel?.UdapServerMetaData?.AuthorizationEndpoint}");
+        sb.AppendLine($"Host: {AppState.MetadataVerificationModel?.UdapServerMetaData?.TokenEndpoint}");
         sb.AppendLine("Content-type: application/x-www-form-urlencoded");
         sb.AppendLine();
         sb.AppendLine("grant_type=client_credentials&");
@@ -419,7 +419,7 @@ public partial class UdapBusinessToBusiness
 
         var sb = new StringBuilder();
         sb.AppendLine("POST /token HTTP/1.1");
-        sb.AppendLine($"Host: {AppState.MetadataVerificationModel?.UdapServerMetaData?.AuthorizationEndpoint}");
+        sb.AppendLine($"Host: {AppState.MetadataVerificationModel?.UdapServerMetaData?.TokenEndpoint}");
         sb.AppendLine("Content-type: application/x-www-form-urlencoded");
         sb.AppendLine();
         sb.AppendLine("grant_type=authorization_code&");
@@ -556,15 +556,7 @@ public partial class UdapBusinessToBusiness
 
     private IDictionary<string, ClientRegistration?> FilterRegistrations()
     {
-        return AppState.ClientRegistrations.Registrations
-            .Where(r => r.Value != null && 
-                        AppState.UdapClientCertificateInfo != null &&
-                        AppState.UdapClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
-                        AppState.BaseUrl == r.Value.ResourceServer)
-            .ToImmutableDictionary();
+        return AppState.ClientRegistrations.FilterRegistrations(AppState);
     }
-
-    
-
 }
 

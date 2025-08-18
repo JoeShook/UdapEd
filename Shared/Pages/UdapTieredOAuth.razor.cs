@@ -479,14 +479,10 @@ public partial class UdapTieredOAuth
 
     private IDictionary<string, ClientRegistration?>? FilterRegistrations()
     {
-        return AppState.ClientRegistrations?.Registrations
-            .Where(r => r.Value != null &&
-                        r.Value.UserFlowSelected != "client_credentials" &&
-                        r.Value.Scope != null &&
-                        r.Value.Scope.Contains("udap") && 
-                        AppState.UdapClientCertificateInfo != null &&
-                        AppState.UdapClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
-                        AppState.BaseUrl == r.Value.ResourceServer)
-            .ToImmutableDictionary();
+        return AppState.ClientRegistrations?.FilterRegistrations(
+            AppState,
+            r => r.UserFlowSelected != "client_credentials" &&
+                 !string.IsNullOrEmpty(r.Scope) &&
+                 r.Scope.Contains("udap"));
     }
 }

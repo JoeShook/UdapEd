@@ -34,7 +34,8 @@ public class ClientRegistrations
                 AuthServer = registrationDocument.Audience,
                 ResourceServer = resourceServer,
                 RedirectUri = registrationDocument.RedirectUris,
-                Scope = resultModelResult.Scope
+                Scope = resultModelResult.Scope,
+                RegistrationUrl = resultModelResult.Audience // Token endpoint
             };
 
             Registrations[resultModelResult.ClientId] = _clientRegistration;
@@ -96,4 +97,5 @@ public class ClientRegistration
     public ICollection<string>? RedirectUri { get; set; }
     public string? Scope { get; set; }
     public string? IdPBaseUrl { get; set; }
+    public string? RegistrationUrl { get; set; }
 }

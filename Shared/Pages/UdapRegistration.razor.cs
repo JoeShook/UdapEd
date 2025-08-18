@@ -7,12 +7,6 @@
 // */
 #endregion
 
-using System.Net.NetworkInformation;
-using System.Reflection;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
 using Google.Api.Gax;
 using Hl7.Fhir.Rest;
 using Microsoft.AspNetCore.Components;
@@ -20,9 +14,16 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
 using Org.BouncyCastle.Ocsp;
+using System.Net.NetworkInformation;
+using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using Udap.Model;
 using Udap.Model.Registration;
 using UdapEd.Shared.Components;
+using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Registration;
 using UdapEd.Shared.Services;
@@ -867,12 +868,11 @@ public partial class UdapRegistration
     {
         get
         {
-            return AppState.ClientRegistrations?.Registrations
-                .Where(r => r.Value != null &&
-                            AppState.UdapClientCertificateInfo != null &&
-                            AppState.UdapClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
-                            AppState.BaseUrl == r.Value.ResourceServer)
-                .Select(r => r.Value);
+            var filtered = AppState.ClientRegistrations?.FilterRegistrations(
+                AppState,
+                r => AppState.MetadataVerificationModel?.UdapServerMetaData?.RegistrationEndpoint == r.RegistrationUrl);
+
+            return filtered?.Values;
         }
     }
     
