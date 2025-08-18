@@ -444,7 +444,7 @@ public partial class UdapTieredOAuth
             {
                 sb.AppendLine($"{resultProperty.Key}={resultProperty.Value}");
             }
-            _webAuthenticorResponseProps = sb.ToString();
+            _webAuthenticatorResponseProps = sb.ToString();
 
         }
         else
@@ -460,10 +460,10 @@ public partial class UdapTieredOAuth
             return string.Empty;
         }
 
-        return _webAuthenticorResponseProps;
+        return _webAuthenticatorResponseProps;
     }
 
-    private string _webAuthenticorResponseProps = string.Empty;
+    private string _webAuthenticatorResponseProps = string.Empty;
     private CertificatePKIViewer _certificateViewer;
 
     private string? GetJwtHeader(string? tokenString)
