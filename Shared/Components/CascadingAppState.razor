@@ -1,6 +1,7 @@
 ﻿@using Udap.Model.Registration
 @using System.Collections.Specialized
 @using System.Text.Json.Serialization
+@using Udap.Smart.Model
 @using UdapEd.Shared.Model.AuthExtObjects
 @using UdapEd.Shared.Model.Discovery
 @using UdapEd.Shared.Model.Smart;
@@ -194,6 +195,8 @@
 
     public MetadataVerificationModel? MetadataVerificationModel { get; private set; }
 
+    public SmartMetadata? SmartMetadataModel { get; private set; }
+	
     public RawSoftwareStatementAndHeader? SoftwareStatementBeforeEncoding { get; private set; }
 
     public RawSoftwareStatementAndHeader? CertSoftwareStatementBeforeEncoding { get; private set; }

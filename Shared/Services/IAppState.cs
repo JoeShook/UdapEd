@@ -1,6 +1,7 @@
 ﻿using System.Collections.Specialized;
 using Microsoft.AspNetCore.Components;
 using Udap.Model.Registration;
+using Udap.Smart.Model;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.AuthExtObjects;
 using UdapEd.Shared.Model.Discovery;
@@ -17,6 +18,8 @@ public interface IAppState
     OrderedDictionary BaseUrls { get; set; }
 
     public MetadataVerificationModel? MetadataVerificationModel { get; }
+
+    SmartMetadata? SmartMetadataModel { get; }
 
     RawSoftwareStatementAndHeader SoftwareStatementBeforeEncoding { get; }
 

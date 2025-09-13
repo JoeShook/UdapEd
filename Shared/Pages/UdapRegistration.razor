@@ -11,8 +11,10 @@
                         <MudLink Href="/udapDiscovery" Color="Color.Info"> [ @RequestUrl.GetWellKnownUdap(AppState.BaseUrl, AppState.Community) ]</MudLink>
                     </MudItem>
                     <MudItem>
-                        @if (AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported == null ||
-                        AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported.Any() == false)
+                        @if ((AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported == null ||
+                        AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported.Any() == false) &&
+                             AppState.SmartMetadataModel?.scopes_supported == null ||
+                             AppState.SmartMetadataModel?.scopes_supported.Any() == false)
                         {
                             <MudAlert Severity="Severity.Warning">No advertised scopes in metadata.</MudAlert>
                         }

@@ -282,6 +282,7 @@ public partial class UdapRegistration
         {
             _udapDcrDocument = JsonSerializer
                 .Deserialize<UdapDynamicClientRegistrationDocument>(_beforeEncodingStatement);
+
             var beforeEncodingScope = _udapDcrDocument?.Scope;
 
             var rawStatement = new RawSoftwareStatementAndHeader
@@ -399,9 +400,14 @@ public partial class UdapRegistration
         }
         else
         {
+            //TODO: Why don't we pass scopes to BuildRawSoftwareStatementForClientCredentials.  Pattern seems different here
+            var scopes = AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported?.Any() == true ?
+                AppState.SmartMetadataModel?.scopes_supported :
+                AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported;
+
             await BuildRawSoftwareStatementForAuthorizationCode(
                 RegisterService.GetScopesForAuthorizationCode(
-                    AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported, 
+                    scopes, 
                     TieredOauth, 
                     OpenIdScope,
                     AppSharedState.ScopeLevelSelected, 
@@ -439,6 +445,10 @@ public partial class UdapRegistration
                 UdapDcrBuilderForClientCredentialsUnchecked.Cancel() : 
                 UdapDcrBuilderForClientCredentialsUnchecked.Create();
 
+            var scopes = AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported?.Any() == true ?
+                AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported:
+                AppState.SmartMetadataModel?.scopes_supported;
+
             dcrBuilder.WithAudience(AppState.MetadataVerificationModel?.UdapServerMetaData?.RegistrationEndpoint)
                 .WithExpiration(TimeSpan.FromMinutes(5))
                 .WithJwtId()
@@ -448,8 +458,7 @@ public partial class UdapRegistration
                     "mailto:Joseph.Shook@Surescripts.com", "mailto:JoeShook@gmail.com"
                 })
                 .WithTokenEndpointAuthMethod(UdapConstants.RegistrationDocumentValues.TokenEndpointAuthMethodValue)
-                .WithScope(RegisterService.GetScopesForClientCredentials(
-                    AppState.MetadataVerificationModel?.UdapServerMetaData?.ScopesSupported,
+                .WithScope(RegisterService.GetScopesForClientCredentials(scopes,
                     SmartV1Scopes,
                     SmartV2Scopes));
 
@@ -471,7 +480,7 @@ public partial class UdapRegistration
             {
                 _missingScope = true;
             }
-            // Console.WriteLine(request.SerializeToJson(true));
+            // Console.WriteLine(request.SerializeToJson(trueNo advertised scopes in metada
             var statement = await RegisterService
                 .BuildSoftwareStatementForClientCredentials(request, _signingAlgorithm);
             if (statement != null)

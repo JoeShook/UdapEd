@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
 using MudBlazor;
+using Udap.Common.Extensions;
 using Udap.Model;
 using UdapEd.Shared.Components;
 using UdapEd.Shared.Services;
@@ -180,6 +181,18 @@ public partial class UdapDiscovery
                 var model = await MetadataService.GetUdapMetadataVerificationModel(BaseUrl, Community, default);
                 await AppState.SetPropertyAsync(this, nameof(AppState.MetadataVerificationModel), model);
                 UpdateModelSize(model.UdapServerMetaData);
+
+                if (model.UdapServerMetaData == null || 
+                    model.UdapServerMetaData.ScopesSupported == null ||
+                    !model.UdapServerMetaData.ScopesSupported.Any())
+                {
+                    var smartModel = await MetadataService.GetSmartMetadata($"{BaseUrl.EnsureTrailingSlash()}.well-known/smart-configuration", default);
+                    await AppState.SetPropertyAsync(this, nameof(AppState.SmartMetadataModel), smartModel);
+                }
+                else
+                {
+                    await AppState.SetPropertyAsync(this, nameof(AppState.SmartMetadataModel), null);
+                }
             }
 
             Result = AppState.MetadataVerificationModel?.UdapServerMetaData != null
