@@ -35,7 +35,7 @@ public class ClientRegistrations
                 ResourceServer = resourceServer,
                 RedirectUri = registrationDocument.RedirectUris,
                 Scope = resultModelResult.Scope,
-                RegistrationUrl = resultModelResult.Audience // Token endpoint
+                RegistrationUrl = registrationDocument.Audience
             };
 
             Registrations[resultModelResult.ClientId] = _clientRegistration;
