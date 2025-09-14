@@ -219,7 +219,8 @@ public class CertificationService : ICertificationService
         var certificationBuilder = UdapCertificationsAndEndorsementBuilder.Create(request.CertificationName, clientCert);
 
         var signedSoftwareStatement = certificationBuilder
-            .WithExpiration(request.Expiration)
+            // .WithExpiration(request.Expiration)
+            .WithClampedExpiration(request.Expiration)
             .WithAudience(request.Audience)
             .WithCertificationDescription(request.CertificationDescription)
             .WithCertificationUris(request.CertificationUris)

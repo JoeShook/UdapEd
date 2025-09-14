@@ -235,7 +235,8 @@ public class CertificationsController : Controller
         var certificationBuilder = UdapCertificationsAndEndorsementBuilder.Create(request.CertificationName, clientCert);
 
         var signedSoftwareStatement = certificationBuilder
-            .WithExpiration(request.Expiration)
+            // .WithExpiration(request.Expiration)
+            .WithClampedExpiration(request.Expiration)
             .WithAudience(request.Audience)
             .WithCertificationDescription(request.CertificationDescription)
             .WithCertificationUris(request.CertificationUris)
@@ -297,7 +298,8 @@ public class CertificationsController : Controller
         var certificationBuilder = UdapCertificationsAndEndorsementBuilderUnchecked.Create(document.CertificationName, clientCert);
         
         var signedSoftwareStatement = certificationBuilder
-            .WithExpiration(document.Expiration)
+            // .WithExpiration(document.Expiration)
+            .WithClampedExpiration(document.Expiration)
             .WithAudience(document.Audience)
             .WithCertificationDescription(document.CertificationDescription)
             .WithCertificationUris(document.CertificationUris)

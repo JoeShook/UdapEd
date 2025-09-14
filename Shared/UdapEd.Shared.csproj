@@ -22,16 +22,16 @@
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="HtmlSanitizer" Version="9.0.886" />
     <PackageReference Include="Microsoft.Bcl.Memory" Version="9.0.6" />
-    <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.1" />
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
     <PackageReference Include="Google.Cloud.Storage.V1" Version="4.13.0" />
     <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.17" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.6" />
     <PackageReference Include="MudBlazor" Version="8.9.0" />
 
-    <PackageReference Include="Udap.Smart.Model" Version="0.5.4" />
-    <PackageReference Include="Udap.CdsHooks.Model" Version="0.5.4" />
-    <PackageReference Include="Udap.Model" Version="0.5.4" />
-    <PackageReference Include="Udap.Common" Version="0.5.4" />
+    <PackageReference Include="Udap.Smart.Model" Version="0.5.10" />
+    <PackageReference Include="Udap.CdsHooks.Model" Version="0.5.10" />
+    <PackageReference Include="Udap.Model" Version="0.5.10" />
+    <PackageReference Include="Udap.Common" Version="0.5.10" />
 
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.6" />
     <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="4.12.0" />
