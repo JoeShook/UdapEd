@@ -111,8 +111,9 @@
     <MauiAsset LogicalName="fhirlabs.net.client.pfx" Include="CertificateStore/fhirlabs.net.client.pfx" Condition="Exists('CertificateStore/fhirlabs.net.client.pfx')" />
     <MauiAsset LogicalName="udap.emrdirect.client.certificate.p12" Include="CertificateStore/udap.emrdirect.client.certificate.p12" Condition="Exists('CertificateStore/udap.emrdirect.client.certificate.p12')" />
     <MauiAsset LogicalName="FhirLabs_mTLS_Client.pfx" Include="CertificateStore/FhirLabs_mTLS_Client.pfx" Condition="Exists('CertificateStore/FhirLabs_mTLS_Client.pfx')" />
+    <MauiAsset LogicalName="FhirLabsAdminCertification.pfx" Include="CertificateStore/FhirLabsAdminCertification.pfx" Condition="Exists('CertificateStore/FhirLabsAdminCertification.pfx')" />
 
-    <MauiAsset Include="..\Shared\wwwroot\Packages\udap_urls.json" LogicalName="udap_urls.json" />
+		<MauiAsset Include="..\Shared\wwwroot\Packages\udap_urls.json" LogicalName="udap_urls.json" />
     <MauiAsset Include="appsettings.json" LogicalName="appsettings.json" />
   </ItemGroup>
 
