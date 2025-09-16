@@ -38,6 +38,8 @@ public partial class PatientSearch
     private string? _fhirResultRaw;
 
     private string? _outComeMessage;
+    private Severity _outcomeSeverity = Severity.Info;   // ADD
+
     private string _selectedItemText = string.Empty;
 
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
@@ -145,9 +147,8 @@ public partial class PatientSearch
     {
         if (!_shouldReloadTable)
         {
-            // Return cached data if available
-            var patients = _currentBundle?.Entry.Select(entry => entry.Resource).Cast<Patient>().ToList() ?? new List<Patient>();
-            return new TableData<Patient>() { TotalItems = _currentBundle?.Total ?? 0, Items = patients };
+            var patientsCached = _currentBundle?.Entry.Select(e => e.Resource).OfType<Patient>().ToList() ?? new List<Patient>();
+            return new TableData<Patient> { TotalItems = _currentBundle?.Total ?? 0, Items = patientsCached };
         }
         _shouldReloadTable = false;
 
@@ -155,75 +156,110 @@ public partial class PatientSearch
         {
             if (_currentBundle != null)
             {
-                _currentBundle.Entry.RemoveAll(component => true); // We only need the links for paging.
+                _currentBundle.Entry.RemoveAll(_ => true); // keep paging links only
                 _model.Bundle = await new FhirJsonSerializer().SerializeToStringAsync(_currentBundle);
             }
-            
+
             _model.RowsPerPage = AppState.PatientSearchPref.RowsPerPage;
             _model.LaunchContext = AppState.LaunchContext;
             if (_pager != null) { _model.PageDirection = _pager.PageDirection; }
-            
+
             var result = await FhirService.SearchPatient(_model, ct);
 
-            if (result.FhirCompressedSize != null)
-            {
-                _compressedSize = result.FhirCompressedSize;
-            }
-
-            if(result.FhirDecompressedSize != null)
-            {
-                _decompressedSize = result.FhirDecompressedSize;
-            }
+            if (result.FhirCompressedSize != null) _compressedSize = result.FhirCompressedSize;
+            if (result.FhirDecompressedSize != null) _decompressedSize = result.FhirDecompressedSize;
 
             if (result.UnAuthorized)
             {
                 _outComeMessage = HttpStatusCode.Unauthorized.ToString();
+                return new TableData<Patient> { Items = [] };
             }
-            else if (result.HttpStatusCode == HttpStatusCode.PreconditionFailed)
-            {
-                var setResult = await DiscoveryService.SetBaseFhirUrl(AppState.BaseUrl);
-                _outComeMessage = "BaseUrl was reset.  Try again";
-            }
-            else if (result.OperationOutcome != null)
-            {
-                string? errorMessage = null;
 
+            if (result.HttpStatusCode == HttpStatusCode.PreconditionFailed)
+            {
+                await DiscoveryService.SetBaseFhirUrl(AppState.BaseUrl);
+                _outComeMessage = "BaseUrl was reset.  Try again";
+                return new TableData<Patient> { Items = [] };
+            }
+
+            // Always capture bundle if present
+            _currentBundle = result.Result;
+            _fhirResultRaw = null;
+
+            if (result.HttpStatusCode != null)
+            {
+                _fhirResultRaw = $"HTTP/{result.Version} {(int)result.HttpStatusCode} {result.HttpStatusCode}{Environment.NewLine}{Environment.NewLine}";
+            }
+
+            if (_currentBundle != null)
+            {
+                _fhirResultRaw += await new FhirJsonSerializer(new SerializerSettings { Pretty = true })
+                    .SerializeToStringAsync(_currentBundle);
+            }
+
+            if (result.OperationOutcome != null)
+            {
+                var msg = "";
                 foreach (var issue in result.OperationOutcome.Issue)
                 {
-                    errorMessage += $"Error:: Details: {issue.Details?.Text}.<br/>"
-                                    + $"Diagnostics: {HtmlSanitizer.Sanitize(issue.Diagnostics)}.<br/>"
-                                    + $"IssueType: {issue.Code}.<br/>";
+                    msg += $"Outcome Issue:<br/>"
+                           + $"Severity: {issue.Severity}<br/>"
+                           + $"Details: {issue.Details?.Text}<br/>"
+                           + $"Diagnostics: {HtmlSanitizer.Sanitize(issue.Diagnostics)}<br/>"
+                           + $"Type: {issue.Code}<br/><br/>";
                 }
 
-                _outComeMessage = errorMessage;
+                _outComeMessage = msg;
+
+                // Determine severity (data + non-critical outcome => downgrade)
+                var hasNonOutcomeData = _currentBundle?.Entry.Any(e => e.Resource is not OperationOutcome) ?? false;
+                _outcomeSeverity = DetermineOutcomeSeverity(result.OperationOutcome, hasNonOutcomeData);
             }
             else
             {
                 _outComeMessage = null;
-                _currentBundle = result.Result;
-
-                if (result.HttpStatusCode != null)
-                {
-                    _fhirResultRaw = $"HTTP/{result.Version} {(int)result.HttpStatusCode} {result.HttpStatusCode}";
-                    _fhirResultRaw += Environment.NewLine + Environment.NewLine;
-                }
-
-                if (_currentBundle != null)
-                {
-                    _fhirResultRaw += await new FhirJsonSerializer(new SerializerSettings { Pretty = true })
-                        .SerializeToStringAsync(_currentBundle);
-                }
-
-                _model.Page = state.Page;
-
-                    var patients = _currentBundle?.Entry.Select(entry => entry.Resource).Cast<Patient>().ToList();
-
-                    return new TableData<Patient>() { TotalItems = _currentBundle?.Total ?? 0, Items = patients };
-                
+                _outcomeSeverity = Severity.Info;
             }
+
+            _model.Page = state.Page;
+            var patients = _currentBundle?.Entry.Select(e => e.Resource).OfType<Patient>().ToList() ?? new List<Patient>();
+            return new TableData<Patient> { TotalItems = _currentBundle?.Total ?? 0, Items = patients };
         }
 
-        return new TableData<Patient>(){Items = new List<Patient>()};
+        return new TableData<Patient> { Items = [] };
+    }
+
+    // ADD: helper severity mapper
+    private static Severity DetermineOutcomeSeverity(OperationOutcome outcome, bool hasData)
+    {
+        // Rank severities (higher number => more severe)
+        static int Rank(OperationOutcome.IssueSeverity? sev) => sev switch
+        {
+            OperationOutcome.IssueSeverity.Fatal => 4,
+            OperationOutcome.IssueSeverity.Error => 3,
+            OperationOutcome.IssueSeverity.Warning => 2,
+            OperationOutcome.IssueSeverity.Information => 1,
+            _ => 1
+        };
+
+        var maxRank = outcome.Issue.Any()
+            ? outcome.Issue.Max(i => Rank(i.Severity))
+            : 1;
+
+        // If we have normal resources plus only info/warning -> downgrade to info/warning
+        if (hasData && maxRank <= 2)
+        {
+            return maxRank == 2 ? Severity.Warning : Severity.Info;
+        }
+
+        // Map final
+        return maxRank switch
+        {
+            >= 4 => Severity.Error, // fatal
+            3 => Severity.Error,    // error
+            2 => Severity.Warning,
+            _ => Severity.Info
+        };
     }
     
     private RawResourcePanel? rawResourcePanel;

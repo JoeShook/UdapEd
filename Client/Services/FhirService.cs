@@ -64,11 +64,15 @@ public class FhirService : IFhirService
             }
 
             var bundle = new FhirJsonParser().Parse<Bundle>(result);
-            var operationOutcome = bundle.Entry.Select(e => e.Resource as OperationOutcome).ToList();
-            
-            if (operationOutcome.Any(o => o != null))
+
+            // Allow bundle + OperationOutcome to coexist (warnings, partial success, etc.)
+            var operationOutcome = bundle.Entry
+                .Select(e => e.Resource as OperationOutcome)
+                .FirstOrDefault(o => o != null);
+
+            if (operationOutcome != null)
             {
-                resultModel = new FhirResultModel<Bundle>(operationOutcome.First(), response.StatusCode, response.Version);
+                resultModel = new FhirResultModel<Bundle>(bundle, operationOutcome, response.StatusCode, response.Version);
                 EnrichResult(response, resultModel);
                 return resultModel;
             }
@@ -96,27 +100,50 @@ public class FhirService : IFhirService
             var result = await response.Content.ReadAsStringAsync();
             var resource = new FhirJsonParser().Parse<Resource>(result);
 
-
             switch (resource)
             {
                 case Bundle bundle:
-                    resultModel =  new FhirResultModel<Bundle>(bundle, response.StatusCode, response.Version);
+                {
+                    var oo = bundle.Entry
+                        .Select(e => e.Resource as OperationOutcome)
+                        .FirstOrDefault(o => o != null);
+
+                    if (oo != null)
+                    {
+                        resultModel = new FhirResultModel<Bundle>(bundle, oo, response.StatusCode, response.Version);
+                        EnrichResult(response, resultModel);
+                        return resultModel;
+                    }
+
+                    resultModel = new FhirResultModel<Bundle>(bundle, response.StatusCode, response.Version);
                     EnrichResult(response, resultModel);
                     return resultModel;
-                    break;
+                }
                 case Parameters outParameters:
-                     var bundlePart = outParameters.Parameter?.FirstOrDefault(p => p.Resource is Bundle)?.Resource as Bundle;
+                {
+                    var bundlePart = outParameters.Parameter?
+                        .FirstOrDefault(p => p.Resource is Bundle)?
+                        .Resource as Bundle;
+
+                    var outcome = outParameters.Parameter?
+                        .FirstOrDefault(p => p.Resource is OperationOutcome)?
+                        .Resource as OperationOutcome;
+
+                    if (bundlePart != null && outcome != null)
+                    {
+                        return new FhirResultModel<Bundle>(bundlePart, outcome, response.StatusCode, response.Version);
+                    }
+
                     if (bundlePart != null)
                     {
-                        return new FhirResultModel<Bundle>(bundlePart);
+                        return new FhirResultModel<Bundle>(bundlePart, response.StatusCode, response.Version);
                     }
-                    // Optionally, handle OperationOutcome in Parameters
-                    var outcome = outParameters.Parameter?.FirstOrDefault(p => p.Resource is OperationOutcome)?.Resource as OperationOutcome;
+
                     if (outcome != null)
                     {
                         return new FhirResultModel<Bundle>(outcome);
                     }
-                    // If neither, return error
+
                     var opOutcome = new OperationOutcome()
                     {
                         ResourceBase = null,
@@ -129,19 +156,10 @@ public class FhirService : IFhirService
                         ]
                     };
                     return new FhirResultModel<Bundle>(opOutcome);
-                    break;
+                }
                 case OperationOutcome operationOutcome:
                     return new FhirResultModel<Bundle>(operationOutcome);
-                    break;
-                default:
-                    // handle unexpected resource type
-                    break;
             }
-
-
-            // var patients = bundle.Entry.Select(e => e.Resource as Patient).ToList();
-
-            
         }
 
         return await HandleResponseError(response);
@@ -301,7 +319,6 @@ public class FhirService : IFhirService
             var result = await response.Content.ReadAsStringAsync();
             var resource = new FhirJsonParser().Parse<Resource>(result);
 
-
             if (resource is OperationOutcome operationOutcome)
             {
                 return new FhirResultModel<Hl7.Fhir.Model.Resource>(operationOutcome);
@@ -407,17 +424,20 @@ public class FhirService : IFhirService
             return new FhirResultModel<Resource>(operationOutcome, response.StatusCode, response.Version);
         }
     }
+
     private async Task<FhirResultModel<Bundle>> SearchHandler(HttpResponseMessage response)
     {
         if (response.IsSuccessStatusCode)
         {
             var result = await response.Content.ReadAsStringAsync();
             var bundle = new FhirJsonParser().Parse<Bundle>(result);
-            var operationOutcome = bundle.Entry.Select(e => e.Resource as OperationOutcome).ToList();
+            var operationOutcome = bundle.Entry
+                .Select(e => e.Resource as OperationOutcome)
+                .FirstOrDefault(o => o != null);
 
-            if (operationOutcome.Any(o => o != null))
+            if (operationOutcome != null)
             {
-                return new FhirResultModel<Bundle>(operationOutcome.First(), response.StatusCode, response.Version);
+                return new FhirResultModel<Bundle>(bundle, operationOutcome, response.StatusCode, response.Version);
             }
 
             return new FhirResultModel<Bundle>(bundle, response.StatusCode, response.Version);
@@ -505,7 +525,6 @@ public class FhirService : IFhirService
             {
                 // ignored
             }
-
 
             if (result.Contains("Resource Server Error:"))
             {

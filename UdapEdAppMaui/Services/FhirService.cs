@@ -54,12 +54,7 @@ internal class FhirService : IFhirService
             {
                 var patient = await _fhirClient.ReadAsync<Patient>($"Patient/{model.Id}");
                 var singlePatientBundle = new Bundle();
-
-                var bundleEntry = new Bundle.EntryComponent
-                {
-                    Resource = patient
-                };
-
+                var bundleEntry = new Bundle.EntryComponent { Resource = patient };
                 singlePatientBundle.Entry.Add(bundleEntry);
 
                 resultModel = new FhirResultModel<Bundle>(singlePatientBundle);
@@ -67,29 +62,37 @@ internal class FhirService : IFhirService
                 return resultModel;
             }
 
-            
-
             Hl7.Fhir.Model.Bundle? bundle;
 
             if (model.Bundle.IsNullOrEmpty())
             {
                 bundle = await _fhirClient.SearchAsync<Patient>(SearchParamsExtensions.OrderBy(BuildSearchParams(model), "given"));
-                resultModel = new FhirResultModel<Bundle>(bundle);
+
+                // NEW: preserve bundle even if it includes an OperationOutcome
+                var firstOutcome = bundle?.Entry
+                    .Select(e => e.Resource as OperationOutcome)
+                    .FirstOrDefault(o => o != null);
+
+                if (firstOutcome != null)
+                {
+                    resultModel = new FhirResultModel<Bundle>(bundle!, firstOutcome); // CHANGED
+                }
+                else
+                {
+                    resultModel = new FhirResultModel<Bundle>(bundle);
+                }
+
                 await EnrichResult(resultModel);
                 return resultModel;
             }
 
             var links = new FhirJsonParser().Parse<Bundle>(model.Bundle);
             bundle = await _fhirClient.ContinueAsync(links, model.PageDirection);
-            
-            var operationOutcome = bundle?.Entry.Select(e => e.Resource as OperationOutcome).ToList();
 
-            if (operationOutcome != null && operationOutcome.Any(o => o != null))
-            {
-                resultModel = new FhirResultModel<Bundle>(operationOutcome.First());
-                await EnrichResult(resultModel);
-                return resultModel;
-            }
+            // CHANGED: previously returned ONLY the OperationOutcome (dropping bundle)
+            var continuationOutcome = bundle?.Entry
+                .Select(e => e.Resource as OperationOutcome)
+                .FirstOrDefault(o => o != null);
 
             if (bundle == null)
             {
@@ -110,7 +113,15 @@ internal class FhirService : IFhirService
                 return resultModel;
             }
 
-            resultModel = new FhirResultModel<Bundle>(bundle);
+            if (continuationOutcome != null)
+            {
+                resultModel = new FhirResultModel<Bundle>(bundle, continuationOutcome); // CHANGED
+            }
+            else
+            {
+                resultModel = new FhirResultModel<Bundle>(bundle);
+            }
+
             await EnrichResult(resultModel);
             return resultModel;
         }
@@ -415,29 +426,13 @@ internal class FhirService : IFhirService
         catch (FhirOperationException ex)
         {
             _logger.LogWarning(ex.Message);
-
-            if (ex.Status == HttpStatusCode.Unauthorized)
-            {
-                return new FhirResultModel<Bundle>(true);
-            }
-
-            if (ex.Outcome != null)
-            {
-                return new FhirResultModel<Bundle>(ex.Outcome);
-            }
-
+            if (ex.Status == HttpStatusCode.Unauthorized) return new FhirResultModel<Bundle>(true);
+            if (ex.Outcome != null) return new FhirResultModel<Bundle>(ex.Outcome);
             var operationOutCome = new OperationOutcome()
             {
                 ResourceBase = null,
-                Issue =
-                [
-                    new OperationOutcome.IssueComponent
-                    {
-                        Diagnostics = "Resource Server Error:"
-                    }
-                ]
+                Issue = [ new OperationOutcome.IssueComponent { Diagnostics = "Resource Server Error:" } ]
             };
-
             return new FhirResultModel<Bundle>(operationOutCome);
         }
         catch (Exception ex)
@@ -451,10 +446,8 @@ internal class FhirService : IFhirService
     {
         try
         {
-            //Todo maybe inject in the future, so we don't exhaust underlying HttpClient
             var fhirClient = new FhirClient(searchForm.Url, new FhirClientSettings() { PreferredFormat = ResourceFormat.Json });
             var searchParams = new SearchParams();
-
             foreach (var pair in searchForm.FormUrlEncoded)
             {
                 var item = pair.Split('=');
@@ -462,11 +455,13 @@ internal class FhirService : IFhirService
             }
 
             var bundle = await fhirClient.SearchUsingPostAsync(searchParams, searchForm.Resource);
-            var operationOutcome = bundle?.Entry.Select(e => e.Resource as OperationOutcome).ToList();
+            var firstOutcome = bundle?.Entry
+                .Select(e => e.Resource as OperationOutcome)
+                .FirstOrDefault(o => o != null);
 
-            if (operationOutcome != null && operationOutcome.Any(o => o != null))
+            if (bundle != null && firstOutcome != null)
             {
-                return new FhirResultModel<Bundle>(operationOutcome.First());
+                return new FhirResultModel<Bundle>(bundle, firstOutcome); // CHANGED
             }
 
             return new FhirResultModel<Bundle>(bundle);
@@ -474,29 +469,13 @@ internal class FhirService : IFhirService
         catch (FhirOperationException ex)
         {
             _logger.LogWarning(ex.Message);
-
-            if (ex.Status == HttpStatusCode.Unauthorized)
-            {
-                return new FhirResultModel<Bundle>(true);
-            }
-
-            if (ex.Outcome != null)
-            {
-                return new FhirResultModel<Bundle>(ex.Outcome);
-            }
-
+            if (ex.Status == HttpStatusCode.Unauthorized) return new FhirResultModel<Bundle>(true);
+            if (ex.Outcome != null) return new FhirResultModel<Bundle>(ex.Outcome);
             var operationOutCome = new OperationOutcome()
             {
                 ResourceBase = null,
-                Issue =
-                [
-                    new OperationOutcome.IssueComponent
-                    {
-                        Diagnostics = "Resource Server Error:"
-                    }
-                ]
+                Issue = [ new OperationOutcome.IssueComponent { Diagnostics = "Resource Server Error:" } ]
             };
-
             return new FhirResultModel<Bundle>(operationOutCome);
         }
         catch (Exception ex)
