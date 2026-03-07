@@ -1,0 +1,56 @@
+# Build from repo root:
+#   docker build -t udaped-gcp -f Dockerfile.gcp .
+#
+# Run interactively (first time — creates named volume for gcloud creds):
+#   docker run -it --name udaped-gcp -v udaped-gcloud-config:/root/.config/gcloud udaped-gcp
+#
+# Re-enter after stopping:
+#   docker start -ai udaped-gcp
+#
+# gcloud credentials persist in the "udaped-gcloud-config" named volume across
+# container restarts. Authenticate once with:
+#   gcloud auth application-default login
+#   gcloud config set project <YOUR_PROJECT_ID>
+
+FROM mcr.microsoft.com/dotnet/sdk:9.0
+
+# Install gcloud CLI
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        curl gnupg apt-transport-https ca-certificates && \
+    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" \
+      > /etc/apt/sources.list.d/google-cloud-sdk.list && \
+    curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg \
+      | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends google-cloud-cli && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /src
+
+ENV UseMauiEssentials=false
+
+# Copy solution and build infrastructure files first (better layer caching)
+COPY ["global.json", "."]
+COPY ["nuget.config", "."]
+COPY ["Directory.Packages.props", "."]
+COPY ["UdapEd.sln", "."]
+
+# Copy all project files for restore (cached unless .csproj files change)
+COPY ["Server/UdapEd.Server.csproj", "Server/"]
+COPY ["Client/UdapEd.Client.csproj", "Client/"]
+COPY ["Shared/UdapEd.Shared.csproj", "Shared/"]
+# -- Tests --
+COPY ["_tests/UtilityTests/UtilityTests.csproj", "_tests/UtilityTests/"]
+
+RUN dotnet restore -p:TargetFramework=net9.0 "Server/UdapEd.Server.csproj"
+
+# Copy everything else and build
+COPY . .
+RUN dotnet build "Server/UdapEd.Server.csproj" -p:TargetFramework=net9.0 -c Release --no-restore
+
+# Volume mount point for gcloud credentials
+VOLUME ["/root/.config/gcloud"]
+
+ENTRYPOINT ["/bin/bash"]

@@ -14,6 +14,8 @@ public static class UdapEdConstants
 
     public const string TOKEN = "Token";
     public const string BASE_URL = "BaseUrl";
+    public const string DPOP_ENABLED = "DPoP_Enabled";
+    public const string DPOP_SIGNING_ALG = "DPoP_SigningAlg";
     public const string CLIENT_HEADERS = "ClientHeaders";
 
     public const string MTLS_CLIENT_CERTIFICATE = "mtls_ClientCertificate";
@@ -62,5 +64,6 @@ public static class UdapEdConstants
 
         public const string FhirCompressedSize = "X-Fhir-Compressed-Size";
         public const string FhirDecompressedSize = "X-Fhir-Decompressed-Size";
+        public const string FhirOutgoingRequest = "X-Fhir-Outgoing-Request";
     }
 }

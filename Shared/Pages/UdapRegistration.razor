@@ -79,6 +79,14 @@
                                     <PropertyColumn Property="x => x.SubjAltName" Title="Subject Alt Name (URI)" />
                                     <PropertyColumn Property="x => x.ClientId" Title="Client ID" />
                                     <PropertyColumn Property="x => x.GrantType" Title="Grant Type" />
+                                    <TemplateColumn T="ClientRegistration" Title="DPoP">
+                                        <CellTemplate>
+                                            @if (context.Item?.DPoPEnabled == true)
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.Check" Color="Color.Success" Size="Size.Small" />
+                                            }
+                                        </CellTemplate>
+                                    </TemplateColumn>
                                 </Columns>
                                 <ChildRowContent>
                                     <MudCard>
@@ -202,6 +210,12 @@
                             </TooltipContent>
                         </MudTooltip>
                     </MudItem>
+
+                    <MudItem>
+                        <MudCheckBox @bind-Value="DPoPEnabled" T="bool"
+                                     Label="DPoP Enabled" />
+                    </MudItem>
+
                     <MudSpacer />
                     <MudItem>
                         <MudCard Outlined="true" Class="px-2 mud-border-primary">

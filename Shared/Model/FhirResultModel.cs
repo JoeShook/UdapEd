@@ -21,6 +21,7 @@ public class FhirResultModel<T>
     public Version? Version { get; }
     public int? FhirCompressedSize { get; set; }
     public int? FhirDecompressedSize { get; set; }
+    public OutgoingRequestInfo? OutgoingRequestInfo { get; set; }
 
     // Public flags (kept as fields to match existing signature)
     public bool HasResult;
@@ -71,11 +72,14 @@ public class FhirResultModel<T>
     }
 
     // 6) Unauthorized flag
-    public FhirResultModel(bool unAuthorized)
+    public FhirResultModel(bool unAuthorized, string? unauthorizedMessage = null)
     {
         UnAuthorized = unAuthorized;
+        UnauthorizedMessage = unauthorizedMessage;
         ComputeFlags();
     }
+
+    public string? UnauthorizedMessage { get; }
 
     // 7) NEW overload: Result + OperationOutcome (no HTTP metadata available in MAUI code paths)
     public FhirResultModel(T result, OperationOutcome? operationOutcome)

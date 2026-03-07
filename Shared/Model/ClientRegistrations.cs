@@ -21,7 +21,7 @@ public class ClientRegistrations
 
     public Dictionary<string, ClientRegistration?> Registrations { get; set; } = new();
     
-    public ClientRegistration? SetRegistration(RegistrationDocument resultModelResult, UdapDynamicClientRegistrationDocument? registrationDocument, Oauth2FlowEnum oauth2Flow, string resourceServer)
+    public ClientRegistration? SetRegistration(RegistrationDocument resultModelResult, UdapDynamicClientRegistrationDocument? registrationDocument, Oauth2FlowEnum oauth2Flow, string resourceServer, bool dpopEnabled = false)
     {
         if (registrationDocument is { Issuer: not null, Audience: not null })
         {
@@ -35,7 +35,8 @@ public class ClientRegistrations
                 ResourceServer = resourceServer,
                 RedirectUri = registrationDocument.RedirectUris,
                 Scope = resultModelResult.Scope,
-                RegistrationUrl = registrationDocument.Audience
+                RegistrationUrl = registrationDocument.Audience,
+                DPoPEnabled = dpopEnabled
             };
 
             Registrations[resultModelResult.ClientId] = _clientRegistration;
@@ -98,4 +99,5 @@ public class ClientRegistration
     public string? Scope { get; set; }
     public string? IdPBaseUrl { get; set; }
     public string? RegistrationUrl { get; set; }
+    public bool DPoPEnabled { get; set; }
 }

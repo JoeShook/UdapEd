@@ -7,7 +7,7 @@
   IgnorableNamespaces="uap rescap">
 
   <!-- <Identity Name="net.fhirlabs.udaped" Publisher="CN=Joseph Shook" Version="0.5.6.0" /> -->
-  <Identity Name="maui-package-name-placeholder" Publisher="CN=User Name" Version="0.0.0.0" />
+  <Identity Name="maui-package-name-placeholder" Publisher="CN=User Name" Version="0.0.5.0" />
 
 	<mp:PhoneIdentity PhoneProductId="CF1BE303-AA5F-45F5-859D-046D3E3AF671" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
@@ -20,7 +20,6 @@
 
   <Dependencies>
     <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
-    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
   </Dependencies>
 
   <Resources>
@@ -30,15 +29,15 @@
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">   
 
-    <!-- <uap:VisualElements -->
-    <!--   DisplayName="UdapEd" -->
-    <!--   Description="UDAP Editor Application" -->
-    <!--   BackgroundColor="transparent" -->
-    <!--   Square150x150Logo="Assets\Square150x150Logo.png" -->
-    <!--   Square44x44Logo="Assets\Square44x44Logo.png"> -->
-    <!--   <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square71x71Logo="Assets\SmallTile.png" Square310x310Logo="Assets\LargeTile.png"/> -->
-    <!--   <uap:SplashScreen Image="Assets\SplashScreen.png" /> -->
-    <!-- </uap:VisualElements> -->
+    <uap:VisualElements
+      DisplayName="UdapEd"
+      Description="UDAP Editor Application"
+      BackgroundColor="transparent"
+      Square150x150Logo="Assets\appicon.png"
+      Square44x44Logo="Assets\appicon.png">
+      <uap:DefaultTile Wide310x150Logo="Assets\appicon.png" Square71x71Logo="Assets\appicon.png" Square310x310Logo="Assets\appicon.png"/>
+      <uap:SplashScreen Image="Assets\splash.png" />
+    </uap:VisualElements>
 
       <Extensions>
         <uap:Extension Category="windows.protocol">

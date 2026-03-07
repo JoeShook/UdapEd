@@ -180,7 +180,8 @@ public class FhirService : IFhirService
 
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
-            return new FhirResultModel<CodeSystem>(true);
+            var unauthorizedDetail = await response.Content.ReadAsStringAsync();
+            return new FhirResultModel<CodeSystem>(true, unauthorizedDetail);
         }
 
         if (response.StatusCode == HttpStatusCode.InternalServerError)
@@ -242,7 +243,8 @@ public class FhirService : IFhirService
 
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
-            return new FhirResultModel<ValueSet>(true);
+            var unauthorizedDetail = await response.Content.ReadAsStringAsync();
+            return new FhirResultModel<ValueSet>(true, unauthorizedDetail);
         }
 
         if (response.StatusCode == HttpStatusCode.InternalServerError)
@@ -334,7 +336,8 @@ public class FhirService : IFhirService
     {
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
-            return new FhirResultModel<Resource>(true);
+            var unauthorizedDetail = await response.Content.ReadAsStringAsync();
+            return new FhirResultModel<Resource>(true, unauthorizedDetail);
         }
 
         if (response.StatusCode == HttpStatusCode.InternalServerError)
@@ -374,6 +377,20 @@ public class FhirService : IFhirService
 
                 return new FhirResultModel<Resource>(operationOutCome, HttpStatusCode.Unauthorized, response.Version);
             }
+
+            // General 500 fallback: try to extract OperationOutcome, otherwise use raw body
+            var operationOutcome500 = FhirResourceUtility.ExtractOperationOutcome(result);
+            if (operationOutcome500 != null)
+            {
+                return new FhirResultModel<Resource>(operationOutcome500, HttpStatusCode.InternalServerError, response.Version);
+            }
+
+            return new FhirResultModel<Resource>(
+                new OperationOutcome
+                {
+                    Issue = [new OperationOutcome.IssueComponent { Diagnostics = result }]
+                },
+                HttpStatusCode.InternalServerError, response.Version);
         }
 
         if (response.StatusCode == HttpStatusCode.MethodNotAllowed)
@@ -393,35 +410,39 @@ public class FhirService : IFhirService
             return new FhirResultModel<Resource>(operationOutCome, HttpStatusCode.MethodNotAllowed, response.Version);
         }
 
-        //todo constant :: and this whole routine is ugly.  Should move logic upstream to controller
-        //This code exists from testing various FHIR servers like MEDITECH.
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
             var result = await response.Content.ReadAsStringAsync();
 
-            if (result.Contains("Resource Server Error:"))
+            var operationOutcome = FhirResourceUtility.ExtractOperationOutcome(result);
+            if (operationOutcome != null)
             {
-                var operationOutCome = new OperationOutcome()
-                {
-                    ResourceBase = null,
-                    Issue =
-                    [
-                        new OperationOutcome.IssueComponent
-                        {
-                            Diagnostics = result
-                        }
-                    ]
-                };
-
-                return new FhirResultModel<Resource>(operationOutCome, HttpStatusCode.InternalServerError,
-                    response.Version);
+                return new FhirResultModel<Resource>(operationOutcome, HttpStatusCode.NotFound, response.Version);
             }
+
+            return new FhirResultModel<Resource>(
+                new OperationOutcome
+                {
+                    Issue = [new OperationOutcome.IssueComponent { Diagnostics = result }]
+                },
+                HttpStatusCode.NotFound, response.Version);
         }
 
         {
             var result = await response.Content.ReadAsStringAsync();
             var operationOutcome = FhirResourceUtility.ExtractOperationOutcome(result);
-            return new FhirResultModel<Resource>(operationOutcome, response.StatusCode, response.Version);
+
+            if (operationOutcome != null)
+            {
+                return new FhirResultModel<Resource>(operationOutcome, response.StatusCode, response.Version);
+            }
+
+            return new FhirResultModel<Resource>(
+                new OperationOutcome
+                {
+                    Issue = [new OperationOutcome.IssueComponent { Diagnostics = result }]
+                },
+                response.StatusCode, response.Version);
         }
     }
 
@@ -448,9 +469,14 @@ public class FhirService : IFhirService
 
     private async Task<FhirResultModel<Bundle>> HandleResponseError(HttpResponseMessage response)
     {
+        FhirResultModel<Bundle> resultModel;
+
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
-            return new FhirResultModel<Bundle>(true);
+            var unauthorizedDetail = await response.Content.ReadAsStringAsync();
+            resultModel = new FhirResultModel<Bundle>(true, unauthorizedDetail);
+            EnrichResult(response, resultModel);
+            return resultModel;
         }
 
         if (response.StatusCode == HttpStatusCode.InternalServerError)
@@ -471,7 +497,9 @@ public class FhirService : IFhirService
                     ]
                 };
 
-                return new FhirResultModel<Bundle>(operationOutCome, HttpStatusCode.PreconditionFailed, response.Version);
+                resultModel = new FhirResultModel<Bundle>(operationOutCome, HttpStatusCode.PreconditionFailed, response.Version);
+                EnrichResult(response, resultModel);
+                return resultModel;
             }
 
             if (result.Contains(nameof(AuthenticationException)))
@@ -488,10 +516,30 @@ public class FhirService : IFhirService
                     ]
                 };
 
-                return new FhirResultModel<Bundle>(operationOutCome, HttpStatusCode.Unauthorized, response.Version);
+                resultModel = new FhirResultModel<Bundle>(operationOutCome, HttpStatusCode.Unauthorized, response.Version);
+                EnrichResult(response, resultModel);
+                return resultModel;
             }
+
+            // General 500 fallback: try to extract OperationOutcome, otherwise use raw body
+            var operationOutcome500 = FhirResourceUtility.ExtractOperationOutcome(result);
+            if (operationOutcome500 != null)
+            {
+                resultModel = new FhirResultModel<Bundle>(operationOutcome500, HttpStatusCode.InternalServerError, response.Version);
+                EnrichResult(response, resultModel);
+                return resultModel;
+            }
+
+            resultModel = new FhirResultModel<Bundle>(
+                new OperationOutcome
+                {
+                    Issue = [new OperationOutcome.IssueComponent { Diagnostics = result }]
+                },
+                HttpStatusCode.InternalServerError, response.Version);
+            EnrichResult(response, resultModel);
+            return resultModel;
         }
-        
+
         if (response.StatusCode == HttpStatusCode.MethodNotAllowed)
         {
             var operationOutCome = new OperationOutcome()
@@ -505,8 +553,10 @@ public class FhirService : IFhirService
                     }
                 ]
             };
-            
-            return new FhirResultModel<Bundle>(operationOutCome, HttpStatusCode.MethodNotAllowed, response.Version);
+
+            resultModel = new FhirResultModel<Bundle>(operationOutCome, HttpStatusCode.MethodNotAllowed, response.Version);
+            EnrichResult(response, resultModel);
+            return resultModel;
         }
 
         //todo constant :: and this whole routine is ugly.  Should move logic upstream to controller
@@ -515,41 +565,43 @@ public class FhirService : IFhirService
         {
             var result = await response.Content.ReadAsStringAsync();
 
-            try
+            var operationOutcome = FhirResourceUtility.ExtractOperationOutcome(result);
+            if (operationOutcome != null)
             {
-                var operationOutcome = FhirResourceUtility.ExtractOperationOutcome(result);
-
-                return new FhirResultModel<Bundle>(operationOutcome, HttpStatusCode.InternalServerError, response.Version);
-            }
-            catch
-            {
-                // ignored
+                resultModel = new FhirResultModel<Bundle>(operationOutcome, HttpStatusCode.NotFound, response.Version);
+                EnrichResult(response, resultModel);
+                return resultModel;
             }
 
-            if (result.Contains("Resource Server Error:"))
-            {
-                var operationOutcome = new OperationOutcome()
+            resultModel = new FhirResultModel<Bundle>(
+                new OperationOutcome
                 {
-                    ResourceBase = null,
-                    Issue =
-                    [
-                        new OperationOutcome.IssueComponent
-                        {
-                            Diagnostics = result
-                        }
-                    ]
-                };
-                
-                return new FhirResultModel<Bundle>(operationOutcome, HttpStatusCode.InternalServerError,
-                    response.Version);
-            }
+                    Issue = [new OperationOutcome.IssueComponent { Diagnostics = result }]
+                },
+                HttpStatusCode.NotFound, response.Version);
+            EnrichResult(response, resultModel);
+            return resultModel;
         }
 
         {
             var result = await response.Content.ReadAsStringAsync();
             var operationOutcome = FhirResourceUtility.ExtractOperationOutcome(result);
 
-            return new FhirResultModel<Bundle>(operationOutcome, response.StatusCode, response.Version);
+            if (operationOutcome != null)
+            {
+                resultModel = new FhirResultModel<Bundle>(operationOutcome, response.StatusCode, response.Version);
+                EnrichResult(response, resultModel);
+                return resultModel;
+            }
+
+            resultModel = new FhirResultModel<Bundle>(
+                new OperationOutcome
+                {
+                    Issue = [new OperationOutcome.IssueComponent { Diagnostics = result }]
+                },
+                response.StatusCode, response.Version);
+            EnrichResult(response, resultModel);
+            return resultModel;
         }
     }
 
@@ -560,31 +612,55 @@ public class FhirService : IFhirService
         {
             return "Fhir";
         }
-        
+
         var appState = JsonSerializer.Deserialize<UdapClientState>(json,  UdapJsonContext.UdapDefault.UdapClientState);
+
+        await EnsureAccessTokenSynced(appState);
+
         var controller = appState?.ClientMode == ClientSecureMode.mTLS ? "FhirMtls" : "Fhir";
-        
+
         return controller;
     }
 
-    private void EnrichResult(HttpResponseMessage responseMessage, FhirResultModel<Bundle> resultModel)
+    /// <summary>
+    /// Re-syncs the access token from client-side LocalStorage to the server-side session.
+    /// This handles the case where the ASP.NET session expires but the client still has a valid token.
+    /// </summary>
+    private async System.Threading.Tasks.Task EnsureAccessTokenSynced(UdapClientState? appState)
     {
-        int? compressedSize = null;
-        int? decompressedSize = null;
-
-        var headerValue = responseMessage.Headers.GetValues(UdapEdConstants.FhirClient.FhirCompressedSize).FirstOrDefault();
-        if (int.TryParse(headerValue, out var size))
+        var accessToken = appState?.AccessTokens?.AccessToken;
+        if (!string.IsNullOrEmpty(accessToken))
         {
-            compressedSize = size;
+            await _httpClient.PutAsJsonAsync("Metadata/Token", accessToken);
+        }
+    }
+
+    private void EnrichResult<T>(HttpResponseMessage responseMessage, FhirResultModel<T> resultModel)
+    {
+        if (responseMessage.Headers.TryGetValues(UdapEdConstants.FhirClient.FhirCompressedSize, out var compressedValues))
+        {
+            if (int.TryParse(compressedValues.FirstOrDefault(), out var compressedSize))
+            {
+                resultModel.FhirCompressedSize = compressedSize;
+            }
         }
 
-        headerValue = responseMessage.Headers.GetValues(UdapEdConstants.FhirClient.FhirDecompressedSize).FirstOrDefault();
-        if (int.TryParse(headerValue, out size))
+        if (responseMessage.Headers.TryGetValues(UdapEdConstants.FhirClient.FhirDecompressedSize, out var decompressedValues))
         {
-            decompressedSize = size;
+            if (int.TryParse(decompressedValues.FirstOrDefault(), out var decompressedSize))
+            {
+                resultModel.FhirDecompressedSize = decompressedSize;
+            }
         }
 
-        resultModel.FhirCompressedSize = compressedSize;
-        resultModel.FhirDecompressedSize = decompressedSize;
+        if (responseMessage.Headers.TryGetValues(UdapEdConstants.FhirClient.FhirOutgoingRequest, out var reqValues))
+        {
+            var base64 = reqValues.FirstOrDefault();
+            if (base64 != null)
+            {
+                var json = Encoding.UTF8.GetString(Convert.FromBase64String(base64));
+                resultModel.OutgoingRequestInfo = JsonSerializer.Deserialize<OutgoingRequestInfo>(json);
+            }
+        }
     }
 }

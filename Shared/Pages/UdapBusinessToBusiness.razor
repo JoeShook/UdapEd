@@ -20,13 +20,14 @@
                           <ClientIdSelection
                               ClientRegistrations="@FilterRegistrations()"
                               SelectedRegistration="@AppState.ClientRegistrations?.SelectedRegistration"
-                              ClientIdSelected="(registration) =>  
+                              ClientIdSelected="(registration) =>
                               {
                                   Enum.TryParse(registration.UserFlowSelected, out Oauth2FlowEnum flow);
                                   AppState.SetProperty(this, nameof(AppState.Oauth2Flow), flow, true, false);
                                   AppState.ClientRegistrations.SelectedRegistration = registration;
                                   AppState.SetProperty(this, nameof(AppState.ClientRegistrations), AppState.ClientRegistrations, true, true);
-                                  ClientSelectedInUi = registration; 
+                                  ClientSelectedInUi = registration;
+                                  EnableDPoP = registration?.DPoPEnabled ?? false;
 
                                   if (ScopeOverride.IsNullOrEmpty()) { ScopeOverride = registration?.Scope; }
                               }"/>
@@ -87,6 +88,10 @@
                                 }
                             </MudSelect>
                         </MudItem>
+                        <MudItem Class="d-inline-flex">
+                            <MudCheckBox @bind-Value="EnableDPoP" T="bool"
+                                         Label="Enable DPoP" />
+                        </MudItem>
                         <MudItem xs="12">
                             @if (ClientSelectedInUi != null)
                             {
@@ -112,8 +117,15 @@
                                 </MudText>
 
                                 <pre>@TokenRequest1</pre>
+                                @if (EnableDPoP)
+                                {
+                                    <pre style="background-color:lightcyan">@TokenRequestDPoPHeader</pre>
+                                }
                                 <pre style="padding-left: 10px">@TokenRequest2</pre>
-
+                                @if (EnableDPoP)
+                                {
+                                    <pre style="padding-left:10px; background-color:lightcyan">@TokenRequestDPoP</pre>
+                                }
                                 <pre style="padding-left:10px; background-color:lightyellow">@TokenRequest3</pre>
                                 <pre style="padding-left: 10px">@TokenRequestScope</pre>
                                 <pre style="padding-left:10px">@TokenRequest4</pre>
@@ -122,19 +134,42 @@
 
                         <MudItem sm="6" xs="12">
                             <MudPaper Class="udap-analyzed" Elevation="3">
-                                <MudText Align="Align.Right" Color="Color.Tertiary">Client Assertion Decoded</MudText>
+                                <MudText Align="Align.Right" Color="Color.Tertiary">Decoded</MudText>
                                 <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" KeepPanelsAlive="true">
-                                    <MudTabPanel Text="Client Assertion">
-                                        <SignedJwtViewer Title="<b>Decoded client_assertion::</b>"
-                                                         SignedSoftwareStatement="@AppState.ClientCredentialsTokenRequest?.ClientAssertion?.Value"/>
+                                    <MudTabPanel>
+                                        <TabContent>
+                                            <span style="background-color:lightyellow; padding:2px 8px; border-radius:4px;">Client Assertion</span>
+                                        </TabContent>
+                                        <ChildContent>
+                                            <SignedJwtViewer Title="<b>Decoded client_assertion::</b>"
+                                                             SignedSoftwareStatement="@AppState.ClientCredentialsTokenRequest?.ClientAssertion?.Value"/>
+                                        </ChildContent>
                                     </MudTabPanel>
                                     <MudTabPanel Text="Certificates">
-	                                    <CertificatePKIViewer 
+	                                    <CertificatePKIViewer
 		                                    @ref="_certificateViewer"
 		                                    JwtHeaderWithx5c="@GetJwtHeader(AppState.ClientCredentialsTokenRequest?.ClientAssertion?.Value)"
 		                                    EnableAddToClaim="true"
 		                                    EndCertificate="true"/>
                                     </MudTabPanel>
+                                    @if (EnableDPoP)
+                                    {
+                                        <MudTabPanel>
+                                            <TabContent>
+                                                <span style="background-color:lightcyan; padding:2px 8px; border-radius:4px;">DPoP Proof</span>
+                                            </TabContent>
+                                            <ChildContent>
+                                                <SignedJwtViewer Title="<b>Decoded DPoP Proof::</b>"
+                                                                 SignedSoftwareStatement="@AppState.ClientCredentialsTokenRequest?.DPoPProofToken"/>
+                                                <MudDivider Class="my-3"/>
+                                                <MudText Typo="Typo.subtitle2" Color="Color.Primary"><b>dpop_jkt</b> (JWK Thumbprint per RFC 7638)</MudText>
+                                                <MudText Typo="Typo.caption" Color="Color.Tertiary" Class="mb-2">
+                                                    Base64url-encoded SHA-256 hash of the canonical JSON representation of the JWK's required members
+                                                </MudText>
+                                                <pre style="background-color:lightcyan; padding:8px; border-radius:4px; word-break:break-all;">@AppState.ClientCredentialsTokenRequest?.DPoPJkt</pre>
+                                            </ChildContent>
+                                        </MudTabPanel>
+                                    }
                                 </MudTabs>
                             </MudPaper>
                         </MudItem>
@@ -339,7 +374,7 @@
               </MudItem>
               <MudItem sm="6" xs="12">
                 <MudPaper Class="udap-analyzed">
-                  <MudText Align="Align.Right" Color="Color.Tertiary">Client Assertion Decoded</MudText>
+                  <MudText Align="Align.Right" Color="Color.Tertiary">Decoded</MudText>
                   <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" KeepPanelsAlive="true">
                     <MudTabPanel Text="Client Assertion">
                         <SignedJwtViewer Title="<b>Decoded client_assertion::</b>"

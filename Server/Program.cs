@@ -132,9 +132,15 @@ builder.Services.AddSingleton<CustomDecompressionHandler>(sp =>
 builder.Services.AddHttpClient<FhirClientWithUrlProvider>((sp, httpClient) =>
 { })
     .AddHttpMessageHandler(sp => new AuthTokenHttpMessageHandler(sp.GetRequiredService<IAccessTokenProvider>()))
+    .AddHttpMessageHandler(sp => new DPoPResourceHandler(
+        sp.GetRequiredService<IHttpContextAccessor>(),
+        sp.GetRequiredService<ILogger<DPoPResourceHandler>>()))
     .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()))
+    .AddHttpMessageHandler(sp => new UnauthorizedResponseHandler(sp.GetRequiredService<IHttpContextAccessor>()))
     .AddHttpMessageHandler(sp => new CustomDecompressionHandler(
         sp.GetRequiredService<IFhirClientOptionsProvider>(),
+        sp.GetRequiredService<IHttpContextAccessor>()))
+    .AddHttpMessageHandler(sp => new RequestCaptureHandler(
         sp.GetRequiredService<IHttpContextAccessor>()));
 
 builder.Services.AddTransient<IClientCertificateProvider, ClientCertificateProvider>();

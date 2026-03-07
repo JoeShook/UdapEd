@@ -270,6 +270,15 @@ public class RegisterController : Controller
             document.Extensions = request.Extensions;
         }
 
+        // Copy any additional claims not handled by the builder (e.g., user-added custom claims)
+        foreach (var kvp in request)
+        {
+            if (!document.ContainsKey(kvp.Key))
+            {
+                document[kvp.Key] = kvp.Value;
+            }
+        }
+
         var signedSoftwareStatement =
             SignedSoftwareStatementBuilder<UdapDynamicClientRegistrationDocument>
                 .Create(x5cCerts, document)
@@ -283,18 +292,18 @@ public class RegisterController : Controller
         {
             return BadRequest("Failed to read signed software statement using JsonWebTokenHandler");
         }
-        
+
         var result = new RawSoftwareStatementAndHeader
         {
             Header = requestToken.EncodedHeader.DecodeJwtHeader(),
             SoftwareStatement = Base64UrlEncoder.Decode(requestToken.EncodedPayload),
             Scope = request.Scope
         };
-        
+
         return Ok(result);
     }
 
-    
+
 
     [HttpPost("BuildSoftwareStatement/AuthorizationCode")]
     public IActionResult BuildSoftwareStatementWithHeaderForAuthorizationCode(
@@ -357,6 +366,15 @@ public class RegisterController : Controller
             document.Extensions = request.Extensions;
         }
 
+        // Copy any additional claims not handled by the builder (e.g., user-added custom claims)
+        foreach (var kvp in request)
+        {
+            if (!document.ContainsKey(kvp.Key))
+            {
+                document[kvp.Key] = kvp.Value;
+            }
+        }
+
         var signedSoftwareStatement =
             SignedSoftwareStatementBuilder<UdapDynamicClientRegistrationDocument>
                 .Create(x5cCerts, document)
@@ -377,7 +395,7 @@ public class RegisterController : Controller
             SoftwareStatement = Base64UrlEncoder.Decode(requestToken.EncodedPayload),
             Scope = request.Scope
         };
-        
+
         return Ok(result);
     }
 
@@ -436,6 +454,15 @@ public class RegisterController : Controller
         if (document.Extensions != null && document.Extensions.Any())
         {
             dcrBuilder.Document.Extensions = document.Extensions;
+        }
+
+        // Copy any additional claims not handled by the builder (e.g., user-added custom claims)
+        foreach (var kvp in document)
+        {
+            if (!dcrBuilder.Document.ContainsKey(kvp.Key))
+            {
+                dcrBuilder.Document[kvp.Key] = kvp.Value;
+            }
         }
 
         if (!request.SoftwareStatement.Contains(RegistrationDocumentValues.GrantTypes))
@@ -515,6 +542,15 @@ public class RegisterController : Controller
             dcrBuilder.Document.Extensions = document.Extensions;
         }
 
+        // Copy any additional claims not handled by the builder (e.g., user-added custom claims)
+        foreach (var kvp in document)
+        {
+            if (!dcrBuilder.Document.ContainsKey(kvp.Key))
+            {
+                dcrBuilder.Document[kvp.Key] = kvp.Value;
+            }
+        }
+
         var signedSoftwareStatement = dcrBuilder.BuildSoftwareStatement(alg);
 
         var requestBody = new UdapRegisterRequest
@@ -522,7 +558,7 @@ public class RegisterController : Controller
             signedSoftwareStatement,
             UdapConstants.UdapVersionsSupportedValue
         );
-    
+
         return Ok(requestBody);
     }
 

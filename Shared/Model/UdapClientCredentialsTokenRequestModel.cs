@@ -28,6 +28,10 @@ public class UdapClientCredentialsTokenRequestModel : UdapBaseTokenRequestModel
 
     public string? Scope { get; set; }
 
+    public string? DPoPProofToken { get; set; }
+
+    public string? DPoPJkt { get; set; }
+
     public UdapClientCredentialsTokenRequest ToUdapClientCredentialsTokenRequest()
     {
         ArgumentNullException.ThrowIfNull(Version);
@@ -51,11 +55,15 @@ public class UdapClientCredentialsTokenRequestModel : UdapBaseTokenRequestModel
 
         foreach (var item in Parameters) request.Parameters.Add(item);
 
-        // clone.Headers.Clear();
-        // foreach (var header in Headers)
-        // {
-        //     clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
-        // }
+        if (!string.IsNullOrEmpty(DPoPProofToken))
+        {
+            request.DPoPProofToken = DPoPProofToken;
+        }
+
+        if (!string.IsNullOrEmpty(DPoPJkt))
+        {
+            request.Parameters.Add("dpop_jkt", DPoPJkt);
+        }
 
         return request;
     }

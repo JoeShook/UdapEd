@@ -18,6 +18,7 @@ using UdapEd.Server.Services.Fhir;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
+using UdapEd.Server.Services.Authentication;
 using UdapEd.Shared.Services.Fhir;
 using FhirClientWithUrlProvider = UdapEd.Shared.Services.FhirClientWithUrlProvider;
 
@@ -106,29 +107,34 @@ public class FhirBaseController<T> : ControllerBase
         catch (FhirOperationException ex)
         {
             _logger.LogWarning(ex.Message);
+            CopyCustomHeadersToResponse();
 
             if (ex.Status == HttpStatusCode.Unauthorized)
             {
-                return Unauthorized();
+                var unauthorizedDetail = HttpContext.Items[UnauthorizedResponseHandler.UnauthorizedDetailKey] as string;
+                return Unauthorized(unauthorizedDetail ?? ex.Message);
             }
+
+            var statusCode = (int)ex.Status;
 
             if (ex.Outcome != null)
             {
                 var outcomeJson = await new FhirJsonSerializer().SerializeToStringAsync(ex.Outcome);
-                return NotFound(outcomeJson);
+                return StatusCode(statusCode, outcomeJson);
             }
             else
             {
-                return NotFound("Resource Server Error: " + ex.Message);
+                return StatusCode(statusCode, "Resource Server Error: " + ex.Message);
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex.Message);
+            CopyCustomHeadersToResponse();
             // hacky but mTLS is tougher to error handle
             if (ex.InnerException != null && ex.InnerException.Message.Contains("The decryption operation failed"))
             {
-                return NotFound("Resource Server Error: Cannot create a successful mTLS connection.  Check logs.");
+                return StatusCode(502, "Resource Server Error: Cannot create a successful mTLS connection.  Check logs.");
             }
 
             throw;
@@ -188,18 +194,22 @@ public class FhirBaseController<T> : ControllerBase
         catch (FhirOperationException ex)
         {
             _logger.LogWarning(ex.Message);
+            CopyCustomHeadersToResponse();
 
             if (ex.Status == HttpStatusCode.Unauthorized)
             {
-                return Unauthorized();
+                var unauthorizedDetail = HttpContext.Items[UnauthorizedResponseHandler.UnauthorizedDetailKey] as string;
+                return Unauthorized(unauthorizedDetail ?? ex.Message);
             }
+
+            var statusCode = (int)ex.Status;
 
             if (ex.Outcome != null)
             {
                 // Wrap OperationOutcome in a Bundle
                 var bundle = WrapOperationOutcomeInBundle(ex.Outcome);
                 var bundleJson = await new FhirJsonSerializer().SerializeToStringAsync(bundle);
-                return NotFound(bundleJson);
+                return StatusCode(statusCode, bundleJson);
             }
             else
             {
@@ -216,12 +226,13 @@ public class FhirBaseController<T> : ControllerBase
                 };
                 var bundle = WrapOperationOutcomeInBundle(outcome);
                 var bundleJson = await new FhirJsonSerializer().SerializeToStringAsync(bundle);
-                return NotFound(bundleJson);
+                return StatusCode(statusCode, bundleJson);
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex.Message);
+            CopyCustomHeadersToResponse();
             throw;
         }
     }
@@ -261,25 +272,30 @@ public class FhirBaseController<T> : ControllerBase
         catch (FhirOperationException ex)
         {
             _logger.LogWarning(ex.Message);
+            CopyCustomHeadersToResponse();
 
             if (ex.Status == HttpStatusCode.Unauthorized)
             {
-                return Unauthorized();
+                var unauthorizedDetail = HttpContext.Items[UnauthorizedResponseHandler.UnauthorizedDetailKey] as string;
+                return Unauthorized(unauthorizedDetail ?? ex.Message);
             }
+
+            var statusCode = (int)ex.Status;
 
             if (ex.Outcome != null)
             {
                 var outcomeJson = await new FhirJsonSerializer().SerializeToStringAsync(ex.Outcome);
-                return NotFound(outcomeJson);
+                return StatusCode(statusCode, outcomeJson);
             }
             else
             {
-                return NotFound("Resource Server Error: " + ex.Message);
+                return StatusCode(statusCode, "Resource Server Error: " + ex.Message);
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex.Message);
+            CopyCustomHeadersToResponse();
             throw;
         }
     }
@@ -307,25 +323,30 @@ public class FhirBaseController<T> : ControllerBase
         catch (FhirOperationException ex)
         {
             _logger.LogWarning(ex.Message);
+            CopyCustomHeadersToResponse();
 
             if (ex.Status == HttpStatusCode.Unauthorized)
             {
-                return Unauthorized();
+                var unauthorizedDetail = HttpContext.Items[UnauthorizedResponseHandler.UnauthorizedDetailKey] as string;
+                return Unauthorized(unauthorizedDetail ?? ex.Message);
             }
+
+            var statusCode = (int)ex.Status;
 
             if (ex.Outcome != null)
             {
                 var outcomeJson = await new FhirJsonSerializer().SerializeToStringAsync(ex.Outcome);
-                return NotFound(outcomeJson);
+                return StatusCode(statusCode, outcomeJson);
             }
             else
             {
-                return NotFound("Resource Server Error: " + ex.Message);
+                return StatusCode(statusCode, "Resource Server Error: " + ex.Message);
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex.Message);
+            CopyCustomHeadersToResponse();
             throw;
         }
     }
@@ -348,25 +369,30 @@ public class FhirBaseController<T> : ControllerBase
         catch (FhirOperationException ex)
         {
             _logger.LogWarning(ex.Message);
+            CopyCustomHeadersToResponse();
 
             if (ex.Status == HttpStatusCode.Unauthorized)
             {
-                return Unauthorized();
+                var unauthorizedDetail = HttpContext.Items[UnauthorizedResponseHandler.UnauthorizedDetailKey] as string;
+                return Unauthorized(unauthorizedDetail ?? ex.Message);
             }
+
+            var statusCode = (int)ex.Status;
 
             if (ex.Outcome != null)
             {
                 var outcomeJson = await new FhirJsonSerializer().SerializeToStringAsync(ex.Outcome);
-                return NotFound(outcomeJson);
+                return StatusCode(statusCode, outcomeJson);
             }
             else
             {
-                return NotFound("Resource Server Error: " + ex.Message);
+                return StatusCode(statusCode, "Resource Server Error: " + ex.Message);
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex.Message);
+            CopyCustomHeadersToResponse();
             throw;
         }
     }
@@ -395,25 +421,30 @@ public class FhirBaseController<T> : ControllerBase
         catch (FhirOperationException ex)
         {
             _logger.LogWarning(ex.Message);
+            CopyCustomHeadersToResponse();
 
             if (ex.Status == HttpStatusCode.Unauthorized)
             {
-                return Unauthorized();
+                var unauthorizedDetail = HttpContext.Items[UnauthorizedResponseHandler.UnauthorizedDetailKey] as string;
+                return Unauthorized(unauthorizedDetail ?? ex.Message);
             }
+
+            var statusCode = (int)ex.Status;
 
             if (ex.Outcome != null)
             {
                 var outcomeJson = await new FhirJsonSerializer().SerializeToStringAsync(ex.Outcome);
-                return NotFound(outcomeJson);
+                return StatusCode(statusCode, outcomeJson);
             }
             else
             {
-                return NotFound("Resource Server Error: " + ex.Message);
+                return StatusCode(statusCode, "Resource Server Error: " + ex.Message);
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex.Message);
+            CopyCustomHeadersToResponse();
             throw;
         }
     }
@@ -435,25 +466,30 @@ public class FhirBaseController<T> : ControllerBase
         catch (FhirOperationException ex)
         {
             _logger.LogWarning(ex.Message);
+            CopyCustomHeadersToResponse();
 
             if (ex.Status == HttpStatusCode.Unauthorized)
             {
-                return Unauthorized();
+                var unauthorizedDetail = HttpContext.Items[UnauthorizedResponseHandler.UnauthorizedDetailKey] as string;
+                return Unauthorized(unauthorizedDetail ?? ex.Message);
             }
+
+            var statusCode = (int)ex.Status;
 
             if (ex.Outcome != null)
             {
                 var outcomeJson = await new FhirJsonSerializer().SerializeToStringAsync(ex.Outcome);
-                return NotFound(outcomeJson);
+                return StatusCode(statusCode, outcomeJson);
             }
             else
             {
-                return NotFound("Resource Server Error: " + ex.Message);
+                return StatusCode(statusCode, "Resource Server Error: " + ex.Message);
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex.Message);
+            CopyCustomHeadersToResponse();
             throw;
         }
     }

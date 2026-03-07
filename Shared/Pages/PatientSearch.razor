@@ -155,6 +155,43 @@
 				        </MudExpansionPanels>
 			        </MudCardContent>
 		        </MudTabPanel>
+		        <MudTabPanel Text="REST View">
+			        <MudCardContent>
+				        @if (_outgoingRequestFormatted != null)
+				        {
+					        <MudExpansionPanels>
+						        <MudExpansionPanel Text="Outgoing FHIR Request" Expanded="true">
+							        <pre>@_outgoingRequestLine</pre>
+							        @foreach (var header in _outgoingRequestHeaders)
+							        {
+								        @if (header.IsDPoP)
+								        {
+									        <pre style="background-color:lightcyan">@header.Text</pre>
+								        }
+								        else if (header.IsAuth)
+								        {
+									        <pre style="background-color:lightyellow">@header.Text</pre>
+								        }
+								        else
+								        {
+									        <pre>@header.Text</pre>
+								        }
+							        }
+							        @if (_outgoingRequestBody != null)
+							        {
+								        <pre style="margin-top:8px; padding-top:8px; border-top:1px solid #ccc">@_outgoingRequestBody</pre>
+							        }
+						        </MudExpansionPanel>
+					        </MudExpansionPanels>
+				        }
+				        else
+				        {
+					        <MudText Typo="Typo.body2" Color="Color.Secondary">
+						        Execute a search to see the outgoing request details.
+					        </MudText>
+				        }
+			        </MudCardContent>
+		        </MudTabPanel>
 	        </MudTabs>
         </MudCard>
 		

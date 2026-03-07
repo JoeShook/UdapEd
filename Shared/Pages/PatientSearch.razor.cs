@@ -38,7 +38,13 @@ public partial class PatientSearch
     private string? _fhirResultRaw;
 
     private string? _outComeMessage;
-    private Severity _outcomeSeverity = Severity.Info;   // ADD
+    private Severity _outcomeSeverity = Severity.Info;
+
+    // REST View tab state
+    private string? _outgoingRequestFormatted;
+    private string? _outgoingRequestLine;
+    private List<RequestHeaderDisplay> _outgoingRequestHeaders = [];
+    private string? _outgoingRequestBody;
 
     private string _selectedItemText = string.Empty;
 
@@ -168,10 +174,13 @@ public partial class PatientSearch
 
             if (result.FhirCompressedSize != null) _compressedSize = result.FhirCompressedSize;
             if (result.FhirDecompressedSize != null) _decompressedSize = result.FhirDecompressedSize;
+            FormatOutgoingRequest(result.OutgoingRequestInfo);
 
             if (result.UnAuthorized)
             {
-                _outComeMessage = HttpStatusCode.Unauthorized.ToString();
+                _outComeMessage = string.IsNullOrEmpty(result.UnauthorizedMessage)
+                    ? HttpStatusCode.Unauthorized.ToString()
+                    : $"{HttpStatusCode.Unauthorized}: {result.UnauthorizedMessage}";
                 return new TableData<Patient> { Items = [] };
             }
 
@@ -262,6 +271,32 @@ public partial class PatientSearch
         };
     }
     
+    private void FormatOutgoingRequest(OutgoingRequestInfo? info)
+    {
+        if (info == null)
+        {
+            _outgoingRequestFormatted = null;
+            return;
+        }
+
+        _outgoingRequestLine = $"{info.Method} {info.Url} HTTP/1.1";
+        _outgoingRequestHeaders = info.Headers.Select(h => new RequestHeaderDisplay
+        {
+            Text = $"{h.Name}: {h.Value}",
+            IsDPoP = h.Name.Equals("DPoP", StringComparison.OrdinalIgnoreCase),
+            IsAuth = h.Name.Equals("Authorization", StringComparison.OrdinalIgnoreCase)
+        }).ToList();
+        _outgoingRequestBody = info.Body;
+        _outgoingRequestFormatted = "populated";
+    }
+
+    private record RequestHeaderDisplay
+    {
+        public string Text { get; init; } = "";
+        public bool IsDPoP { get; init; }
+        public bool IsAuth { get; init; }
+    }
+
     private RawResourcePanel? rawResourcePanel;
     
     private void OnRowClick(TableRowClickEventArgs<Patient> args)

@@ -1,10 +1,11 @@
 steps:
 # Build the container image
 - name: 'gcr.io/cloud-builders/docker'
-  args: [ 
-  'build', 
-  '-t', 'us-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/fhirlabs.udaped:$TAG_NAME', 
-  '--build-arg', 'TAG_NAME=$TAG_NAME', 
+  args: [
+  'build',
+  '--no-cache',
+  '-t', 'us-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/fhirlabs.udaped:$TAG_NAME',
+  '--build-arg', 'TAG_NAME=$TAG_NAME',
   '--file', './Server/Dockerfile.gcp', '.' ]
 
 # See:: https://cloud.google.com/build/docs/deploying-builds/deploy-cloud-run

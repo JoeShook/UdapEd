@@ -16,4 +16,6 @@ public class ClientCredentialsTokenRequestModel
     public string? Scope { get; set; }
 
     public Dictionary<string, object>? Extensions { get; set; }
+
+    public bool EnableDPoP { get; set; }
 }

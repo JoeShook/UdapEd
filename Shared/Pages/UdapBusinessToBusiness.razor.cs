@@ -51,6 +51,13 @@ public partial class UdapBusinessToBusiness
 
     private string AuthCodeRequestLink { get; set; } = string.Empty;
 
+    private bool _enableDPoP;
+    public bool EnableDPoP
+    {
+        get => _enableDPoP;
+        set => _enableDPoP = value;
+    }
+
     private bool _enablePkce;
     public bool EnablePkce
     {
@@ -98,6 +105,8 @@ public partial class UdapBusinessToBusiness
     private string? TokenRequest3 { get; set; }
     private string? TokenRequestScope { get; set; }
     private string? TokenRequest4 { get; set; }
+    private string? TokenRequestDPoPHeader { get; set; }
+    private string? TokenRequestDPoP { get; set; }
     
     private AuthorizationCodeRequest? _authorizationCodeRequest;
     private AuthorizationCodeRequest? AuthorizationCodeRequest {
@@ -367,7 +376,8 @@ public partial class UdapBusinessToBusiness
             {
                 ClientId = AppState.ClientRegistrations?.SelectedRegistration?.ClientId,
                 TokenEndpointUrl = AppState.MetadataVerificationModel?.UdapServerMetaData?.TokenEndpoint,
-                Scope = ScopeOverride.IsNullOrEmpty() ? TokenRequestScope?.Replace("scope=", "").TrimEnd('&').Trim() : ScopeOverride
+                Scope = ScopeOverride.IsNullOrEmpty() ? TokenRequestScope?.Replace("scope=", "").TrimEnd('&').Trim() : ScopeOverride,
+                EnableDPoP = EnableDPoP
             };
 
             var extensions = AppState.AuthorizationExtObjects.Where(a => a.Value.UseInAuth).ToList();
@@ -390,23 +400,38 @@ public partial class UdapBusinessToBusiness
 
     private void BuildAccessTokenRequestVisualForClientCredentials()
     {
+        var tokenEndpoint = AppState.MetadataVerificationModel?.UdapServerMetaData?.TokenEndpoint;
+        Uri.TryCreate(tokenEndpoint, UriKind.Absolute, out var tokenUri);
+
         var sb = new StringBuilder();
-        sb.AppendLine("POST /token HTTP/1.1");
+        sb.AppendLine($"POST {tokenEndpoint ?? "/token"} HTTP/1.1");
+        sb.AppendLine("-- Headers --");
+        sb.AppendLine($"Host: {tokenUri?.Authority ?? tokenEndpoint}");
         sb.AppendLine("Content-Type: application/x-www-form-urlencoded");
-        sb.AppendLine($"Host: {AppState.MetadataVerificationModel?.UdapServerMetaData?.TokenEndpoint}");
-        sb.AppendLine("Content-type: application/x-www-form-urlencoded");
-        sb.AppendLine();
-        sb.AppendLine("grant_type=client_credentials&");
         TokenRequest1 = sb.ToString();
 
+        if (EnableDPoP)
+        {
+            TokenRequestDPoPHeader = $"DPoP: {AppState.ClientCredentialsTokenRequest?.DPoPProofToken}";
+            TokenRequestDPoP = $"dpop_jkt={AppState.ClientCredentialsTokenRequest?.DPoPJkt}&";
+        }
+        else
+        {
+            TokenRequestDPoPHeader = null;
+            TokenRequestDPoP = null;
+        }
+
         sb = new StringBuilder();
+        sb.AppendLine();
+        sb.AppendLine("-- Body --");
+        sb.AppendLine("grant_type=client_credentials&");
         sb.AppendLine($"client_assertion_type={OidcConstants.ClientAssertionTypes.JwtBearer}&");
         TokenRequest2 = sb.ToString();
 
         TokenRequest3 = $"client_assertion={AppState.ClientCredentialsTokenRequest?.ClientAssertion?.Value}&";
         TokenRequestScope = $"scope={(ScopeOverride.IsNullOrEmpty() ? AppState.ClientCredentialsTokenRequest?.Scope : ScopeOverride)}&";
         sb = new StringBuilder();
-        sb.Append($"udap={UdapConstants.UdapVersionsSupportedValue}&\r\n");
+        sb.Append($"udap={UdapConstants.UdapVersionsSupportedValue}\r\n");
         TokenRequest4 = sb.ToString();
     }
 
@@ -417,11 +442,16 @@ public partial class UdapBusinessToBusiness
             return;
         }
 
+        var tokenEndpoint = AppState.MetadataVerificationModel?.UdapServerMetaData?.TokenEndpoint;
+        Uri.TryCreate(tokenEndpoint, UriKind.Absolute, out var tokenUri);
+
         var sb = new StringBuilder();
-        sb.AppendLine("POST /token HTTP/1.1");
-        sb.AppendLine($"Host: {AppState.MetadataVerificationModel?.UdapServerMetaData?.TokenEndpoint}");
-        sb.AppendLine("Content-type: application/x-www-form-urlencoded");
+        sb.AppendLine($"POST {tokenEndpoint ?? "/token"} HTTP/1.1");
+        sb.AppendLine("-- Headers --");
+        sb.AppendLine($"Host: {tokenUri?.Authority ?? tokenEndpoint}");
+        sb.AppendLine("Content-Type: application/x-www-form-urlencoded");
         sb.AppendLine();
+        sb.AppendLine("-- Body --");
         sb.AppendLine("grant_type=authorization_code&");
         TokenRequest1 = sb.ToString();
 

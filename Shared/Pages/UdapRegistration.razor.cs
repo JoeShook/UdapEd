@@ -57,6 +57,7 @@ public partial class UdapRegistration
     private bool SmartLaunch { get; set; }
     private bool SmartV1Scopes { get; set; } = true;
     private bool SmartV2Scopes { get; set; }
+    private bool DPoPEnabled { get; set; }
     public string? IdP { get; set; }
     private string? _requestBody;
     private bool _missingScope;
@@ -466,7 +467,12 @@ public partial class UdapRegistration
                     ext => ext.Key,
                     ext => ext.Value.Json));
             }
-            
+
+            if (DPoPEnabled)
+            {
+                request["dpop_enabled"] = true;
+            }
+
             if (request.Scope == null && request.GrantTypes?.Count > 0)
             {
                 _missingScope = true;
@@ -520,6 +526,11 @@ public partial class UdapRegistration
             dcrBuilder.Document.Issuer = SubjectAltName;
 
             var request = dcrBuilder.Build();
+
+            if (DPoPEnabled)
+            {
+                request["dpop_enabled"] = true;
+            }
 
             if (request.Scope == null && request.GrantTypes?.Count > 0)
             {
@@ -794,7 +805,7 @@ public partial class UdapRegistration
             {
                 if (resultModel.Result.ClientId != null)
                 {
-                    var registration = AppState.ClientRegistrations.SetRegistration(resultModel.Result, _udapDcrDocument, Oauth2Flow, AppState.BaseUrl);
+                    var registration = AppState.ClientRegistrations.SetRegistration(resultModel.Result, _udapDcrDocument, Oauth2Flow, AppState.BaseUrl, DPoPEnabled);
                     AppState.ClientRegistrations.SelectedRegistration = registration;
                 }
 

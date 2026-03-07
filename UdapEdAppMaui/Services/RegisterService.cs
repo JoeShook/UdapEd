@@ -109,6 +109,15 @@ internal class RegisterService : IRegisterService
             document.Extensions = request.Extensions;
         }
 
+        // Copy any additional claims not handled by the builder (e.g., user-added custom claims)
+        foreach (var kvp in request)
+        {
+            if (!document.ContainsKey(kvp.Key))
+            {
+                document[kvp.Key] = kvp.Value;
+            }
+        }
+
         var signedSoftwareStatement =
             SignedSoftwareStatementBuilder<UdapDynamicClientRegistrationDocument>
                 .Create(x5cCerts, document)
@@ -194,6 +203,15 @@ internal class RegisterService : IRegisterService
             document.Extensions = request.Extensions;
         }
 
+        // Copy any additional claims not handled by the builder (e.g., user-added custom claims)
+        foreach (var kvp in request)
+        {
+            if (!document.ContainsKey(kvp.Key))
+            {
+                document[kvp.Key] = kvp.Value;
+            }
+        }
+
         var signedSoftwareStatement =
             SignedSoftwareStatementBuilder<UdapDynamicClientRegistrationDocument>
                 .Create(x5cCerts, document)
@@ -277,6 +295,15 @@ internal class RegisterService : IRegisterService
             dcrBuilder.Document.Extensions = document.Extensions;
         }
 
+        // Copy any additional claims not handled by the builder (e.g., user-added custom claims)
+        foreach (var kvp in document)
+        {
+            if (!dcrBuilder.Document.ContainsKey(kvp.Key))
+            {
+                dcrBuilder.Document[kvp.Key] = kvp.Value;
+            }
+        }
+
         if (!request.SoftwareStatement.Contains(UdapConstants.RegistrationDocumentValues.GrantTypes))
         {
             dcrBuilder.Document.GrantTypes = null;
@@ -354,6 +381,15 @@ internal class RegisterService : IRegisterService
         if (document.Extensions != null && document.Extensions.Any())
         {
             dcrBuilder.Document.Extensions = document.Extensions;
+        }
+
+        // Copy any additional claims not handled by the builder (e.g., user-added custom claims)
+        foreach (var kvp in document)
+        {
+            if (!dcrBuilder.Document.ContainsKey(kvp.Key))
+            {
+                dcrBuilder.Document[kvp.Key] = kvp.Value;
+            }
         }
 
         var signedSoftwareStatement = dcrBuilder.BuildSoftwareStatement(signingAlgorithm);
