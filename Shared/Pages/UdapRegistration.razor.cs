@@ -30,7 +30,7 @@ using UdapEd.Shared.Services;
 
 namespace UdapEd.Shared.Pages;
 
-public partial class UdapRegistration
+public partial class UdapRegistration : IAsyncDisposable
 {
     private string SubjectAltName { get; set; }
     private string? _signingAlgorithm;
@@ -58,6 +58,34 @@ public partial class UdapRegistration
     private bool SmartV1Scopes { get; set; } = true;
     private bool SmartV2Scopes { get; set; }
     private bool DPoPEnabled { get; set; }
+    private double _dpopArrowY = -1;
+    private bool _dpopArrowVisible;
+
+    private async Task RecalcDPoPArrowPosition()
+    {
+        if (!DPoPEnabled || !SoftwareStatementBeforeEncodingSoftwareStatement.Contains("dpop_enabled"))
+        {
+            _dpopArrowY = -1;
+            _dpopArrowVisible = false;
+            return;
+        }
+
+        var pos = await JsRuntime.InvokeAsync<DPoPArrowPosition>(
+            "dpopArrow.getPosition", "softwareStatementTextarea", "\"dpop_enabled\"");
+        _dpopArrowY = pos.Y;
+        _dpopArrowVisible = pos.Visible;
+    }
+
+    [JSInvokable]
+    public void UpdateDPoPArrowPosition(double y, bool visible)
+    {
+        _dpopArrowY = y;
+        _dpopArrowVisible = visible;
+        StateHasChanged();
+    }
+
+    private record DPoPArrowPosition(double Y, bool Visible);
+
     public string? IdP { get; set; }
     private string? _requestBody;
     private bool _missingScope;
@@ -763,6 +791,7 @@ public partial class UdapRegistration
                 WriteIndented = true,
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
             });
+
     }
 
 
@@ -829,15 +858,29 @@ public partial class UdapRegistration
         ErrorBoundary?.Recover();
     }
     
-    protected override Task OnAfterRenderAsync(bool firstRender)
+    private DotNetObjectReference<UdapRegistration>? _dotNetRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && AppState.UdapClientCertificateInfo?.SubjectAltNames != null && AppState.UdapClientCertificateInfo.SubjectAltNames.Any())
+        if (firstRender)
         {
-            SubjectAltName = AppState.UdapClientCertificateInfo?.SubjectAltNames.First();
+            if (AppState.UdapClientCertificateInfo?.SubjectAltNames != null && AppState.UdapClientCertificateInfo.SubjectAltNames.Any())
+            {
+                SubjectAltName = AppState.UdapClientCertificateInfo?.SubjectAltNames.First();
+                StateHasChanged();
+            }
+
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JsRuntime.InvokeVoidAsync("dpopArrow.register", _dotNetRef, "softwareStatementTextarea", "\"dpop_enabled\"");
+        }
+
+        if (DPoPEnabled && _dpopArrowY < 0 && SoftwareStatementBeforeEncodingSoftwareStatement.Contains("dpop_enabled"))
+        {
+            await RecalcDPoPArrowPosition();
             StateHasChanged();
         }
 
-        return base.OnAfterRenderAsync(firstRender);
+        await base.OnAfterRenderAsync(firstRender);
     }
 
     private async Task ResetLocalRegisteredClients()
@@ -982,6 +1025,7 @@ public partial class UdapRegistration
         {
             Console.WriteLine(ex.Message);
         }
+
     }
 
     private void HighlightCertifications()
@@ -1012,5 +1056,12 @@ public partial class UdapRegistration
                     $"{softwareStatement}" +
                     $"<span id=\"indicator\" class=\"indicator\">[+]</span></div>");
         }
+
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await JsRuntime.InvokeVoidAsync("dpopArrow.unregister");
+        _dotNetRef?.Dispose();
     }
 }

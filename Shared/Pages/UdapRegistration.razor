@@ -346,10 +346,21 @@
                                                    Class="@ValidRawSoftwareStatementStyle"
                                                    rows="@(SoftwareStatementBeforeEncodingHeader.Count(s => s == '\n') + 5)"
                                                    @bind-Value="SoftwareStatementBeforeEncodingHeader"/>,
-                                    <InputTextArea Class="@ValidRawSoftwareStatementStyle"
-                                                   rows="@(SoftwareStatementBeforeEncodingSoftwareStatement.Count(s => s == '\n') + 1)"
-                                                   @bind-Value="SoftwareStatementBeforeEncodingSoftwareStatement"
-                                                   @onfocusout="PersistSoftwareStatement"/>
+                                    <div style="position:relative;">
+                                        @if (_dpopArrowY >= 0 && _dpopArrowVisible)
+                                        {
+                                            <div class="dpop-sticky-arrow" style="top:@(_dpopArrowY)px;">
+                                                <span>DPoP</span>
+                                            </div>
+                                        }
+                                        <textarea id="softwareStatementTextarea"
+                                                  Class="@ValidRawSoftwareStatementStyle"
+                                                  rows="@(SoftwareStatementBeforeEncodingSoftwareStatement.Count(s => s == '\n') + 1)"
+                                                  @bind="SoftwareStatementBeforeEncodingSoftwareStatement"
+                                                  @bind:event="oninput"
+                                                  @bind:after="RecalcDPoPArrowPosition"
+                                                  @onfocusout="PersistSoftwareStatement"></textarea>
+                                    </div>
                                     <pre Class="@ValidRawSoftwareStatementStyle">]</pre>
                                 </MudPaper>
                                 @if (_missingScope)
@@ -434,8 +445,17 @@
                                                      SignedSoftwareStatement="@AppState.UdapRegistrationRequest?.SoftwareStatement"/>
                                 </MudTabPanel>
                                 <MudTabPanel Text="Certifications and Endorsements Decoded" OnClick="HighlightCertifications">
-                                    <SignedJwtViewer Title="<b>Decoded software_statement::</b>"
-                                                     SignedSoftwareStatement="@AppState.UdapRegistrationRequest?.Certifications.FirstOrDefault()"/>
+                                    @if (AppState.UdapRegistrationRequest?.Certifications?.FirstOrDefault() != null)
+                                    {
+                                        <SignedJwtViewer Title="<b>Decoded certification::</b>"
+                                                         SignedSoftwareStatement="@AppState.UdapRegistrationRequest?.Certifications?.FirstOrDefault()"/>
+                                    }
+                                    else
+                                    {
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                            No "Certification and Endorsement" certificate loaded.
+                                        </MudText>
+                                    }
                                 </MudTabPanel>
                             </MudTabs>
                             

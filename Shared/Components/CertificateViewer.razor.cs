@@ -42,6 +42,8 @@ public partial class CertificateViewer : ComponentBase
         set => _certificateView = value;
     }
 
+    private string? _previousJwtHeader;
+
     [Inject] private IDiscoveryService MetadataService { get; set; } = null!;
     [Inject] private IInfrastructure Infrastructure { get; set; } = null!;
     private Dictionary<string, string> _certificateMetadata = new Dictionary<string, string>();
@@ -122,6 +124,14 @@ public partial class CertificateViewer : ComponentBase
 
         if (!string.IsNullOrEmpty(JwtHeader) && !JwtHeader.Equals("Loading ..."))
         {
+            if (_previousJwtHeader != null && JwtHeader != _previousJwtHeader)
+            {
+                _certificateView = default;
+                StateHasChanged();
+                await Task.Delay(200);
+            }
+            _previousJwtHeader = JwtHeader;
+
             var document = JsonDocument.Parse(JwtHeader);
             var root = document.RootElement;
             var certificates = root.TryGetStringArray("x5c").ToList();

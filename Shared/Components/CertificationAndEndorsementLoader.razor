@@ -39,7 +39,7 @@
         <MudText Typo="Typo.body2"><b>Issuer:</b> @AppState.CertificationAndEndorsementInfo?.Issuer </MudText>
        
 
-    @if (AppState.CertificationAndEndorsementInfo.CertLoaded == CertLoadedEnum.Expired)
+    @if (AppState.CertificationAndEndorsementInfo?.CertLoaded == CertLoadedEnum.Expired)
     {
         <MudAlert Severity="Severity.Error">Certificate Expired</MudAlert>
     }

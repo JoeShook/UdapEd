@@ -154,6 +154,100 @@ pre {
   margin: 8px;
 }
 
+.epoch-tooltip {
+  position: relative;
+  border-bottom: 1px dashed currentColor;
+  cursor: help;
+}
+
+.epoch-tooltip .epoch-tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  font-size: 0.85em;
+  line-height: 1.5;
+  z-index: 1000;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+
+.epoch-tooltip:hover .epoch-tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+.epoch-expired {
+  background-color: #ffcdd2;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.dpop-sticky-arrow {
+  position: absolute;
+  left: -28px;
+  display: flex;
+  align-items: center;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.dpop-sticky-arrow > span {
+  background-color: lightcyan;
+  color: #00695c;
+  font-size: 0.7em;
+  font-weight: 700;
+  padding: 2px 4px 2px 6px;
+  border-radius: 3px 0 0 3px;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.dpop-sticky-arrow::after {
+  content: "";
+  width: 0;
+  height: 0;
+  border-top: 9px solid transparent;
+  border-bottom: 9px solid transparent;
+  border-left: 8px solid lightcyan;
+}
+
+.x5c-collapsible {
+  display: inline;
+}
+
+.x5c-collapsible > summary {
+  display: inline;
+  cursor: pointer;
+  list-style: none;
+}
+
+.x5c-collapsible > summary::-webkit-details-marker {
+  display: none;
+}
+
+.x5c-collapsible > summary .x5c-full {
+  display: none;
+}
+
+.x5c-collapsible[open] > summary .x5c-short {
+  display: none;
+}
+
+.x5c-collapsible[open] > summary .x5c-full {
+  display: inline;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
 .udap-rowgroup {
   background-color: #F0F8FF;
   padding: 8px;

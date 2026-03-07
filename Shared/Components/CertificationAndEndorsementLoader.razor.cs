@@ -49,7 +49,7 @@ public partial class CertificationAndEndorsementLoader
         }
         else
         {
-            await SetCertLoadedColorFoExample(clientCertificateLoadStatus.CertLoaded);
+            await SetCertLoadedColorFoExample(clientCertificateLoadStatus?.CertLoaded);
         }
 
         await JSRuntime.InvokeVoidAsync("pageEventHandlers.registerHandlers");
