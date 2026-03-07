@@ -59,10 +59,7 @@ public static class MauiProgram
             //     outputTemplate:
             //     "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}",
             //     theme: AnsiConsoleTheme.Code)
-#if ANDROID
-            .WriteTo.AndroidLog()
-#endif
-            .WriteTo.File(file, 
+            .WriteTo.File(file,
                 flushToDiskInterval: flushInterval,
                 encoding: System.Text.Encoding.UTF8, 
                 rollingInterval: RollingInterval.Day, 
