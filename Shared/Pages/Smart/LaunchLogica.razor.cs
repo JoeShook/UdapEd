@@ -257,6 +257,7 @@ public partial class LaunchLogica
             Raw = tokenResponse.Json.AsJson(),
             IsError = tokenResponse.IsError,
             Error = tokenResponse.Error,
+            ErrorDescription = tokenResponse.ErrorDescription,
             AccessToken = tokenResponse.AccessToken,
             IdentityToken = tokenResponse.IdentityToken,
             RefreshToken = tokenResponse.RefreshToken,

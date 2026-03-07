@@ -258,6 +258,7 @@ public partial class LaunchBP
             Raw = tokenResponse.Raw,
             IsError = tokenResponse.IsError,
             Error = tokenResponse.Error,
+            ErrorDescription = tokenResponse.ErrorDescription,
             AccessToken = tokenResponse.AccessToken,
             IdentityToken = tokenResponse.IdentityToken,
             RefreshToken = tokenResponse.RefreshToken,

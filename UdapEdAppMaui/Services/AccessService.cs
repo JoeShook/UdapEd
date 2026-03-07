@@ -207,6 +207,7 @@ internal class AccessService : IAccessService
             Raw = tokenResponse.Json.AsJson(),
             IsError = tokenResponse.IsError,
             Error = tokenResponse.Error,
+            ErrorDescription = tokenResponse.ErrorDescription,
             AccessToken = tokenResponse.AccessToken,
             IdentityToken = tokenResponse.IdentityToken,
             RefreshToken = tokenResponse.RefreshToken,
@@ -238,12 +239,18 @@ internal class AccessService : IAccessService
             Raw = tokenResponse.Json.AsJson(),
             IsError = tokenResponse.IsError,
             Error = tokenResponse.Error,
+            ErrorDescription = tokenResponse.ErrorDescription,
             AccessToken = tokenResponse.AccessToken,
             IdentityToken = tokenResponse.IdentityToken,
             RefreshToken = tokenResponse.RefreshToken,
             ExpiresAt = DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn),
             Scope = tokenResponse.Raw,
-            TokenType = tokenResponse.TokenType
+            TokenType = tokenResponse.TokenType,
+            Headers = tokenResponse.HttpResponse?.Headers
+                    .ToDictionary(h => h.Key, h => h.Value.ToArray())
+                is { } authCodeHeaders
+                ? JsonSerializer.Serialize(authCodeHeaders, new JsonSerializerOptions { WriteIndented = true })
+                : null
         };
 
         if (tokenResponseModel.AccessToken != null)

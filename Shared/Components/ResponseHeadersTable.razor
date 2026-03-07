@@ -1,0 +1,67 @@
+@if (!string.IsNullOrEmpty(Headers))
+{
+    <br />
+    <MudText Typo="Typo.caption" Class="mb-1"><strong>Response Headers</strong></MudText>
+    <MudSimpleTable Dense="true" Hover="true" Elevation="0" Style="background: transparent;">
+        <tbody>
+            @foreach (var header in ParseHeaders(Headers))
+            {
+                <tr>
+                    <td style="font-weight: 500; white-space: nowrap; padding: 2px 12px 2px 0;">@header.Key</td>
+                    <td style="padding: 2px 0;">@header.Value</td>
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+}
+
+@code {
+    [Parameter]
+    public string? Headers { get; set; }
+
+    private static List<KeyValuePair<string, string>> ParseHeaders(string headersJson)
+    {
+        var result = new List<KeyValuePair<string, string>>();
+
+        try
+        {
+            using var doc = JsonDocument.Parse(headersJson);
+
+            if (doc.RootElement.ValueKind == JsonValueKind.Array)
+            {
+                // Server format: [{"Key":"Date","Value":["Sat, ..."]}]
+                foreach (var item in doc.RootElement.EnumerateArray())
+                {
+                    var key = item.GetProperty("Key").GetString() ?? "";
+                    var values = item.GetProperty("Value").EnumerateArray()
+                        .Select(v => v.GetString() ?? "");
+                    result.Add(new KeyValuePair<string, string>(key, string.Join(", ", values)));
+                }
+            }
+            else if (doc.RootElement.ValueKind == JsonValueKind.Object)
+            {
+                // MAUI format: {"Date":["Sat, ..."], ...}
+                foreach (var prop in doc.RootElement.EnumerateObject())
+                {
+                    if (prop.Value.ValueKind == JsonValueKind.Array)
+                    {
+                        var values = prop.Value.EnumerateArray()
+                            .Select(v => v.GetString() ?? "");
+                        result.Add(new KeyValuePair<string, string>(prop.Name, string.Join(", ", values)));
+                    }
+                    else
+                    {
+                        result.Add(new KeyValuePair<string, string>(prop.Name, prop.Value.ToString()));
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Fallback: show raw header text as a single entry
+            result.Add(new KeyValuePair<string, string>("Raw", headersJson));
+        }
+
+        return result;
+    }
+}

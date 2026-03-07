@@ -1,0 +1,17 @@
+@if (TokenResponse is { IsError: true })
+{
+    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="mb-2" NoIcon="false">
+        <MudText Typo="Typo.subtitle1"><strong>@TokenResponse.Error</strong></MudText>
+        @if (!string.IsNullOrEmpty(TokenResponse.ErrorDescription))
+        {
+            <MudText Typo="Typo.body2">@TokenResponse.ErrorDescription</MudText>
+        }
+    </MudAlert>
+
+    <ResponseHeadersTable Headers="@TokenResponse.Headers" />
+}
+
+@code {
+    [Parameter]
+    public TokenResponseModel? TokenResponse { get; set; }
+}

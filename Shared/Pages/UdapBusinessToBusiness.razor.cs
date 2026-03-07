@@ -497,7 +497,7 @@ public partial class UdapBusinessToBusiness
                 await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), tokenResponse);
                 await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
 
-                AccessToken = tokenResponse is { IsError: false } ? tokenResponse.Raw : tokenResponse?.Error;
+                AccessToken = tokenResponse is { IsError: false } ? tokenResponse.Raw : null;
             }
             else //client_credentials
             {
@@ -514,9 +514,7 @@ public partial class UdapBusinessToBusiness
                 await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), tokenResponse);
                 await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
 
-                AccessToken = tokenResponse is { IsError: false }
-                    ? tokenResponse.Raw 
-                    : $"Failed:\r\n\r\n{tokenResponse?.Error}\r\n{tokenResponse?.Headers}";
+                AccessToken = tokenResponse is { IsError: false } ? tokenResponse.Raw : null;
             }
         }
         catch (Exception ex)

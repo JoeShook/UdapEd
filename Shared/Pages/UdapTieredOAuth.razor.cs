@@ -411,7 +411,7 @@ public partial class UdapTieredOAuth
             await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), tokenResponse);
             await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
 
-            AccessToken = tokenResponse is { IsError: false } ? tokenResponse.Raw : tokenResponse?.Error;
+            AccessToken = tokenResponse is { IsError: false } ? tokenResponse.Raw : null;
             
         }
         catch (Exception ex)

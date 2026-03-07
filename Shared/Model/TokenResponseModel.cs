@@ -14,6 +14,8 @@ public class TokenResponseModel
 
     public string? Error { get; set; }
 
+    public string? ErrorDescription { get; set; }
+
     public string? AccessToken { get; set; }
 
     public string? IdentityToken { get; set; }
