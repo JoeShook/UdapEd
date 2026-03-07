@@ -1,4 +1,4 @@
-﻿@page "/patientSearch"
+@page "/patientSearch"
 @using Hl7.Fhir.Model
 @using UdapEd.Shared.Components
 @using Task = System.Threading.Tasks.Task
@@ -159,30 +159,140 @@
 			        <MudCardContent>
 				        @if (_outgoingRequestFormatted != null)
 				        {
-					        <MudExpansionPanels>
-						        <MudExpansionPanel Text="Outgoing FHIR Request" Expanded="true">
-							        <pre>@_outgoingRequestLine</pre>
-							        @foreach (var header in _outgoingRequestHeaders)
-							        {
-								        @if (header.IsDPoP)
+					        <MudGrid Spacing="1">
+						        <MudItem sm="6" xs="12">
+							        <MudPaper Class="udap-input" Elevation="3">
+								        <MudText Align="Align.Right" Color="Color.Tertiary">Outgoing FHIR Request</MudText>
+								        <pre>@_outgoingRequestLine</pre>
+								        @foreach (var header in _outgoingRequestHeaders)
 								        {
-									        <pre style="background-color:lightcyan">@header.Text</pre>
+									        @if (header.IsDPoP)
+									        {
+										        <pre style="background-color:lightcyan">@header.Text</pre>
+									        }
+									        else if (header.IsAuth)
+									        {
+										        <pre style="background-color:lightyellow">@header.Text</pre>
+									        }
+									        else
+									        {
+										        <pre>@header.Text</pre>
+									        }
 								        }
-								        else if (header.IsAuth)
+								        @if (_outgoingRequestBody != null)
 								        {
-									        <pre style="background-color:lightyellow">@header.Text</pre>
+									        <pre style="margin-top:8px; padding-top:8px; border-top:1px solid #ccc">@_outgoingRequestBody</pre>
 								        }
-								        else
-								        {
-									        <pre>@header.Text</pre>
-								        }
-							        }
-							        @if (_outgoingRequestBody != null)
-							        {
-								        <pre style="margin-top:8px; padding-top:8px; border-top:1px solid #ccc">@_outgoingRequestBody</pre>
-							        }
-						        </MudExpansionPanel>
-					        </MudExpansionPanels>
+							        </MudPaper>
+						        </MudItem>
+
+						        <MudItem sm="6" xs="12">
+							        <MudPaper Class="udap-analyzed" Elevation="3">
+								        <MudText Align="Align.Right" Color="Color.Tertiary">Decoded</MudText>
+								        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" KeepPanelsAlive="true">
+									        @if (_bearerToken != null)
+									        {
+										        <MudTabPanel>
+											        <TabContent>
+												        <span style="background-color:lightyellow; padding:2px 8px; border-radius:4px;">Access Token</span>
+											        </TabContent>
+											        <ChildContent>
+												        <SignedJwtViewer Title="<b>Decoded Access Token::</b>"
+												                         SignedSoftwareStatement="@_bearerToken"/>
+												        <MudDivider Class="my-3"/>
+												        <MudExpansionPanels>
+													        <MudExpansionPanel>
+														        <TitleContent>
+															        <div class="d-flex align-center">
+																        <MudIcon Icon="@Icons.Material.Filled.CastForEducation" Color="Color.Tertiary" Class="mr-2" Size="Size.Small"/>
+																        <MudText Typo="Typo.body2" Color="Color.Tertiary">What is an Access Token?</MudText>
+															        </div>
+														        </TitleContent>
+														        <ChildContent>
+															        <MudPaper Class="udap-knowledge" Elevation="0">
+																        <MudText Typo="Typo.body2">
+																	        An <span style="background-color:lightyellow; padding:1px 4px; border-radius:3px;">access token</span> is a credential issued by an authorization server that allows a client application
+																	        to access protected resources (such as FHIR endpoints) on behalf of a user or system. In UDAP and SMART on FHIR
+																	        workflows, the <span style="background-color:lightyellow; padding:1px 4px; border-radius:3px;">access token</span> is typically a <b>JSON Web Token (JWT)</b> containing claims that describe the
+																	        granted scopes, the intended audience, expiration, and the identity of the client or user.
+																        </MudText>
+																        <MudText Typo="Typo.body2" Class="mt-2">
+																	        The token is sent in the <code>Authorization</code> header using the <span style="background-color:lightyellow; padding:1px 4px; border-radius:3px;">Bearer</span> scheme
+																	        (or the <span style="background-color:lightcyan; padding:1px 4px; border-radius:3px;">DPoP</span> scheme when <span style="background-color:lightcyan; padding:1px 4px; border-radius:3px;">DPoP</span> is enabled). The resource server validates the token's signature,
+																	        expiration, audience, and scopes before granting access.
+																        </MudText>
+																        <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="mt-3"><b>Related specifications:</b></MudText>
+																        <ul class="ml-4 mt-1">
+																	        <li><a href="https://datatracker.ietf.org/doc/html/rfc6749" target="_blank">RFC 6749</a> &mdash; OAuth 2.0 Authorization Framework</li>
+																	        <li><a href="https://datatracker.ietf.org/doc/html/rfc6750" target="_blank">RFC 6750</a> &mdash; Bearer Token Usage</li>
+																	        <li><a href="https://datatracker.ietf.org/doc/html/rfc9068" target="_blank">RFC 9068</a> &mdash; JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens</li>
+																	        <li><a href="https://hl7.org/fhir/smart-app-launch/" target="_blank">SMART App Launch IG</a> &mdash; SMART on FHIR scopes and launch context</li>
+																        </ul>
+															        </MudPaper>
+														        </ChildContent>
+													        </MudExpansionPanel>
+												        </MudExpansionPanels>
+											        </ChildContent>
+										        </MudTabPanel>
+									        }
+									        @if (_dpopProofToken != null)
+									        {
+										        <MudTabPanel>
+											        <TabContent>
+												        <span style="background-color:lightcyan; padding:2px 8px; border-radius:4px;">DPoP Proof</span>
+											        </TabContent>
+											        <ChildContent>
+												        <SignedJwtViewer Title="<b>Decoded DPoP Proof::</b>"
+												                         SignedSoftwareStatement="@_dpopProofToken"/>
+												        <MudDivider Class="my-3"/>
+												        <MudExpansionPanels>
+													        <MudExpansionPanel>
+														        <TitleContent>
+															        <div class="d-flex align-center">
+																        <MudIcon Icon="@Icons.Material.Filled.CastForEducation" Color="Color.Tertiary" Class="mr-2" Size="Size.Small"/>
+																        <MudText Typo="Typo.body2" Color="Color.Tertiary">What is a DPoP Proof?</MudText>
+															        </div>
+														        </TitleContent>
+														        <ChildContent>
+															        <MudPaper Class="udap-knowledge" Elevation="0">
+																        <MudText Typo="Typo.body2">
+																	        <b>DPoP (Demonstration of Proof-of-Possession)</b> is a mechanism that binds an <span style="background-color:lightyellow; padding:1px 4px; border-radius:3px;">access token</span> to a
+																	        specific client by proving the client holds the private key corresponding to a public key declared
+																	        during token issuance. Unlike plain <span style="background-color:lightyellow; padding:1px 4px; border-radius:3px;">Bearer</span> tokens, a <span style="background-color:lightcyan; padding:1px 4px; border-radius:3px;">DPoP</span>-bound token cannot be replayed by an
+																	        attacker who intercepts it, because each request requires a fresh proof signed by the client's private key.
+																        </MudText>
+																        <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="mt-3"><b>How it works:</b></MudText>
+																        <MudText Typo="Typo.body2" Class="mt-1">
+																	        The client generates a <span style="background-color:lightcyan; padding:1px 4px; border-radius:3px;">DPoP</span> proof JWT and sends it in the <code style="background-color:lightcyan">DPoP</code> header.
+																	        The <span style="background-color:lightyellow; padding:1px 4px; border-radius:3px;">access token</span>'s <code>Authorization</code> header uses the <span style="background-color:lightcyan; padding:1px 4px; border-radius:3px;">DPoP</span> scheme instead of <span style="background-color:lightyellow; padding:1px 4px; border-radius:3px;">Bearer</span>.
+																	        The resource server verifies that the <span style="background-color:lightcyan; padding:1px 4px; border-radius:3px;">DPoP</span> proof's public key matches the <b>cnf</b> (confirmation) claim
+																	        in the <span style="background-color:lightyellow; padding:1px 4px; border-radius:3px;">access token</span>.
+																        </MudText>
+																        <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="mt-3"><b>The <code>cnf</code> claim:</b></MudText>
+																        <MudText Typo="Typo.body2" Class="mt-1">
+																	        The <span style="background-color:lightyellow; padding:1px 4px; border-radius:3px;">access token</span> contains a <code>cnf</code> (confirmation) claim with a <code>jkt</code> member &mdash;
+																	        a <b>JWK Thumbprint</b> (base64url-encoded SHA-256 hash of the public key's canonical JSON form per RFC 7638).
+																	        The resource server computes the thumbprint from the <span style="background-color:lightcyan; padding:1px 4px; border-radius:3px;">DPoP</span> proof's <code>jwk</code> header and verifies
+																	        it matches the <code>jkt</code> in the <span style="background-color:lightyellow; padding:1px 4px; border-radius:3px;">access token</span>'s <code>cnf</code> claim, proving the sender holds the
+																	        correct private key.
+																        </MudText>
+																        <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="mt-3"><b>Related specifications:</b></MudText>
+																        <ul class="ml-4 mt-1">
+																	        <li><a href="https://datatracker.ietf.org/doc/html/rfc9449" target="_blank">RFC 9449</a> &mdash; OAuth 2.0 Demonstrating Proof of Possession (DPoP)</li>
+																	        <li><a href="https://datatracker.ietf.org/doc/html/rfc7800" target="_blank">RFC 7800</a> &mdash; Proof-of-Possession Key Semantics for JWTs (<code>cnf</code> claim)</li>
+																	        <li><a href="https://datatracker.ietf.org/doc/html/rfc7638" target="_blank">RFC 7638</a> &mdash; JSON Web Key (JWK) Thumbprint</li>
+																        </ul>
+															        </MudPaper>
+														        </ChildContent>
+													        </MudExpansionPanel>
+												        </MudExpansionPanels>
+											        </ChildContent>
+										        </MudTabPanel>
+									        }
+								        </MudTabs>
+							        </MudPaper>
+						        </MudItem>
+					        </MudGrid>
 				        }
 				        else
 				        {
@@ -194,7 +304,7 @@
 		        </MudTabPanel>
 	        </MudTabs>
         </MudCard>
-		
+
         <MudCard>
 	        <MudCardContent>
 				<RawResourcePanel @ref="rawResourcePanel" />

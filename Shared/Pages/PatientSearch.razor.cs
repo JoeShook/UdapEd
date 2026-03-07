@@ -46,6 +46,10 @@ public partial class PatientSearch
     private List<RequestHeaderDisplay> _outgoingRequestHeaders = [];
     private string? _outgoingRequestBody;
 
+    // Decoded token state
+    private string? _bearerToken;
+    private string? _dpopProofToken;
+
     private string _selectedItemText = string.Empty;
 
     [CascadingParameter] public CascadingAppState AppState { get; set; } = null!;
@@ -276,6 +280,8 @@ public partial class PatientSearch
         if (info == null)
         {
             _outgoingRequestFormatted = null;
+            _bearerToken = null;
+            _dpopProofToken = null;
             return;
         }
 
@@ -288,6 +294,30 @@ public partial class PatientSearch
         }).ToList();
         _outgoingRequestBody = info.Body;
         _outgoingRequestFormatted = "populated";
+
+        // Extract raw token values for the Decoder card
+        _bearerToken = null;
+        _dpopProofToken = null;
+
+        foreach (var header in info.Headers)
+        {
+            if (header.Name.Equals("Authorization", StringComparison.OrdinalIgnoreCase))
+            {
+                var value = header.Value.Trim();
+                if (value.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                {
+                    _bearerToken = value.Substring("Bearer ".Length).Trim();
+                }
+                else if (value.StartsWith("DPoP ", StringComparison.OrdinalIgnoreCase))
+                {
+                    _bearerToken = value.Substring("DPoP ".Length).Trim();
+                }
+            }
+            else if (header.Name.Equals("DPoP", StringComparison.OrdinalIgnoreCase))
+            {
+                _dpopProofToken = header.Value.Trim();
+            }
+        }
     }
 
     private record RequestHeaderDisplay
