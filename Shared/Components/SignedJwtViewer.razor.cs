@@ -10,6 +10,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.IdentityModel.Tokens;
 using MudBlazor;
@@ -84,11 +85,33 @@ public partial class SignedJwtViewer : ComponentBase
                 sb.AppendLine(formattedStatement);
             }
 
-            _decodedJwt = sb.ToString();
+            _decodedJwt = AddEpochTooltips(sb.ToString());
         }
         catch (Exception ex)
         {
             _decodedJwt = SignedSoftwareStatement;
         }
+    }
+
+    private static readonly Regex EpochClaimRegex = new(
+        @"(""(?:nbf|iat|exp)"":\s*)(\d+)",
+        RegexOptions.Compiled);
+
+    private static string AddEpochTooltips(string html)
+    {
+        return EpochClaimRegex.Replace(html, match =>
+        {
+            var prefix = match.Groups[1].Value;
+            var epochStr = match.Groups[2].Value;
+
+            if (!long.TryParse(epochStr, out var epoch))
+                return match.Value;
+
+            var utc = DateTimeOffset.FromUnixTimeSeconds(epoch);
+            var local = utc.ToLocalTime();
+            var tooltip = $"{utc:yyyy-MM-dd HH:mm:ss} UTC ({local:yyyy-MM-dd HH:mm:ss} local)";
+
+            return $"{prefix}<span title=\"{tooltip}\" style=\"border-bottom:1px dashed currentColor; cursor:help;\">{epochStr}</span>";
+        });
     }
 }
