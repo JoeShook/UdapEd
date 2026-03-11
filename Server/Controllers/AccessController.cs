@@ -110,7 +110,28 @@ public class AccessController : Controller
             tokenRequest.CodeVerifier = tokenRequestModel.CodeVerifier;
         }
 
-        return Task.FromResult<IActionResult>(Ok(tokenRequest));
+        var tokenRequestModel2 = tokenRequest.ToModel();
+
+        if (tokenRequestModel.EnableDPoP)
+        {
+            tokenRequestModel2.DPoPProofToken = DPoPProofTokenGenerator.GenerateProofToken(
+                clientCert,
+                alg,
+                "POST",
+                tokenRequestModel.TokenEndpointUrl!);
+
+            tokenRequestModel2.DPoPJkt = DPoPProofTokenGenerator.ComputeJwkThumbprint(clientCert);
+
+            HttpContext.Session.SetString(UdapEdConstants.DPOP_ENABLED, "true");
+            HttpContext.Session.SetString(UdapEdConstants.DPOP_SIGNING_ALG, alg);
+        }
+        else
+        {
+            HttpContext.Session.Remove(UdapEdConstants.DPOP_ENABLED);
+            HttpContext.Session.Remove(UdapEdConstants.DPOP_SIGNING_ALG);
+        }
+
+        return Task.FromResult<IActionResult>(Ok(tokenRequestModel2));
     }
 
     [HttpPost("BuildRequestToken/client_credentials")]
@@ -227,6 +248,27 @@ public class AccessController : Controller
     public async Task<IActionResult> RequestAccessTokenForAuthorizationCode([FromBody] UdapAuthorizationCodeTokenRequestModel request)
     {
         var tokenRequest = request.ToUdapAuthorizationCodeTokenRequest();
+
+        // Regenerate a fresh DPoP proof with current iat/jti if DPoP is enabled
+        var dpopEnabled = HttpContext.Session.GetString(UdapEdConstants.DPOP_ENABLED);
+        if (dpopEnabled == "true" && !string.IsNullOrEmpty(request.DPoPProofToken))
+        {
+            var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
+            var signingAlg = HttpContext.Session.GetString(UdapEdConstants.DPOP_SIGNING_ALG);
+
+            if (clientCertWithKey != null && signingAlg != null)
+            {
+                var certBytes = Convert.FromBase64String(clientCertWithKey);
+                var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+
+                tokenRequest.DPoPProofToken = DPoPProofTokenGenerator.GenerateProofToken(
+                    clientCert,
+                    signingAlg,
+                    "POST",
+                    tokenRequest.Address!);
+            }
+        }
+
         var tokenResponse = await _httpClient.ExchangeCodeForTokenResponse(tokenRequest);
 
         var tokenResponseModel = new TokenResponseModel

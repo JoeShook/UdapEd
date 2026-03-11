@@ -32,11 +32,11 @@
 }"
                                            ClientIdSelected="(registration) =>
 {
-
     Enum.TryParse(registration.UserFlowSelected, out Oauth2FlowEnum flow);
     AppState.SetProperty(this, nameof(AppState.Oauth2Flow), flow, true, false);
     AppState.ClientRegistrations.SelectedRegistration = registration;
     AppState.SetProperty(this, nameof(AppState.ClientRegistrations), AppState.ClientRegistrations);
+    EnableDPoP = registration?.DPoPEnabled ?? false;
 }" />
                     </MudItem>
 
@@ -236,6 +236,10 @@
                     }
                 </MudSelect>
             </MudItem>
+            <MudItem Class="d-inline-flex">
+                <MudCheckBox @bind-Value="EnableDPoP" T="bool"
+                             Label="Enable DPoP" />
+            </MudItem>
         </MudGrid>
     </MudCardActions>
     <MudCardContent>
@@ -245,7 +249,15 @@
                     <MudText Align="Align.Right" Color="Color.Tertiary">5.1 Authorization Code Flow</MudText>
                     <MudText Align="Align.Right" Color="Color.Tertiary">Cash Code in for Access Token</MudText>
                     <pre>@TokenRequest1</pre>
+                    @if (EnableDPoP)
+                    {
+                        <pre style="background-color:lightcyan">@TokenRequestDPoPHeader</pre>
+                    }
                     <pre style="padding-left: 10px">@TokenRequest2</pre>
+                    @if (EnableDPoP)
+                    {
+                        <pre style="padding-left:10px; background-color:lightcyan">@TokenRequestDPoP</pre>
+                    }
                     <pre style="padding-left:10px; background-color:lightyellow">@TokenRequest3</pre>
                     <pre style="padding-left:10px">@TokenRequest4</pre>
                 </MudPaper>
@@ -259,12 +271,30 @@
                                              SignedSoftwareStatement="@AppState.AuthorizationCodeTokenRequest?.ClientAssertion?.Value" />
                         </MudTabPanel>
                         <MudTabPanel Text="Certificates">
-	                        <CertificatePKIViewer  
-		                        @ref="_certificateViewer" 
-		                        JwtHeaderWithx5c="@GetJwtHeader(AppState.AuthorizationCodeTokenRequest?.ClientAssertion?.Value)" 
+	                        <CertificatePKIViewer
+		                        @ref="_certificateViewer"
+		                        JwtHeaderWithx5c="@GetJwtHeader(AppState.AuthorizationCodeTokenRequest?.ClientAssertion?.Value)"
 		                        EnableAddToClaim="true"
 		                        EndCertificate="true"/>
                         </MudTabPanel>
+                        @if (EnableDPoP)
+                        {
+                            <MudTabPanel>
+                                <TabContent>
+                                    <span style="background-color:lightcyan; padding:2px 8px; border-radius:4px;">DPoP Proof</span>
+                                </TabContent>
+                                <ChildContent>
+                                    <SignedJwtViewer Title="<b>Decoded DPoP Proof::</b>"
+                                                     SignedSoftwareStatement="@AppState.AuthorizationCodeTokenRequest?.DPoPProofToken"/>
+                                    <MudDivider Class="my-3"/>
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Primary"><b>dpop_jkt</b> (JWK Thumbprint per RFC 7638)</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Tertiary" Class="mb-2">
+                                        Base64url-encoded SHA-256 hash of the canonical JSON representation of the JWK's required members
+                                    </MudText>
+                                    <pre style="background-color:lightcyan; padding:8px; border-radius:4px; word-break:break-all;">@AppState.AuthorizationCodeTokenRequest?.DPoPJkt</pre>
+                                </ChildContent>
+                            </MudTabPanel>
+                        }
                     </MudTabs>
                 </MudPaper>
             </MudItem>

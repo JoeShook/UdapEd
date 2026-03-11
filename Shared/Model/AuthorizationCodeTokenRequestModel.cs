@@ -20,4 +20,5 @@ public class AuthorizationCodeTokenRequestModel
 
     public string? CodeVerifier { get; set; }
 
+    public bool EnableDPoP { get; set; }
 }

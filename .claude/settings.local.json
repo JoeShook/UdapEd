@@ -8,7 +8,8 @@
       "Bash(grep:*)",
       "Bash(tail:*)",
       "Bash(grep error:*)",
-      "Bash(cd /c/Source/GitHub/JoeShook/udap-tools/UdapEd && dotnet build Server/UdapEd.Server.csproj 2>&1)"
+      "Bash(cd /c/Source/GitHub/JoeShook/udap-tools/UdapEd && dotnet build Server/UdapEd.Server.csproj 2>&1)",
+      "Bash(dotnet build:*)"
     ]
   }
 }

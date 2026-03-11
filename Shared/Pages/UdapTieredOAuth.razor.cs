@@ -39,6 +39,13 @@ public partial class UdapTieredOAuth
     
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
 
+    private bool _enableDPoP;
+    public bool EnableDPoP
+    {
+        get => _enableDPoP;
+        set => _enableDPoP = value;
+    }
+
     private bool _enablePkce;
     public bool EnablePkce
     {
@@ -88,6 +95,8 @@ public partial class UdapTieredOAuth
     private string? TokenRequest3 { get; set; }
     private string? TokenRequestScope { get; set; }
     private string? TokenRequest4 { get; set; }
+    private string? TokenRequestDPoPHeader { get; set; }
+    private string? TokenRequestDPoP { get; set; }
     
     private AuthorizationCodeRequest? _authorizationCodeRequest;
     private AuthorizationCodeRequest? AuthorizationCodeRequest {
@@ -287,6 +296,7 @@ public partial class UdapTieredOAuth
         }
 
         EnablePkce = AppState.Pkce.EnablePkce;
+        EnableDPoP = AppState.ClientRegistrations?.SelectedRegistration?.DPoPEnabled ?? false;
     }
 
 
@@ -326,6 +336,7 @@ public partial class UdapTieredOAuth
         {
             ClientId = AppState.ClientRegistrations?.SelectedRegistration?.ClientId,
             TokenEndpointUrl = AppState.MetadataVerificationModel?.UdapServerMetaData?.TokenEndpoint,
+            EnableDPoP = EnableDPoP
         };
 
         tokenRequestModel.RedirectUrl = NavManager.Uri.RemoveQueryParameters();
@@ -339,7 +350,7 @@ public partial class UdapTieredOAuth
 
         var requestToken = await AccessService
             .BuildRequestAccessTokenForAuthCode(tokenRequestModel, _signingAlgorithm);
-        
+
         await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeTokenRequest), requestToken);
 
         if (AppState.AuthorizationCodeTokenRequest == null)
@@ -363,15 +374,31 @@ public partial class UdapTieredOAuth
             return;
         }
 
+        var tokenEndpoint = AppState.MetadataVerificationModel?.UdapServerMetaData?.TokenEndpoint;
+        Uri.TryCreate(tokenEndpoint, UriKind.Absolute, out var tokenUri);
+
         var sb = new StringBuilder();
-        sb.AppendLine("POST /token HTTP/1.1");
-        sb.AppendLine($"Host: {AppState.MetadataVerificationModel?.UdapServerMetaData?.AuthorizationEndpoint}");
-        sb.AppendLine("Content-type: application/x-www-form-urlencoded");
-        sb.AppendLine();
-        sb.AppendLine("grant_type=authorization_code&");
+        sb.AppendLine($"POST {tokenEndpoint ?? "/token"} HTTP/1.1");
+        sb.AppendLine("-- Headers --");
+        sb.AppendLine($"Host: {tokenUri?.Authority ?? tokenEndpoint}");
+        sb.AppendLine("Content-Type: application/x-www-form-urlencoded");
         TokenRequest1 = sb.ToString();
 
+        if (EnableDPoP)
+        {
+            TokenRequestDPoPHeader = $"DPoP: {AppState.AuthorizationCodeTokenRequest?.DPoPProofToken}";
+            TokenRequestDPoP = $"dpop_jkt={AppState.AuthorizationCodeTokenRequest?.DPoPJkt}&";
+        }
+        else
+        {
+            TokenRequestDPoPHeader = null;
+            TokenRequestDPoP = null;
+        }
+
         sb = new StringBuilder();
+        sb.AppendLine();
+        sb.AppendLine("-- Body --");
+        sb.AppendLine("grant_type=authorization_code&");
         sb.AppendLine($"code={AppState.AuthorizationCodeTokenRequest?.Code}&");
         sb.AppendLine($"client_assertion_type={OidcConstants.ClientAssertionTypes.JwtBearer}&");
         TokenRequest2 = sb.ToString();
@@ -386,8 +413,9 @@ public partial class UdapTieredOAuth
             sb.AppendLine($"code_verifier={AppState.Pkce.CodeVerifier}");
         }
         sb.Append($"udap={UdapConstants.UdapVersionsSupportedValue}");
+
         TokenRequest4 = sb.ToString();
-        
+
     }
 
     private async Task GetAccessToken()

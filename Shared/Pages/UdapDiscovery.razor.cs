@@ -158,7 +158,6 @@ public partial class UdapDiscovery
         {
             AppState.MetadataVerificationModel.UdapServerMetaData = null;
         }
-        Community = null;
         Result = string.Empty;
         StateHasChanged();
     }

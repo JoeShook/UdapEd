@@ -105,7 +105,28 @@ internal class AccessService : IAccessService
             tokenRequest.CodeVerifier = tokenRequestModel.CodeVerifier;
         }
 
-        return await Task.FromResult(tokenRequest.ToModel());
+        var tokenRequestModel2 = tokenRequest.ToModel();
+
+        if (tokenRequestModel.EnableDPoP)
+        {
+            tokenRequestModel2.DPoPProofToken = DPoPProofTokenGenerator.GenerateProofToken(
+                clientCert,
+                signingAlgorithm,
+                "POST",
+                tokenRequestModel.TokenEndpointUrl!);
+
+            tokenRequestModel2.DPoPJkt = DPoPProofTokenGenerator.ComputeJwkThumbprint(clientCert);
+
+            await SecureStorage.Default.SetAsync(UdapEdConstants.DPOP_ENABLED, "true");
+            await SecureStorage.Default.SetAsync(UdapEdConstants.DPOP_SIGNING_ALG, signingAlgorithm);
+        }
+        else
+        {
+            SecureStorage.Default.Remove(UdapEdConstants.DPOP_ENABLED);
+            SecureStorage.Default.Remove(UdapEdConstants.DPOP_SIGNING_ALG);
+        }
+
+        return await Task.FromResult(tokenRequestModel2);
     }
 
     public async Task<UdapClientCredentialsTokenRequestModel?> BuildRequestAccessTokenForClientCredentials(ClientCredentialsTokenRequestModel tokenRequestModel,
@@ -232,6 +253,32 @@ internal class AccessService : IAccessService
     public async Task<TokenResponseModel?> RequestAccessTokenForAuthorizationCode(UdapAuthorizationCodeTokenRequestModel request)
     {
         var tokenRequest = request.ToUdapAuthorizationCodeTokenRequest();
+
+        // Regenerate a fresh DPoP proof with current iat/jti if DPoP is enabled
+        var dpopEnabled = await SecureStorage.Default.GetAsync(UdapEdConstants.DPOP_ENABLED);
+        if (dpopEnabled == "true" && !string.IsNullOrEmpty(request.DPoPProofToken))
+        {
+            var clientCertWithKey = await RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
+            var signingAlg = await SecureStorage.Default.GetAsync(UdapEdConstants.DPOP_SIGNING_ALG);
+
+            if (clientCertWithKey != null && signingAlg != null)
+            {
+                var certBytes = Convert.FromBase64String(clientCertWithKey);
+                var flags = X509KeyStorageFlags.DefaultKeySet;
+                if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+                {
+                    flags |= X509KeyStorageFlags.Exportable;
+                }
+                var clientCert = new X509Certificate2(certBytes, "ILikePasswords", flags);
+
+                tokenRequest.DPoPProofToken = DPoPProofTokenGenerator.GenerateProofToken(
+                    clientCert,
+                    signingAlg,
+                    "POST",
+                    tokenRequest.Address!);
+            }
+        }
+
         var tokenResponse = await _httpClient.ExchangeCodeForTokenResponse(tokenRequest);
 
         var tokenResponseModel = new TokenResponseModel
