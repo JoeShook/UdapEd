@@ -193,7 +193,7 @@ internal class FhirService : IFhirService
         int? compressedSize = null;
         int? decompressedSize = null;
 
-        var headerValue = await SecureStorage.Default.GetAsync(UdapEdConstants.FhirClient.FhirCompressedSize); 
+        var headerValue = await SecureStorage.Default.GetAsync(UdapEdConstants.FhirClient.FhirCompressedSize);
         if (int.TryParse(headerValue, out var size))
         {
             compressedSize = size;
@@ -207,6 +207,24 @@ internal class FhirService : IFhirService
 
         resultModel.FhirCompressedSize = compressedSize;
         resultModel.FhirDecompressedSize = decompressedSize;
+
+        // Capture HTTP status from Firely FhirClient's LastResult
+        var lastResult = _fhirClient.LastResult;
+        if (lastResult != null && int.TryParse(lastResult.Status, out var statusCode))
+        {
+            resultModel.SetHttpStatus((HttpStatusCode)statusCode, new Version(1, 1));
+        }
+
+        // Capture outgoing request info from SecureStorage (set by RequestCaptureHandler)
+        var requestInfoJson = await SecureStorage.Default.GetAsync(UdapEdConstants.FhirClient.FhirOutgoingRequest);
+        if (!string.IsNullOrEmpty(requestInfoJson))
+        {
+            try
+            {
+                resultModel.OutgoingRequestInfo = System.Text.Json.JsonSerializer.Deserialize<OutgoingRequestInfo>(requestInfoJson);
+            }
+            catch { /* ignore deserialization errors */ }
+        }
     }
 
     public async Task<FhirResultModel<Hl7.Fhir.Model.Bundle>> MatchPatient(string operation, string parametersJson)

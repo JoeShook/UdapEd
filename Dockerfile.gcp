@@ -44,11 +44,11 @@ COPY ["Shared/UdapEd.Shared.csproj", "Shared/"]
 # -- Tests --
 COPY ["_tests/UtilityTests/UtilityTests.csproj", "_tests/UtilityTests/"]
 
-RUN dotnet restore -p:TargetFramework=net9.0 "Server/UdapEd.Server.csproj"
+RUN dotnet restore -p:TargetFramework=net10.0 "Server/UdapEd.Server.csproj"
 
 # Copy everything else and build
 COPY . .
-RUN dotnet build "Server/UdapEd.Server.csproj" -p:TargetFramework=net9.0 -c Release --no-restore
+RUN dotnet build "Server/UdapEd.Server.csproj" -p:TargetFramework=net10.0 -c Release --no-restore
 
 # Volume mount point for gcloud credentials
 VOLUME ["/root/.config/gcloud"]

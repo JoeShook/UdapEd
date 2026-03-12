@@ -13,7 +13,9 @@
       "Bash(dotnet list:*)",
       "Bash(dotnet add:*)",
       "Bash(dotnet:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(powershell:*)",
+      "Bash(powershell.exe:*)"
     ]
   }
 }

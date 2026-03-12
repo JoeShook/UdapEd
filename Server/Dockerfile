@@ -1,6 +1,6 @@
 #See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 ARG TAG_NAME
 WORKDIR /app
 EXPOSE 8080
@@ -9,7 +9,7 @@ COPY ./Server/SureFhirLabs_CA.cer /etc/ssl/certs
 COPY ./Server/ngnix-proxy-TestCA.cer /etc/ssl/certs
 RUN update-ca-certificates
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 ENV GCPDeploy=true
@@ -22,15 +22,15 @@ COPY ["Server", "Server/"]
 COPY ["Client", "Client/"]
 COPY ["Shared", "Shared/"]
 
-RUN dotnet restore -p:TargetFramework=net9.0.0 "Server/UdapEd.Server.csproj"
+RUN dotnet restore -p:TargetFramework=net10.0 "Server/UdapEd.Server.csproj"
 
-RUN dotnet build "Server/UdapEd.Server.csproj" -p:TargetFramework=net9.0.0 -c Release --no-restore -o /app/build -v diag
+RUN dotnet build "Server/UdapEd.Server.csproj" -p:TargetFramework=net10.0 -c Release --no-restore -o /app/build -v diag
 
 
 FROM build AS publish
 ARG TAG_NAME
 ENV UseMauiEssentials=false
-RUN dotnet publish "Server/UdapEd.Server.csproj" -p:TargetFramework=net9.0.0  -c Release --no-restore -o /app/publish /p:UseAppHost=false 
+RUN dotnet publish "Server/UdapEd.Server.csproj" -p:TargetFramework=net10.0  -c Release --no-restore -o /app/publish /p:UseAppHost=false 
 
 FROM base AS final
 WORKDIR /app

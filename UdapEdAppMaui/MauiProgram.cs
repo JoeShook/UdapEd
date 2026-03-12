@@ -169,10 +169,12 @@ public static class MauiProgram
         builder.Services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
         builder.Services.AddSingleton<IFhirClientOptionsProvider, FhirClientOptionsProvider>();
         builder.Services.AddTransient<HttpResponseHandler>();
+        builder.Services.AddTransient<UdapEdAppMaui.Services.Authentication.DPoPResourceHandler>();
 
         builder.Services.AddHttpClient<FhirClientWithUrlProvider>((sp, httpClient) =>
                 { })
             .AddHttpMessageHandler(sp => new AuthTokenHttpMessageHandler(sp.GetRequiredService<IAccessTokenProvider>()))
+            .AddHttpMessageHandler<UdapEdAppMaui.Services.Authentication.DPoPResourceHandler>()
             .AddHttpMessageHandler(sp => new HeaderAugmentationHandler(sp.GetRequiredService<IOptionsMonitor<UdapClientOptions>>()))
             .AddHttpMessageHandler(sp => new CustomDecompressionHandler(
                 sp.GetRequiredService<IFhirClientOptionsProvider>(),

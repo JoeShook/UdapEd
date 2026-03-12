@@ -17,8 +17,8 @@ public class FhirResultModel<T>
     public T? Result { get; }
     public OperationOutcome? OperationOutcome { get; }
     public bool UnAuthorized { get; }
-    public HttpStatusCode? HttpStatusCode { get; }
-    public Version? Version { get; }
+    public HttpStatusCode? HttpStatusCode { get; private set; }
+    public Version? Version { get; private set; }
     public int? FhirCompressedSize { get; set; }
     public int? FhirDecompressedSize { get; set; }
     public OutgoingRequestInfo? OutgoingRequestInfo { get; set; }
@@ -87,6 +87,12 @@ public class FhirResultModel<T>
         Result = result;
         OperationOutcome = operationOutcome;
         ComputeFlags();
+    }
+
+    public void SetHttpStatus(HttpStatusCode statusCode, Version version)
+    {
+        HttpStatusCode = statusCode;
+        Version = version;
     }
 
     private void ComputeFlags()
