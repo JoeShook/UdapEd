@@ -130,17 +130,17 @@
 
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Maui" Version="9.1.1" />
-    <PackageReference Include="Google.Cloud.Storage.V1" Version="4.13.0" />
+    <PackageReference Include="CommunityToolkit.Maui" Version="11.1.0" />
+    <PackageReference Include="Google.Cloud.Storage.V1" Version="4.14.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.6" />
     <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.120" />
     <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.120" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="9.0.120" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.6" />
-    <PackageReference Include="Serilog" Version="4.3.0" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
+    <PackageReference Include="Serilog" Version="4.3.1" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="Udap.Client" Version="0.5.10" />
+    <PackageReference Include="Udap.Client" Version="0.5.22" />
   </ItemGroup>
 
   <ItemGroup>
@@ -149,6 +149,12 @@
 
   <ItemGroup>
     <PackageReference Include="WinUIEx" Version="2.4.0" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'" />
+  </ItemGroup>
+
+  <!-- Windows splash screen workaround: the resizetizer generates splashSplashScreen.scale-*.png
+       but WinUI packaging expects Assets\splash.png. Supply a static fallback. -->
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+    <Content Include="Platforms\Windows\Assets\splash.png" Link="Assets\splash.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 

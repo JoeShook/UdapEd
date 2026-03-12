@@ -18,6 +18,9 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using System.Net;
 using Udap.Common.Extensions;
+
+#pragma warning disable SDK0001 // ToTypedElement is experimental in Firely SDK 6
+#pragma warning disable SDK0002 // ToScopedNode is experimental in Firely SDK 6
 using Udap.Model;
 using UdapEd.Shared.Components;
 using UdapEd.Shared.Extensions;
@@ -51,7 +54,7 @@ public partial class Directory
     private FhirResults _fhirResults = new FhirResults();
     private string? _outComeMessage;
     private List<Hl7.Fhir.Model.Bundle.EntryComponent?>? _entries;
-    private FhirJsonSerializer _fhirJsonSerializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
+    private FhirJsonSerializer _fhirJsonSerializer = new FhirJsonSerializer();
 /// <summary>
 /// Hl7.Fhir.Model.ModelInfo.SupportedResources is a source of truth for Resource names
 /// </summary>
@@ -276,7 +279,7 @@ private readonly List<string> _supportedResources = new List<string>()
 
             if (result.Result != null)
             {
-                _fhirResults.RawFhir = await new FhirJsonSerializer(new SerializerSettings { Pretty = true })
+                _fhirResults.RawFhir = await new FhirJsonSerializer()
                     .SerializeToStringAsync(result.Result);
 
                 var scopeNode = result.Result.ToTypedElement().ToScopedNode();
@@ -292,15 +295,17 @@ private readonly List<string> _supportedResources = new List<string>()
                     return;
                 }
 
+                var treeChildren = new List<TreeItemData<FhirHierarchyEntry>>();
                 foreach (var referenceContext in scopeNode.Select($"Bundle.entry.resource.where($this.is ({_fhirSearch.ResourceName}))"))
                 {
                     var domainResource = referenceContext.ToPoco<DomainResource>();
-                    var nameMaybe = domainResource.NamedChildren.FirstOrDefault(nc => nc.ElementName == "name");
-                    var resource = new FhirJsonParser().Parse(referenceContext) as DomainResource;
-                    var orgEntry = new TreeItemData(nameMaybe.Value?.ToString() ?? resource?.Id ?? "Unknown", resource?.Id ?? "Unknown", $"{resource?.TypeName}/{resource?.Id}");
-                    
-                    _fhirResults.TreeViewStore.Children?.Add(orgEntry);
+                    var nameElement = domainResource.ToTypedElement().Children("name").FirstOrDefault();
+                    var resource = referenceContext.ToPoco<DomainResource>();
+                    var orgEntry = new TreeItemData(nameElement?.Value?.ToString() ?? resource?.Id ?? "Unknown", resource?.Id ?? "Unknown", $"{resource?.TypeName}/{resource?.Id}");
+
+                    treeChildren.Add(orgEntry);
                 }
+                _fhirResults.TreeViewStore.Children = treeChildren;
                 
                 foreach (var referenceItem in references)
                 {
@@ -312,13 +317,13 @@ private readonly List<string> _supportedResources = new List<string>()
                     foreach (var typedElement in parentReferencedId)
                     {
 
-                        var parentEntry = _fhirResults.TreeViewStore.Children?.FirstOrDefault(tv => tv.Value?.Id == typedElement.Value as string);
-                
+                        var parentEntry = _fhirResults.TreeViewStore.Children?.FirstOrDefault(tv => tv.Value?.Id == typedElement.Value as string) as TreeItemData<FhirHierarchyEntry>;
+
                         // Get Endpoint addresses
                         var endpoints =
                             scopeNode.Select(
                                 $"Bundle.entry.resource.select($this).where($this is Endpoint and $this.descendants().reference.endsWith('{_fhirSearch.ResourceName}/{typedElement.Value}'))");
-                        
+
                         await BuildTreeviewForEndpoints(endpoints, parentEntry);
                     }
                 }
@@ -338,19 +343,20 @@ private readonly List<string> _supportedResources = new List<string>()
     private async T.Task BuildTreeviewForEndpoints(IEnumerable<ITypedElement> endpoints, TreeItemData<FhirHierarchyEntry>? parentEntry = null)
     {
         var treeStore = parentEntry ??  _fhirResults.TreeViewStore;
-        
+        var storeChildren = (treeStore.Children as List<TreeItemData<FhirHierarchyEntry>>) ?? new List<TreeItemData<FhirHierarchyEntry>>();
+
         foreach (var endpoint in endpoints)
         {
-            var endpointResource = new FhirJsonParser().Parse<Endpoint>(endpoint);
-            if (treeStore.Children != null && treeStore.Children.Any(ts => ts.Value?.Id == endpointResource.Id))
+            var endpointResource = endpoint.ToPoco<Endpoint>();
+            if (storeChildren.Any(ts => ts.Value?.Id == endpointResource.Id))
             {
                 return;
             }
-            
+
             var endPointTreeItem = new TreeItemData(endpointResource.Id, endpointResource.Name, $"{endpointResource?.TypeName}/{endpointResource?.Id}");
-            
-            treeStore.Children ??= new List<TreeItemData<FhirHierarchyEntry>>();
-            treeStore.Children?.Add(endPointTreeItem);
+            var endpointChildren = new List<TreeItemData<FhirHierarchyEntry>>();
+
+            storeChildren.Add(endPointTreeItem);
 
             var dynamicEndpointTypes = endpointResource.ToTypedElement().Select(
                 $"extension.where($this.url in 'http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-dynamicRegistration').descendants().select($this.descendants().coding.code)");
@@ -359,14 +365,12 @@ private readonly List<string> _supportedResources = new List<string>()
             foreach (var dynamicEndpointType in dynamicEndpointTypes)
             {
                 if (dynamicEndpointType.Value?.ToString() == "udap")
-                {   
-                    endPointTreeItem.Children ??= new List<TreeItemData<FhirHierarchyEntry>>();
-                    endPointTreeItem.Children.Add(new TreeItemData(
+                {
+                    endpointChildren.Add(new TreeItemData(
                         id: endpointResource.Id,
                         name: endpointResource.Name,
                         resourceReference: $"{endpointResource?.TypeName}/{endpointResource?.Id}",
                         icon: Icons.Material.TwoTone.DynamicForm,
-                        // iconColor: results.Notifications.Any() ? Color.Error : Color.Success,
                         iconColor: Color.Error,
                         link: AppendUdapWellKnown(endpointResource.Address),
                         type: dynamicEndpointType.Value?.ToString()
@@ -379,8 +383,7 @@ private readonly List<string> _supportedResources = new List<string>()
                         await MetadataService.GetSmartMetadata(
                             $"{endpointResource.Address.EnsureTrailingSlash()}.well-known/smart-configuration", default);
 
-                    endPointTreeItem.Children ??= new List<TreeItemData<FhirHierarchyEntry>>();
-                    endPointTreeItem.Children.Add(new TreeItemData(
+                    endpointChildren.Add(new TreeItemData(
                         endpointResource.Id,
                         endpointResource.Name,
                         $"{endpointResource?.TypeName}/{endpointResource?.Id}",
@@ -401,8 +404,7 @@ private readonly List<string> _supportedResources = new List<string>()
                 var mtlsEncodeCertificate = GetMtlsServerCertificate(mTlsEndpointType);
                 var notifications = await MtlsService.VerifyMtlsTrust(mtlsEncodeCertificate);
 
-                endPointTreeItem.Children ??= new List<TreeItemData<FhirHierarchyEntry>>();
-                endPointTreeItem.Children.Add(new TreeItemData(
+                endpointChildren.Add(new TreeItemData(
                     endpointResource.Id,
                     endpointResource.Name,
                     $"{endpointResource?.TypeName}/{endpointResource?.Id}",
@@ -416,6 +418,11 @@ private readonly List<string> _supportedResources = new List<string>()
                     null,
                     mtlsEncodeCertificate
                     ));
+            }
+
+            if (endpointChildren.Count > 0)
+            {
+                endPointTreeItem.Children = endpointChildren;
             }
 
 
@@ -435,6 +442,7 @@ private readonly List<string> _supportedResources = new List<string>()
             //     });
             // }
         }
+        treeStore.Children = storeChildren;
     }
 
     private async T.Task AugmentHandler()
@@ -572,51 +580,25 @@ private readonly List<string> _supportedResources = new List<string>()
         public string HttpStatus { get; set; }
         public string RawFhir { get; set; }
         public List<Hl7.Fhir.Model.Bundle.EntryComponent>? Entries { get; set; }
-        public TreeItemData<FhirHierarchyEntry> TreeViewStore = new (){Children = [] };
+        public TreeItemData<FhirHierarchyEntry> TreeViewStore = new () { Children = new List<TreeItemData<FhirHierarchyEntry>>() };
     }
 
 
-    public class ObjectToFhirBoolConverter : BoolConverter<string>
+    public class ObjectToFhirBoolConverter : IReversibleConverter<string, bool?>
     {
-
-        public ObjectToFhirBoolConverter()
+        public bool? Convert(string input)
         {
-            SetFunc = OnSet;
-            GetFunc = OnGet;
+            return input switch
+            {
+                "true" => true,
+                "false" => false,
+                _ => null
+            };
         }
 
-        private string OnGet(bool? value)
+        public string ConvertBack(bool? input)
         {
-            try
-            {
-                return value == true ? "true" : "false";
-            }
-            catch (Exception e)
-            {
-                UpdateGetError("Conversion error: " + e.Message);
-                return default;
-            }
+            return input == true ? "true" : "false";
         }
-
-        private bool? OnSet(string arg)
-        {
-            if (arg == null)
-                return null;
-            try
-            {
-                if (arg == "true")
-                    return true;
-                if (arg == "false")
-                    return false;
-                else
-                    return null;
-            }
-            catch (FormatException e)
-            {
-                UpdateSetError("Conversion error: " + e.Message);
-                return null;
-            }
-        }
-
     }
 }

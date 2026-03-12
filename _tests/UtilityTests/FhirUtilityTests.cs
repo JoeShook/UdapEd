@@ -5,6 +5,8 @@ using Hl7.Fhir.ElementModel;
 using Hl7.Fhir.Introspection;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
+
+#pragma warning disable SDK0001 // ToTypedElement is experimental in Firely SDK 6
 using Hl7.Fhir.Specification;
 using Hl7.Fhir.Specification.Navigation;
 using Hl7.Fhir.Specification.Source;
@@ -156,7 +158,7 @@ public class FhirUtilityTests
                         _testOutputHelper.WriteLine("\t\t\t" + extensionValue?.Binding?.ValueSet);
                         var p = new ExpandParameters().WithValueSet(url: extensionValue?.Binding?.ValueSet);
                         var valueSet = await termService.Expand(p, useGet: true) as ValueSet;
-                        File.WriteAllText("", await new FhirJsonSerializer() { Settings = { Pretty = true } }.SerializeToStringAsync(valueSet));
+                        File.WriteAllText("", await new FhirJsonSerializer().SerializeToStringAsync(valueSet, pretty: true));
                         // _testOutputHelper.WriteLine(await new FhirJsonSerializer(){Settings = { Pretty = true}}.SerializeToStringAsync(valueSet));
                     }
 

@@ -108,7 +108,7 @@ public class MetadataController : Controller
                 return NotFound();
             }
             
-            return Ok(await result.ToJsonAsync());
+            return Ok(await new FhirJsonSerializer().SerializeToStringAsync(result));
         }
         catch (Exception ex)
         {

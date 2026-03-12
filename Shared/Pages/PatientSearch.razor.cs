@@ -206,7 +206,7 @@ public partial class PatientSearch
 
             if (_currentBundle != null)
             {
-                _fhirResultRaw += await new FhirJsonSerializer(new SerializerSettings { Pretty = true })
+                _fhirResultRaw += await new FhirJsonSerializer()
                     .SerializeToStringAsync(_currentBundle);
             }
 
@@ -332,7 +332,7 @@ public partial class PatientSearch
     private void OnRowClick(TableRowClickEventArgs<Patient> args)
     {
         rawResourcePanel?.ShowResource(
-            new FhirJsonSerializer(new SerializerSettings { Pretty = true })
+            new FhirJsonSerializer()
                 .SerializeToString(args.Item)
         );
     }

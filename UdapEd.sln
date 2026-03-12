@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.2.11430.68 d18.0
+VisualStudioVersion = 18.2.11430.68
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UdapEd.Shared", "Shared\UdapEd.Shared.csproj", "{40F8E835-9A6D-4351-AC50-A3DAC5952CE9}"
 EndProject
@@ -150,6 +150,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{2E7C12F9-FA4D-472B-B092-F5611D653699} = {73A41BC7-BF69-4F68-9C82-865E92498701}
 		{364E6518-77F0-4AD8-9D45-556194C2DE2F} = {E6D32F39-AFCD-4EC3-BCD3-BC0F2B844DFF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

@@ -66,7 +66,7 @@ public class FhirContextJsonConverter : JsonConverter<FhirContext>
 
     public override void Write(Utf8JsonWriter writer, FhirContext value, JsonSerializerOptions options)
     {
-        var fhirJsonSerializer = new FhirJsonSerializer(new SerializerSettings { Pretty = _indent });
+        var fhirJsonSerializer = new FhirJsonSerializer();
 
         writer.WriteStartObject();
 

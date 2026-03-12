@@ -215,7 +215,7 @@ public partial class PatientMatch
     private void OnRowClick(TableRowClickEventArgs<Hl7.Fhir.Model.Bundle.EntryComponent> args)
     {
         rawResourcePanel?.ShowResource(
-            new FhirJsonSerializer(new SerializerSettings { Pretty = true })
+            new FhirJsonSerializer()
                 .SerializeToString(args.Item)
         );
     }
@@ -396,11 +396,11 @@ public partial class PatientMatch
 
             if (parts.Length == 2)
             {
-                patient.Identifier.Add(new Identifier(parts.First(), parts.Last()));
+                patient.Identifier.Add(new Hl7.Fhir.Model.Identifier(parts.First(), parts.Last()));
             }
             else
             {
-                patient.Identifier.Add(new Identifier() { Value = parts.First() });
+                patient.Identifier.Add(new Hl7.Fhir.Model.Identifier() { Value = parts.First() });
             }
         }
 
@@ -486,7 +486,7 @@ public partial class PatientMatch
             {
                 if (!valueSetValue.Value.IsNullOrEmpty())
                 {
-                    var identifier = new Identifier();
+                    var identifier = new Hl7.Fhir.Model.Identifier();
                     var parts = valueSetValue.Value.Split('|');
                     var codeableConcept = new CodeableConcept
                     {
@@ -534,7 +534,7 @@ public partial class PatientMatch
         }
             
 
-        _parametersJson = new FhirJsonSerializer(new SerializerSettings { Pretty = true })
+        _parametersJson = new FhirJsonSerializer()
             .SerializeToString(parameters);
     }
 
@@ -605,7 +605,7 @@ public partial class PatientMatch
                     _matchResultRaw += Environment.NewLine + Environment.NewLine;
                 }
 
-                _matchResultRaw += await new FhirJsonSerializer(new SerializerSettings { Pretty = true })
+                _matchResultRaw += await new FhirJsonSerializer()
                     .SerializeToStringAsync(result.Result);
 
                 _entries = result.Result?.Entry

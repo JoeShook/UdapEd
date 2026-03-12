@@ -13,7 +13,7 @@ namespace UdapEd.Shared.Search;
 
 public class ResourceToSearchParamMap
 {
-    public ResourceToSearchParamMap(string resource, List<ModelInfo.SearchParamDefinition> @params)
+    public ResourceToSearchParamMap(string resource, List<SearchParamDefinition> @params)
     {
         Resource = resource;
         ParamDefinitions = @params;
@@ -21,6 +21,6 @@ public class ResourceToSearchParamMap
 
     public string Resource { get; }
 
-    public List<ModelInfo.SearchParamDefinition>? ParamDefinitions { get; }
+    public List<SearchParamDefinition>? ParamDefinitions { get; }
 
 }
