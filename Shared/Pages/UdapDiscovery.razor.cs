@@ -130,8 +130,9 @@ public partial class UdapDiscovery
     
     public Adornment KnownCommunityAdornment
     {
-        get => BaseUrl != null && (BaseUrl.Equals("https://fhirlabs.net/fhir/r4", StringComparison.OrdinalIgnoreCase) 
-            || BaseUrl.StartsWith("https://dev-mtx-interop.meditech.com", StringComparison.OrdinalIgnoreCase))
+        get => BaseUrl != null && (BaseUrl.StartsWith("https://fhirlabs.net/", StringComparison.OrdinalIgnoreCase) 
+            || BaseUrl.StartsWith("https://dev-mtx-interop.meditech.com", StringComparison.OrdinalIgnoreCase)
+            || BaseUrl != null && BaseUrl.StartsWith("https://localhost:7016/", StringComparison.OrdinalIgnoreCase))
             ? Adornment.End : Adornment.None;
     }
 

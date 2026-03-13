@@ -1,15 +1,13 @@
-﻿#region (c) 2024 Joseph Shook. All rights reserved.
+#region (c) 2024 Joseph Shook. All rights reserved.
 // /*
 //  Authors:
 //     Joseph Shook   Joseph.Shook@Surescripts.com
-// 
+//
 //  See LICENSE in the project root for license information.
 // */
 #endregion
 
 #if WINDOWS
-using AutoMapper;
-using Microsoft.Extensions.Logging.Abstractions;
 using UdapEd.Shared.Services;
 
 namespace UdapEdAppMaui.Services;
@@ -19,40 +17,8 @@ public class WebAuthenticatorForWindows : IExternalWebAuthenticator
     {
         var result = await WinUIEx.WebAuthenticator.AuthenticateAsync(new Uri(url), new Uri(callbackUrl));
         var dict = result.Properties.ToDictionary(k => k.Key, v => (string?)v.Value, StringComparer.OrdinalIgnoreCase);
-       
+
         return new ExternalWebAuthenticatorResult(dict);
-    }
-}
-
-public static class WebAuthenticatorResultMapper
-{
-    static WebAuthenticatorResultMapper()
-    {
-        Mapper = new MapperConfiguration(cfg =>
-            {
-                cfg.AddProfile<WebAuthenticatorResultProfile>();
-            }, new NullLoggerFactory())
-            .CreateMapper();
-    }
-
-    internal static IMapper Mapper { get; }
-
-    /// <summary>
-    /// Maps a <see cref="WinUIEx.WebAuthenticatorResult"/> to a <see cref="WebAuthenticatorResult"/>.
-    /// </summary>
-    /// <param name="request">The WebAuthenticatorResult.</param>
-    /// <returns></returns>
-    public static WebAuthenticatorResult Map(this WinUIEx.WebAuthenticatorResult request)
-    {
-        return Mapper.Map<WebAuthenticatorResult>(request);
-    }
-}
-
-public class WebAuthenticatorResultProfile : Profile
-{
-    public WebAuthenticatorResultProfile()
-    {
-        CreateMap<WinUIEx.WebAuthenticatorResult, WebAuthenticatorResult>();
     }
 }
 

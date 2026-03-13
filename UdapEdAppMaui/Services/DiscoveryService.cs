@@ -37,16 +37,19 @@ internal class DiscoveryService : IDiscoveryService
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<DiscoveryService> _logger;
     private readonly ILoggerFactory _loggerFactory;
+    private readonly ICertificateDownloadCache? _downloadCache;
 
     public DiscoveryService(
         IHttpClientFactory httpClientFactory,
         IOptionsMonitor<UdapClientOptions> udapClientOptions,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        ICertificateDownloadCache? downloadCache = null)
     {
         _udapClientOptions = udapClientOptions;
         _httpClientFactory = httpClientFactory;
         _logger = loggerFactory.CreateLogger<DiscoveryService>();
         _loggerFactory = loggerFactory;
+        _downloadCache = downloadCache;
     }
 
 
@@ -76,17 +79,17 @@ internal class DiscoveryService : IDiscoveryService
                     };
 
                     // Local functions to handle events
-                    void OnProblem(X509ChainElement element) =>
+                    void OnProblem(ChainElementInfo element) =>
                         result.Problems.Add(
                             $"{element.Certificate.SubjectName.Name} :: \n" +
-                            $"{element.ChainElementStatus.Summarize(TrustChainValidator.DefaultProblemFlags)}");
+                            $"{element.Problems.Summarize(TrustChainValidator.DefaultProblemFlags)}");
                     void OnUntrusted(X509Certificate2 certificate2) =>
                         result.Untrusted.Add("Untrusted: " + certificate2.Subject);
                     void OnTokenError(string message) =>
                         result.TokenErrors.Add("TokenError: " + message);
 
                     var clientDiscovery = new UdapClientDiscoveryValidator(
-                        new TrustChainValidator(_loggerFactory.CreateLogger<TrustChainValidator>()),
+                        new TrustChainValidator(_loggerFactory.CreateLogger<TrustChainValidator>(), _downloadCache),
                         _loggerFactory.CreateLogger<UdapClientDiscoveryValidator>()
                         );
                     

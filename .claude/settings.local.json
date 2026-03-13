@@ -15,7 +15,8 @@
       "Bash(dotnet:*)",
       "Bash(cp:*)",
       "Bash(powershell:*)",
-      "Bash(powershell.exe:*)"
+      "Bash(powershell.exe:*)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

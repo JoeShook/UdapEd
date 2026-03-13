@@ -71,7 +71,7 @@ public class MetadataController : Controller
             _udapClient.Problem += element =>
                 result.Problems.Add(
                     $"{element.Certificate.SubjectName.Name} :: \n" +
-                    $"{element.ChainElementStatus.Summarize(TrustChainValidator.DefaultProblemFlags)}");
+                    $"{element.Problems.Summarize(TrustChainValidator.DefaultProblemFlags)}");
             _udapClient.Untrusted += certificate2 => result.Untrusted.Add("Untrusted: " + certificate2.Subject);
             _udapClient.TokenError += message => result.TokenErrors.Add("TokenError: " + message);
 

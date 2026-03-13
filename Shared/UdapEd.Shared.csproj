@@ -17,26 +17,25 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="16.1.0" />
-    <PackageReference Include="BlazorMonaco" Version="3.4.0" IncludeAssets="all" />
+<PackageReference Include="BlazorMonaco" Version="3.4.0" IncludeAssets="all" />
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="HtmlSanitizer" Version="9.0.892" />
-    <PackageReference Include="Microsoft.Bcl.Memory" Version="10.0.4" />
+    <PackageReference Include="Microsoft.Bcl.Memory" Version="10.0.5" />
     <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
     <PackageReference Include="Google.Cloud.Storage.V1" Version="4.14.0" />
-    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="10.0.4" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="10.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.5" />
     <PackageReference Include="MudBlazor" Version="9.1.0" />
 
-    <PackageReference Include="Udap.Smart.Model" Version="0.5.22" />
-    <PackageReference Include="Udap.CdsHooks.Model" Version="0.5.22" />
-    <PackageReference Include="Udap.Model" Version="0.5.22" />
-    <PackageReference Include="Udap.Common" Version="0.5.22" />
+    <PackageReference Include="Udap.Smart.Model" Version="0.6.6" />
+    <PackageReference Include="Udap.CdsHooks.Model" Version="0.6.6" />
+    <PackageReference Include="Udap.Model" Version="0.6.6" />
+    <PackageReference Include="Udap.Common" Version="0.6.6" />
 
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.5" />
     <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="4.14.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.4" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.5" />
 
   </ItemGroup>
   <ItemGroup>

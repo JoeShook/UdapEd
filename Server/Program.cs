@@ -109,6 +109,9 @@ builder.Services.AddRazorPages();
 //
 //     });
 
+builder.Services.AddUdapCertificateCache();
+builder.Services.AddHttpClient<CertificateDownloadCache>();
+builder.Services.AddSingleton<ICertificateDownloadCache, CertificateDownloadCache>();
 builder.Services.AddScoped<TrustChainValidator>();
 builder.Services.AddScoped<UdapClientDiscoveryValidator>();
 builder.Services.AddHttpClient<IUdapClient, UdapClient>()

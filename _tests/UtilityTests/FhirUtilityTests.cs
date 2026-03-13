@@ -158,7 +158,7 @@ public class FhirUtilityTests
                         _testOutputHelper.WriteLine("\t\t\t" + extensionValue?.Binding?.ValueSet);
                         var p = new ExpandParameters().WithValueSet(url: extensionValue?.Binding?.ValueSet);
                         var valueSet = await termService.Expand(p, useGet: true) as ValueSet;
-                        File.WriteAllText("", await new FhirJsonSerializer().SerializeToStringAsync(valueSet, pretty: true));
+                        File.WriteAllText("", await new FhirJsonSerializer(new SerializerSettings { Pretty = true }).SerializeToStringAsync(valueSet));
                         // _testOutputHelper.WriteLine(await new FhirJsonSerializer(){Settings = { Pretty = true}}.SerializeToStringAsync(valueSet));
                     }
 

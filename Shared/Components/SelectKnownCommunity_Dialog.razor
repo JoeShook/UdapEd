@@ -7,7 +7,7 @@
     </TitleContent>
     <DialogContent>
 	    <MudForm>
-            @if (BaseUrl != null && BaseUrl.Equals("https://fhirlabs.net/fhir/r4".TrimEnd('/'), StringComparison.Ordinal))
+            @if (BaseUrl != null && BaseUrl.StartsWith("https://fhirlabs.net/".TrimEnd('/'), StringComparison.Ordinal))
             {
 	            <MudSelect @bind-Value="Community"
 	                       Label="Select Community"
@@ -24,7 +24,8 @@
 		            <MudSelectItem Value="@("udap://untrusted.fhirlabs.net/")">udap://untrusted.fhirlabs.net/</MudSelectItem>
 		            <MudSelectItem Value="@("udap://Iss.Mismatch.To.SubjAltName/")">udap://Iss.Mismatch.To.SubjAltName/</MudSelectItem>
 		            <MudSelectItem Value="@("udap://Iss.Mismatch.To.BaseUrl/")">udap://Iss.Mismatch.To.BaseUrl/</MudSelectItem>
-		            <MudSelectItem Value="@("udap://ECDSA/")">udap://ECDSA/</MudSelectItem>
+                    <MudSelectItem Value="@("udap://ECDSA/")">udap://ECDSA/</MudSelectItem>
+                    <MudSelectItem Value="@("udap://multihost/")">udap://multihost/</MudSelectItem>
 
 	            </MudSelect>
             }
@@ -42,7 +43,26 @@
 
 	            </MudSelect>
             }
-	    </MudForm>
+            
+            @if (BaseUrl != null && BaseUrl.StartsWith("https://localhost:7016/".TrimEnd('/'), StringComparison.Ordinal))
+            {
+                <MudSelect @bind-Value="Community"
+                           Label="Select Community"
+                           Placeholder="Please Select"
+                           AdornmentIcon="@Icons.Material.Outlined.ArrowDropDown"
+                           AdornmentColor="Color.Primary"
+                           Variant="Variant.Outlined"
+                           FullWidth=false>
+
+                    <MudSelectItem Value="@("udap://multihost/")">udap://multihost/</MudSelectItem>
+
+                </MudSelect>
+            }
+
+
+            
+
+        </MudForm>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>

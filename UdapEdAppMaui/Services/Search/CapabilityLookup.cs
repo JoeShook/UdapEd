@@ -45,11 +45,11 @@ public class CapabilityLookup : ICapabilityLookup
 
         foreach (var resourceComponent in capabilityStatement.Rest.SelectMany(restComponent => restComponent.Resource))
         {
-            var spDefinition = new List<SearchParamDefinition>();
+            var spDefinition = new List<ModelInfo.SearchParamDefinition>();
             foreach (var searchParam in resourceComponent.SearchParam)
             {
                 //_testOutputHelper.WriteLine($"\t\t{searchParam.Name} :: {searchParam.Type}");
-                spDefinition.Add(new SearchParamDefinition() { Resource = resourceComponent.Type, Code = searchParam.Name, Type = searchParam.Type.GetValueOrDefault(), Url = searchParam.Definition, Description = searchParam.Documentation});
+                spDefinition.Add(new ModelInfo.SearchParamDefinition() { Resource = resourceComponent.Type, Code = searchParam.Name, Type = searchParam.Type.GetValueOrDefault(), Url = searchParam.Definition, Description = searchParam.Documentation});
 
             }
             

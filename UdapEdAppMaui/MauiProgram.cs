@@ -157,6 +157,9 @@ public static class MauiProgram
         builder.Services.AddHttpClient<ICdsService, CdsService>();
         builder.Services.AddHttpClient<IServiceExchange, ServiceExchange>();
 
+        builder.Services.AddUdapCertificateCache();
+        builder.Services.AddHttpClient<CertificateDownloadCache>();
+        builder.Services.AddSingleton<ICertificateDownloadCache, CertificateDownloadCache>();
         builder.Services.AddTransient<TrustChainValidator>();
         builder.Services.AddTransient<UdapClientDiscoveryValidator>();
         builder.Services.AddHttpClient<IUdapClient, UdapClient>()

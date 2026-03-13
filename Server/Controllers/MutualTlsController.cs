@@ -281,7 +281,7 @@ public class MutualTlsController : Controller
 
 
     [HttpPost("VerifyMtlsTrust")]
-    public IActionResult VerifyMtlsTrust([FromBody] string publicCertificate)
+    public async Task<IActionResult> VerifyMtlsTrust([FromBody] string publicCertificate)
     {
         var clientCertBytes = Convert.FromBase64String(publicCertificate);
         var clientCertificate = new X509Certificate2(clientCertBytes);
@@ -297,11 +297,11 @@ public class MutualTlsController : Controller
         var certificate = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
 
         var notifications = new List<string>();
-        _trustChainValidator.Problem += element => notifications.Add($"Validation Problem: {element.ChainElementStatus.Summarize(TrustChainValidator.DefaultProblemFlags)}");
-        _trustChainValidator.Untrusted += message => notifications.Add($"Validation Untrusted: {message}");
-        _trustChainValidator.Error += (_, message) => notifications.Add($"Validation Error: {message}");
+        _trustChainValidator.Problem += element => notifications.Add($"Validation Problem: {element.Problems.Summarize(TrustChainValidator.DefaultProblemFlags)}");
+        _trustChainValidator.Untrusted += cert => notifications.Add($"Validation Untrusted: {cert.Subject}");
+        _trustChainValidator.Error += (cert, ex) => notifications.Add($"Validation Error: {ex.Message}");
 
-        var trusted = _trustChainValidator.IsTrustedCertificate("UdapEd",
+        var trusted = await _trustChainValidator.IsTrustedCertificateAsync("UdapEd",
             clientCertificate,
             new X509Certificate2Collection(),
             new X509Certificate2Collection(certificate));
