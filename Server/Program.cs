@@ -109,9 +109,14 @@ builder.Services.AddRazorPages();
 //
 //     });
 
+builder.Services.AddSingleton<CertificateCacheSettings>();
 builder.Services.AddUdapCertificateCache();
 builder.Services.AddHttpClient<CertificateDownloadCache>();
-builder.Services.AddSingleton<ICertificateDownloadCache, CertificateDownloadCache>();
+builder.Services.AddSingleton<CertificateDownloadCache>();
+builder.Services.AddSingleton<ICertificateDownloadCache>(sp =>
+    new ConditionalCertificateDownloadCache(
+        sp.GetRequiredService<CertificateDownloadCache>(),
+        sp.GetRequiredService<CertificateCacheSettings>()));
 builder.Services.AddScoped<TrustChainValidator>();
 builder.Services.AddScoped<UdapClientDiscoveryValidator>();
 builder.Services.AddHttpClient<IUdapClient, UdapClient>()

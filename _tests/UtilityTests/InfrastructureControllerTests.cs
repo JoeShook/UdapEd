@@ -58,9 +58,10 @@ namespace UtilityTests
             var subjAltNames = new List<string> { "udap://joe.shook/", "udap://joseph.shook/" };
 
             var infrastructure = new Infrastructure(
-                Substitute.For<HttpClient>(), 
+                Substitute.For<HttpClient>(),
                 Substitute.For<CrlCacheService>(Substitute.For<ILogger<CrlCacheService>>()),
                 Substitute.For<IFhirClientOptionsProvider>(),
+                new CertificateCacheSettings(),
                 Substitute.For<ILogger<Infrastructure>>());
             var bytes = await infrastructure.JitFhirlabsCommunityCertificate(subjAltNames, "udap-test");
 

@@ -137,6 +137,7 @@ public static class MauiProgram
         builder.Services.AddScoped<IInfrastructure>(sp =>
             new UdapEdAppMaui.Services.IOS.Infrastructure(
                 sp.GetRequiredService<IHttpClientFactory>().CreateClient("UdapEdServer"),
+                sp.GetRequiredService<CertificateCacheSettings>(),
                 sp.GetRequiredService<ILogger<UdapEdAppMaui.Services.IOS.Infrastructure>>()
             )
         );
@@ -157,9 +158,14 @@ public static class MauiProgram
         builder.Services.AddHttpClient<ICdsService, CdsService>();
         builder.Services.AddHttpClient<IServiceExchange, ServiceExchange>();
 
+        builder.Services.AddSingleton<CertificateCacheSettings>();
         builder.Services.AddUdapCertificateCache();
         builder.Services.AddHttpClient<CertificateDownloadCache>();
-        builder.Services.AddSingleton<ICertificateDownloadCache, CertificateDownloadCache>();
+        builder.Services.AddSingleton<CertificateDownloadCache>();
+        builder.Services.AddSingleton<ICertificateDownloadCache>(sp =>
+            new ConditionalCertificateDownloadCache(
+                sp.GetRequiredService<CertificateDownloadCache>(),
+                sp.GetRequiredService<CertificateCacheSettings>()));
         builder.Services.AddTransient<TrustChainValidator>();
         builder.Services.AddTransient<UdapClientDiscoveryValidator>();
         builder.Services.AddHttpClient<IUdapClient, UdapClient>()

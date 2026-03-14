@@ -38,6 +38,10 @@ public interface IInfrastructure
     Task EnableFhirCompression(bool enable);
 
     Task<bool> GetFhirCompression();
+
+    Task EnableCertificateCache(bool enable);
+
+    Task<bool> GetCertificateCacheEnabled();
 }
 
 public class X509CacheSettings

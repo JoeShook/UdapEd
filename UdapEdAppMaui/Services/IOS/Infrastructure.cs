@@ -23,11 +23,13 @@ namespace UdapEdAppMaui.Services.IOS;
 public class Infrastructure : IInfrastructure
 {
     private HttpClient _httpClient;
+    private readonly CertificateCacheSettings _certificateCacheSettings;
     private readonly ILogger<Infrastructure> _logger;
 
-    public Infrastructure(HttpClient httpClient, ILogger<Infrastructure> logger)
+    public Infrastructure(HttpClient httpClient, CertificateCacheSettings certificateCacheSettings, ILogger<Infrastructure> logger)
     {
         _httpClient = httpClient;
+        _certificateCacheSettings = certificateCacheSettings;
         _logger = logger;
     }
 
@@ -199,7 +201,7 @@ public class Infrastructure : IInfrastructure
         try
         {
             var response = await _httpClient.GetAsync($"Infrastructure/GetFhirCompression");
-            
+
             if (response.IsSuccessStatusCode)
             {
                 var enabled = await response.Content.ReadFromJsonAsync<bool>();
@@ -214,5 +216,16 @@ public class Infrastructure : IInfrastructure
             _logger.LogError(ex, $"Failed GetFhirCompression");
             throw;
         }
+    }
+
+    public Task EnableCertificateCache(bool enable)
+    {
+        _certificateCacheSettings.Enabled = enable;
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> GetCertificateCacheEnabled()
+    {
+        return Task.FromResult(_certificateCacheSettings.Enabled);
     }
 }

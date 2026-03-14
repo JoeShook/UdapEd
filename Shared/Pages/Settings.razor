@@ -1,26 +1,37 @@
-﻿@page "/settings"
+@page "/settings"
 @inject IInfrastructure Infrastructure
 
 <MudContainer MaxWidth="MaxWidth.Small" class="mt-4">
     <MudPaper Class="p-3">
         <MudText Typo="Typo.h5">Settings</MudText>
         <MudSwitch T="bool" @bind-Value="_enableCompression"
-                   @bind-Value:after="SaveSettings"
+                   @bind-Value:after="SaveCompressionSetting"
                    Color="Color.Primary"
                    Label="Enable FHIR Client Compression"/>
+        <MudSwitch T="bool" @bind-Value="_enableCertificateCache"
+                   @bind-Value:after="SaveCertificateCacheSetting"
+                   Color="Color.Primary"
+                   Label="Enable Certificate Download Cache"/>
     </MudPaper>
 </MudContainer>
 
 @code {
     private bool _enableCompression;
+    private bool _enableCertificateCache = true;
 
     protected override async Task OnInitializedAsync()
     {
         _enableCompression = await Infrastructure.GetFhirCompression();
+        _enableCertificateCache = await Infrastructure.GetCertificateCacheEnabled();
     }
 
-    private async Task SaveSettings()
+    private async Task SaveCompressionSetting()
     {
         await Infrastructure.EnableFhirCompression(_enableCompression);
+    }
+
+    private async Task SaveCertificateCacheSetting()
+    {
+        await Infrastructure.EnableCertificateCache(_enableCertificateCache);
     }
 }

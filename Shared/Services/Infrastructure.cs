@@ -23,13 +23,15 @@ public class Infrastructure : IInfrastructure
     protected readonly HttpClient HttpClient;
     private readonly CrlCacheService _crlCacheService;
     private readonly IFhirClientOptionsProvider _fhirClientOptionsProvider;
+    private readonly CertificateCacheSettings _certificateCacheSettings;
     private readonly ILogger<Infrastructure> _logger;
 
-    public Infrastructure(HttpClient httpClient, CrlCacheService crlCacheService, IFhirClientOptionsProvider fhirClientOptionsProvider, ILogger<Infrastructure> logger)
+    public Infrastructure(HttpClient httpClient, CrlCacheService crlCacheService, IFhirClientOptionsProvider fhirClientOptionsProvider, CertificateCacheSettings certificateCacheSettings, ILogger<Infrastructure> logger)
     {
         HttpClient = httpClient;
         _crlCacheService = crlCacheService;
         _fhirClientOptionsProvider = fhirClientOptionsProvider;
+        _certificateCacheSettings = certificateCacheSettings;
         _logger = logger;
     }
 
@@ -397,6 +399,17 @@ public class Infrastructure : IInfrastructure
     public Task<bool> GetFhirCompression()
     {
         return _fhirClientOptionsProvider.GetDecompression();
+    }
+
+    public Task EnableCertificateCache(bool enable)
+    {
+        _certificateCacheSettings.Enabled = enable;
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> GetCertificateCacheEnabled()
+    {
+        return Task.FromResult(_certificateCacheSettings.Enabled);
     }
 
     private async Task<(byte[] caData, byte[] intermediateData)> GetSigningCertificates()

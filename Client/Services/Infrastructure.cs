@@ -202,7 +202,7 @@ public class Infrastructure : IInfrastructure
         try
         {
             var response = await _httpClient.GetAsync($"Infrastructure/GetFhirCompression");
-            
+
             if (response.IsSuccessStatusCode)
             {
                 var enabled = await response.Content.ReadFromJsonAsync<bool>();
@@ -215,6 +215,45 @@ public class Infrastructure : IInfrastructure
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Failed GetFhirCompression");
+            throw;
+        }
+    }
+
+    public async Task EnableCertificateCache(bool enable)
+    {
+        try
+        {
+            var response = await _httpClient.PutAsJsonAsync($"Infrastructure/SetCertificateCache", enable);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError($"Failed to set certificate cache setting. Status code: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Failed SetCertificateCache to {enable}");
+            throw;
+        }
+    }
+
+    public async Task<bool> GetCertificateCacheEnabled()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"Infrastructure/GetCertificateCache");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var enabled = await response.Content.ReadFromJsonAsync<bool>();
+                return enabled;
+            }
+
+            _logger.LogError($"Failed to get certificate cache setting. Status code: {response.StatusCode}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Failed GetCertificateCache");
             throw;
         }
     }

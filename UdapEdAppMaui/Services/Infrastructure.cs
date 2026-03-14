@@ -19,8 +19,8 @@ using UdapEdAppMaui.Extensions;
 namespace UdapEdAppMaui.Services;
 public class Infrastructure : UdapEd.Shared.Services.Infrastructure
 {
-    public Infrastructure(HttpClient httpClient, CrlCacheService crlCacheService, IFhirClientOptionsProvider fhirClientOptionsProvider, ILogger<UdapEd.Shared.Services.Infrastructure> logger) 
-        : base(httpClient, crlCacheService, fhirClientOptionsProvider, logger)
+    public Infrastructure(HttpClient httpClient, CrlCacheService crlCacheService, IFhirClientOptionsProvider fhirClientOptionsProvider, CertificateCacheSettings certificateCacheSettings, ILogger<UdapEd.Shared.Services.Infrastructure> logger)
+        : base(httpClient, crlCacheService, fhirClientOptionsProvider, certificateCacheSettings, logger)
     {
     }
 

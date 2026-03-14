@@ -212,4 +212,20 @@ public class InfrastructureController : Controller
 
         return Ok(enabled);
     }
+
+    [HttpPut("SetCertificateCache")]
+    public async Task<IActionResult> SetCertificateCache([FromBody] bool enable)
+    {
+        await _infrastructure.EnableCertificateCache(enable);
+
+        return Ok();
+    }
+
+    [HttpGet("GetCertificateCache")]
+    public async Task<IActionResult> GetCertificateCache()
+    {
+        var enabled = await _infrastructure.GetCertificateCacheEnabled();
+
+        return Ok(enabled);
+    }
 }
