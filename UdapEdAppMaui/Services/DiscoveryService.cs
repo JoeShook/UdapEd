@@ -89,10 +89,12 @@ internal class DiscoveryService : IDiscoveryService
                         result.TokenErrors.Add("TokenError: " + message);
 
                     var clientDiscovery = new UdapClientDiscoveryValidator(
-                        new TrustChainValidator(_loggerFactory.CreateLogger<TrustChainValidator>(), _downloadCache),
+                        new TrustChainValidator(
+                            _loggerFactory.CreateLogger<TrustChainValidator>(),
+                            _downloadCache),
                         _loggerFactory.CreateLogger<UdapClientDiscoveryValidator>()
                         );
-                    
+
                     var udapClient = new UdapClient(
                         httpClient,
                         clientDiscovery,

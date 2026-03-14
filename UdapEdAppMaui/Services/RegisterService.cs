@@ -58,7 +58,7 @@ internal class RegisterService : IRegisterService
 
         if (clientCertWithKey == null)
         {
-            throw new Exception("Cannot find a certificate.  Reload the certificate.");
+            throw new InvalidOperationException("Cannot find a certificate.  Reload the certificate.");
         }
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
@@ -129,7 +129,7 @@ internal class RegisterService : IRegisterService
 
         if (requestToken == null)
         {
-            throw new Exception("Failed to read signed software statement using JsonWebTokenHandler");
+            throw new InvalidOperationException("Failed to read signed software statement using JsonWebTokenHandler");
         }
 
         var result = new RawSoftwareStatementAndHeader
@@ -149,7 +149,7 @@ internal class RegisterService : IRegisterService
 
         if (clientCertWithKey == null)
         {
-            throw new Exception("Cannot find a certificate.  Reload the certificate.");
+            throw new InvalidOperationException("Cannot find a certificate.  Reload the certificate.");
         }
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
@@ -223,7 +223,7 @@ internal class RegisterService : IRegisterService
 
         if (requestToken == null)
         {
-            throw new Exception("Failed to read signed software statement using JsonWebTokenHandler");
+            throw new InvalidOperationException("Failed to read signed software statement using JsonWebTokenHandler");
         }
 
         var result = new RawSoftwareStatementAndHeader
@@ -242,7 +242,7 @@ internal class RegisterService : IRegisterService
 
         if (clientCertWithKey == null)
         {
-            throw new Exception("Cannot find a certificate.  Reload the certificate.");
+            throw new InvalidOperationException("Cannot find a certificate.  Reload the certificate.");
         }
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
@@ -326,7 +326,7 @@ internal class RegisterService : IRegisterService
 
         if (clientCertWithKey == null)
         {
-            throw new Exception("Cannot find a certificate.  Reload the certificate.");
+            throw new InvalidOperationException("Cannot find a certificate.  Reload the certificate.");
         }
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
