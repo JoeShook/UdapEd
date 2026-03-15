@@ -228,4 +228,20 @@ public class InfrastructureController : Controller
 
         return Ok(enabled);
     }
+
+    [HttpPost("ClearAiaCache")]
+    public async Task<IActionResult> ClearAiaCache([FromBody] string url)
+    {
+        await _infrastructure.ClearAiaCache(url);
+
+        return NoContent();
+    }
+
+    [HttpPost("ClearCrlCache")]
+    public async Task<IActionResult> ClearCrlCache([FromBody] string url)
+    {
+        await _infrastructure.ClearCrlCache(url);
+
+        return NoContent();
+    }
 }

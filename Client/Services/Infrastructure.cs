@@ -257,4 +257,38 @@ public class Infrastructure : IInfrastructure
             throw;
         }
     }
+
+    public async Task ClearAiaCache(string url)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("Infrastructure/ClearAiaCache", url);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError($"Failed to clear AIA cache. Status code: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed ClearAiaCache");
+            throw;
+        }
+    }
+
+    public async Task ClearCrlCache(string url)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("Infrastructure/ClearCrlCache", url);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError($"Failed to clear CRL cache. Status code: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed ClearCrlCache");
+            throw;
+        }
+    }
 }

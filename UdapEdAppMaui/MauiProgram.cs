@@ -138,6 +138,7 @@ public static class MauiProgram
             new UdapEdAppMaui.Services.IOS.Infrastructure(
                 sp.GetRequiredService<IHttpClientFactory>().CreateClient("UdapEdServer"),
                 sp.GetRequiredService<CertificateCacheSettings>(),
+                sp.GetRequiredService<ICertificateDownloadCache>(),
                 sp.GetRequiredService<ILogger<UdapEdAppMaui.Services.IOS.Infrastructure>>()
             )
         );

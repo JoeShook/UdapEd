@@ -10,6 +10,7 @@
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Udap.Common.Certificates;
 using UdapEd.Shared;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Services;
@@ -19,8 +20,8 @@ using UdapEdAppMaui.Extensions;
 namespace UdapEdAppMaui.Services;
 public class Infrastructure : UdapEd.Shared.Services.Infrastructure
 {
-    public Infrastructure(HttpClient httpClient, CrlCacheService crlCacheService, IFhirClientOptionsProvider fhirClientOptionsProvider, CertificateCacheSettings certificateCacheSettings, ILogger<UdapEd.Shared.Services.Infrastructure> logger)
-        : base(httpClient, crlCacheService, fhirClientOptionsProvider, certificateCacheSettings, logger)
+    public Infrastructure(HttpClient httpClient, CrlCacheService crlCacheService, IFhirClientOptionsProvider fhirClientOptionsProvider, CertificateCacheSettings certificateCacheSettings, ICertificateDownloadCache certificateDownloadCache, ILogger<UdapEd.Shared.Services.Infrastructure> logger)
+        : base(httpClient, crlCacheService, fhirClientOptionsProvider, certificateCacheSettings, certificateDownloadCache, logger)
     {
     }
 

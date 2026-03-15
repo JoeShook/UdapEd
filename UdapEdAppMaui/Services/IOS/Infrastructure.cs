@@ -9,6 +9,7 @@
 
 using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
+using Udap.Common.Certificates;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 
@@ -24,12 +25,14 @@ public class Infrastructure : IInfrastructure
 {
     private HttpClient _httpClient;
     private readonly CertificateCacheSettings _certificateCacheSettings;
+    private readonly ICertificateDownloadCache _certificateDownloadCache;
     private readonly ILogger<Infrastructure> _logger;
 
-    public Infrastructure(HttpClient httpClient, CertificateCacheSettings certificateCacheSettings, ILogger<Infrastructure> logger)
+    public Infrastructure(HttpClient httpClient, CertificateCacheSettings certificateCacheSettings, ICertificateDownloadCache certificateDownloadCache, ILogger<Infrastructure> logger)
     {
         _httpClient = httpClient;
         _certificateCacheSettings = certificateCacheSettings;
+        _certificateDownloadCache = certificateDownloadCache;
         _logger = logger;
     }
 
@@ -227,5 +230,15 @@ public class Infrastructure : IInfrastructure
     public Task<bool> GetCertificateCacheEnabled()
     {
         return Task.FromResult(_certificateCacheSettings.Enabled);
+    }
+
+    public async Task ClearAiaCache(string url)
+    {
+        await _certificateDownloadCache.RemoveIntermediateAsync(url);
+    }
+
+    public async Task ClearCrlCache(string url)
+    {
+        await _certificateDownloadCache.RemoveCrlAsync(url);
     }
 }

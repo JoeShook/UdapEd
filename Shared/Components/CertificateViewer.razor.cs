@@ -164,6 +164,16 @@ public partial class CertificateViewer : ComponentBase
         await CrlCachedEvent.InvokeAsync(crlFileCache);
     }
 
+    private async Task ClearAiaCache(string url)
+    {
+        await Infrastructure.ClearAiaCache(url);
+    }
+
+    private async Task ClearCrlCache(string url)
+    {
+        await Infrastructure.ClearCrlCache(url);
+    }
+
     private async Task RemoveFromStore()
     {
         if (_thumbPrints != null && StoreCache != null)

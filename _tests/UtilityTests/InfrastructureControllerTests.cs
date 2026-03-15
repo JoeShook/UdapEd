@@ -10,6 +10,7 @@
 using Org.BouncyCastle.X509;
 using System.Security.Cryptography.X509Certificates;
 using NSubstitute;
+using Udap.Common.Certificates;
 using Udap.Util.Extensions;
 using UdapEd.Shared.Services;
 using Xunit.Abstractions;
@@ -62,6 +63,7 @@ namespace UtilityTests
                 Substitute.For<CrlCacheService>(Substitute.For<ILogger<CrlCacheService>>()),
                 Substitute.For<IFhirClientOptionsProvider>(),
                 new CertificateCacheSettings(),
+                Substitute.For<ICertificateDownloadCache>(),
                 Substitute.For<ILogger<Infrastructure>>());
             var bytes = await infrastructure.JitFhirlabsCommunityCertificate(subjAltNames, "udap-test");
 

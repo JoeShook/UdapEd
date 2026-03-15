@@ -14,6 +14,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using Org.BouncyCastle.X509;
 using UdapEd.Shared.Model;
+using Udap.Common.Certificates;
 using UdapEd.Shared.Services.Fhir;
 using UdapEd.Shared.Services.x509;
 
@@ -24,14 +25,16 @@ public class Infrastructure : IInfrastructure
     private readonly CrlCacheService _crlCacheService;
     private readonly IFhirClientOptionsProvider _fhirClientOptionsProvider;
     private readonly CertificateCacheSettings _certificateCacheSettings;
+    private readonly ICertificateDownloadCache _certificateDownloadCache;
     private readonly ILogger<Infrastructure> _logger;
 
-    public Infrastructure(HttpClient httpClient, CrlCacheService crlCacheService, IFhirClientOptionsProvider fhirClientOptionsProvider, CertificateCacheSettings certificateCacheSettings, ILogger<Infrastructure> logger)
+    public Infrastructure(HttpClient httpClient, CrlCacheService crlCacheService, IFhirClientOptionsProvider fhirClientOptionsProvider, CertificateCacheSettings certificateCacheSettings, ICertificateDownloadCache certificateDownloadCache, ILogger<Infrastructure> logger)
     {
         HttpClient = httpClient;
         _crlCacheService = crlCacheService;
         _fhirClientOptionsProvider = fhirClientOptionsProvider;
         _certificateCacheSettings = certificateCacheSettings;
+        _certificateDownloadCache = certificateDownloadCache;
         _logger = logger;
     }
 
@@ -410,6 +413,16 @@ public class Infrastructure : IInfrastructure
     public Task<bool> GetCertificateCacheEnabled()
     {
         return Task.FromResult(_certificateCacheSettings.Enabled);
+    }
+
+    public async Task ClearAiaCache(string url)
+    {
+        await _certificateDownloadCache.RemoveIntermediateAsync(url);
+    }
+
+    public async Task ClearCrlCache(string url)
+    {
+        await _certificateDownloadCache.RemoveCrlAsync(url);
     }
 
     private async Task<(byte[] caData, byte[] intermediateData)> GetSigningCertificates()

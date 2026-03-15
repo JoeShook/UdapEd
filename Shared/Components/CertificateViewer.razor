@@ -99,6 +99,13 @@
                                            OnClick="@(() => ResolveIntermediate(keyValuePair.Value))">
                                            <MudText Color="Color.Info">Resolve</MudText>
                                        </MudButton>
+                                       <MudButton
+                                           IconColor="Color.Warning"
+                                           StartIcon=@Icons.Material.Filled.DeleteSweep
+                                           Size="Size.Small"
+                                           OnClick="@(() => ClearAiaCache(keyValuePair.Value))">
+                                           <MudText Color="Color.Warning">Clear Cache</MudText>
+                                       </MudButton>
 
                                        @if (EnableAddToClaim)
                                        {
@@ -130,6 +137,12 @@
                                                       Size="Size.Small"
                                                       OnClick="@(() => ResolveCrl(keyValuePair.Value))">
                                                <MudText Color="Color.Info">Resolve</MudText>
+                                           </MudButton>
+                                           <MudButton IconColor="Color.Warning"
+                                                      StartIcon=@Icons.Material.Filled.DeleteSweep
+                                                      Size="Size.Small"
+                                                      OnClick="@(() => ClearCrlCache(keyValuePair.Value))">
+                                               <MudText Color="Color.Warning">Clear Cache</MudText>
                                            </MudButton>
                                        }
                                    </MudItem>

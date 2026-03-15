@@ -42,6 +42,10 @@ public interface IInfrastructure
     Task EnableCertificateCache(bool enable);
 
     Task<bool> GetCertificateCacheEnabled();
+
+    Task ClearAiaCache(string url);
+
+    Task ClearCrlCache(string url);
 }
 
 public class X509CacheSettings
