@@ -7,14 +7,13 @@
 // */
 #endregion
 
-using System.Text.Json;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
-using Udap.Model;
-using Udap.Model.UdapAuthenticationExtensions;
+using System.Text.Json;
+using Udap.Tefca.Model;
 using UdapEd.Shared.Model.AuthExtObjects;
 using Task = System.Threading.Tasks.Task;
 
@@ -48,7 +47,7 @@ public partial class TefcaIasForm : ComponentBase
     {
         var authExtObj =
             AppState.AuthorizationExtObjects.SingleOrDefault(a =>
-                a.Key == UdapConstants.UdapAuthorizationExtensions.TEFCAIAS);
+                a.Key == TefcaConstants.UdapAuthorizationExtensions.TEFCAIAS);
 
         if (authExtObj.Key != null && authExtObj.Value != null && !string.IsNullOrEmpty(authExtObj.Value.Json))
         {
@@ -109,7 +108,7 @@ public partial class TefcaIasForm : ComponentBase
     
     public void Update()
     {
-        var authExtObj = AppState.AuthorizationExtObjects.SingleOrDefault(a => a.Key == UdapConstants.UdapAuthorizationExtensions.TEFCAIAS);
+        var authExtObj = AppState.AuthorizationExtObjects.SingleOrDefault(a => a.Key == TefcaConstants.UdapAuthorizationExtensions.TEFCAIAS);
 
         if (authExtObj.Key != null && authExtObj.Value != null && !string.IsNullOrEmpty(authExtObj.Value.Json))
         {
@@ -131,7 +130,7 @@ public partial class TefcaIasForm : ComponentBase
     {
         var remove = _hl7B2BModel.ConsentPolicy?.Remove(policy);
         Console.WriteLine("Removed: " + remove);
-        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.TEFCAIAS, _hl7B2BModel, true);
+        await UpdateAppState(TefcaConstants.UdapAuthorizationExtensions.TEFCAIAS, _hl7B2BModel, true);
         StateHasChanged();
         await Task.Delay(100);
     }
@@ -150,7 +149,7 @@ public partial class TefcaIasForm : ComponentBase
     private async Task RemoveConsentReference(string reference)
     {
         _hl7B2BModel.ConsentReference?.Remove(reference);
-        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.TEFCAIAS, _hl7B2BModel, true);
+        await UpdateAppState(TefcaConstants.UdapAuthorizationExtensions.TEFCAIAS, _hl7B2BModel, true);
         StateHasChanged();
     }
 
@@ -159,14 +158,14 @@ public partial class TefcaIasForm : ComponentBase
         await _form.Validate();
         if (_form.IsValid)
         {
-            await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.TEFCAIAS, _hl7B2BModel, true);
+            await UpdateAppState(TefcaConstants.UdapAuthorizationExtensions.TEFCAIAS, _hl7B2BModel, true);
             await OnUpdateEditor.InvokeAsync();
         }
     }
 
     private async Task HandleRemove()
     {
-        await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.TEFCAIAS, _hl7B2BModel, false);
+        await UpdateAppState(TefcaConstants.UdapAuthorizationExtensions.TEFCAIAS, _hl7B2BModel, false);
         await OnUpdateEditor.InvokeAsync();
     }
 
@@ -210,7 +209,7 @@ public partial class TefcaIasForm : ComponentBase
 
     private async Task GoToTefcaFacilitateFhirSOP()
     {
-        await JsRuntime.InvokeVoidAsync("open", "https://rce.sequoiaproject.org/wp-content/uploads/2024/07/SOP-Facilitated-FHIR-Implementation_508-1.pdf#page=17", "_blank");
+        await JsRuntime.InvokeVoidAsync("open", "https://rce.sequoiaproject.org/wp-content/uploads/2026/02/SOP-Facilitated-FHIR-Implementation-2.0-Draft-508.pdf#page=16", "_blank");
     }
 
     private string? ValidateJsonRelatedPerson(string? input)

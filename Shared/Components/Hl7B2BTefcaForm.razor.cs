@@ -7,14 +7,14 @@
 // */
 #endregion
 
+using System.Reflection;
 using System.Text.Json;
-using Hl7.Fhir.Packages.Hl7Terminology_6_0_2;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
 using Udap.Model;
 using Udap.Model.UdapAuthenticationExtensions;
-using UdapEd.Shared.Extensions;
+using Udap.Tefca.Model;
 using UdapEd.Shared.Model.AuthExtObjects;
 
 namespace UdapEd.Shared.Components;
@@ -43,7 +43,7 @@ public partial class Hl7B2BTefcaForm : ComponentBase
 
     protected override void OnInitialized()
     {
-        _vsPurposeOfUse = Hl7Helpers.GetAllCodingsFromType(typeof(VsPurposeOfUse)).Where(c => c.Code != "PurposeOfUse").Select(c => c.Code).ToList();
+        _vsPurposeOfUse = GetExchangePurposeCodes();
 
         var authExtObj = AppState.AuthorizationExtObjects.SingleOrDefault(a => a.Key == UdapConstants.UdapAuthorizationExtensions.Hl7B2B);
 
@@ -54,10 +54,19 @@ public partial class Hl7B2BTefcaForm : ComponentBase
         }
         else
         {
-            // default starter template
+            // default starter template with TEFCA exchange purpose
             _hl7B2BModel = JsonSerializer.Deserialize<HL7B2BAuthorizationExtension>(
-                "{\"version\":\"1\",\"subject_id\":\"urn:oid:2.16.840.1.113883.4.6#1234567890\",\"organization_id\":\"https://fhirlabs.net/fhir/r4\",\"organization_name\":\"FhirLabs\",\"purpose_of_use\":[\"urn:oid:2.16.840.1.113883.5.8#TREAT\"]}");
+                $"{{\"version\":\"1\",\"subject_id\":\"urn:oid:2.16.840.1.113883.4.6#1234567890\",\"organization_id\":\"https://fhirlabs.net/fhir/r4\",\"organization_name\":\"FhirLabs\",\"purpose_of_use\":[\"urn:oid:{TefcaConstants.ExchangePurposeCodes.Oid}#{TefcaConstants.ExchangePurposeCodes.TefcaRequiredTreatment}\"]}}");
         }
+    }
+
+    private static List<string> GetExchangePurposeCodes()
+    {
+        return typeof(TefcaConstants.ExchangePurposeCodes)
+            .GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+            .Where(f => f.IsLiteral && !f.IsInitOnly && f.Name != nameof(TefcaConstants.ExchangePurposeCodes.Oid))
+            .Select(f => (string)f.GetRawConstantValue()!)
+            .ToList();
     }
 
     private Task<IEnumerable<string>> SearchPurposeOfUse(string value, CancellationToken ct)
@@ -94,9 +103,10 @@ public partial class Hl7B2BTefcaForm : ComponentBase
 
     private void AddPurposeOfUse()
     {
-        if (!string.IsNullOrWhiteSpace(_newPurposeOfUse) && _hl7B2BModel.PurposeOfUse != null && !_hl7B2BModel.PurposeOfUse.Contains($"urn:oid:2.16.840.1.113883.5.8#{_newPurposeOfUse}"))
+        var fullUri = $"urn:oid:{TefcaConstants.ExchangePurposeCodes.Oid}#{_newPurposeOfUse}";
+        if (!string.IsNullOrWhiteSpace(_newPurposeOfUse) && _hl7B2BModel.PurposeOfUse != null && !_hl7B2BModel.PurposeOfUse.Contains(fullUri))
         {
-            _hl7B2BModel.PurposeOfUse.Add($"urn:oid:2.16.840.1.113883.5.8#{_newPurposeOfUse}");
+            _hl7B2BModel.PurposeOfUse.Add(fullUri);
             _newPurposeOfUse = string.Empty;
         }
     }
@@ -192,6 +202,6 @@ public partial class Hl7B2BTefcaForm : ComponentBase
 
     private async Task GoToTefcaFacilitateFhirSOP()
     {
-        await JsRuntime.InvokeVoidAsync("open", "https://rce.sequoiaproject.org/wp-content/uploads/2024/07/SOP-Facilitated-FHIR-Implementation_508-1.pdf#page=16", "_blank");
+        await JsRuntime.InvokeVoidAsync("open", "https://rce.sequoiaproject.org/wp-content/uploads/2026/02/SOP-Facilitated-FHIR-Implementation-2.0-Draft-508.pdf#page=15", "_blank");
     }
 }

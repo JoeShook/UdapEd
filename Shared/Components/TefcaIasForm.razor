@@ -1,7 +1,7 @@
 ﻿<MudForm @ref="_form" Model="@_hl7B2BModel">
 
     <div style="display: flex; justify-content: flex-end;">
-        <MudText Color="Color.Tertiary">See TEFCA Facilitated FHIR SOP Page 17</MudText>
+        <MudText Color="Color.Tertiary">See TEFCA Facilitated FHIR SOP v2.0 — Table 4</MudText>
         <MudImage Width="158" Height="56"
                   Class="cursor-pointer ma-2"
                   Src="https://rce.sequoiaproject.org/wp-content/uploads/2023/10/rce-logo-gray.svg"
@@ -84,7 +84,6 @@
         </MudText>
     }
 
-    <MudTextField @bind-Value="_hl7B2BModel.IalVetted" Label="IA Vetted" />
     <MudTextField @bind-Value="_newConsentPolicy" Label="New Consent Policy" />
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddConsentPolicy">Add Consent Policy</MudButton>
     <MudChipSet T="string">
@@ -98,7 +97,7 @@
     </MudChipSet>
     @if (_hl7B2BModel.ConsentPolicy.Count == 0)
     {
-        <div class="validation-error">At least one Consent Policy is required.</div>
+        <div class="validation-error">Consent Policy is required when user is not the patient (relationship != ONESELF).</div>
     }
 
     <MudTextField @bind-Value="_newConsentReference" Label="New Consent Reference" />
@@ -112,7 +111,7 @@
             }
         }
     </MudChipSet>
-    <MudTextField @bind-Value="_hl7B2BModel.IdToken" Label="Id Token" />
+    <MudTextField @bind-Value="_hl7B2BModel.IdToken" Label="Id Token (CSP-provided OpenID Connect token)" Required="true" />
 
     <MudGrid Justify="Justify.FlexEnd">
         <MudItem>

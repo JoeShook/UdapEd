@@ -7,12 +7,13 @@
 // */
 #endregion
 
-using System.Text.Json;
 using BlazorMonaco.Editor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using System.Text.Json;
 using Udap.Model;
 using Udap.Model.UdapAuthenticationExtensions;
+using Udap.Tefca.Model;
 using UdapEd.Shared.Model.AuthExtObjects;
 
 namespace UdapEd.Shared.Components;
@@ -99,7 +100,7 @@ public partial class AuthorizationExtObjects : ComponentBase
                         b2bAuthExtensions[keyValuePair.Key] = b2bAuthExtension;
                     }
                 }
-                if (keyValuePair.Key == UdapConstants.UdapAuthorizationExtensions.TEFCAIAS)
+                if (keyValuePair.Key == TefcaConstants.UdapAuthorizationExtensions.TEFCAIAS)
                 {
                     var b2bAuthExtension = JsonSerializer.Deserialize<TEFCAIASAuthorizationExtension>(keyValuePair.Value.Json,
                         _jsonSerializerOptions);
