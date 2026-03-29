@@ -112,6 +112,54 @@ public class Infrastructure : IInfrastructure
         return memoryStream.ToArray();
     }
 
+    public async Task<byte[]> BuildTefcaTestCertificatePackage(List<string> subjAltNames)
+    {
+        if (!subjAltNames.Any())
+        {
+            return [];
+        }
+
+        var (caData, intermediateData) = await GetTefcaSigningCertificates();
+
+        using var rootCa = new X509Certificate2(caData, "udap-test");
+        using var subCa = new X509Certificate2(intermediateData, "udap-test");
+
+        var certTooling = new CertificateTooling();
+
+        var x500Builder = new X500DistinguishedNameBuilder();
+        x500Builder.AddCommonName(subjAltNames.First());
+        x500Builder.AddOrganizationalUnitName("TEFCA-TEST");
+        x500Builder.AddOrganizationName("Fhir Coding");
+        x500Builder.AddLocalityName("Portland");
+        x500Builder.AddStateOrProvinceName("Oregon");
+        x500Builder.AddCountryOrRegion("US");
+
+        var distinguishedName = x500Builder.Build();
+
+        var rsaCertificate = certTooling.BuildUdapClientCertificate(
+            subCa,
+            rootCa,
+            subCa.GetRSAPrivateKey()!,
+            distinguishedName,
+            subjAltNames,
+            "http://crl.fhircerts.net/crl/TefcaTestIntermediateCrl.crl",
+            "http://crl.fhircerts.net/certs/intermediates/TEFCA_Test_Intermediate.cer"
+        );
+
+        using var memoryStream = new MemoryStream();
+        using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+        {
+            var entry = archive.CreateEntry("tefca_client_rsa.p12");
+            await using (var entryStream = entry.Open())
+            await using (var binaryWriter = new BinaryWriter(entryStream))
+            {
+                binaryWriter.Write(rsaCertificate);
+            }
+        }
+
+        return memoryStream.ToArray();
+    }
+
     public async Task<byte[]> JitFhirlabsCommunityCertificate(List<string> subjAltNames, string password)
     {
         var (caData, intermediateData) = await GetSigningCertificates();
@@ -435,6 +483,16 @@ public class Infrastructure : IInfrastructure
         return (caData, intermediateData);
     }
     
+
+    private async Task<(byte[] caData, byte[] intermediateData)> GetTefcaSigningCertificates()
+    {
+        var caFilePath = "gs://cert_store_private/TEFCA_Community/TEFCA_Test_CA.pfx";
+        var intermediateFilePath = "gs://cert_store_private/TEFCA_Community/intermediates/TEFCA_Test_Intermediate.pfx";
+
+        byte[] caData = await DownloadFileFromGcs(caFilePath);
+        byte[] intermediateData = await DownloadFileFromGcs(intermediateFilePath);
+        return (caData, intermediateData);
+    }
 
     private async Task<byte[]> DownloadFileFromGcs(string gcsFilePath)
     {

@@ -135,16 +135,16 @@
 
 </MudItem>
 
-<MudItem >
+<MudItem xs="12">
     <MudText Typo="Typo.subtitle2">This is a tool to experiment with the Security IG constrained on the UDAP profiles. See FHIR link in top right corner. Notice if you upload a client certificate (P12 format) it will be stored in the server’s session service. The session lifetime is set for one hour. The tool will ask for a password to access the private key, allowing it to generate a software statement used for registration and authorization requests. <MudText Typo="Typo.button" Color="Color.Primary">Do not use your production client certificates.</MudText> 
         But if you are using a cert from EMR Direct or the Fhirlabs anchor for testing, you should consider using this tool. If you are not comfortable loading your certificate, then you can use the test client certificate button above which will load a test client already hosted in the back end. I will add more test certs for other scenarios including failure conditions as this tool evolves. Another idea may be to load one of my EMR Direct issued client certificates that one can use to test registration. </MudText>
 </MudItem>
 
-<MudItem>
+<MudItem xs="12">
     <MudText Typo="Typo.subtitle2">The plan is to allow the user to control some of the inputs as they go through registration and token requests. One place where this feature has begun to show up is in the B2B page during authorization_code flow. Notice the first card labeled 3.1 Authorization Code Flow can be edited. One can work through all the expected failure condition behaviors by invalidating parameters or deleting them. </MudText>
 </MudItem>
 
-<MudItem>
+<MudItem xs="12">
     <MudCard>
         <MudCardHeader>
             <CardHeaderAvatar>
@@ -193,7 +193,7 @@
         </MudCardContent>
     </MudCard>
 </MudItem>
-<MudItem>
+<MudItem xs="12">
     <MudCard>
         <MudCardHeader>
             <CardHeaderAvatar>
@@ -222,35 +222,106 @@
                             <a href="https://storage.googleapis.com/cert_client_downloads/fhirlabs.net.revoked.client.pfx">fhirlabs.net.revoked.client.pfx</a><br/>
                             <a href="https://storage.googleapis.com/cert_client_downloads/fhirlabs.net.untrusted.client.pfx">fhirlabs.net.untrusted.client.pfx</a><br/>
                         </MudCardContent>
+                    </MudCard>
+
+                    <MudCard Class="mb-4">
                         <MudCardHeader>
-                        <CardHeaderContent>
-                            <MudText Typo="Typo.body1" Color="Color.Primary">Build and download your personal UDAP certificates</MudText>
-                            <MudText Typo="Typo.body2">Click the button below to get your own personal zip package of UDAP test certificates
-                                from the Fhirlabs community.  Select up to 10 subject alternative names.  The pack will include one RSA one ECDSA certificate.</MudText>
-                        </CardHeaderContent>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.body1" Color="Color.Primary">Build FhirLabs Community Certificates</MudText>
+                                <MudText Typo="Typo.body2">Generate your own personal zip package of UDAP test certificates
+                                    from the FhirLabs community (<code>udap://fhirlabs.net/</code>). Select up to 10 subject alternative names. The pack will include one RSA and one ECDSA certificate.</MudText>
+                            </CardHeaderContent>
                         </MudCardHeader>
-                        <MudCardContent>   
+                        <MudCardContent>
                             <MudList T="string">
                                 @foreach (var item in SubjectAltNames)
                                 {
                                     <MudListItem OnClick="@(() => RemoveSubjectAltName(item))" Text=@item Icon="@Icons.Material.Filled.Remove"/>
                                 }
                             </MudList>
-                                <MudTextField @bind-Value="subjectAltName" Variant="Variant.Outlined"/>
-                                <MudButton OnClick="@(() => AddSubjectAltName())" Color="Color.Error">Add Subject Alt Name</MudButton>
-                            
+                            <MudTextField @bind-Value="subjectAltName" Variant="Variant.Outlined"/>
+                            <MudButton OnClick="@(() => AddSubjectAltName())" Color="Color.Error">Add Subject Alt Name</MudButton>
+
                             <MudFab HtmlTag="label"
                                     Class="ma-2"
                                     Size="Size.Small"
                                     Color="Color.Primary"
                                     StartIcon="@Icons.Material.Filled.FolderZip"
-                                    Label="Download My UDAP Certificate Pack"
+                                    Label="Download FhirLabs Certificate Pack"
                                     IconSize="Size.Small"
-                                                Disabled="@(!SubjectAltNames.Any())"
+                                    Disabled="@(!SubjectAltNames.Any())"
                                     OnClick="@BuildMyTestCertificatePackage"/>
                         </MudCardContent>
                     </MudCard>
-                    
+
+                    <MudCard Class="mb-4">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.body1" Color="Color.Primary">Build FhirLabs Mock TEFCA Community Certificates</MudText>
+                                <MudText Typo="Typo.body2">Generate a test certificate for the TEFCA community (<code>tefca://test-community</code>). Choose whether you need a <b>server</b> certificate (for signing UDAP metadata at your FHIR endpoint) or a <b>client</b> certificate (for registration and token requests with a specific exchange purpose).</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudRadioGroup @bind-Value="_tefcaCertType">
+                                <MudRadio Value="@("client")" Color="Color.Primary">Client Certificate</MudRadio>
+                                <MudRadio Value="@("server")" Color="Color.Primary">Server Certificate</MudRadio>
+                            </MudRadioGroup>
+
+                            @if (_tefcaCertType == "server")
+                            {
+                                <MudText Typo="Typo.body2" Class="mt-2 mb-1">Add the base URL(s) of your FHIR server. These become the SAN URIs in the certificate. Up to 10 SANs.</MudText>
+                                <MudList T="string">
+                                    @foreach (var item in TefcaServerSans)
+                                    {
+                                        <MudListItem OnClick="@(() => RemoveTefcaServerSan(item))" Text=@item Icon="@Icons.Material.Filled.Remove"/>
+                                    }
+                                </MudList>
+                                <MudTextField @bind-Value="_tefcaServerSan"
+                                              Label="FHIR Server Base URL"
+                                              Placeholder="https://myfhirserver.com/fhir/r4"
+                                              Variant="Variant.Outlined"/>
+                                <MudButton OnClick="@AddTefcaServerSan" Color="Color.Error">Add Subject Alt Name</MudButton>
+
+                                <MudFab HtmlTag="label"
+                                        Class="ma-2 mt-4"
+                                        Size="Size.Small"
+                                        Color="Color.Primary"
+                                        StartIcon="@Icons.Material.Filled.FolderZip"
+                                        Label="Download TEFCA Server Certificate"
+                                        IconSize="Size.Small"
+                                        Disabled="@(!TefcaCanGenerate)"
+                                        OnClick="@BuildTefcaTestCertificatePackage"/>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body2" Class="mt-2">The client certificate will include a SAN URI for every valid TEFCA Exchange Purpose (XP) code, plus one <code>INVALID</code> entry for testing rejection scenarios. Each SAN follows the format <code>&lt;prefix&gt;#&lt;XP-CODE&gt;</code>, per TEFCA SOP v2.0 Section 6.11.</MudText>
+                                <MudTextField @bind-Value="_tefcaSanPrefix"
+                                              Label="SAN URI Prefix"
+                                              HelperText="The base URI prepended to each XP code (e.g. urn:oid:2.999)"
+                                              Variant="Variant.Outlined"
+                                              Class="mt-2"/>
+                                <MudText Typo="Typo.caption" Class="mt-2 mb-1"><b>Included SANs:</b></MudText>
+                                <MudList T="string" Dense="true">
+                                    @foreach (var san in TefcaClientSans)
+                                    {
+                                        <MudListItem Dense="true" Icon="@Icons.Material.Filled.Link">
+                                            <MudText Typo="Typo.caption">@san</MudText>
+                                        </MudListItem>
+                                    }
+                                </MudList>
+
+                                <MudFab HtmlTag="label"
+                                        Class="ma-2"
+                                        Size="Size.Small"
+                                        Color="Color.Primary"
+                                        StartIcon="@Icons.Material.Filled.FolderZip"
+                                        Label="Download TEFCA Client Certificate"
+                                        IconSize="Size.Small"
+                                        OnClick="@BuildTefcaTestCertificatePackage"/>
+                            }
+                        </MudCardContent>
+                    </MudCard>
+
                 </MudItem>
                 <MudItem xs="12" sm="8" md="8">
                     <MudCard>
@@ -271,7 +342,7 @@
         </MudCardContent>
     </MudCard>
 </MudItem>
-<MudItem>
+<MudItem xs="12">
     <MudCard>
         <MudCardContent>
             Trademark Notices:

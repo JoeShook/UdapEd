@@ -44,7 +44,8 @@ public partial class Index
 
     private async Task GetCommunities()
     {
-        _fhirLabsCommunityList = await DiscoveryService.GetFhirLabsCommunityList();
+        var html = await DiscoveryService.GetFhirLabsCommunityList();
+        _fhirLabsCommunityList = System.Text.RegularExpressions.Regex.Replace(html, @"<style[\s\S]*?</style>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
     }
 
     private List<ClientHeader> Headers { get; set; } = new();
@@ -96,13 +97,66 @@ public partial class Index
         SubjectAltNames.Remove(item);
         StateHasChanged();
     }
-    
+
     private async Task BuildMyTestCertificatePackage()
     {
         byte[] zipFile = await Infrastructure.BuildMyTestCertificatePackage(SubjectAltNames);
 
         // Delegate saving to a platform-specific service
         await FileSaveService.SaveAsync("UdapEdCertificatePack.zip", zipFile, "application/zip");
+    }
+
+    // TEFCA certificate generation
+    private string _tefcaCertType = "client";
+    private string _tefcaServerSan = "";
+    private List<string> TefcaServerSans { get; set; } = new();
+    private string _tefcaSanPrefix = "urn:oid:2.999";
+
+    private static readonly List<string> TefcaXpCodes = new()
+    {
+        "T-TRTMNT", "T-TREAT", "T-PYMNT", "T-HCO", "T-HCO-CC",
+        "T-HCO-HED", "T-HCO-QM", "T-PH", "T-PH-ECR", "T-PH-ELR",
+        "T-IAS", "T-GOVDTRM", "INVALID",
+    };
+
+    private List<string> TefcaClientSans => TefcaXpCodes
+        .Select(xp => $"{_tefcaSanPrefix}#{xp}")
+        .ToList();
+
+    private void AddTefcaServerSan()
+    {
+        if (!TefcaServerSans.Contains(_tefcaServerSan) && TefcaServerSans.Count < 10)
+        {
+            if (Uri.TryCreate(_tefcaServerSan, UriKind.Absolute, out var uri))
+            {
+                TefcaServerSans.Add(uri.AbsoluteUri);
+                _tefcaServerSan = "";
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void RemoveTefcaServerSan(string item)
+    {
+        TefcaServerSans.Remove(item);
+        StateHasChanged();
+    }
+
+    private bool TefcaCanGenerate => _tefcaCertType == "client"
+        ? Uri.TryCreate($"{_tefcaSanPrefix}#T-TREAT", UriKind.Absolute, out _)
+        : TefcaServerSans.Any();
+
+    private async Task BuildTefcaTestCertificatePackage()
+    {
+        var sans = _tefcaCertType == "client"
+            ? TefcaClientSans
+            : TefcaServerSans;
+
+        byte[] zipFile = await Infrastructure.BuildTefcaTestCertificatePackage(sans);
+        var filename = _tefcaCertType == "client"
+            ? "TefcaMockClientCertificatePack.zip"
+            : "TefcaMockServerCertificatePack.zip";
+        await FileSaveService.SaveAsync(filename, zipFile, "application/zip");
     }
 
     private void Callback(string obj)

@@ -23,6 +23,12 @@ public interface IInfrastructure
     /// <returns></returns>
     Task<byte[]> BuildMyTestCertificatePackage(List<string> subjAltNames);
 
+    /// <summary>
+    /// Package up a zip file containing an RSA certificate
+    /// for use in the TEFCA community.
+    /// </summary>
+    Task<byte[]> BuildTefcaTestCertificatePackage(List<string> subjAltNames);
+
     Task<byte[]> JitFhirlabsCommunityCertificate(List<string> subjAltNames, string password);
 
     Task<CertificateViewModel?> GetX509ViewModel(string url);

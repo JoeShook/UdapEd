@@ -55,6 +55,20 @@ public class Infrastructure : IInfrastructure
         return new byte[] { };
     }
 
+    public async Task<byte[]> BuildTefcaTestCertificatePackage(List<string> subjAltNames)
+    {
+        var queryString = string.Join("&", subjAltNames.Select(name => $"subjAltNames={Uri.EscapeDataString(name)}"));
+        var response = await _httpClient.GetAsync($"Infrastructure/BuildTefcaTestCertificatePackage?{queryString}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var contentBase64 = await response.Content.ReadAsStringAsync();
+            return Convert.FromBase64String(contentBase64);
+        }
+
+        return new byte[] { };
+    }
+
     /// <summary>
     /// Not implemented.  This is a web service to allow udap client certificates from the Fhirlabs community in automation workflows.
     /// Maybe something like HL7-FAST Foundry can use this to generate a client certificate for a UDAP Tiered enabled Authorization server.

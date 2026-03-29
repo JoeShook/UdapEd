@@ -48,6 +48,23 @@ public class InfrastructureController : Controller
         }
     }
 
+    [HttpGet("BuildTefcaTestCertificatePackage")]
+    public async Task<IActionResult> BuildTefcaTestCertificatePackage(List<string> subjAltNames, CancellationToken token)
+    {
+        try
+        {
+            var zip = await _infrastructure.BuildTefcaTestCertificatePackage(subjAltNames);
+            var base64String = Convert.ToBase64String(zip);
+
+            return Ok(base64String);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to build TEFCA test certificate package");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
     [HttpGet("JitFhirlabsCommunityCertificate")]
     public async Task<IActionResult> JitFhirlabsCommunityCertificate(List<string> subjAltNames, string password, CancellationToken token)
     {
