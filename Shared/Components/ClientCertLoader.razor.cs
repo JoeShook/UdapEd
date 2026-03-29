@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using MudBlazor;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 using Color = MudBlazor.Color;
-using FocusEventArgs = Microsoft.AspNetCore.Components.Web.FocusEventArgs;
 
 namespace UdapEd.Shared.Components;
 
@@ -18,6 +17,11 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
     [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
     private readonly PeriodicTimer _periodicTimer = new PeriodicTimer(TimeSpan.FromMinutes(5));
     private bool _checkServerSession;
+
+    public Color CertLoadedColor = Color.Default;
+    public Color PrePackagedCertLoadedColor = Color.Default;
+
+    private readonly IReadOnlyList<ClientCertEntry> _prePackagedCerts = PrePackagedClientCerts.Entries;
 
     protected override async Task OnInitializedAsync()
     {
@@ -32,21 +36,14 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
 
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), clientCertificateLoadStatus);
 
-        if (clientCertificateLoadStatus != null &&
-            clientCertificateLoadStatus.Issuer.StartsWith("EMR Direct Test Client SubCA"))
+        if (clientCertificateLoadStatus is { UserSuppliedCertificate: true })
         {
-            await SetCertLoadedColorForDefaultCommunity(clientCertificateLoadStatus.CertLoaded);
+            SetCertLoadedColor(clientCertificateLoadStatus.CertLoaded, ref CertLoadedColor);
         }
-        else if (clientCertificateLoadStatus is { UserSuppliedCertificate: true })
+        else if (clientCertificateLoadStatus is { CertLoaded: CertLoadedEnum.Positive })
         {
-            await SetCertLoadedColor(clientCertificateLoadStatus.CertLoaded);
+            SetCertLoadedColor(clientCertificateLoadStatus.CertLoaded, ref PrePackagedCertLoadedColor);
         }
-        else if (clientCertificateLoadStatus != null &&
-                 clientCertificateLoadStatus.Issuer.StartsWith("SureFhir-Intermediate"))
-        {
-            await SetCertLoadedColorForFhirLabs(clientCertificateLoadStatus.CertLoaded);
-        }
-
 
         await JSRuntime.InvokeVoidAsync("pageEventHandlers.registerHandlers");
         RunTimer();
@@ -79,19 +76,13 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
 
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), clientCertificateLoadStatus);
 
-        if (clientCertificateLoadStatus != null &&
-            clientCertificateLoadStatus.Issuer.StartsWith("EMR Direct Test Client SubCA"))
+        if (clientCertificateLoadStatus is { UserSuppliedCertificate: true })
         {
-            await SetCertLoadedColorForDefaultCommunity(clientCertificateLoadStatus?.CertLoaded);
+            SetCertLoadedColor(clientCertificateLoadStatus.CertLoaded, ref CertLoadedColor);
         }
-        else if (clientCertificateLoadStatus is { UserSuppliedCertificate: true })
+        else if (clientCertificateLoadStatus is { CertLoaded: CertLoadedEnum.Positive })
         {
-            await SetCertLoadedColor(clientCertificateLoadStatus?.CertLoaded);
-        }
-        else if (clientCertificateLoadStatus != null &&
-                 clientCertificateLoadStatus.Issuer.StartsWith("SureFhir-Intermediate"))
-        {
-            await SetCertLoadedColorForFhirLabs(clientCertificateLoadStatus?.CertLoaded);
+            SetCertLoadedColor(clientCertificateLoadStatus.CertLoaded, ref PrePackagedCertLoadedColor);
         }
 
         _checkServerSession = true;
@@ -102,105 +93,46 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
         _checkServerSession = false;
     }
 
-    private async Task SetCertLoadedColor(CertLoadedEnum? isCertLoaded)
+    private async Task LoadPrePackagedCert(ClientCertEntry cert)
     {
-        CertLoadedColorForFhirLabs = Color.Default;
-        CertLoadedColorForDefaultCommunity = Color.Default;
-
-        switch (isCertLoaded)
-        {
-            case CertLoadedEnum.Negative:
-                CertLoadedColor = Color.Default;
-                await AppState.SetPropertyAsync(this, nameof(AppState.CertificateLoaded), false);
-                break;
-            case CertLoadedEnum.Positive:
-                CertLoadedColor = Color.Success;
-                await AppState.SetPropertyAsync(this, nameof(AppState.CertificateLoaded), true);
-                break;
-            case CertLoadedEnum.InvalidPassword:
-                CertLoadedColor = Color.Warning;
-                await AppState.SetPropertyAsync(this, nameof(AppState.CertificateLoaded), false);
-                break;
-            case CertLoadedEnum.Expired:
-                CertLoadedColor = Color.Error;
-                await AppState.SetPropertyAsync(this, nameof(AppState.CertificateLoaded), false);
-                break;
-            default:
-                CertLoadedColor = Color.Error;
-                await AppState.SetPropertyAsync(this, nameof(AppState.CertificateLoaded), false);
-                break;
-        }
-
-        this.StateHasChanged();
+        var certViewModel = await RegisterService.LoadTestCertificate(cert.CertificateName);
+        SetCertLoadedColor(certViewModel?.CertLoaded, ref PrePackagedCertLoadedColor);
+        await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), certViewModel);
+        await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
+        await OnCertificateLoaded.InvokeAsync();
     }
 
-    private async Task SetCertLoadedColorForFhirLabs(CertLoadedEnum? isCertLoaded)
+    private void SetCertLoadedColor(CertLoadedEnum? isCertLoaded, ref Color certColor)
     {
         CertLoadedColor = Color.Default;
-        CertLoadedColorForDefaultCommunity = Color.Default;
+        PrePackagedCertLoadedColor = Color.Default;
 
         switch (isCertLoaded)
         {
             case CertLoadedEnum.Negative:
-                CertLoadedColorForFhirLabs = Color.Default;
-                await AppState.SetPropertyAsync(this, nameof(AppState.CertificateLoaded), false);
+                certColor = Color.Default;
+                AppState.SetProperty(this, nameof(AppState.CertificateLoaded), false);
                 break;
             case CertLoadedEnum.Positive:
-                CertLoadedColorForFhirLabs = Color.Success;
-                await AppState.SetPropertyAsync(this, nameof(AppState.CertificateLoaded), true);
+                certColor = Color.Success;
+                AppState.SetProperty(this, nameof(AppState.CertificateLoaded), true);
                 break;
             case CertLoadedEnum.InvalidPassword:
-                CertLoadedColorForFhirLabs = Color.Warning;
-                await AppState.SetPropertyAsync(this, nameof(AppState.CertificateLoaded), false);
+                certColor = Color.Warning;
+                AppState.SetProperty(this, nameof(AppState.CertificateLoaded), false);
                 break;
             case CertLoadedEnum.Expired:
-                CertLoadedColorForFhirLabs = Color.Error;
-                await AppState.SetPropertyAsync(this, nameof(AppState.CertificateLoaded), false);
+                certColor = Color.Error;
+                AppState.SetProperty(this, nameof(AppState.CertificateLoaded), false);
                 break;
             default:
-                CertLoadedColorForFhirLabs = Color.Error;
-                await AppState.SetPropertyAsync(this, nameof(AppState.CertificateLoaded), false);
+                certColor = Color.Error;
+                AppState.SetProperty(this, nameof(AppState.CertificateLoaded), false);
                 break;
         }
 
         this.StateHasChanged();
     }
-
-    private async Task SetCertLoadedColorForDefaultCommunity(CertLoadedEnum? isCertLoaded)
-    {
-        CertLoadedColor = Color.Default;
-        CertLoadedColorForFhirLabs = Color.Default;
-
-        switch (isCertLoaded)
-        {
-            case CertLoadedEnum.Negative:
-                CertLoadedColorForDefaultCommunity = Color.Default;
-                await AppState.SetPropertyAsync(this, nameof(AppState.CertificateLoaded), false);
-                break;
-            case CertLoadedEnum.Positive:
-                CertLoadedColorForDefaultCommunity = Color.Success;
-                await AppState.SetPropertyAsync(this, nameof(AppState.CertificateLoaded), true);
-                break;
-            case CertLoadedEnum.InvalidPassword:
-                CertLoadedColorForDefaultCommunity = Color.Warning;
-                await AppState.SetPropertyAsync(this, nameof(AppState.CertificateLoaded), false);
-                break;
-            case CertLoadedEnum.Expired:
-                CertLoadedColorForDefaultCommunity = Color.Error;
-                await AppState.SetPropertyAsync(this, nameof(AppState.CertificateLoaded), false);
-                break;
-            default:
-                CertLoadedColorForDefaultCommunity = Color.Error;
-                await AppState.SetPropertyAsync(this, nameof(AppState.CertificateLoaded), false);
-                break;
-        }
-
-        this.StateHasChanged();
-    }
-
-    public Color CertLoadedColor { get; set; } = Color.Default;
-    public Color CertLoadedColorForFhirLabs { get; set; } = Color.Default;
-    public Color CertLoadedColorForDefaultCommunity { get; set; } = Color.Default;
 
     private async Task UploadFilesAsync(InputFileChangeEventArgs e)
     {
@@ -218,25 +150,7 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
         var dialog = await DialogService.ShowAsync<Password_Dialog>("Certificate Password", options);
         var result = await dialog.Result;
         var certViewModel = await RegisterService.ValidateCertificate(result.Data?.ToString() ?? "");
-        await SetCertLoadedColor(certViewModel?.CertLoaded);
-        await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), certViewModel);
-        await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
-        await OnCertificateLoaded.InvokeAsync();
-    }
-
-    private async Task LoadFhirLabsTestCertificate()
-    {
-        var certViewModel = await RegisterService.LoadTestCertificate("CertificateStore/fhirlabs.net.client.pfx");
-        await SetCertLoadedColorForFhirLabs(certViewModel?.CertLoaded);
-        await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), certViewModel);
-        await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
-        await OnCertificateLoaded.InvokeAsync();
-    }
-
-    private async Task LoadEmrTestCertificate()
-    {
-        var certViewModel = await RegisterService.LoadTestCertificate("CertificateStore/udap.emrdirect.client.certificate.p12");
-        await SetCertLoadedColorForDefaultCommunity(certViewModel?.CertLoaded);
+        SetCertLoadedColor(certViewModel?.CertLoaded, ref CertLoadedColor);
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), certViewModel);
         await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
         await OnCertificateLoaded.InvokeAsync();
@@ -258,7 +172,7 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
 
                 await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo),
                     clientCertificateLoadStatus);
-                await SetCertLoadedColor(clientCertificateLoadStatus?.CertLoaded);
+                SetCertLoadedColor(clientCertificateLoadStatus?.CertLoaded, ref CertLoadedColor);
             }
         }
     }

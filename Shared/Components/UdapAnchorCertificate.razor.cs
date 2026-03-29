@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using UdapEd.Shared.Model;
@@ -16,8 +16,9 @@ public partial class UdapAnchorCertificate: ComponentBase, IDisposable
     [Inject] private IDiscoveryService DiscoveryService { get; set; } = null!;
     private bool _checkServerSession;
     public Color AnchorLoadedColor;
-    public Color EmrDirectAnchorLoadedColor;
-    public Color FhirLabsAnchorLoadedColor;
+    public Color PrePackagedAnchorLoadedColor;
+
+    private readonly IReadOnlyList<AnchorEntry> _prePackagedAnchors = PrePackagedAnchors.Entries;
 
     protected override async Task OnInitializedAsync()
     {
@@ -37,16 +38,10 @@ public partial class UdapAnchorCertificate: ComponentBase, IDisposable
         {
             SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref AnchorLoadedColor);
         }
-        else if (anchorCertificateLoadStatus != null &&
-                 anchorCertificateLoadStatus.Issuer.StartsWith("EMR Direct Test CA"))
+        else if (anchorCertificateLoadStatus is { CertLoaded: CertLoadedEnum.Positive })
         {
-            SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref EmrDirectAnchorLoadedColor);
+            SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref PrePackagedAnchorLoadedColor);
         }
-        else if (anchorCertificateLoadStatus != null && anchorCertificateLoadStatus.Issuer.StartsWith("SureFhir-CA"))
-        {
-            SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref FhirLabsAnchorLoadedColor);
-        }
-
 
         await JSRuntime.InvokeVoidAsync("pageEventHandlers.registerHandlers");
         RunTimer();
@@ -72,18 +67,13 @@ public partial class UdapAnchorCertificate: ComponentBase, IDisposable
         var anchorCertificateLoadStatus = await DiscoveryService.AnchorCertificateLoadStatus();
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapAnchorCertificateInfo), anchorCertificateLoadStatus);
 
-
-        if (anchorCertificateLoadStatus != null && anchorCertificateLoadStatus.Issuer.StartsWith("EMR Direct Test CA"))
-        {
-            SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref EmrDirectAnchorLoadedColor);
-        }
-        else if (anchorCertificateLoadStatus is { UserSuppliedCertificate: true })
+        if (anchorCertificateLoadStatus is { UserSuppliedCertificate: true })
         {
             SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref AnchorLoadedColor);
         }
-        else if (anchorCertificateLoadStatus != null && anchorCertificateLoadStatus.Issuer.StartsWith("SureFhir-CA"))
+        else if (anchorCertificateLoadStatus is { CertLoaded: CertLoadedEnum.Positive })
         {
-            SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref FhirLabsAnchorLoadedColor);
+            SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref PrePackagedAnchorLoadedColor);
         }
 
         _checkServerSession = true;
@@ -94,25 +84,17 @@ public partial class UdapAnchorCertificate: ComponentBase, IDisposable
         _checkServerSession = false;
     }
 
-    private async Task LoadFhirLabsAnchor()
+    private async Task LoadPrePackagedAnchor(AnchorEntry anchor)
     {
-        var certViewModel = await DiscoveryService.LoadFhirLabsAnchor();
-        SetCertLoadedColor(certViewModel?.CertLoaded, ref FhirLabsAnchorLoadedColor);
-        await AppState.SetPropertyAsync(this, nameof(AppState.UdapAnchorCertificateInfo), certViewModel);
-    }
-
-    private async Task LoadUdapOrgAnchor()
-    {
-        var certViewModel = await DiscoveryService.LoadUdapOrgAnchor();
-        SetCertLoadedColor(certViewModel?.CertLoaded, ref EmrDirectAnchorLoadedColor);
+        var certViewModel = await DiscoveryService.LoadAnchor(anchor.Url);
+        SetCertLoadedColor(certViewModel?.CertLoaded, ref PrePackagedAnchorLoadedColor);
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapAnchorCertificateInfo), certViewModel);
     }
 
     private void SetCertLoadedColor(CertLoadedEnum? isCertLoaded, ref Color anchorColor)
     {
         AnchorLoadedColor = Color.Default;
-        EmrDirectAnchorLoadedColor = Color.Default;
-        FhirLabsAnchorLoadedColor = Color.Default;
+        PrePackagedAnchorLoadedColor = Color.Default;
 
         switch (isCertLoaded)
         {

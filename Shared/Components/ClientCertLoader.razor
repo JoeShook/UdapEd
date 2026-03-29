@@ -1,46 +1,34 @@
-﻿<InputFile id="fileInput" OnChange="UploadFilesAsync" hidden />
+<InputFile id="fileInput" OnChange="UploadFilesAsync" hidden />
 
-
-<MudFab Class="ma-2"
-        HtmlTag="label"
-        Size="Size.Small"
-        Color="@CertLoadedColor"
-        StartIcon="@AppState.CertificateIcon"
-        Label="Upload a Client Certificate"
-        Title="Upload Client Certificate"
-        IconSize="Size.Small"
-        for="fileInput"/>
-
-<MudFab HtmlTag="label"
-        Class="ma-2"
-        Size="Size.Small"
-        Color="@CertLoadedColorForFhirLabs"
-        StartIcon="@AppState.CertificateIcon"
-        Label="FhirLabs Community Test Certificate"
-        Title="Use Test Client Certificate"
-        IconSize="Size.Small"
-        OnClick="@LoadFhirLabsTestCertificate"/>
-
-<MudFab HtmlTag="label"
-        Class="ma-2"
-        Size="Size.Small"
-        Color="@CertLoadedColorForDefaultCommunity"
-        StartIcon="@AppState.CertificateIcon"
-        Label="EMR Direct Default Certificate"
-        Title="Use Test Client Certificate"
-        IconSize="Size.Small"
-        OnClick="@LoadEmrTestCertificate" />
-
+<MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="my-2">
+    <MudFab HtmlTag="label"
+            Size="Size.Small"
+            Color="@CertLoadedColor"
+            StartIcon="@AppState.CertificateIcon"
+            Label="Upload"
+            Title="Upload Client Certificate"
+            IconSize="Size.Small"
+            for="fileInput"/>
+    <MudMenu Label="Load Pre-packaged Cert"
+             StartIcon="@AppState.CertificateIcon"
+             Color="@PrePackagedCertLoadedColor"
+             Size="Size.Small"
+             Variant="Variant.Filled">
+        @foreach (var cert in _prePackagedCerts)
+        {
+            <MudMenuItem OnClick="@(() => LoadPrePackagedCert(cert))" Title="@cert.Description">@cert.Name</MudMenuItem>
+        }
+    </MudMenu>
+</MudStack>
 
 @if (AppState.ClientMode == ClientSecureMode.UDAP && (
     !string.IsNullOrEmpty(AppState.UdapClientCertificateInfo?.DistinguishedName) ||
      !string.IsNullOrEmpty(AppState.UdapClientCertificateInfo?.Thumbprint)))
-{   
-        <MudText Typo="Typo.body2"><b>Subject:</b>@AppState.UdapClientCertificateInfo?.DistinguishedName</MudText>
-    <MudText Typo="Typo.caption"> <b>Thumbprint (sha1)</b> </MudText>
-        <MudText  Typo="Typo.body2">@AppState.UdapClientCertificateInfo?.Thumbprint </MudText>
-        <MudText Typo="Typo.body2"><b>Issuer:</b> @AppState.UdapClientCertificateInfo?.Issuer </MudText>
-       
+{
+    <MudText Typo="Typo.body2"><b>Subject:</b> @AppState.UdapClientCertificateInfo?.DistinguishedName</MudText>
+    <MudText Typo="Typo.caption"><b>Thumbprint (sha1)</b></MudText>
+    <MudText Typo="Typo.body2">@AppState.UdapClientCertificateInfo?.Thumbprint</MudText>
+    <MudText Typo="Typo.body2"><b>Issuer:</b> @AppState.UdapClientCertificateInfo?.Issuer</MudText>
 
     @if (AppState.UdapClientCertificateInfo.CertLoaded == CertLoadedEnum.Expired)
     {

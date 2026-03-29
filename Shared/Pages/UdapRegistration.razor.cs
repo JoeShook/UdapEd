@@ -296,6 +296,12 @@ public partial class UdapRegistration : IAsyncDisposable
     private void Reset()
     {
         _signingAlgorithm = null;
+
+        if (AppState.UdapClientCertificateInfo?.SubjectAltNames != null && AppState.UdapClientCertificateInfo.SubjectAltNames.Any())
+        {
+            SubjectAltName = AppState.UdapClientCertificateInfo.SubjectAltNames.First();
+        }
+
         StateHasChanged();
     }
 

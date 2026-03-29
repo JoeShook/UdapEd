@@ -1,17 +1,16 @@
-﻿<InputFile id="fileInput" OnChange="UploadFilesAsync" hidden />
+<InputFile id="fileInput" OnChange="UploadFilesAsync" hidden />
 
 <InputFile id="anchorFileInput" OnChange="UploadFilesAsync" hidden/>
 
 <MudCard Class="pa-2 ma-2" Elevation="0">
     <MudCardHeader>
         <CardHeaderContent>
-            <MudText style="float: right">Choose Trust Anchor Certificate.</MudText>
+            <MudText Align="Align.End">Choose Trust Anchor Certificate.</MudText>
         </CardHeaderContent>
     </MudCardHeader>
-    <MudCardActions style="float: right">
-        <MudStack Wrap="Wrap.Wrap" Row="true">
-            <MudFab Class="ma-2 " style="float: right;"
-                    HtmlTag="label"
+    <MudCardActions>
+        <MudStack Row="true" Justify="Justify.FlexEnd" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Style="width: 100%">
+            <MudFab HtmlTag="label"
                     Size="Size.Small"
                     Color="@AnchorLoadedColor"
                     StartIcon="@AppState.CertificateIcon"
@@ -19,26 +18,19 @@
                     Title="Upload Anchor Certificate"
                     IconSize="Size.Small"
                     for="anchorFileInput"/>
-            <MudFab Class="ma-2 " Style="float: right; white-space: nowrap;"
-                    HtmlTag="label"
-                    Size="Size.Small"
-                    Color="@FhirLabsAnchorLoadedColor"
-                    StartIcon="@AppState.CertificateIcon"
-                    Label="Load FhirLabs Test CA"
-                    IconSize="Size.Small"
-                    OnClick="@LoadFhirLabsAnchor"/>
-
-            <MudFab Class="ma-2 " Style="float: right; white-space: nowrap;"
-                    HtmlTag="label"
-                    Size="Size.Small"
-                    Color="@EmrDirectAnchorLoadedColor"
-                    StartIcon="@AppState.CertificateIcon"
-                    Label="Load EMR Direct Test CA"
-                    IconSize="Size.Small"
-                    OnClick="@LoadUdapOrgAnchor"/>
+            <MudMenu Label="Load Pre-packaged Anchor"
+                     StartIcon="@AppState.CertificateIcon"
+                     Color="@PrePackagedAnchorLoadedColor"
+                     Size="Size.Small"
+                     Variant="Variant.Filled">
+                @foreach (var anchor in _prePackagedAnchors)
+                {
+                    <MudMenuItem OnClick="@(() => LoadPrePackagedAnchor(anchor))" Title="@anchor.Description">@anchor.Name</MudMenuItem>
+                }
+            </MudMenu>
         </MudStack>
     </MudCardActions>
-    <MudCardContent style="float: left">
+    <MudCardContent>
         @if (!string.IsNullOrEmpty(AppState.UdapAnchorCertificateInfo?.DistinguishedName) ||
              !string.IsNullOrEmpty(AppState.UdapAnchorCertificateInfo?.Thumbprint))
         {
@@ -47,10 +39,9 @@
             </MudItem>
 
             <MudItem xs="12">
-                <MudText  Typo="Typo.caption"> Thumbprint (sha1) </MudText>
-                <MudText  Typo="Typo.body2">@AppState.UdapAnchorCertificateInfo?.Thumbprint </MudText>
+                <MudText Typo="Typo.caption"> Thumbprint (sha1) </MudText>
+                <MudText Typo="Typo.body2">@AppState.UdapAnchorCertificateInfo?.Thumbprint </MudText>
             </MudItem>
-
         }
     </MudCardContent>
 </MudCard>

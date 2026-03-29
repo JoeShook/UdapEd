@@ -209,15 +209,13 @@ internal class DiscoveryService : IDiscoveryService
         }
     }
 
-    public async Task<CertificateStatusViewModel?> LoadFhirLabsAnchor()
+    public async Task<CertificateStatusViewModel?> LoadAnchor(string url)
     {
-        var anchorCertificate = "https://storage.googleapis.com/crl.fhircerts.net/certs/SureFhirLabs_CA.cer";
-
         var result = new CertificateStatusViewModel { CertLoaded = CertLoadedEnum.Negative };
 
         try
         {
-            var response = await _httpClientFactory.CreateClient().GetAsync(new Uri(anchorCertificate));
+            var response = await _httpClientFactory.CreateClient().GetAsync(new Uri(url));
             response.EnsureSuccessStatusCode();
             var certBytes = await response.Content.ReadAsByteArrayAsync();
             var certificate = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
@@ -231,39 +229,8 @@ internal class DiscoveryService : IDiscoveryService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed loading anchor from {anchorCertificate}", anchorCertificate);
-            _logger.LogDebug(ex,
-                $"Failed loading certificate from {nameof(anchorCertificate)} {anchorCertificate}");
-
-            return result;
-        }
-    }
-
-    public async Task<CertificateStatusViewModel?> LoadUdapOrgAnchor()
-    {
-        var anchorCertificate = "http://certs.emrdirect.com/certs/EMRDirectTestCA.crt";
-
-        var result = new CertificateStatusViewModel { CertLoaded = CertLoadedEnum.Negative };
-
-        try
-        {
-            var response = await _httpClientFactory.CreateClient().GetAsync(new Uri(anchorCertificate));
-            response.EnsureSuccessStatusCode();
-            var certBytes = await response.Content.ReadAsByteArrayAsync();
-            var certificate = X509Certificate2.CreateFromPem(certBytes.ToPemFormat());
-            result.DistinguishedName = certificate.SubjectName.Name;
-            result.Thumbprint = certificate.Thumbprint;
-            result.CertLoaded = CertLoadedEnum.Positive;
-            result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
-            await SecureStorage.Default.SetAsync(UdapEdConstants.UDAP_ANCHOR_CERTIFICATE, Convert.ToBase64String(certBytes));
-
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed loading anchor from {anchorCertificate}", anchorCertificate);
-            _logger.LogDebug(ex,
-                $"Failed loading certificate from {nameof(anchorCertificate)} {anchorCertificate}");
+            _logger.LogError(ex, "Failed loading anchor from {Url}", url);
+            _logger.LogDebug(ex, "Failed loading certificate from {Url}", url);
 
             return result;
         }
