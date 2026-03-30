@@ -14,7 +14,7 @@ public partial class UdapAnchorCertificate: ComponentBase, IDisposable
     private readonly PeriodicTimer _periodicTimer = new PeriodicTimer(TimeSpan.FromMinutes(5));
     [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
     [Inject] private IDiscoveryService DiscoveryService { get; set; } = null!;
-    private bool _checkServerSession;
+    private bool _checkServerSession = true;
     public Color AnchorLoadedColor;
     public Color PrePackagedAnchorLoadedColor;
 
@@ -38,9 +38,9 @@ public partial class UdapAnchorCertificate: ComponentBase, IDisposable
         {
             SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref AnchorLoadedColor);
         }
-        else if (anchorCertificateLoadStatus is { CertLoaded: CertLoadedEnum.Positive })
+        else
         {
-            SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref PrePackagedAnchorLoadedColor);
+            SetCertLoadedColor(anchorCertificateLoadStatus?.CertLoaded, ref PrePackagedAnchorLoadedColor);
         }
 
         await JSRuntime.InvokeVoidAsync("pageEventHandlers.registerHandlers");
@@ -71,9 +71,9 @@ public partial class UdapAnchorCertificate: ComponentBase, IDisposable
         {
             SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref AnchorLoadedColor);
         }
-        else if (anchorCertificateLoadStatus is { CertLoaded: CertLoadedEnum.Positive })
+        else
         {
-            SetCertLoadedColor(anchorCertificateLoadStatus.CertLoaded, ref PrePackagedAnchorLoadedColor);
+            SetCertLoadedColor(anchorCertificateLoadStatus?.CertLoaded, ref PrePackagedAnchorLoadedColor);
         }
 
         _checkServerSession = true;
@@ -127,7 +127,15 @@ public partial class UdapAnchorCertificate: ComponentBase, IDisposable
             {
                 var certViewModel = await DiscoveryService.AnchorCertificateLoadStatus();
                 await AppState.SetPropertyAsync(this, nameof(AppState.UdapAnchorCertificateInfo), certViewModel);
-                SetCertLoadedColor(certViewModel?.CertLoaded, ref AnchorLoadedColor);
+
+                if (certViewModel is { UserSuppliedCertificate: true })
+                {
+                    SetCertLoadedColor(certViewModel.CertLoaded, ref AnchorLoadedColor);
+                }
+                else
+                {
+                    SetCertLoadedColor(certViewModel?.CertLoaded, ref PrePackagedAnchorLoadedColor);
+                }
             }
         }
     }

@@ -26,7 +26,7 @@ public partial class CertificationAndEndorsementLoader
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
     private readonly PeriodicTimer _periodicTimer = new PeriodicTimer(TimeSpan.FromMinutes(5));
-    private bool _checkServerSession;
+    private bool _checkServerSession = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -215,7 +215,15 @@ public partial class CertificationAndEndorsementLoader
 
                 await AppState.SetPropertyAsync(this, nameof(AppState.CertificationAndEndorsementInfo),
                     clientCertificateLoadStatus);
-                await SetCertLoadedColor(clientCertificateLoadStatus?.CertLoaded);
+
+                if (clientCertificateLoadStatus is { UserSuppliedCertificate: true })
+                {
+                    await SetCertLoadedColor(clientCertificateLoadStatus.CertLoaded);
+                }
+                else
+                {
+                    await SetCertLoadedColorFoExample(clientCertificateLoadStatus?.CertLoaded);
+                }
             }
         }
     }

@@ -16,7 +16,7 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
     private readonly PeriodicTimer _periodicTimer = new PeriodicTimer(TimeSpan.FromMinutes(5));
-    private bool _checkServerSession;
+    private bool _checkServerSession = true;
 
     public Color CertLoadedColor = Color.Default;
     public Color PrePackagedCertLoadedColor = Color.Default;
@@ -40,9 +40,9 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
         {
             SetCertLoadedColor(clientCertificateLoadStatus.CertLoaded, ref CertLoadedColor);
         }
-        else if (clientCertificateLoadStatus is { CertLoaded: CertLoadedEnum.Positive })
+        else
         {
-            SetCertLoadedColor(clientCertificateLoadStatus.CertLoaded, ref PrePackagedCertLoadedColor);
+            SetCertLoadedColor(clientCertificateLoadStatus?.CertLoaded, ref PrePackagedCertLoadedColor);
         }
 
         await JSRuntime.InvokeVoidAsync("pageEventHandlers.registerHandlers");
@@ -80,9 +80,9 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
         {
             SetCertLoadedColor(clientCertificateLoadStatus.CertLoaded, ref CertLoadedColor);
         }
-        else if (clientCertificateLoadStatus is { CertLoaded: CertLoadedEnum.Positive })
+        else
         {
-            SetCertLoadedColor(clientCertificateLoadStatus.CertLoaded, ref PrePackagedCertLoadedColor);
+            SetCertLoadedColor(clientCertificateLoadStatus?.CertLoaded, ref PrePackagedCertLoadedColor);
         }
 
         _checkServerSession = true;
@@ -172,7 +172,15 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
 
                 await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo),
                     clientCertificateLoadStatus);
-                SetCertLoadedColor(clientCertificateLoadStatus?.CertLoaded, ref CertLoadedColor);
+
+                if (clientCertificateLoadStatus is { UserSuppliedCertificate: true })
+                {
+                    SetCertLoadedColor(clientCertificateLoadStatus.CertLoaded, ref CertLoadedColor);
+                }
+                else
+                {
+                    SetCertLoadedColor(clientCertificateLoadStatus?.CertLoaded, ref PrePackagedCertLoadedColor);
+                }
             }
         }
     }
