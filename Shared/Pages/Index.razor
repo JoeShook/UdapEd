@@ -230,6 +230,9 @@
                                 <MudText Typo="Typo.body1" Color="Color.Primary">Build FhirLabs Community Certificates</MudText>
                                 <MudText Typo="Typo.body2">Generate your own personal zip package of UDAP test certificates
                                     from the FhirLabs community (<code>udap://fhirlabs.net/</code>). Select up to 10 subject alternative names. The pack will include one RSA and one ECDSA certificate.</MudText>
+                                <MudText Typo="Typo.body2" Class="mt-2">
+                                    Trust Anchor: <a href="https://storage.googleapis.com/crl.fhircerts.net/certs/SureFhirLabs_CA.cer" target="_blank">SureFhirLabs_CA.cer</a>
+                                </MudText>
                             </CardHeaderContent>
                         </MudCardHeader>
                         <MudCardContent>
@@ -259,6 +262,9 @@
                             <CardHeaderContent>
                                 <MudText Typo="Typo.body1" Color="Color.Primary">Build FhirLabs Mock TEFCA Community Certificates</MudText>
                                 <MudText Typo="Typo.body2">Generate a test certificate for the TEFCA community (<code>tefca://test-community</code>). Choose whether you need a <b>server</b> certificate (for signing UDAP metadata at your FHIR endpoint) or a <b>client</b> certificate (for registration and token requests with a specific exchange purpose).</MudText>
+                                <MudText Typo="Typo.body2" Class="mt-2">
+                                    Trust Anchor: <a href="https://storage.googleapis.com/crl.fhircerts.net/certs/TEFCA_Test_CA.cer" target="_blank">TEFCA_Test_CA.cer</a>
+                                </MudText>
                             </CardHeaderContent>
                         </MudCardHeader>
                         <MudCardContent>
