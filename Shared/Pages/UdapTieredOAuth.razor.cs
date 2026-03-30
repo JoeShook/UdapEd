@@ -32,6 +32,14 @@ public partial class UdapTieredOAuth
 
     private ErrorBoundary? ErrorBoundary { get; set; }
 
+    // Expansion panel state
+    private bool _step1Expanded = true;
+    private bool _step2Expanded;
+    private bool _step3Expanded;
+    private bool _step4Expanded;
+    private bool _step5Expanded;
+    private bool _step6Expanded;
+
     [Inject] IExternalWebAuthenticator? ExternalWebAuthenticator { get; set; }
 
     [Inject] IAccessService AccessService { get; set; } = null!;
@@ -280,18 +288,24 @@ public partial class UdapTieredOAuth
         return uri.Query.Replace("&", "&\r\n");
     }
 
-    private bool _callBackEntryScrolled = false;
+    private bool _callBackHandled = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
-        if (!_callBackEntryScrolled && !string.IsNullOrEmpty(uri.Query))
+        if (!_callBackHandled && !string.IsNullOrEmpty(uri.Query))
         {
             var queryParams = QueryHelpers.ParseQuery(uri.Query);
             if (!queryParams.GetValueOrDefault("code").ToString().IsNullOrEmpty())
             {
-                var success = await JsRuntime.InvokeAsync<bool>("UdapEd.scrollTo", "CallBackEntry");
-                _callBackEntryScrolled = success;
+                _callBackHandled = true;
+                _step1Expanded = false;
+                _step2Expanded = false;
+                _step3Expanded = false;
+                _step4Expanded = true;
+                _step5Expanded = true;
+                _step6Expanded = true;
+                StateHasChanged();
             }
         }
 

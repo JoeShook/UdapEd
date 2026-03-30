@@ -35,6 +35,12 @@ public partial class UdapRegistration : IAsyncDisposable
     private string SubjectAltName { get; set; }
     private string? _signingAlgorithm;
 
+    // Expansion panel state
+    private bool _regStep1Expanded = true;
+    private bool _regStep2Expanded;
+    private bool _regStep3Expanded;
+    private bool _regStep4Expanded;
+
     private bool TieredOauth
     {
         get => AppSharedState.TieredOAuth;

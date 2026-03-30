@@ -45,6 +45,9 @@
     function scrollElementIntoView(id) {
       document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
     }
+    function getElementHeight(element) {
+      return element ? element.offsetHeight : 400;
+    }
   </script>
 </body>
 

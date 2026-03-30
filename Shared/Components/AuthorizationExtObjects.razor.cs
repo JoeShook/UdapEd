@@ -29,6 +29,8 @@ public partial class AuthorizationExtObjects : ComponentBase
 
     private StandaloneCodeEditor _editor = null!;
     private bool _isEditorInitialized;
+    private ElementReference _leftColumnRef;
+    private int _editorHeight = 400;
     public Hl7B2BUserForm? _hl7B2BUserForm;
     protected Hl7B2BForm? _hl7B2BForm;
     protected Hl7B2BTefcaForm? _hl7B2BTefcaForm;
@@ -69,9 +71,9 @@ public partial class AuthorizationExtObjects : ComponentBase
 
     private async Task EditorOnDidInit()
     {
-        await _editor.Layout(new Dimension() { Height = 600, Width = 200 });
-        await JsRuntime.InvokeVoidAsync("setMonacoEditorResize", _editor.Id);
         _isEditorInitialized = true;
+        await Task.Delay(200);
+        await MeasureLeftColumnHeight();
     }
 
     private async Task SetEditorValue(Func<KeyValuePair<string, AuthExtModel>, bool> predicate)
@@ -169,6 +171,34 @@ public partial class AuthorizationExtObjects : ComponentBase
     }
 
    
+    private async Task MeasureLeftColumnHeight()
+    {
+        try
+        {
+            var height = await JsRuntime.InvokeAsync<int>(
+                "getElementHeight", _leftColumnRef);
+
+            if (height > 100)
+            {
+                _editorHeight = height - 50; // subtract button row height
+                StateHasChanged();
+                await Task.Delay(50);
+                await _editor.Layout(new Dimension { Height = _editorHeight });
+            }
+        }
+        catch
+        {
+            // element not yet rendered
+        }
+    }
+
+    private async Task OnTabChanged(int index)
+    {
+        // Small delay for tab content to render
+        await Task.Delay(200);
+        await MeasureLeftColumnHeight();
+    }
+
     private Task HandleUpdateEditor()
     {
         return InvokeAsync(() => _editor.SetValue(JsonSerializer.Serialize(AppState.AuthorizationExtObjects, _jsonSerializerOptions)));

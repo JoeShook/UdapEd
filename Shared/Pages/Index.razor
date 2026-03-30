@@ -294,7 +294,7 @@
                             }
                             else
                             {
-                                <MudText Typo="Typo.body2" Class="mt-2">The client certificate will include a SAN URI for every valid TEFCA Exchange Purpose (XP) code, plus one <code>INVALID</code> entry for testing rejection scenarios. Each SAN follows the format <code>&lt;prefix&gt;#&lt;XP-CODE&gt;</code>, per TEFCA SOP v2.0 Section 6.11.</MudText>
+                                <MudText Typo="Typo.body2" Class="mt-2">The client certificate will include a SAN URI for every valid TEFCA Exchange Purpose (XP) code, plus one <code>INVALID</code> entry for testing rejection scenarios. Each SAN follows the format <code>&lt;prefix&gt;#&lt;XP-CODE&gt;</code>, per <a href="https://rce.sequoiaproject.org/wp-content/uploads/2026/02/SOP-Facilitated-FHIR-Implementation-2.0-Draft-508.pdf#page=14" target="_blank">TEFCA SOP v2.0 Section 6.11</a>.</MudText>
                                 <MudTextField @bind-Value="_tefcaSanPrefix"
                                               Label="SAN URI Prefix"
                                               HelperText="The base URI prepended to each XP code (e.g. urn:oid:2.999)"
