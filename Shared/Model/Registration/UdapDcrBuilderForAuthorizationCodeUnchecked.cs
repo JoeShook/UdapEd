@@ -49,6 +49,11 @@ public class UdapDcrBuilderForAuthorizationCodeUnchecked : UdapDcrBuilderForAuth
     {
         return new UdapDcrBuilderForAuthorizationCodeUnchecked(cert, true);
     }
+
+    public static UdapDcrBuilderForAuthorizationCodeUnchecked Cancel(List<X509Certificate2> certs)
+    {
+        return new UdapDcrBuilderForAuthorizationCodeUnchecked(certs, true);
+    }
     
     public new static UdapDcrBuilderForAuthorizationCodeUnchecked Cancel()
     {

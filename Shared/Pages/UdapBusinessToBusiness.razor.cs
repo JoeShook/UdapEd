@@ -39,7 +39,6 @@ public partial class UdapBusinessToBusiness
     private ErrorBoundary? ErrorBoundary { get; set; }
 
     // Expansion panel state
-    private bool _step1Expanded = true;
     private bool _step2Expanded;
     private bool _step3Expanded;
     private bool _step4Expanded;
@@ -306,7 +305,6 @@ public partial class UdapBusinessToBusiness
             if (!queryParams.GetValueOrDefault("code").ToString().IsNullOrEmpty())
             {
                 _callBackHandled = true;
-                _step1Expanded = false;
                 _step2Expanded = false;
                 _step3Expanded = false;
                 _step4Expanded = false;

@@ -36,7 +36,6 @@ public partial class UdapRegistration : IAsyncDisposable
     private string? _signingAlgorithm;
 
     // Expansion panel state
-    private bool _regStep1Expanded = true;
     private bool _regStep2Expanded;
     private bool _regStep3Expanded;
     private bool _regStep4Expanded;
@@ -162,12 +161,10 @@ public partial class UdapRegistration : IAsyncDisposable
             try
             {
                 jsonHeader = JsonNode.Parse(AppState.SoftwareStatementBeforeEncoding.Header)
-                    ?.ToJsonString(
-                        // new JsonSerializerOptions()
-                        // {
-                        //     WriteIndented = true
-                        // }
-                    ).Replace("\\u002B", "+");
+                    ?.ToJsonString(new JsonSerializerOptions()
+                    {
+                        WriteIndented = true
+                    }).Replace("\\u002B", "+");
             }
             catch
             {
@@ -200,12 +197,10 @@ public partial class UdapRegistration : IAsyncDisposable
             try
             {
                 jsonHeader = JsonNode.Parse(AppState.CertSoftwareStatementBeforeEncoding.Header)
-                    ?.ToJsonString(
-                        // new JsonSerializerOptions()
-                        // {
-                        //     WriteIndented = true
-                        // }
-                    ).Replace("\\u002B", "+");
+                    ?.ToJsonString(new JsonSerializerOptions()
+                    {
+                        WriteIndented = true
+                    }).Replace("\\u002B", "+");
             }
             catch
             {
@@ -454,6 +449,43 @@ public partial class UdapRegistration : IAsyncDisposable
         await BuildRawCertSoftwareStatement();
     }
 
+    private void AppendCertToX5cHeader(string? certBase64, ref string headerField)
+    {
+        if (string.IsNullOrEmpty(certBase64) || string.IsNullOrEmpty(headerField))
+        {
+            return;
+        }
+
+        try
+        {
+            var headerNode = JsonNode.Parse(headerField);
+            var x5cArray = headerNode?["x5c"]?.AsArray();
+
+            if (x5cArray != null)
+            {
+                x5cArray.Add(certBase64);
+                headerField = headerNode!.ToJsonString(new JsonSerializerOptions { WriteIndented = true })
+                    .Replace("\\u002B", "+");
+            }
+        }
+        catch
+        {
+            // ignored
+        }
+    }
+
+    private void OnRegistrationIntermediateAdded(string? certBase64)
+    {
+        AppendCertToX5cHeader(certBase64, ref _beforeEncodingHeader);
+        StateHasChanged();
+    }
+
+    private void OnCertificationIntermediateAdded(string? certBase64)
+    {
+        AppendCertToX5cHeader(certBase64, ref _beforeCertificationEncodingHeader);
+        StateHasChanged();
+    }
+
     private async Task BuildRawCancelSoftwareStatement()
     {
         _cancelRegistration = true;
@@ -498,15 +530,6 @@ public partial class UdapRegistration : IAsyncDisposable
             dcrBuilder.Document.Issuer = SubjectAltName;
             
             var request = dcrBuilder.Build();
-
-            var extensions = AppState.AuthorizationExtObjects.Where(a => a.Value.UseInRegister).ToList();
-
-            if (extensions.Any())
-            {
-                request.Extensions = PayloadSerializer.Deserialize(extensions.ToDictionary(
-                    ext => ext.Key,
-                    ext => ext.Value.Json));
-            }
 
             if (DPoPEnabled)
             {
@@ -645,6 +668,8 @@ public partial class UdapRegistration : IAsyncDisposable
                 .WithTokenEndpointAuthMethod("private_key_jwt");
                                                                     
             builder.Document.Expiration = EpochTime.GetIntDate(DateTime.Now.AddYears(1)); //todo set expiration in UI
+            builder.WithAdditionalClaims(_selectedCertificationTemplate.AdditionalClaims);
+
             var request = builder.Build();
 
             var statement = await CertificationService
@@ -969,6 +994,83 @@ public partial class UdapRegistration : IAsyncDisposable
     private CertificatePKIViewer _certificateViewerForClient;
     private CertificatePKIViewer _certificateViewerForCertification;
     private CertificationTemplate _selectedCertificationTemplate = CertificationTemplates.Entries[0];
+
+    private static readonly HashSet<string> TefcaHighlightKeys = new()
+    {
+        "certification_name", "certification_uris", "exchange_purposes", "home_community_id"
+    };
+
+    private string HighlightedCertSoftwareStatement
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(_beforeEncodingCertStatement))
+            {
+                return string.Empty;
+            }
+
+            var highlighted = _beforeEncodingCertStatement;
+
+            foreach (var key in TefcaHighlightKeys)
+            {
+                highlighted = HighlightJsonKey(highlighted, key);
+            }
+
+            return highlighted;
+        }
+    }
+
+    private static string HighlightJsonKey(string json, string key)
+    {
+        var searchKey = $"\"{key}\"";
+        var idx = json.IndexOf(searchKey, StringComparison.Ordinal);
+        if (idx < 0) return json;
+
+        // Find the start of the line
+        var lineStart = json.LastIndexOf('\n', idx);
+        lineStart = lineStart < 0 ? 0 : lineStart + 1;
+
+        // Find the end of the value (handle multi-line arrays/objects)
+        var colonIdx = json.IndexOf(':', idx + searchKey.Length);
+        if (colonIdx < 0) return json;
+
+        var valueStart = colonIdx + 1;
+
+        // Skip whitespace after colon
+        while (valueStart < json.Length && char.IsWhiteSpace(json[valueStart]) && json[valueStart] != '\n')
+            valueStart++;
+
+        int valueEnd;
+        if (valueStart < json.Length && json[valueStart] == '[')
+        {
+            // Array value - find matching ]
+            var depth = 1;
+            var pos = valueStart + 1;
+            while (pos < json.Length && depth > 0)
+            {
+                if (json[pos] == '[') depth++;
+                else if (json[pos] == ']') depth--;
+                pos++;
+            }
+            valueEnd = pos;
+        }
+        else
+        {
+            // Simple value - find end of line
+            valueEnd = json.IndexOf('\n', valueStart);
+            if (valueEnd < 0) valueEnd = json.Length;
+        }
+
+        // Trim trailing comma if present
+        var lineEnd = valueEnd;
+        while (lineEnd < json.Length && (json[lineEnd] == ',' || json[lineEnd] == '\n'))
+            lineEnd++;
+
+        var line = json.Substring(lineStart, lineEnd - lineStart);
+        var marked = $"<mark>{line.TrimEnd()}</mark>\n";
+
+        return json.Substring(0, lineStart) + marked + json.Substring(lineEnd);
+    }
 
     public Dictionary<string, bool> RedirectUrls
     {

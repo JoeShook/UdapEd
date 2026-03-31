@@ -35,6 +35,8 @@ public static class CertificationTemplates
             {
                 ["exchange_purposes"] = JsonSerializer.SerializeToElement(
                     new[] { "urn:oid:2.16.840.1.113883.3.7204.1.5.2.1#T-IAS" }),
+                ["home_community_id"] = JsonSerializer.SerializeToElement(
+                    "urn:oid:2.16.840.1.113883.3.2054.2.4"),
             }),
     };
 }

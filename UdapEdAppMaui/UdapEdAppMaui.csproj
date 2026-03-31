@@ -137,7 +137,7 @@
     <PackageReference Include="Serilog" Version="4.3.1" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="Udap.Client" Version="0.7.9" />
+    <PackageReference Include="Udap.Client" Version="0.7.11" />
   </ItemGroup>
 
   <ItemGroup>

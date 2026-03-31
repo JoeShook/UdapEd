@@ -48,6 +48,11 @@ public class UdapDcrBuilderForClientCredentialsUnchecked : UdapDcrBuilderForClie
     {
         return new UdapDcrBuilderForClientCredentialsUnchecked(cert, true);
     }
+
+    public static UdapDcrBuilderForClientCredentialsUnchecked Cancel(List<X509Certificate2> certs)
+    {
+        return new UdapDcrBuilderForClientCredentialsUnchecked(certs, true);
+    }
     
     public new static UdapDcrBuilderForClientCredentialsUnchecked Cancel()
     {

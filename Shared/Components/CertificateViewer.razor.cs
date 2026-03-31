@@ -61,6 +61,13 @@ public partial class CertificateViewer : ComponentBase
     [Parameter]
     public EventCallback<CrlFileCacheSettings?> CrlCachedEvent { get; set; }
 
+    /// <summary>
+    /// Fired when an intermediate certificate is added to the x5c session store.
+    /// The string parameter is the base64-encoded certificate to append to the x5c array.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string?> IntermediateAddedToX5cEvent { get; set; }
+
     public List<X509CacheSettings>? StoreCache { get; set; }
     public List<CrlFileCacheSettings>? FileCache { get; set; }
 
@@ -154,7 +161,8 @@ public partial class CertificateViewer : ComponentBase
 
     private async Task AddIntermediateToX5c(string url)
     {
-        await Infrastructure.GetIntermediateX509(url, CertContext);
+        var certBase64 = await Infrastructure.GetIntermediateX509(url, CertContext);
+        await IntermediateAddedToX5cEvent.InvokeAsync(certBase64);
     }
 
     private async Task ResolveCrl(string url)

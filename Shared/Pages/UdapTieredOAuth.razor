@@ -16,14 +16,13 @@
 <MudExpansionPanels MultiExpansion="true" Class="mt-2">
 
     @* Step 1: Client & Certificate Selection *@
-    <MudExpansionPanel @bind-Expanded="_step1Expanded">
-        <TitleContent>
+    <MudCard Class="mt-2" Elevation="1">
+        <MudCardHeader>
             <div class="d-flex align-center">
                 <MudIcon Icon="@Icons.Material.Filled.Badge" Class="mr-2" Color="Color.Primary"/>
                 <MudText Typo="Typo.h6">1. Client & Certificate Selection</MudText>
             </div>
-        </TitleContent>
-        <ChildContent>
+        </MudCardHeader>
             <MudCard Class="pa-2" Elevation="0">
                 <MudCardContent>
                     <MudGrid Spacing="1" Justify="Justify.FlexStart" Class="mb-2">
@@ -55,8 +54,7 @@
                     </MudGrid>
                 </MudCardContent>
             </MudCard>
-        </ChildContent>
-    </MudExpansionPanel>
+    </MudCard>
 
     @* Step 2: Build Authorization Code Request *@
     <MudExpansionPanel @bind-Expanded="_step2Expanded">

@@ -250,7 +250,8 @@ public class CertificationService : ICertificationService
             .WithGrantTypes(request.GrantTypes)
             .WithResponseTypes(request.ResponseTypes) // omit for client_credentials rule
             .WithScope(request.Scope)
-            .WithTokenEndpointAuthMethod(request.TokenEndpointAuthMethod);
+            .WithTokenEndpointAuthMethod(request.TokenEndpointAuthMethod)
+            .WithAdditionalClaims(request.AdditionalClaims);
 
         var signedSoftwareStatement = certificationBuilder.BuildSoftwareStatement(signingAlgorithm);
 
@@ -322,6 +323,8 @@ public class CertificationService : ICertificationService
             .WithResponseTypes(document.ResponseTypes) // omit for client_credentials rule
             .WithScope(document.Scope)
             .WithTokenEndpointAuthMethod(document.TokenEndpointAuthMethod);
+
+        certificationBuilder.WithAdditionalClaims(document.AdditionalClaims);
 
         var signedSoftwareStatement = certificationBuilder.BuildSoftwareStatement(signingAlgorithm);
 

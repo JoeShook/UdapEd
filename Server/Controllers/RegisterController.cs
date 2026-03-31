@@ -219,7 +219,6 @@ public class RegisterController : Controller
         [FromQuery] string alg)
     {
         var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
-        HttpContext.Session.Remove(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
 
         if (clientCertWithKey == null)
         {
@@ -243,7 +242,7 @@ public class RegisterController : Controller
         if (request.GrantTypes == null || !request.GrantTypes.Any())
         {
             dcrBuilder = UdapDcrBuilderForClientCredentialsUnchecked
-                .Cancel(clientCert);
+                .Cancel(x5cCerts);
         }
         else{
             dcrBuilder = UdapDcrBuilderForClientCredentialsUnchecked
@@ -311,7 +310,6 @@ public class RegisterController : Controller
         [FromQuery] string alg)
     {
         var clientCertWithKey = HttpContext.Session.GetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
-        HttpContext.Session.Remove(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
 
         if (clientCertWithKey == null)
         {
@@ -335,7 +333,7 @@ public class RegisterController : Controller
         if (request.GrantTypes == null || !request.GrantTypes.Any())
         {
             dcrBuilder = UdapDcrBuilderForAuthorizationCodeUnchecked
-                .Cancel(clientCert);
+                .Cancel(x5cCerts);
         }
         else
         {
@@ -430,7 +428,7 @@ public class RegisterController : Controller
         if (document.GrantTypes == null || !document.GrantTypes.Any())
         {
             dcrBuilder = UdapDcrBuilderForClientCredentialsUnchecked
-                .Cancel(clientCert);
+                .Cancel(x5cCerts);
         }
         else
         {
@@ -512,7 +510,7 @@ public class RegisterController : Controller
         if (document.GrantTypes == null || !document.GrantTypes.Any())
         {
             dcrBuilder = UdapDcrBuilderForAuthorizationCodeUnchecked
-                .Cancel(clientCert);
+                .Cancel(x5cCerts);
         }
         else
         {

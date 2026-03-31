@@ -24,14 +24,14 @@
         <MudExpansionPanels MultiExpansion="true" Class="mt-2">
 
             @* amamamamamamamamamamam Step 1: Certificate & Configuration amamamamamamamamamamam *@
-            <MudExpansionPanel @bind-Expanded="_regStep1Expanded">
-                <TitleContent>
+            <MudCard Class="mt-2" Elevation="1">
+                <MudCardHeader>
                     <div class="d-flex align-center">
                         <MudIcon Icon="@Icons.Material.Filled.Badge" Class="mr-2" Color="Color.Primary"/>
                         <MudText Typo="Typo.h6">1. Certificate & Configuration</MudText>
                     </div>
-                </TitleContent>
-                <ChildContent>
+                </MudCardHeader>
+                <MudCardContent>
                     <MudTabs Class="udap-rowgroup" Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
                         <MudTabPanel Text="Udap Client Certificate">
                             <MudGrid Spacing="2" Justify="Justify.FlexStart" align-start>
@@ -179,8 +179,8 @@
                             </MudItem>
                         </MudGrid>
                     </MudCardContent>
-                </ChildContent>
-            </MudExpansionPanel>
+                </MudCardContent>
+            </MudCard>
 
             @* amamamamamamamamamamam Step 2: Build Software Statements amamamamamamamamamamam *@
             <MudExpansionPanel @bind-Expanded="_regStep2Expanded">
@@ -378,7 +378,8 @@
                                                 @ref="_certificateViewerForClient"
                                                 JwtHeaderWithx5c="@SoftwareStatementBeforeEncodingHeader"
                                                 EnableAddToClaim="true"
-                                                EndCertificate="true"/>
+                                                EndCertificate="true"
+                                                IntermediateAddedToX5cEvent="@OnRegistrationIntermediateAdded"/>
                                         </MudPaper>
                                     </MudItem>
                                 </MudGrid>
@@ -400,6 +401,13 @@
                                                            @onfocusout="PersistCertSoftwareStatement" />
                                             <pre Class="@ValidCertRawSoftwareStatementStyle">]</pre>
                                         </MudPaper>
+                                        @if (_selectedCertificationTemplate.AdditionalClaims != null && !string.IsNullOrEmpty(CertSoftwareStatementBeforeEncodingSoftwareStatement))
+                                        {
+                                            <MudPaper Class="udap-analyzed mt-2" Elevation="3">
+                                                <MudText Align="Align.Right" Color="Color.Tertiary">Template Highlights</MudText>
+                                                <pre>@((MarkupString)HighlightedCertSoftwareStatement)</pre>
+                                            </MudPaper>
+                                        }
                                         @if (_missingScope)
                                         {
                                             <MudAlert Severity="Severity.Warning">Don't forget a scope</MudAlert>
@@ -408,7 +416,7 @@
                                     <MudItem sm="6" xs="12">
                                         <MudPaper Class="udap-analyzed" Elevation="3">
                                             <MudText Align="Align.Right" Color="Color.Tertiary">x509 certificates from x5c</MudText>
-                                            <CertificatePKIViewer  @ref="_certificateViewerForCertification"  JwtHeaderWithx5c="@CertSoftwareStatementBeforeEncodingHeader" EnableAddToClaim="true" CertContext="certification" />
+                                            <CertificatePKIViewer  @ref="_certificateViewerForCertification"  JwtHeaderWithx5c="@CertSoftwareStatementBeforeEncodingHeader" EnableAddToClaim="true" CertContext="certification" IntermediateAddedToX5cEvent="@OnCertificationIntermediateAdded" />
                                         </MudPaper>
                                     </MudItem>
                                 </MudGrid>

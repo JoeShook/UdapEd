@@ -10,6 +10,7 @@
     IntermediateResolvedEvent = "(x509Encoded) => { IntermediateCertificate = x509Encoded; }"
     CrlResolvedEvent="(crlDescription) => { Crl = crlDescription; }"
     CrlCachedEvent="(crlFileCacheSettings) => { CrlUrlCache = crlFileCacheSettings; StateHasChanged();}"
+    IntermediateAddedToX5cEvent="IntermediateAddedToX5cEvent"
    />
     
 @if (Crl != null)
@@ -55,6 +56,7 @@
                           Title="Intermediate Certificate"
                           EncodeCertificate="@IntermediateCertificate"
                           EnableAddToClaim="@EnableAddToClaim"
-                          CertContext="@CertContext"/>
+                          CertContext="@CertContext"
+                          IntermediateAddedToX5cEvent="IntermediateAddedToX5cEvent"/>
     
 }
