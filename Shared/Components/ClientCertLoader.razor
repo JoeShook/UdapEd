@@ -25,6 +25,10 @@
     !string.IsNullOrEmpty(AppState.UdapClientCertificateInfo?.DistinguishedName) ||
      !string.IsNullOrEmpty(AppState.UdapClientCertificateInfo?.Thumbprint)))
 {
+    @if (!string.IsNullOrEmpty(AppState.ClientRegistrations?.SelectedRegistration?.SubjAltName))
+    {
+        <MudText Typo="Typo.body2"><b>Registered SAN:</b> @AppState.ClientRegistrations.SelectedRegistration.SubjAltName</MudText>
+    }
     <MudText Typo="Typo.body2"><b>Subject:</b> @AppState.UdapClientCertificateInfo?.DistinguishedName</MudText>
     <MudText Typo="Typo.caption"><b>Thumbprint (sha1)</b></MudText>
     <MudText Typo="Typo.body2">@AppState.UdapClientCertificateInfo?.Thumbprint</MudText>
