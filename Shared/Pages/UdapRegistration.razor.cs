@@ -604,12 +604,31 @@ public partial class UdapRegistration : IAsyncDisposable
             }
 
             var builder = UdapCertificationsAndEndorsementBuilderUnchecked
-                .Create("FhirLabs Administrator Certification");
+                .Create(_selectedCertificationTemplate.CertificationName);
+
+            // Pull scope, grant_types, and response_types from the client software statement
+            string? clientScope = null;
+            List<string>? clientGrantTypes = null;
+            HashSet<string>? clientResponseTypes = null;
+
+            if (AppState.SoftwareStatementBeforeEncoding?.SoftwareStatement != null)
+            {
+                var clientDoc = JsonSerializer.Deserialize<UdapDynamicClientRegistrationDocument>(
+                    AppState.SoftwareStatementBeforeEncoding.SoftwareStatement);
+
+                if (clientDoc != null)
+                {
+                    clientScope = clientDoc.Scope;
+                    clientGrantTypes = clientDoc.GrantTypes?.ToList();
+                    clientResponseTypes = clientDoc.ResponseTypes != null
+                        ? new HashSet<string>(clientDoc.ResponseTypes)
+                        : null;
+                }
+            }
 
             builder
-            .WithCertificationDescription("Application can perform all CRUD operations against the FHIR server.")
-                .WithCertificationUris(new List<string>()
-                    { "https://certifications.fhirlabs.net/criteria/admin-2024.7" })
+            .WithCertificationDescription(_selectedCertificationTemplate.CertificationDescription)
+                .WithCertificationUris(_selectedCertificationTemplate.CertificationUris)
                 .WithDeveloperName("Joe Shook")
                 .WithDeveloperAddress("Portland Oregon")
                 .WithClientName(UdapEdConstants.CLIENT_NAME)
@@ -620,27 +639,10 @@ public partial class UdapRegistration : IAsyncDisposable
                 .WithTermsOfService("https://udaped.fhirlabs.net/TermsOfService.html")
                 .WithPolicyUri("https://udaped.fhirlabs.net/Policy.html")
                 .WithContacts(new List<string>() { "mailto:Joseph.Shook@Surescripts.com", "mailto:JoeShook@gmail.com" })
-                // SMART
-                //.WithLaunchUri("https://udaped.fhirlabs.net/smart/launch?iss=https://launch.smarthealthit.org/v/r4/fhir&launch=WzAsIiIsIiIsIkFVVE8iLDAsMCwwLCIiLCIiLCIiLCIiLCJhdXRoX2ludmFsaWRfY2xpZW50X2lkIiwiIiwiIiwyLDFd")
-
-                //
-                // Must be empty for client_credentials
-                //
-                // .WithRedirectUris(new List<string>
-                //     { new Uri($"https://client.fhirlabs.net/redirect/{Guid.NewGuid()}").AbsoluteUri })
-
-                // .WithIPsAllowed(new List<string>() { "198.51.100.0/24", "203.0.113.55" })
-                // .WithGrantTypes(new List<string>() { "authorization_code", "refresh_token", "client_credentials" })
-                // .WithResponseTypes(new HashSet<string> { "code" }) // omit for client_credentials rule
-                .WithScope("user/*.write")
-                .WithTokenEndpointAuthMethod("private_key_jwt"); // 'none' if authorization server allows it.
-                                                                // 'client_secret_post': The client uses the HTTP POST parameters
-                                                                // as defined in OAuth 2.0, Section 2.3.1.
-                                                                // "client_secret_basic": The client uses HTTP Basic as defined in
-                                                                // OAuth 2.0, Section 2.3.1.
-                                                                //
-                                                                // The additional value private_key_jwt may also be used.
-                                                                //
+                .WithGrantTypes(clientGrantTypes)
+                .WithResponseTypes(clientResponseTypes)
+                .WithScope(clientScope ?? "user/*.write")
+                .WithTokenEndpointAuthMethod("private_key_jwt");
                                                                     
             builder.Document.Expiration = EpochTime.GetIntDate(DateTime.Now.AddYears(1)); //todo set expiration in UI
             var request = builder.Build();
@@ -966,6 +968,7 @@ public partial class UdapRegistration : IAsyncDisposable
     private Dictionary<string, bool>? _redirectUrls;
     private CertificatePKIViewer _certificateViewerForClient;
     private CertificatePKIViewer _certificateViewerForCertification;
+    private CertificationTemplate _selectedCertificationTemplate = CertificationTemplates.Entries[0];
 
     public Dictionary<string, bool> RedirectUrls
     {

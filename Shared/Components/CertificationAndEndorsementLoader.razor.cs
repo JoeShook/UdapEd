@@ -28,6 +28,8 @@ public partial class CertificationAndEndorsementLoader
     private readonly PeriodicTimer _periodicTimer = new PeriodicTimer(TimeSpan.FromMinutes(5));
     private bool _checkServerSession = true;
 
+    private readonly IReadOnlyList<CertificationCertEntry> _prePackagedCerts = PrePackagedCertificationCerts.Entries;
+
     protected override async Task OnInitializedAsync()
     {
         _instance = this;
@@ -190,9 +192,9 @@ public partial class CertificationAndEndorsementLoader
         await OnCertificationCertLoaded.InvokeAsync();
     }
 
-    private async Task LoadFhirLabsExampleCertificatationCertificate()
+    private async Task LoadPrePackagedCert(CertificationCertEntry cert)
     {
-        var certViewModel = await CertificationService.LoadTestCertificate("CertificateStore/FhirLabsAdminCertification.pfx");
+        var certViewModel = await CertificationService.LoadTestCertificate(cert.CertificateName);
         await SetCertLoadedColorFoExample(certViewModel?.CertLoaded);
         await AppState.SetPropertyAsync(this, nameof(AppState.CertificationAndEndorsementInfo), certViewModel);
         await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);

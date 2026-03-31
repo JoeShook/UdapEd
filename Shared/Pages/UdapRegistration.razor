@@ -46,6 +46,18 @@
                                 <MudItem>
                                     <CertificationAndEndorsementLoader OnCertificationCertLoaded="@CiertificationReset" />
                                 </MudItem>
+                                <MudItem>
+                                    <MudMenu Label="@($"C&E Template: {_selectedCertificationTemplate.Name}")"
+                                             StartIcon="@Icons.Material.Filled.Description"
+                                             Size="Size.Small"
+                                             Variant="Variant.Filled"
+                                             Color="Color.Primary">
+                                        @foreach (var template in CertificationTemplates.Entries)
+                                        {
+                                            <MudMenuItem OnClick="@(() => _selectedCertificationTemplate = template)">@template.Name</MudMenuItem>
+                                        }
+                                    </MudMenu>
+                                </MudItem>
                                 <MudSpacer />
                             </MudGrid>
                         </MudTabPanel>

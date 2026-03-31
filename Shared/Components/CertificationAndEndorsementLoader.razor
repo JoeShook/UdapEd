@@ -1,43 +1,41 @@
-﻿@implements IDisposable
+@implements IDisposable
 
 <InputFile id="fileInput" OnChange="UploadFilesAsync" hidden />
 
-
-<MudFab Class="ma-2"
-        HtmlTag="label"
+<MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="my-2">
+    <MudFab HtmlTag="label"
+            Size="Size.Small"
+            Color="@CertLoadedColor"
+            StartIcon="@AppState.CertificateIcon"
+            Label="Upload"
+            Title="Upload a Certification Or Endorsement Certificate"
+            IconSize="Size.Small"
+            for="fileInput"/>
+    <MudMenu Label="Load Pre-packaged Cert"
+             StartIcon="@AppState.CertificateIcon"
+             Color="@CertLoadedColorForDefaultCommunity"
+             Size="Size.Small"
+             Variant="Variant.Filled">
+        @foreach (var cert in _prePackagedCerts)
+        {
+            <MudMenuItem OnClick="@(() => LoadPrePackagedCert(cert))" Title="@cert.Description">@cert.Name</MudMenuItem>
+        }
+    </MudMenu>
+    <MudIconButton
         Size="Size.Small"
-        Color="@CertLoadedColor"
-        StartIcon="@AppState.CertificateIcon"
-        Label="Upload a Certification Or Endorsement Certificate"
-        IconSize="Size.Small"
-        for="fileInput"/>
-
-<MudFab HtmlTag="label"
-        Class="ma-2"
-        Size="Size.Small"
-        Color="@CertLoadedColorForDefaultCommunity"
-        StartIcon="@AppState.CertificateIcon"
-        Label="FhirLabs Example Certification"
-        IconSize="Size.Small"
-        OnClick="@LoadFhirLabsExampleCertificatationCertificate"/>
-
-<MudIconButton
-    Class="ma-2"
-    Size="Size.Small"
-    Icon="@Icons.Material.Filled.Delete"
-    OnClick="@ClearCertificationAndEndorsementInfo"
-    />
-
+        Icon="@Icons.Material.Filled.Delete"
+        OnClick="@ClearCertificationAndEndorsementInfo" />
+</MudStack>
 
 @if (AppState.ClientMode == ClientSecureMode.UDAP && (
     !string.IsNullOrEmpty(AppState.CertificationAndEndorsementInfo?.DistinguishedName) ||
      !string.IsNullOrEmpty(AppState.CertificationAndEndorsementInfo?.Thumbprint)))
-{   
+{
         <MudText Typo="Typo.body2"><b>Subject:</b>@AppState.CertificationAndEndorsementInfo?.DistinguishedName</MudText>
         <MudText Typo="Typo.caption"> <b>Thumbprint (sha1)</b> </MudText>
         <MudText  Typo="Typo.body2">@AppState.CertificationAndEndorsementInfo?.Thumbprint </MudText>
         <MudText Typo="Typo.body2"><b>Issuer:</b> @AppState.CertificationAndEndorsementInfo?.Issuer </MudText>
-       
+
 
     @if (AppState.CertificationAndEndorsementInfo?.CertLoaded == CertLoadedEnum.Expired)
     {
