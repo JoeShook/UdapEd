@@ -1,8 +1,9 @@
 ﻿
-<CertificateViewer 
+<CertificateViewer
 	Class="mt-2"
 	EndCertificate="@EndCertificate"
     EnableAddToClaim="@EnableAddToClaim"
+    CertContext="@CertContext"
     Title="@Title"
     JwtHeader="@JwtHeaderWithx5c"
     EncodeCertificate="@EncodeCertificate"
@@ -53,6 +54,7 @@
     <CertificatePKIViewer Class="mt-2"
                           Title="Intermediate Certificate"
                           EncodeCertificate="@IntermediateCertificate"
-                          EnableAddToClaim="@EnableAddToClaim"/>
+                          EnableAddToClaim="@EnableAddToClaim"
+                          CertContext="@CertContext"/>
     
 }

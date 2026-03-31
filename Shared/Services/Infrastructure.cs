@@ -217,7 +217,7 @@ public class Infrastructure : IInfrastructure
     /// </summary>
     /// <param name="url"></param>
     /// <returns></returns>
-    public virtual async Task<string?> GetIntermediateX509(string url)
+    public virtual async Task<string?> GetIntermediateX509(string url, string? certContext = null)
     {
         var bytes = await HttpClient.GetByteArrayAsync(url);
 

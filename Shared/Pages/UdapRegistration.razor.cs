@@ -789,10 +789,18 @@ public partial class UdapRegistration : IAsyncDisposable
 
     private async Task BuildRequestBodyForAuthorizationCode()
     {
+        var certifications = await CertificationService
+            .BuildRequestBody(AppState.CertSoftwareStatementBeforeEncoding, _signingAlgorithm);
+
         var registerRequest = await RegisterService
             .BuildRequestBodyForAuthorizationCode(
                 AppState.SoftwareStatementBeforeEncoding,
                 _signingAlgorithm);
+
+        if (!string.IsNullOrEmpty(certifications))
+        {
+            registerRequest.Certifications = new string[] { certifications };
+        }
 
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapRegistrationRequest), registerRequest);
 

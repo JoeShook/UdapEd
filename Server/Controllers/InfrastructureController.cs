@@ -98,22 +98,25 @@ public class InfrastructureController : Controller
     }
 
     [HttpGet("AddIntermediateX509")]
-    public async Task<IActionResult> AddIntermediateX509(string url, CancellationToken token)
+    public async Task<IActionResult> AddIntermediateX509(string url, string? certContext, CancellationToken token)
     {
         try
         {
             var encodedCertificate = await _infrastructure.GetIntermediateX509(url);
-            
+
             if (encodedCertificate != null)
             {
                 byte[] certificateBytes = Convert.FromBase64String(encodedCertificate);
                 var certificate = new X509Certificate2(certificateBytes);
-                var intermediatesStored = HttpContext.Session.GetString(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
+                var sessionKey = certContext == "certification"
+                    ? UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES
+                    : UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES;
+                var intermediatesStored = HttpContext.Session.GetString(sessionKey);
                 var intermediateCerts = intermediatesStored.DeserializeCertificates();
                 if (intermediateCerts.All(i => i.Thumbprint != certificate.Thumbprint))
                 {
                     intermediateCerts.Add(certificate);
-                    HttpContext.Session.SetString(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES, intermediateCerts.SerializeCertificates());
+                    HttpContext.Session.SetString(sessionKey, intermediateCerts.SerializeCertificates());
                 }
             }
 

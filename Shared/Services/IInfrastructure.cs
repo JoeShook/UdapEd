@@ -33,7 +33,7 @@ public interface IInfrastructure
 
     Task<CertificateViewModel?> GetX509ViewModel(string url);
 
-    Task<string?> GetIntermediateX509(string url);
+    Task<string?> GetIntermediateX509(string url, string? certContext = null);
 
     Task<string?> GetCrldata(string url);
     Task<X509CacheSettings?> GetX509StoreCache(string thumbprint);

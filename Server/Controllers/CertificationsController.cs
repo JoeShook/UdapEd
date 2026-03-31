@@ -59,6 +59,7 @@ public class CertificationsController : Controller
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             HttpContext.Session.SetString(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
             HttpContext.Session.SetInt32(UdapEdConstants.CERTIFICATION_UPLOADED_CERTIFICATE, 0);
+            HttpContext.Session.Remove(UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
             result.DistinguishedName = subjectName;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -90,6 +91,7 @@ public class CertificationsController : Controller
     {
         HttpContext.Session.SetString(UdapEdConstants.CERTIFICATION_CERTIFICATE, base64String);
         HttpContext.Session.SetInt32(UdapEdConstants.CERTIFICATION_UPLOADED_CERTIFICATE, 1);
+        HttpContext.Session.Remove(UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
 
         return Ok();
     }
@@ -153,6 +155,7 @@ public class CertificationsController : Controller
         HttpContext.Session.Remove(UdapEdConstants.CERTIFICATION_CERTIFICATE);
         HttpContext.Session.Remove(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY);
         HttpContext.Session.Remove(UdapEdConstants.CERTIFICATION_UPLOADED_CERTIFICATE);
+        HttpContext.Session.Remove(UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
 
         return Ok();
     }
@@ -232,9 +235,18 @@ public class CertificationsController : Controller
         var certBytes = Convert.FromBase64String(clientCertWithKey);
         var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
-        var certificationBuilder = UdapCertificationsAndEndorsementBuilder.Create(request.CertificationName, clientCert);
+        var x5cCerts = new List<X509Certificate2> { clientCert };
+        var intermediatesStored = HttpContext.Session.GetString(UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
+        var intermediateCerts = intermediatesStored.DeserializeCertificates();
 
-        var signedSoftwareStatement = certificationBuilder
+        if (intermediateCerts != null && intermediateCerts.Any())
+        {
+            x5cCerts.AddRange(intermediateCerts);
+        }
+
+        var certificationBuilder = UdapCertificationsAndEndorsementBuilderUnchecked.Create(request.CertificationName, x5cCerts);
+
+        certificationBuilder
             // .WithExpiration(request.Expiration)
             .WithClampedExpiration(request.Expiration)
             .WithAudience(request.Audience)
@@ -255,8 +267,9 @@ public class CertificationsController : Controller
             .WithGrantTypes(request.GrantTypes)
             .WithResponseTypes(request.ResponseTypes) // omit for client_credentials rule
             .WithScope(request.Scope)
-            .WithTokenEndpointAuthMethod(request.TokenEndpointAuthMethod)
-            .BuildSoftwareStatement(signingAlgorithm);
+            .WithTokenEndpointAuthMethod(request.TokenEndpointAuthMethod);
+
+        var signedSoftwareStatement = certificationBuilder.BuildSoftwareStatement(signingAlgorithm);
                 
         var tokenHandler = new JsonWebTokenHandler();
         var jsonToken = tokenHandler.ReadToken(signedSoftwareStatement);
@@ -292,12 +305,21 @@ public class CertificationsController : Controller
         var certBytes = Convert.FromBase64String(clientCertWithKey);
         var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
+        var x5cCerts = new List<X509Certificate2> { clientCert };
+        var intermediatesStored = HttpContext.Session.GetString(UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
+        var intermediateCerts = intermediatesStored.DeserializeCertificates();
+
+        if (intermediateCerts != null && intermediateCerts.Any())
+        {
+            x5cCerts.AddRange(intermediateCerts);
+        }
+
         var document = JsonSerializer
             .Deserialize<UdapCertificationAndEndorsementDocument>(request.SoftwareStatement)!;
 
-        var certificationBuilder = UdapCertificationsAndEndorsementBuilderUnchecked.Create(document.CertificationName, clientCert);
-        
-        var signedSoftwareStatement = certificationBuilder
+        var certificationBuilder = UdapCertificationsAndEndorsementBuilderUnchecked.Create(document.CertificationName, x5cCerts);
+
+        certificationBuilder
             // .WithExpiration(document.Expiration)
             .WithClampedExpiration(document.Expiration)
             .WithAudience(document.Audience)
@@ -318,9 +340,10 @@ public class CertificationsController : Controller
             .WithGrantTypes(document.GrantTypes)
             .WithResponseTypes(document.ResponseTypes) // omit for client_credentials rule
             .WithScope(document.Scope)
-            .WithTokenEndpointAuthMethod(document.TokenEndpointAuthMethod)
-            .BuildSoftwareStatement(signingAlgorithm);
-        
+            .WithTokenEndpointAuthMethod(document.TokenEndpointAuthMethod);
+
+        var signedSoftwareStatement = certificationBuilder.BuildSoftwareStatement(signingAlgorithm);
+
         return Ok(signedSoftwareStatement);
     }
 }

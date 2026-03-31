@@ -216,9 +216,20 @@ public class CertificationService : ICertificationService
         var certBytes = Convert.FromBase64String(clientCertWithKey);
         var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
-        var certificationBuilder = UdapCertificationsAndEndorsementBuilder.Create(request.CertificationName, clientCert);
+        var x5cCerts = new List<X509Certificate2> { clientCert };
+        var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
+        if (intermediatesStored != null)
+        {
+            var intermediateCerts = Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
+            if (intermediateCerts != null && intermediateCerts.Any())
+            {
+                x5cCerts.AddRange(intermediateCerts);
+            }
+        }
 
-        var signedSoftwareStatement = certificationBuilder
+        var certificationBuilder = UdapCertificationsAndEndorsementBuilderUnchecked.Create(request.CertificationName, x5cCerts);
+
+        certificationBuilder
             // .WithExpiration(request.Expiration)
             .WithClampedExpiration(request.Expiration)
             .WithAudience(request.Audience)
@@ -239,8 +250,9 @@ public class CertificationService : ICertificationService
             .WithGrantTypes(request.GrantTypes)
             .WithResponseTypes(request.ResponseTypes) // omit for client_credentials rule
             .WithScope(request.Scope)
-            .WithTokenEndpointAuthMethod(request.TokenEndpointAuthMethod)
-            .BuildSoftwareStatement(signingAlgorithm);
+            .WithTokenEndpointAuthMethod(request.TokenEndpointAuthMethod);
+
+        var signedSoftwareStatement = certificationBuilder.BuildSoftwareStatement(signingAlgorithm);
 
         var tokenHandler = new JsonWebTokenHandler();
         var jsonToken = tokenHandler.ReadToken(signedSoftwareStatement);
@@ -276,9 +288,20 @@ public class CertificationService : ICertificationService
         var document = JsonSerializer
             .Deserialize<UdapCertificationAndEndorsementDocument>(request.SoftwareStatement)!;
 
-        var certificationBuilder = UdapCertificationsAndEndorsementBuilderUnchecked.Create(document.CertificationName, clientCert);
+        var x5cCerts = new List<X509Certificate2> { clientCert };
+        var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
+        if (intermediatesStored != null)
+        {
+            var intermediateCerts = Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
+            if (intermediateCerts != null && intermediateCerts.Any())
+            {
+                x5cCerts.AddRange(intermediateCerts);
+            }
+        }
 
-        var signedSoftwareStatement = certificationBuilder
+        var certificationBuilder = UdapCertificationsAndEndorsementBuilderUnchecked.Create(document.CertificationName, x5cCerts);
+
+        certificationBuilder
             .WithExpiration(document.Expiration)
             .WithAudience(document.Audience)
             .WithCertificationDescription(document.CertificationDescription)
@@ -298,8 +321,9 @@ public class CertificationService : ICertificationService
             .WithGrantTypes(document.GrantTypes)
             .WithResponseTypes(document.ResponseTypes) // omit for client_credentials rule
             .WithScope(document.Scope)
-            .WithTokenEndpointAuthMethod(document.TokenEndpointAuthMethod)
-            .BuildSoftwareStatement(signingAlgorithm);
+            .WithTokenEndpointAuthMethod(document.TokenEndpointAuthMethod);
+
+        var signedSoftwareStatement = certificationBuilder.BuildSoftwareStatement(signingAlgorithm);
 
         return signedSoftwareStatement;
     }

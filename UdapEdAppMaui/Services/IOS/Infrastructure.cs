@@ -96,11 +96,16 @@ public class Infrastructure : IInfrastructure
         }
     }
 
-    public async Task<string?> GetIntermediateX509(string url)
+    public async Task<string?> GetIntermediateX509(string url, string? certContext = null)
     {
         try
         {
-            var response = await _httpClient.GetAsync($"Infrastructure/AddIntermediateX509?url={url}");
+            var requestUrl = $"Infrastructure/AddIntermediateX509?url={url}";
+            if (!string.IsNullOrEmpty(certContext))
+            {
+                requestUrl += $"&certContext={Uri.EscapeDataString(certContext)}";
+            }
+            var response = await _httpClient.GetAsync(requestUrl);
 
             return await response.Content.ReadAsStringAsync();
         }

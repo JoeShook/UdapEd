@@ -21,6 +21,7 @@ public partial class CertificateViewer : ComponentBase
 
     [Parameter] public bool EndCertificate { get; set; }
     [Parameter ]public bool EnableAddToClaim { get; set; }
+    [Parameter] public string? CertContext { get; set; }
 
 
     [Parameter] public string Class { get; set; }
@@ -153,7 +154,7 @@ public partial class CertificateViewer : ComponentBase
 
     private async Task AddIntermediateToX5c(string url)
     {
-        await Infrastructure.GetIntermediateX509(url);
+        await Infrastructure.GetIntermediateX509(url, CertContext);
     }
 
     private async Task ResolveCrl(string url)

@@ -396,7 +396,7 @@
                                     <MudItem sm="6" xs="12">
                                         <MudPaper Class="udap-analyzed" Elevation="3">
                                             <MudText Align="Align.Right" Color="Color.Tertiary">x509 certificates from x5c</MudText>
-                                            <CertificatePKIViewer  @ref="_certificateViewerForCertification"  JwtHeaderWithx5c="@CertSoftwareStatementBeforeEncodingHeader" />
+                                            <CertificatePKIViewer  @ref="_certificateViewerForCertification"  JwtHeaderWithx5c="@CertSoftwareStatementBeforeEncodingHeader" EnableAddToClaim="true" CertContext="certification" />
                                         </MudPaper>
                                     </MudItem>
                                 </MudGrid>

@@ -26,14 +26,17 @@ public class Infrastructure : UdapEd.Shared.Services.Infrastructure
     }
 
 
-    public override async Task<string?> GetIntermediateX509(string url)
+    public override async Task<string?> GetIntermediateX509(string url, string? certContext = null)
     {
         try
         {
             var bytes = await HttpClient.GetByteArrayAsync(url);
 
             var certificate = new X509Certificate2(bytes);
-            var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
+            var sessionKey = certContext == "certification"
+                ? UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES
+                : UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES;
+            var intermediatesStored = await SessionExtensions.RetrieveFromChunks(sessionKey);
             var intermediateCerts =
                 intermediatesStored == null ? new X509Certificate2Collection() :
                 Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates() ?? new X509Certificate2Collection();
@@ -41,16 +44,8 @@ public class Infrastructure : UdapEd.Shared.Services.Infrastructure
             if (intermediateCerts.All(i => i.Thumbprint != certificate.Thumbprint))
             {
                 intermediateCerts.Add(certificate);
-                await SessionExtensions.StoreInChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES, intermediateCerts.SerializeCertificates());
+                await SessionExtensions.StoreInChunks(sessionKey, intermediateCerts.SerializeCertificates());
             }
-
-            // if (intermediateCerts != null && intermediateCerts.Any())
-            // {
-            //     intermediateCerts.Add(certificate);
-            // }
-            //
-            // await SessionExtensions.StoreInChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES,
-            //     certificate.RawData);
 
             return certificate.GetRawCertDataString();
         }
