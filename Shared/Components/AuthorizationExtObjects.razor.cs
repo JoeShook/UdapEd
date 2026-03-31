@@ -29,6 +29,7 @@ public partial class AuthorizationExtObjects : ComponentBase
 
     private StandaloneCodeEditor _editor = null!;
     private bool _isEditorInitialized;
+    private bool _initialEditorValueSet;
     private ElementReference _leftColumnRef;
     private int _editorHeight = 400;
     public Hl7B2BUserForm? _hl7B2BUserForm;
@@ -42,20 +43,20 @@ public partial class AuthorizationExtObjects : ComponentBase
     };
 
     private Func<KeyValuePair<string, AuthExtModel>, bool> _authExtObjectPredicate;
-    
+
+
+    protected override void OnInitialized()
+    {
+        _authExtObjectPredicate = OperationType == AuthExtObjectOperationType.Auth
+            ? a => a.Value.UseInAuth
+            : a => a.Value.UseInRegister;
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (_isEditorInitialized && AppState.AuthorizationExtObjects.Any())
+        if (_isEditorInitialized && !_initialEditorValueSet && AppState.AuthorizationExtObjects.Any())
         {
-            if (OperationType == AuthExtObjectOperationType.Auth)
-            {
-                _authExtObjectPredicate = a => a.Value.UseInAuth;
-            }
-            else
-            {
-                _authExtObjectPredicate = a => a.Value.UseInRegister;
-            }
+            _initialEditorValueSet = true;
             await SetEditorValue(_authExtObjectPredicate);
         }
     }
@@ -194,13 +195,19 @@ public partial class AuthorizationExtObjects : ComponentBase
 
     private async Task OnTabChanged(int index)
     {
-        // Small delay for tab content to render
-        await Task.Delay(200);
-        await MeasureLeftColumnHeight();
+        if (!_isEditorInitialized) return;
+
+        await Task.Delay(100);
+        await JsRuntime.InvokeVoidAsync("eval", "window.dispatchEvent(new Event('resize'))");
     }
 
-    private Task HandleUpdateEditor()
+    private async Task HandleUpdateEditor()
     {
-        return InvokeAsync(() => _editor.SetValue(JsonSerializer.Serialize(AppState.AuthorizationExtObjects, _jsonSerializerOptions)));
+        if (_isEditorInitialized && _authExtObjectPredicate != null)
+        {
+            await SetEditorValue(_authExtObjectPredicate);
+            await Task.Delay(50);
+            await JsRuntime.InvokeVoidAsync("eval", "window.dispatchEvent(new Event('resize'))");
+        }
     }
 }

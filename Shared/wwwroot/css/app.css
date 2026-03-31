@@ -4,6 +4,10 @@ html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+.text-transform-none .mud-tab {
+    text-transform: none !important;
+}
+
 h1:focus {
     outline: none;
 }

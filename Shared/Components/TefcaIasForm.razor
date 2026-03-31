@@ -11,15 +11,9 @@
 
     <MudTextField @bind-Value="_hl7B2BModel.Version" Label="Version" Required="true" />
     
-    <MudAutocomplete T="string" @bind-Value="_hl7B2BModel.PurposeOfUse"
-                     Label="New Purpose of Use"
-                     SearchFunc="@SearchPurposeOfUse"
-                     MaxItems="100"
-                     Class="scrollable-dropdown" />
-    
     
     <MudGrid Justify="Justify.SpaceBetween" @onclick="OpenRelatedPersonMenu" Class="mt-1">
-        
+
         <MudItem>
             <MudText OnClick="OpenRelatedPersonMenu">@(_jsonRelatedPerson)</MudText>
         </MudItem>
@@ -32,6 +26,7 @@
                         @(new MarkupString(string.Join("<br/> ", AppState.FhirContext.CurrentRelatedPerson.Name.Select(hn => $"{hn.Given.First()}, {hn.Family}"))))
                     </MudMenuItem>
                 }
+                <MudMenuItem OnClick="@CreateOneselfRelatedPerson">Self (ONESELF)</MudMenuItem>
                 <MudMenuItem OnClick="@EmptyRelatedPersonContext">Create Empty Person</MudMenuItem>
                 <MudMenuItem OnClick="@SearchForRelatedPerson">Search for Person</MudMenuItem>
                 <MudMenuItem OnClick="@ClearRelatedPersonContext">
@@ -95,7 +90,7 @@
             }
         }
     </MudChipSet>
-    @if (_hl7B2BModel.ConsentPolicy.Count == 0)
+    @if (!_isOneself && _hl7B2BModel.ConsentPolicy.Count == 0)
     {
         <div class="validation-error">Consent Policy is required when user is not the patient (relationship != ONESELF).</div>
     }
@@ -111,7 +106,7 @@
             }
         }
     </MudChipSet>
-    <MudTextField @bind-Value="_hl7B2BModel.IdToken" Label="Id Token (CSP-provided OpenID Connect token)" Required="true" />
+    <MudTextField @bind-Value="_idTokenString" Label="Id Token (CSP-provided OpenID Connect token)" />
 
     <MudGrid Justify="Justify.FlexEnd">
         <MudItem>

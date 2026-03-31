@@ -32,9 +32,10 @@ public partial class TefcaIasForm : ComponentBase
     private MarkupString? _jsonPatient;
     private string? _selectedConsentPolicy;
     private string? _selectedConsentReference;
+    private string? _idTokenString;
     private string? _newConsentPolicy;
     private string? _newConsentReference;
-    private List<string> _vsPurposeOfUse = ["T-IAS"];
+    private bool _isOneself;
     private MudMenu relatedPersonMenuRef;
     private MudMenu patientMenuRef;
 
@@ -59,12 +60,27 @@ public partial class TefcaIasForm : ComponentBase
             _hl7B2BModel = new TEFCAIASAuthorizationExtension();
         }
 
+        if (_hl7B2BModel?.IdToken != null)
+        {
+            _idTokenString = _hl7B2BModel.IdToken.Value.ToString();
+        }
+
         if (_hl7B2BModel?.UserInformation != null)
         {
             try
             {
-                var person = new FhirJsonParser().Parse<RelatedPerson>(_hl7B2BModel?.UserInformation.ToString());
-                SetRelatedPersonPresentation(person);
+                if (_hl7B2BModel.UserInformation.Value.ValueKind == JsonValueKind.String &&
+                    _hl7B2BModel.UserInformation.Value.GetString() == "ONESELF")
+                {
+                    _isOneself = true;
+                    _jsonRelatedPerson = new MarkupString("ONESELF");
+                }
+                else
+                {
+                    var person = new FhirJsonParser().Parse<RelatedPerson>(_hl7B2BModel.UserInformation.Value.ToString());
+                    _isOneself = false;
+                    SetRelatedPersonPresentation(person);
+                }
             }
             catch (Exception e)
             {
@@ -86,14 +102,12 @@ public partial class TefcaIasForm : ComponentBase
         }
     }
 
-    private Task<IEnumerable<string>> SearchPurposeOfUse(string value, CancellationToken ct)
+    private Task CreateOneselfRelatedPerson()
     {
-        if (string.IsNullOrEmpty(value))
-            return Task.FromResult(_vsPurposeOfUse.AsEnumerable());
-
-        return Task.FromResult(_vsPurposeOfUse
-            .Where(c => c.Contains(value, StringComparison.InvariantCultureIgnoreCase))
-            .AsEnumerable());
+        _isOneself = true;
+        _hl7B2BModel.UserInformation = JsonDocument.Parse("\"ONESELF\"").RootElement;
+        _jsonRelatedPerson = new MarkupString("ONESELF");
+        return Task.CompletedTask;
     }
 
     protected override Task OnAfterRenderAsync(bool firstRender)
@@ -155,11 +169,27 @@ public partial class TefcaIasForm : ComponentBase
 
     private async Task HandleInclude()
     {
-        await _form.Validate();
-        if (_form.IsValid)
+        SyncIdToken();
+        await UpdateAppState(TefcaConstants.UdapAuthorizationExtensions.TEFCAIAS, _hl7B2BModel, true);
+        await OnUpdateEditor.InvokeAsync();
+    }
+
+    private void SyncIdToken()
+    {
+        if (!string.IsNullOrWhiteSpace(_idTokenString))
         {
-            await UpdateAppState(TefcaConstants.UdapAuthorizationExtensions.TEFCAIAS, _hl7B2BModel, true);
-            await OnUpdateEditor.InvokeAsync();
+            try
+            {
+                _hl7B2BModel.IdToken = JsonDocument.Parse($"\"{_idTokenString}\"").RootElement;
+            }
+            catch
+            {
+                _hl7B2BModel.IdToken = null;
+            }
+        }
+        else
+        {
+            _hl7B2BModel.IdToken = null;
         }
     }
 
@@ -229,9 +259,11 @@ public partial class TefcaIasForm : ComponentBase
     {
         if (AppState.FhirContext.CurrentRelatedPerson != null)
         {
-            var jsonString = new FhirJsonSerializer().SerializeToString(AppState.FhirContext.CurrentRelatedPerson);
+            var person = AppState.FhirContext.CurrentRelatedPerson;
+            _isOneself = false;
+            var jsonString = new FhirJsonSerializer().SerializeToString(person);
             _hl7B2BModel.UserInformation = JsonDocument.Parse(jsonString).RootElement;
-            SetRelatedPersonPresentation(AppState.FhirContext.CurrentRelatedPerson);
+            SetRelatedPersonPresentation(person);
         }
     }
 
@@ -248,6 +280,8 @@ public partial class TefcaIasForm : ComponentBase
                 }
             ]
         };
+
+        _isOneself = false;
 
         var jsonString = await new FhirJsonSerializer().SerializeToStringAsync(relatedPerson);
         _hl7B2BModel.UserInformation = JsonDocument.Parse(jsonString).RootElement;

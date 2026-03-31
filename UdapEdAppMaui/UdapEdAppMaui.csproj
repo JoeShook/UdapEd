@@ -118,6 +118,8 @@
     <MauiAsset LogicalName="udap.emrdirect.client.certificate.p12" Include="CertificateStore/udap.emrdirect.client.certificate.p12" Condition="Exists('CertificateStore/udap.emrdirect.client.certificate.p12')" />
     <MauiAsset LogicalName="FhirLabs_mTLS_Client.pfx" Include="CertificateStore/FhirLabs_mTLS_Client.pfx" Condition="Exists('CertificateStore/FhirLabs_mTLS_Client.pfx')" />
     <MauiAsset LogicalName="FhirLabsAdminCertification.pfx" Include="CertificateStore/FhirLabsAdminCertification.pfx" Condition="Exists('CertificateStore/FhirLabsAdminCertification.pfx')" />
+    <MauiAsset LogicalName="fhirlabs.net.tefca.client.pfx" Include="CertificateStore/fhirlabs.net.tefca.client.pfx" Condition="Exists('CertificateStore/fhirlabs.net.tefca.client.pfx')" />
+    <MauiAsset LogicalName="FTefacaRce_EmrDirect_FhirLabs.pfx" Include="CertificateStore/TefacaRce_EmrDirect_FhirLabs.pfx" Condition="Exists('CertificateStore/TefacaRce_EmrDirect_FhirLabs.pfx')" />
 
 		<MauiAsset Include="..\Shared\wwwroot\Packages\udap_urls.json" LogicalName="udap_urls.json" />
     <MauiAsset Include="appsettings.json" LogicalName="appsettings.json" />
@@ -135,7 +137,7 @@
     <PackageReference Include="Serilog" Version="4.3.1" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="Udap.Client" Version="0.7.2" />
+    <PackageReference Include="Udap.Client" Version="0.7.9" />
   </ItemGroup>
 
   <ItemGroup>
@@ -154,7 +156,13 @@
 
 
   <ItemGroup>
+    <None Update="CertificateStore\fhirlabs.net.tefca.client.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="CertificateStore\FhirLabsAdminCertification.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="CertificateStore\TefacaRce_EmrDirect_FhirLabs.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="CertificateStore\udap-sandbox-surescripts-2.p12">
@@ -167,9 +175,5 @@
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>   
   </ItemGroup>
-	
-	<ItemGroup>
-		<Folder Include="CertificateStore\" />
-	</ItemGroup>
 	
 </Project>
