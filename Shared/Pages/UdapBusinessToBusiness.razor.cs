@@ -53,8 +53,9 @@ public partial class UdapBusinessToBusiness
 
 
     [Inject] IAccessService AccessService { get; set; } = null!;
+    [Inject] IInfrastructure Infrastructure { get; set; } = null!;
     [Inject] NavigationManager NavManager { get; set; } = null!;
-    
+
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
 
     [Inject] IMainPageService? MainPageService { get; set; } = null!;
@@ -353,9 +354,14 @@ public partial class UdapBusinessToBusiness
             return;
         }
 
+        if (ServerRequiresTefcaCertification())
+        {
+            await Infrastructure.ResolveAiaIntermediates();
+        }
+
         if (AppState.Oauth2Flow == Oauth2FlowEnum.authorization_code)
         {
-            
+
             var tokenRequestModel = new AuthorizationCodeTokenRequestModel
             {
                 ClientId = AppState.ClientRegistrations?.SelectedRegistration?.ClientId,
@@ -617,6 +623,12 @@ public partial class UdapBusinessToBusiness
     {
         if (string.IsNullOrEmpty(certBase64)) return;
         await BuildAccessTokenRequest();
+    }
+
+    private bool ServerRequiresTefcaCertification()
+    {
+        var required = AppState.MetadataVerificationModel?.UdapServerMetaData?.UdapCertificationsRequired;
+        return required != null && required.Contains("https://rce.sequoiaproject.org/udap/profiles/basic-app-certification");
     }
 
     private string? GetJwtHeader(string? tokenString)

@@ -42,8 +42,9 @@ public partial class UdapConsumer
     [Inject] IExternalWebAuthenticator? ExternalWebAuthenticator { get; set; }
 
     [Inject] IAccessService AccessService { get; set; } = null!;
+    [Inject] IInfrastructure Infrastructure { get; set; } = null!;
     [Inject] NavigationManager NavManager { get; set; } = null!;
-    
+
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
 
     private string AuthCodeRequestLink { get; set; } = string.Empty;
@@ -338,7 +339,12 @@ public partial class UdapConsumer
             TokenRequest1 = "Missing TokenEndpoint";
             return;
         }
-        
+
+        if (ServerRequiresTefcaCertification())
+        {
+            await Infrastructure.ResolveAiaIntermediates();
+        }
+
         var tokenRequestModel = new AuthorizationCodeTokenRequestModel
         {
             ClientId = AppState.ClientRegistrations.SelectedRegistration?.ClientId,
@@ -504,6 +510,12 @@ public partial class UdapConsumer
     {
         if (string.IsNullOrEmpty(certBase64)) return;
         await BuildAccessTokenRequest();
+    }
+
+    private bool ServerRequiresTefcaCertification()
+    {
+        var required = AppState.MetadataVerificationModel?.UdapServerMetaData?.UdapCertificationsRequired;
+        return required != null && required.Contains("https://rce.sequoiaproject.org/udap/profiles/basic-app-certification");
     }
 
     private string GetJwtHeader(string? tokenString)
