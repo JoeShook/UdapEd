@@ -304,9 +304,10 @@
                                 <MudTabPanel Text="Certificates">
                                     <CertificatePKIViewer
                                         @ref="_certificateViewer"
-                                        JwtHeaderWithx5c="@GetJwtHeader(AppState.AuthorizationCodeTokenRequest?.ClientAssertion?.Value)"
+                                        JwtHeaderWithx5c="@_authCodeJwtHeader"
                                         EnableAddToClaim="true"
-                                        EndCertificate="true"/>
+                                        EndCertificate="true"
+                                        IntermediateAddedToX5cEvent="@OnIntermediateAdded"/>
                                 </MudTabPanel>
                                 @if (EnableDPoP)
                                 {

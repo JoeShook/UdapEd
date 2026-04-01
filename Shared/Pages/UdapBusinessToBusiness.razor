@@ -161,9 +161,10 @@
                                       <MudTabPanel Text="Certificates">
                                           <CertificatePKIViewer
                                               @ref="_certificateViewer"
-                                              JwtHeaderWithx5c="@GetJwtHeader(AppState.ClientCredentialsTokenRequest?.ClientAssertion?.Value)"
+                                              JwtHeaderWithx5c="@_clientCredentialsJwtHeader"
                                               EnableAddToClaim="true"
-                                              EndCertificate="true"/>
+                                              EndCertificate="true"
+                                              IntermediateAddedToX5cEvent="@OnClientCredentialsIntermediateAdded"/>
                                       </MudTabPanel>
                                       @if (EnableDPoP)
                                       {
@@ -432,7 +433,11 @@
                                                            SignedSoftwareStatement="@AppState.AuthorizationCodeTokenRequest?.ClientAssertion?.Value" />
                                       </MudTabPanel>
                                       <MudTabPanel Text="Certificates">
-                                          <CertificatePKIViewer  @ref="_certificateViewer" JwtHeaderWithx5c="@GetJwtHeader(AppState.AuthorizationCodeTokenRequest?.ClientAssertion?.Value)" />
+                                          <CertificatePKIViewer  @ref="_certificateViewer"
+                                              JwtHeaderWithx5c="@_authCodeJwtHeader"
+                                              EnableAddToClaim="true"
+                                              EndCertificate="true"
+                                              IntermediateAddedToX5cEvent="@OnAuthCodeIntermediateAdded"/>
                                       </MudTabPanel>
                                       @if (EnableDPoP)
                                       {

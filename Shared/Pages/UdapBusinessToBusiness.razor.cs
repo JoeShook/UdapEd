@@ -325,6 +325,8 @@ public partial class UdapBusinessToBusiness
             TokenRequest2 = string.Empty;
             TokenRequest3 = string.Empty;
             TokenRequest4 = string.Empty;
+            _clientCredentialsJwtHeader = string.Empty;
+            _authCodeJwtHeader = string.Empty;
             await AppState.SetPropertyAsync(this, nameof(AppState.AuthorizationCodeRequest), null);
         
         LoginCallback(true);
@@ -418,6 +420,8 @@ public partial class UdapBusinessToBusiness
 
     private void BuildAccessTokenRequestVisualForClientCredentials()
     {
+        _clientCredentialsJwtHeader = GetJwtHeader(AppState.ClientCredentialsTokenRequest?.ClientAssertion?.Value) ?? string.Empty;
+
         var tokenEndpoint = AppState.MetadataVerificationModel?.UdapServerMetaData?.TokenEndpoint;
         Uri.TryCreate(tokenEndpoint, UriKind.Absolute, out var tokenUri);
 
@@ -459,6 +463,8 @@ public partial class UdapBusinessToBusiness
         {
             return;
         }
+
+        _authCodeJwtHeader = GetJwtHeader(AppState.AuthorizationCodeTokenRequest?.ClientAssertion?.Value) ?? string.Empty;
 
         var tokenEndpoint = AppState.MetadataVerificationModel?.UdapServerMetaData?.TokenEndpoint;
         Uri.TryCreate(tokenEndpoint, UriKind.Absolute, out var tokenUri);
@@ -598,7 +604,20 @@ public partial class UdapBusinessToBusiness
 
     private string _webAuthenticorResponseProps = string.Empty;
     private CertificatePKIViewer _certificateViewer;
+    private string _clientCredentialsJwtHeader = string.Empty;
+    private string _authCodeJwtHeader = string.Empty;
 
+    private async Task OnClientCredentialsIntermediateAdded(string? certBase64)
+    {
+        if (string.IsNullOrEmpty(certBase64)) return;
+        await BuildAccessTokenRequest();
+    }
+
+    private async Task OnAuthCodeIntermediateAdded(string? certBase64)
+    {
+        if (string.IsNullOrEmpty(certBase64)) return;
+        await BuildAccessTokenRequest();
+    }
 
     private string? GetJwtHeader(string? tokenString)
     {

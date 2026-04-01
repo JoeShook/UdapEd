@@ -8,16 +8,22 @@
 #endregion
 
 using System.Net;
+using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
+using Duende.IdentityModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Udap.Client.Client.Extensions;
+using Udap.Model;
 using Udap.Model.Access;
+using Udap.Model.Statement;
 using Udap.Model.UdapAuthenticationExtensions;
+using Udap.Util.Extensions;
 using UdapEd.Server.Extensions;
 using UdapEd.Shared;
+using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Mappers;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
@@ -95,15 +101,62 @@ public class AccessController : Controller
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
         var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
-        
-        var tokenRequestBuilder = AccessTokenRequestForAuthorizationCodeBuilder.Create(
-            tokenRequestModel.ClientId,
-            tokenRequestModel.TokenEndpointUrl,
-            clientCert,
-            tokenRequestModel.RedirectUrl,
-            tokenRequestModel.Code);
 
-        var tokenRequest = tokenRequestBuilder.Build(alg);
+        var x5cCerts = new List<X509Certificate2> { clientCert };
+        var intermediatesStored = HttpContext.Session.GetString(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
+        var intermediateCerts = intermediatesStored.DeserializeCertificates();
+
+        if (intermediateCerts != null && intermediateCerts.Any())
+        {
+            x5cCerts.AddRange(intermediateCerts);
+        }
+
+        UdapAuthorizationCodeTokenRequest tokenRequest;
+
+        if (x5cCerts.Count > 1)
+        {
+            var now = DateTime.UtcNow;
+            var jwtPayload = new JwtPayLoadExtension(
+                tokenRequestModel.ClientId,
+                tokenRequestModel.TokenEndpointUrl,
+                new List<Claim>
+                {
+                    new(JwtClaimTypes.IssuedAt, EpochTime.GetIntDate(now).ToString(), ClaimValueTypes.Integer),
+                    new(JwtClaimTypes.JwtId, CryptoRandom.CreateUniqueId()),
+                    new(JwtClaimTypes.Subject, tokenRequestModel.ClientId ?? "")
+                },
+                now,
+                now.AddMinutes(5));
+
+            var clientAssertion = SignedSoftwareStatementBuilder<JwtPayLoadExtension>
+                .Create(x5cCerts, jwtPayload)
+                .Build(alg);
+
+            tokenRequest = new UdapAuthorizationCodeTokenRequest
+            {
+                Address = tokenRequestModel.TokenEndpointUrl,
+                RequestUri = new Uri(tokenRequestModel.TokenEndpointUrl!),
+                Code = tokenRequestModel.Code!,
+                RedirectUri = tokenRequestModel.RedirectUrl!,
+                ClientAssertion = new Duende.IdentityModel.Client.ClientAssertion
+                {
+                    Type = OidcConstants.ClientAssertionTypes.JwtBearer,
+                    Value = clientAssertion
+                },
+                Udap = UdapConstants.UdapVersionsSupportedValue
+            };
+        }
+        else
+        {
+            var tokenRequestBuilder = AccessTokenRequestForAuthorizationCodeBuilder.Create(
+                tokenRequestModel.ClientId,
+                tokenRequestModel.TokenEndpointUrl,
+                clientCert,
+                tokenRequestModel.RedirectUrl,
+                tokenRequestModel.Code);
+
+            tokenRequest = tokenRequestBuilder.Build(alg);
+        }
 
         if (tokenRequestModel.CodeVerifier != null)
         {
@@ -149,25 +202,77 @@ public class AccessController : Controller
         var certBytes = Convert.FromBase64String(clientCertWithKey);
         var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
-        var tokenRequestBuilder = AccessTokenRequestForClientCredentialsBuilder.Create(
-            tokenRequestModel.ClientId,
-            tokenRequestModel.TokenEndpointUrl,
-            clientCert);
+        var x5cCerts = new List<X509Certificate2> { clientCert };
+        var intermediatesStored = HttpContext.Session.GetString(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
+        var intermediateCerts = intermediatesStored.DeserializeCertificates();
 
-        if (tokenRequestModel.Extensions != null)
+        if (intermediateCerts != null && intermediateCerts.Any())
         {
-            foreach (var extension in tokenRequestModel.Extensions)
+            x5cCerts.AddRange(intermediateCerts);
+        }
+
+        UdapClientCredentialsTokenRequest tokenRequest;
+
+        if (x5cCerts.Count > 1)
+        {
+            var now = DateTime.UtcNow;
+            var jwtPayload = new JwtPayLoadExtension(
+                tokenRequestModel.ClientId,
+                tokenRequestModel.TokenEndpointUrl,
+                new List<Claim>
+                {
+                    new(JwtClaimTypes.IssuedAt, EpochTime.GetIntDate(now).ToString(), ClaimValueTypes.Integer),
+                    new(JwtClaimTypes.JwtId, CryptoRandom.CreateUniqueId()),
+                    new(JwtClaimTypes.Subject, tokenRequestModel.ClientId ?? "")
+                },
+                now,
+                now.AddMinutes(5));
+
+            if (tokenRequestModel.Extensions != null)
             {
-                tokenRequestBuilder.WithExtension(extension.Key, extension.Value);
+                var payload = jwtPayload as Dictionary<string, object>;
+                payload.Add(UdapConstants.JwtClaimTypes.Extensions, tokenRequestModel.Extensions);
             }
-        }
 
-        if (tokenRequestModel.Scope != null)
+            var clientAssertion = SignedSoftwareStatementBuilder<JwtPayLoadExtension>
+                .Create(x5cCerts, jwtPayload)
+                .Build(alg);
+
+            tokenRequest = new UdapClientCredentialsTokenRequest
+            {
+                Address = tokenRequestModel.TokenEndpointUrl,
+                ClientAssertion = new Duende.IdentityModel.Client.ClientAssertion
+                {
+                    Type = OidcConstants.ClientAssertionTypes.JwtBearer,
+                    Value = clientAssertion
+                },
+                Udap = UdapConstants.UdapVersionsSupportedValue,
+                Scope = tokenRequestModel.Scope
+            };
+        }
+        else
         {
-            tokenRequestBuilder.WithScope(tokenRequestModel.Scope);
+            var tokenRequestBuilder = AccessTokenRequestForClientCredentialsBuilder.Create(
+                tokenRequestModel.ClientId,
+                tokenRequestModel.TokenEndpointUrl,
+                clientCert);
+
+            if (tokenRequestModel.Extensions != null)
+            {
+                foreach (var extension in tokenRequestModel.Extensions)
+                {
+                    tokenRequestBuilder.WithExtension(extension.Key, extension.Value);
+                }
+            }
+
+            if (tokenRequestModel.Scope != null)
+            {
+                tokenRequestBuilder.WithScope(tokenRequestModel.Scope);
+            }
+
+            tokenRequest = tokenRequestBuilder.Build(alg);
         }
 
-        var tokenRequest = tokenRequestBuilder.Build(alg);
         var tokenRequestModel2 = tokenRequest.ToModel();
 
         if (tokenRequestModel.EnableDPoP)
