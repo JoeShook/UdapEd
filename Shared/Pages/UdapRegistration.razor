@@ -46,20 +46,22 @@
                                 <MudItem>
                                     <CertificationAndEndorsementLoader OnCertificationCertLoaded="@CiertificationReset" />
                                 </MudItem>
-                                <MudItem>
-                                    <MudMenu Label="@($"C&E Template: {_selectedCertificationTemplate.Name}")"
-                                             StartIcon="@Icons.Material.Filled.Description"
-                                             Size="Size.Small"
-                                             Variant="Variant.Filled"
-                                             Color="Color.Primary">
-                                        @foreach (var template in CertificationTemplates.Entries)
-                                        {
-                                            <MudMenuItem OnClick="@(() => _selectedCertificationTemplate = template)">@template.Name</MudMenuItem>
-                                        }
-                                    </MudMenu>
-                                </MudItem>
                                 <MudSpacer />
                             </MudGrid>
+                            <MudDivider Class="my-2" />
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" Color="Color.Primary" />
+                                <MudText Typo="Typo.body2"><b>Self-Declared Template:</b></MudText>
+                                <MudMenu Size="Size.Small"
+                                         Variant="Variant.Filled"
+                                         Color="Color.Tertiary"
+                                         Label="@_selectedCertificationTemplate.Name">
+                                    @foreach (var template in CertificationTemplates.Entries)
+                                    {
+                                        <MudMenuItem OnClick="@(() => _selectedCertificationTemplate = template)">@template.Name</MudMenuItem>
+                                    }
+                                </MudMenu>
+                            </MudStack>
                         </MudTabPanel>
                         <MudTabPanel Text="Declarations" ToolTip="Certifications and Endorsements">
                             Future:  Select Certification and Endorsements or upload.  It will be a signed jwt.
@@ -403,10 +405,24 @@
                                         </MudPaper>
                                         @if (_selectedCertificationTemplate.AdditionalClaims != null && !string.IsNullOrEmpty(CertSoftwareStatementBeforeEncodingSoftwareStatement))
                                         {
-                                            <MudPaper Class="udap-analyzed mt-2" Elevation="3">
-                                                <MudText Align="Align.Right" Color="Color.Tertiary">Template Highlights</MudText>
-                                                <pre>@((MarkupString)HighlightedCertSoftwareStatement)</pre>
-                                            </MudPaper>
+                                            <MudExpansionPanels Class="mt-2">
+                                                <MudExpansionPanel>
+                                                    <TitleContent>
+                                                        <div class="d-flex justify-space-between align-center" style="width:100%">
+                                                            <MudText Color="Color.Tertiary">Template Highlights</MudText>
+                                                            <MudLink Href="https://rce.sequoiaproject.org/wp-content/uploads/2024/02/Facilitated-FHIR-Implementation-Guide-v2.0.pdf#page=14"
+                                                                     Target="_blank"
+                                                                     Color="Color.Info"
+                                                                     Typo="Typo.caption">
+                                                                Facilitated FHIR IG (section 6.11.6)
+                                                            </MudLink>
+                                                        </div>
+                                                    </TitleContent>
+                                                    <ChildContent>
+                                                        <pre>@((MarkupString)HighlightedCertSoftwareStatement)</pre>
+                                                    </ChildContent>
+                                                </MudExpansionPanel>
+                                            </MudExpansionPanels>
                                         }
                                         @if (_missingScope)
                                         {

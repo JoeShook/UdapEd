@@ -26,6 +26,37 @@ public class Infrastructure : UdapEd.Shared.Services.Infrastructure
     }
 
 
+    public override async Task ResolveAiaIntermediates(string? certContext = null)
+    {
+        try
+        {
+            var certSessionKey = certContext == "certification"
+                ? UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY
+                : UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY;
+            var intermediateSessionKey = certContext == "certification"
+                ? UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES
+                : UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES;
+
+            var clientCertWithKey = await SessionExtensions.RetrieveFromChunks(certSessionKey);
+            if (clientCertWithKey == null) return;
+
+            var certBytes = Convert.FromBase64String(clientCertWithKey);
+            var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+
+            var aiaExtension = clientCert.Extensions["1.3.6.1.5.5.7.1.1"] as X509AuthorityInformationAccessExtension;
+            if (aiaExtension == null) return;
+
+            foreach (var aiaUrl in aiaExtension.EnumerateCAIssuersUris())
+            {
+                await GetIntermediateX509(aiaUrl, certContext);
+            }
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
+    }
+
     public override async Task<string?> GetIntermediateX509(string url, string? certContext = null)
     {
         try

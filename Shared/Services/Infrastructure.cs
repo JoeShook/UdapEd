@@ -217,6 +217,12 @@ public class Infrastructure : IInfrastructure
     /// </summary>
     /// <param name="url"></param>
     /// <returns></returns>
+    public virtual Task ResolveAiaIntermediates(string? certContext = null)
+    {
+        // Default no-op; overridden in platform-specific implementations
+        return Task.CompletedTask;
+    }
+
     public virtual async Task<string?> GetIntermediateX509(string url, string? certContext = null)
     {
         var bytes = await HttpClient.GetByteArrayAsync(url);

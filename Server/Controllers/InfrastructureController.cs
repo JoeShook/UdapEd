@@ -129,6 +129,64 @@ public class InfrastructureController : Controller
         }
     }
 
+    [HttpGet("ResolveAiaIntermediates")]
+    public async Task<IActionResult> ResolveAiaIntermediates(string? certContext, CancellationToken token)
+    {
+        try
+        {
+            var certSessionKey = certContext == "certification"
+                ? UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY
+                : UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY;
+            var intermediateSessionKey = certContext == "certification"
+                ? UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES
+                : UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES;
+
+            var clientCertWithKey = HttpContext.Session.GetString(certSessionKey);
+            if (clientCertWithKey == null)
+            {
+                return Ok();
+            }
+
+            var certBytes = Convert.FromBase64String(clientCertWithKey);
+            var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+
+            var aiaExtension = clientCert.Extensions["1.3.6.1.5.5.7.1.1"] as X509AuthorityInformationAccessExtension;
+            if (aiaExtension == null)
+            {
+                return Ok();
+            }
+
+            var intermediateCertsStored = HttpContext.Session.GetString(intermediateSessionKey);
+            var intermediateCerts = intermediateCertsStored.DeserializeCertificates();
+
+            foreach (var aiaUrl in aiaExtension.EnumerateCAIssuersUris())
+            {
+                var encodedCert = await _infrastructure.GetIntermediateX509(aiaUrl);
+                if (encodedCert != null)
+                {
+                    var certData = Convert.FromBase64String(encodedCert);
+                    var intermediateCert = new X509Certificate2(certData);
+                    if (intermediateCerts.All(i => i.Thumbprint != intermediateCert.Thumbprint))
+                    {
+                        intermediateCerts.Add(intermediateCert);
+                    }
+                }
+            }
+
+            if (intermediateCerts.Any())
+            {
+                HttpContext.Session.SetString(intermediateSessionKey, intermediateCerts.SerializeCertificates());
+            }
+
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to resolve AIA intermediates");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
     [HttpGet("GetCrldata")]
     public async Task<IActionResult> GetCrldata(string url, CancellationToken token)
     {

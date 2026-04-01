@@ -243,5 +243,7 @@ public partial class CertificationAndEndorsementLoader
         await CertificationService.RemoveCertificate();
         await SetCertLoadedColor(CertLoadedEnum.Negative);
         await SetCertLoadedColorFoExample(CertLoadedEnum.Negative);
+        await AppState.SetPropertyAsync(this, nameof(AppState.CertificationAndEndorsementInfo), null);
+        await AppState.SetPropertyAsync(this, nameof(AppState.CertSoftwareStatementBeforeEncoding), null);
     }
 }

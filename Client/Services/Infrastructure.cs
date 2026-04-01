@@ -94,6 +94,23 @@ public class Infrastructure : IInfrastructure
         }
     }
 
+    public async Task ResolveAiaIntermediates(string? certContext = null)
+    {
+        try
+        {
+            var requestUrl = "Infrastructure/ResolveAiaIntermediates";
+            if (!string.IsNullOrEmpty(certContext))
+            {
+                requestUrl += $"?certContext={Uri.EscapeDataString(certContext)}";
+            }
+            await _httpClient.GetAsync(requestUrl);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to resolve AIA intermediates");
+        }
+    }
+
     public async Task<string?> GetIntermediateX509(string url, string? certContext = null)
     {
         try

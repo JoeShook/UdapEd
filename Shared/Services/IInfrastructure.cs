@@ -35,6 +35,12 @@ public interface IInfrastructure
 
     Task<string?> GetIntermediateX509(string url, string? certContext = null);
 
+    /// <summary>
+    /// Resolve all AIA intermediate certificates for the currently loaded client cert
+    /// and store them in the session under the appropriate key.
+    /// </summary>
+    Task ResolveAiaIntermediates(string? certContext = null);
+
     Task<string?> GetCrldata(string url);
     Task<X509CacheSettings?> GetX509StoreCache(string thumbprint);
     Task<CrlFileCacheSettings?> GetCryptNetUrlCache(string? path);

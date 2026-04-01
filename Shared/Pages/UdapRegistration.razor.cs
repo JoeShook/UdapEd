@@ -132,6 +132,7 @@ public partial class UdapRegistration : IAsyncDisposable
     ErrorBoundary? ErrorBoundary { get; set; }
     [Inject] IRegisterService RegisterService { get; set; } = null!;
     [Inject] ICertificationService CertificationService { get; set; } = null!;
+    [Inject] IInfrastructure Infrastructure { get; set; } = null!;
 
     [Inject] NavigationManager NavigationManager { get; set; } = null!;
 
@@ -429,6 +430,15 @@ public partial class UdapRegistration : IAsyncDisposable
 
         await Task.Delay(100);
 
+        if (ServerRequiresTefcaCertification())
+        {
+            await Infrastructure.ResolveAiaIntermediates();
+            await Infrastructure.ResolveAiaIntermediates("certification");
+
+            _selectedCertificationTemplate = CertificationTemplates.Entries
+                .FirstOrDefault(t => t.Name == "TEFCA Basic App") ?? _selectedCertificationTemplate;
+        }
+
         if (AppState.Oauth2Flow == Oauth2FlowEnum.client_credentials)
         {
             await BuildRawSoftwareStatementForClientCredentials();
@@ -447,6 +457,12 @@ public partial class UdapRegistration : IAsyncDisposable
         }
 
         await BuildRawCertSoftwareStatement();
+    }
+
+    private bool ServerRequiresTefcaCertification()
+    {
+        var required = AppState.MetadataVerificationModel?.UdapServerMetaData?.UdapCertificationsRequired;
+        return required != null && required.Contains("https://rce.sequoiaproject.org/udap/profiles/basic-app-certification");
     }
 
     private void AppendCertToX5cHeader(string? certBase64, ref string headerField)
@@ -791,9 +807,14 @@ public partial class UdapRegistration : IAsyncDisposable
 
     private async Task BuildRequestBodyForClientCredentials()
     {
-        var certifications = await CertificationService
-            .BuildRequestBody(AppState.CertSoftwareStatementBeforeEncoding, _signingAlgorithm);
-        
+        string? certifications = null;
+
+        if (AppState.CertificationCertLoaded && AppState.CertSoftwareStatementBeforeEncoding != null)
+        {
+            certifications = await CertificationService
+                .BuildRequestBody(AppState.CertSoftwareStatementBeforeEncoding, _signingAlgorithm);
+        }
+
         var registerRequest = await RegisterService
             .BuildRequestBodyForClientCredentials(AppState.SoftwareStatementBeforeEncoding, _signingAlgorithm);
 
@@ -816,8 +837,13 @@ public partial class UdapRegistration : IAsyncDisposable
 
     private async Task BuildRequestBodyForAuthorizationCode()
     {
-        var certifications = await CertificationService
-            .BuildRequestBody(AppState.CertSoftwareStatementBeforeEncoding, _signingAlgorithm);
+        string? certifications = null;
+
+        if (AppState.CertificationCertLoaded && AppState.CertSoftwareStatementBeforeEncoding != null)
+        {
+            certifications = await CertificationService
+                .BuildRequestBody(AppState.CertSoftwareStatementBeforeEncoding, _signingAlgorithm);
+        }
 
         var registerRequest = await RegisterService
             .BuildRequestBodyForAuthorizationCode(
