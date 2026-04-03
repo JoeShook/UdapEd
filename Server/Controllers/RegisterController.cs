@@ -75,12 +75,17 @@ public class RegisterController : Controller
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
-            
+
+            if (certificate.NotAfter < DateTime.Now.Date)
+            {
+                result.CertLoaded = CertLoadedEnum.Expired;
+            }
+
             result.SubjectAltNames = certificate
                 .GetSubjectAltNames(n => n.TagNo == (int)X509Extensions.GeneralNameType.URI)
             .Select(tuple => tuple.Item2)
                 .ToList();
-            
+
             result.PublicKeyAlgorithm = certificate.GetPublicKeyAlgorithm();
             result.Issuer = certificate.IssuerName.EnumerateRelativeDistinguishedNames().FirstOrDefault()?.GetSingleElementValue() ?? string.Empty;
         }

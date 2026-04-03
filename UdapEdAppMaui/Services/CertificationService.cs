@@ -58,6 +58,11 @@ public class CertificationService : ICertificationService
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
 
+            if (certificate.NotAfter < DateTime.Now.Date)
+            {
+                result.CertLoaded = CertLoadedEnum.Expired;
+            }
+
             if (certificate.GetSubjectAltNames().Any())
             {
                 result.SubjectAltNames = certificate

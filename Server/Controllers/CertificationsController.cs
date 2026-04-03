@@ -64,6 +64,11 @@ public class CertificationsController : Controller
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
 
+            if (certificate.NotAfter < DateTime.Now.Date)
+            {
+                result.CertLoaded = CertLoadedEnum.Expired;
+            }
+
             if (certificate.GetSubjectAltNames().Any())
             {
                 result.SubjectAltNames = certificate
@@ -246,29 +251,37 @@ public class CertificationsController : Controller
 
         var certificationBuilder = UdapCertificationsAndEndorsementBuilderUnchecked.Create(request.CertificationName, x5cCerts);
 
-        certificationBuilder
-            // .WithExpiration(request.Expiration)
-            .WithClampedExpiration(request.Expiration)
-            .WithAudience(request.Audience)
-            .WithCertificationDescription(request.CertificationDescription)
-            .WithCertificationUris(request.CertificationUris)
-            .WithDeveloperName(request.DeveloperName)
-            .WithDeveloperAddress(request.DeveloperAddress)
-            .WithClientName(request.ClientName)
-            .WithSoftwareId(request.SoftwareId)
-            .WithSoftwareVersion(request.SoftwareVersion)
-            .WithClientUri(request.ClientUri)
-            .WithLogoUri(request.LogoUri)
-            .WithTermsOfService(request.TosUri)
-            .WithPolicyUri(request.PolicyUri)
-            .WithContacts(request.Contacts)
-            .WithRedirectUris(request.RedirectUris)
-            .WithIPsAllowed(request.IpAllowed)
-            .WithGrantTypes(request.GrantTypes)
-            .WithResponseTypes(request.ResponseTypes) // omit for client_credentials rule
-            .WithScope(request.Scope)
-            .WithTokenEndpointAuthMethod(request.TokenEndpointAuthMethod)
-            .WithAdditionalClaims(request.AdditionalClaims);
+        try
+        {
+            certificationBuilder
+                // .WithExpiration(request.Expiration)
+                .WithClampedExpiration(request.Expiration)
+                .WithAudience(request.Audience)
+                .WithCertificationDescription(request.CertificationDescription)
+                .WithCertificationUris(request.CertificationUris)
+                .WithDeveloperName(request.DeveloperName)
+                .WithDeveloperAddress(request.DeveloperAddress)
+                .WithClientName(request.ClientName)
+                .WithSoftwareId(request.SoftwareId)
+                .WithSoftwareVersion(request.SoftwareVersion)
+                .WithClientUri(request.ClientUri)
+                .WithLogoUri(request.LogoUri)
+                .WithTermsOfService(request.TosUri)
+                .WithPolicyUri(request.PolicyUri)
+                .WithContacts(request.Contacts)
+                .WithRedirectUris(request.RedirectUris)
+                .WithIPsAllowed(request.IpAllowed)
+                .WithGrantTypes(request.GrantTypes)
+                .WithResponseTypes(request.ResponseTypes) // omit for client_credentials rule
+                .WithScope(request.Scope)
+                .WithTokenEndpointAuthMethod(request.TokenEndpointAuthMethod)
+                .WithAdditionalClaims(request.AdditionalClaims);
+        }
+        catch (ArgumentOutOfRangeException ex)
+        {
+            _logger.LogWarning(ex, "Certification certificate expired or expiring too soon");
+            return BadRequest(ex.Message);
+        }
 
         var signedSoftwareStatement = certificationBuilder.BuildSoftwareStatement(signingAlgorithm);
 
@@ -320,29 +333,37 @@ public class CertificationsController : Controller
 
         var certificationBuilder = UdapCertificationsAndEndorsementBuilderUnchecked.Create(document.CertificationName, x5cCerts);
 
-        certificationBuilder
-            // .WithExpiration(document.Expiration)
-            .WithClampedExpiration(document.Expiration)
-            .WithAudience(document.Audience)
-            .WithCertificationDescription(document.CertificationDescription)
-            .WithCertificationUris(document.CertificationUris)
-            .WithDeveloperName(document.DeveloperName)
-            .WithDeveloperAddress(document.DeveloperAddress)
-            .WithClientName(document.ClientName)
-            .WithSoftwareId(document.SoftwareId)
-            .WithSoftwareVersion(document.SoftwareVersion)
-            .WithClientUri(document.ClientUri)
-            .WithLogoUri(document.LogoUri)
-            .WithTermsOfService(document.TosUri)
-            .WithPolicyUri(document.PolicyUri)
-            .WithContacts(document.Contacts)
-            .WithRedirectUris(document.RedirectUris)
-            .WithIPsAllowed(document.IpAllowed)
-            .WithGrantTypes(document.GrantTypes)
-            .WithResponseTypes(document.ResponseTypes) // omit for client_credentials rule
-            .WithScope(document.Scope)
-            .WithTokenEndpointAuthMethod(document.TokenEndpointAuthMethod)
-            .WithAdditionalClaims(document.AdditionalClaims);
+        try
+        {
+            certificationBuilder
+                // .WithExpiration(document.Expiration)
+                .WithClampedExpiration(document.Expiration)
+                .WithAudience(document.Audience)
+                .WithCertificationDescription(document.CertificationDescription)
+                .WithCertificationUris(document.CertificationUris)
+                .WithDeveloperName(document.DeveloperName)
+                .WithDeveloperAddress(document.DeveloperAddress)
+                .WithClientName(document.ClientName)
+                .WithSoftwareId(document.SoftwareId)
+                .WithSoftwareVersion(document.SoftwareVersion)
+                .WithClientUri(document.ClientUri)
+                .WithLogoUri(document.LogoUri)
+                .WithTermsOfService(document.TosUri)
+                .WithPolicyUri(document.PolicyUri)
+                .WithContacts(document.Contacts)
+                .WithRedirectUris(document.RedirectUris)
+                .WithIPsAllowed(document.IpAllowed)
+                .WithGrantTypes(document.GrantTypes)
+                .WithResponseTypes(document.ResponseTypes) // omit for client_credentials rule
+                .WithScope(document.Scope)
+                .WithTokenEndpointAuthMethod(document.TokenEndpointAuthMethod)
+                .WithAdditionalClaims(document.AdditionalClaims);
+        }
+        catch (ArgumentOutOfRangeException ex)
+        {
+            _logger.LogWarning(ex, "Certification certificate expired or expiring too soon");
+            return BadRequest(ex.Message);
+        }
 
         var signedSoftwareStatement = certificationBuilder.BuildSoftwareStatement(signingAlgorithm);
 
