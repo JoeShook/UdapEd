@@ -147,6 +147,8 @@ public partial class UdapBusinessToBusiness
     private void Reset()
     {
         _signingAlgorithm = null;
+        ClientSelectedInUi = AppState.ClientRegistrations?.SelectedRegistration;
+        ScopeOverride = AppState.ClientRegistrations?.SelectedRegistration?.Scope ?? string.Empty;
         StateHasChanged();
     }
 

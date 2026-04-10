@@ -7,8 +7,8 @@ namespace UdapEd.Shared.Extensions;
 public static class ClientRegistrationFilterExtensions
 {
     /// <summary>
-    /// Filters registrations to those matching the current certificate (SAN), resource server (BaseUrl),
-    /// plus any optional additional predicate.
+    /// Filters registrations to those matching the current certificate (SAN and thumbprint),
+    /// resource server (BaseUrl), plus any optional additional predicate.
     /// </summary>
     public static IDictionary<string, ClientRegistration?> FilterRegistrations(
         this ClientRegistrations? source,
@@ -22,9 +22,12 @@ public static class ClientRegistrationFilterExtensions
             return new Dictionary<string, ClientRegistration?>();
         }
 
+        var thumbprint = appState.UdapClientCertificateInfo.Thumbprint;
+
         var query = source.Registrations.Where(r =>
             r.Value != null &&
             appState.UdapClientCertificateInfo.SubjectAltNames.Contains(r.Value.SubjAltName) &&
+            (string.IsNullOrEmpty(r.Value.Thumbprint) || r.Value.Thumbprint == thumbprint) &&
             appState.BaseUrl == r.Value.ResourceServer &&
             appState.MetadataVerificationModel?.UdapServerMetaData?.RegistrationEndpoint == r.Value.RegistrationUrl);
 

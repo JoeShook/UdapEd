@@ -298,6 +298,7 @@ public partial class UdapRegistration : IAsyncDisposable
     private void Reset()
     {
         _signingAlgorithm = null;
+        _localRegisteredClients = string.Empty;
 
         if (AppState.UdapClientCertificateInfo?.SubjectAltNames != null && AppState.UdapClientCertificateInfo.SubjectAltNames.Any())
         {
@@ -907,7 +908,7 @@ public partial class UdapRegistration : IAsyncDisposable
             {
                 if (resultModel.Result.ClientId != null)
                 {
-                    var registration = AppState.ClientRegistrations.SetRegistration(resultModel.Result, _udapDcrDocument, Oauth2Flow, AppState.BaseUrl, DPoPEnabled);
+                    var registration = AppState.ClientRegistrations.SetRegistration(resultModel.Result, _udapDcrDocument, Oauth2Flow, AppState.BaseUrl, AppState.UdapClientCertificateInfo?.Thumbprint ?? string.Empty, DPoPEnabled);
                     AppState.ClientRegistrations.SelectedRegistration = registration;
                 }
 

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using MudBlazor;
+using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
 using Color = MudBlazor.Color;
@@ -99,6 +100,7 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
         SetCertLoadedColor(certViewModel?.CertLoaded, ref PrePackagedCertLoadedColor);
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), certViewModel);
         await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
+        await UpdateSelectedRegistrationForCurrentCert();
         await OnCertificateLoaded.InvokeAsync();
     }
 
@@ -153,6 +155,7 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
         SetCertLoadedColor(certViewModel?.CertLoaded, ref CertLoadedColor);
         await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), certViewModel);
         await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
+        await UpdateSelectedRegistrationForCurrentCert();
         await OnCertificateLoaded.InvokeAsync();
     }
 
@@ -183,6 +186,20 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
                 }
             }
         }
+    }
+
+    private async Task UpdateSelectedRegistrationForCurrentCert()
+    {
+        if (AppState.ClientRegistrations == null)
+        {
+            return;
+        }
+
+        var filtered = AppState.ClientRegistrations.FilterRegistrations(AppState);
+        var firstMatch = filtered.Values.FirstOrDefault();
+
+        AppState.ClientRegistrations.SelectedRegistration = firstMatch;
+        await AppState.SetPropertyAsync(this, nameof(AppState.ClientRegistrations), AppState.ClientRegistrations);
     }
 
     [Parameter] public EventCallback OnCertificateLoaded { get; set; }

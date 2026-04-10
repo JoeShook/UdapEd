@@ -21,7 +21,7 @@ public class ClientRegistrations
 
     public Dictionary<string, ClientRegistration?> Registrations { get; set; } = new();
     
-    public ClientRegistration? SetRegistration(RegistrationDocument resultModelResult, UdapDynamicClientRegistrationDocument? registrationDocument, Oauth2FlowEnum oauth2Flow, string resourceServer, bool dpopEnabled = false)
+    public ClientRegistration? SetRegistration(RegistrationDocument resultModelResult, UdapDynamicClientRegistrationDocument? registrationDocument, Oauth2FlowEnum oauth2Flow, string resourceServer, string thumbprint, bool dpopEnabled = false)
     {
         if (registrationDocument is { Issuer: not null, Audience: not null })
         {
@@ -30,6 +30,7 @@ public class ClientRegistrations
                 ClientId = resultModelResult.ClientId,
                 GrantType = registrationDocument.GrantTypes?.FirstOrDefault(),
                 SubjAltName = registrationDocument.Issuer,
+                Thumbprint = thumbprint,
                 UserFlowSelected = oauth2Flow.ToString(),
                 AuthServer = registrationDocument.Audience,
                 ResourceServer = resourceServer,
@@ -53,6 +54,7 @@ public class ClientRegistrations
         var clientId = Registrations.Where(r =>
             r.Value != null &&
             r.Value.SubjAltName == registration.SubjAltName &&
+            r.Value.Thumbprint == registration.Thumbprint &&
             r.Value.AuthServer == registration.AuthServer &&
             r.Value.ResourceServer == registration.ResourceServer &&
             r.Value.UserFlowSelected == registration.UserFlowSelected &&
@@ -93,6 +95,7 @@ public class ClientRegistration
     public string UserFlowSelected { get; set; } = string.Empty;
     public string? GrantType { get; set; } = string.Empty;
     public string SubjAltName { get; set; } = string.Empty;
+    public string Thumbprint { get; set; } = string.Empty;
     public string AuthServer { get; set; } = string.Empty;
     public string ResourceServer { get; set; } = string.Empty;
     public ICollection<string>? RedirectUri { get; set; }

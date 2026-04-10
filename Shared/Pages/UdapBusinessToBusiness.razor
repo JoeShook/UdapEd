@@ -39,7 +39,7 @@
                                       ClientSelectedInUi = registration;
                                       EnableDPoP = registration?.DPoPEnabled ?? false;
 
-                                      if (ScopeOverride.IsNullOrEmpty()) { ScopeOverride = registration?.Scope; }
+                                      ScopeOverride = registration?.Scope ?? string.Empty;
                                   }"/>
                           </MudItem>
                           <MudItem md="4" xs="12">
