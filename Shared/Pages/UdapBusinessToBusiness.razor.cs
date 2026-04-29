@@ -161,6 +161,8 @@ public partial class UdapBusinessToBusiness
     /// <returns>A <see cref="T:System.Threading.Tasks.Task" /> representing any asynchronous operation.</returns>
     protected override async Task OnInitializedAsync()
     {
+        ClientSelectedInUi = AppState.ClientRegistrations?.SelectedRegistration;
+        ScopeOverride = ClientSelectedInUi?.Scope ?? string.Empty;
         await ResetSoftwareStatement();
         await base.OnInitializedAsync();
     }

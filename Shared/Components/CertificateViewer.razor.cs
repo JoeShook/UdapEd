@@ -167,6 +167,7 @@ public partial class CertificateViewer : ComponentBase
 
     private async Task ResolveCrl(string url)
     {
+        await Infrastructure.ClearCrlCache(url);
         var crl = await Infrastructure.GetCrldata(url);
         var crlFileCache = await Infrastructure.GetCryptNetUrlCache(url);
         await CrlResolvedEvent.InvokeAsync(crl);

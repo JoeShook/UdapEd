@@ -44,10 +44,16 @@ public partial class CertificatePKIViewer : ComponentBase
     private async Task RemoveCrlFromCache(CrlFileCacheSettings crlUrlCache)
     {
         await Infrastructure.RemoveFromFileCache(crlUrlCache);
-        CrlUrlCache = null;
 
-        SnackBar.Add("CRL will be removed from the file cache but it is still in memory.  " +
-                     "The application will need to be recycled if you want to actually down-load " +
-                     "the CRL again", Severity.Info);
+        if (!string.IsNullOrEmpty(crlUrlCache.UrlPath))
+        {
+            await Infrastructure.ClearCrlCache(crlUrlCache.UrlPath);
+        }
+
+        CrlUrlCache = null;
+        Crl = null;
+
+        SnackBar.Add("CRL removed from file cache and in-memory cache. " +
+                     "Click Resolve to fetch the latest CRL.", Severity.Success);
     }
 }

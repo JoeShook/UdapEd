@@ -7,6 +7,7 @@
 // */
 #endregion
 
+using System.Text;
 using Google.Cloud.Storage.V1;
 using Microsoft.Extensions.Logging;
 using System.IO.Compression;
@@ -249,12 +250,74 @@ public class Infrastructure : IInfrastructure
             var bytes = await response.Content.ReadAsByteArrayAsync();
             var crlParser = new X509CrlParser();
             var crl = crlParser.ReadCrl(bytes);
-            return crl.ToString();
+            return FormatCrl(crl);
         }
         catch (Exception ex)
         {
             return ex.Message;
         }
+    }
+
+    private static string FormatCrl(X509Crl crl)
+    {
+        var sb = new StringBuilder();
+        var tz = TimeZoneInfo.Local;
+
+        sb.AppendLine($"  Version:      {crl.Version}");
+        sb.AppendLine($"  IssuerDN:     {crl.IssuerDN}");
+        sb.AppendLine($"  This Update:  {FormatDateWithTimezone(crl.ThisUpdate, tz)}");
+
+        if (crl.NextUpdate != null)
+        {
+            sb.AppendLine($"  Next Update:  {FormatDateWithTimezone(crl.NextUpdate.Value, tz)}");
+        }
+
+        sb.AppendLine($"  Signature Algorithm: {crl.SigAlgName}");
+
+        var revokedCerts = crl.GetRevokedCertificates();
+
+        if (revokedCerts != null && revokedCerts.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine($"  Revoked Certificates: {revokedCerts.Count}");
+
+            foreach (X509CrlEntry entry in revokedCerts)
+            {
+                sb.AppendLine($"    Serial Number:    {entry.SerialNumber:x}");
+                sb.AppendLine($"    Revocation Date:  {FormatDateWithTimezone(entry.RevocationDate, tz)}");
+
+                if (entry.HasExtensions)
+                {
+                    var reason = entry.GetExtensionValue(
+                        Org.BouncyCastle.Asn1.X509.X509Extensions.ReasonCode);
+                    if (reason != null)
+                    {
+                        sb.AppendLine($"    Reason:           {reason}");
+                    }
+                }
+
+                sb.AppendLine();
+            }
+        }
+        else
+        {
+            sb.AppendLine();
+            sb.AppendLine("  Revoked Certificates: none");
+        }
+
+        return sb.ToString();
+    }
+
+    private static string FormatDateWithTimezone(DateTime date, TimeZoneInfo tz)
+    {
+        var utcDate = date.Kind == DateTimeKind.Utc
+            ? date
+            : date.ToUniversalTime();
+
+        var localDate = TimeZoneInfo.ConvertTimeFromUtc(utcDate, tz);
+        var tzAbbrev = tz.IsDaylightSavingTime(localDate) ? tz.DaylightName : tz.StandardName;
+
+        return $"<span title=\"UTC: {utcDate:yyyy-MM-dd HH:mm:ss}\">{localDate:yyyy-MM-dd hh:mm:ss tt} ({tzAbbrev})</span>";
     }
 
     public Task<X509CacheSettings?> GetX509StoreCache(string thumbprint)
