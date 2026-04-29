@@ -23,7 +23,9 @@
       "Bash(ilspycmd /c/Users/Joseph.Shook/.nuget/packages/udap.model/0.7.9/lib/net8.0/Udap.Model.dll -t \"Udap.Model.Registration.UdapCertificationAndEndorsementDocument\")",
       "Bash(ilspycmd /c/Users/Joseph.Shook/.nuget/packages/udap.model/0.7.9/lib/net8.0/Udap.Model.dll -t \"Udap.Model.Statement.SignedSoftwareStatementBuilder\\\\`1\")",
       "Bash(ilspycmd /c/Users/Joseph.Shook/.nuget/packages/udap.model/0.7.9/lib/net8.0/Udap.Model.dll -t \"Udap.Model.Registration.UdapDynamicClientRegistrationDocument\")",
-      "Bash(ilspycmd:*)"
+      "Bash(ilspycmd:*)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ]
   }
 }
