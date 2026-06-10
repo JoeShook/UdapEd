@@ -34,6 +34,8 @@ jobs:
         context: .
         file: ./Server/Dockerfile
         push: true
+        build-args: |
+          TAG_NAME=${{ steps.extract_tag.outputs.tag }}
         tags: |
           ghcr.io/${{ steps.to_lowercase.outputs.lower_repo }}:${{ steps.extract_tag.outputs.tag }}
           ghcr.io/${{ steps.to_lowercase.outputs.lower_repo }}:latest

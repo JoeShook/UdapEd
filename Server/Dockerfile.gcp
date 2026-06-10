@@ -23,16 +23,17 @@ COPY ["Client/UdapEd.Client.csproj", "Client/"]
 COPY ["Shared/UdapEd.Shared.csproj", "Shared/"]
 
 
-RUN dotnet restore -p:TargetFramework=net10.0 "Server/UdapEd.Server.csproj" 
+RUN dotnet restore -p:TargetFramework=net10.0 "Server/UdapEd.Server.csproj"
 COPY . .
 
-RUN dotnet build "Server/UdapEd.Server.csproj" -p:TargetFramework=net10.0 -c Release --no-restore -o /app/build 
+# Stamp the assembly version from TAG_NAME (leading 'v' stripped) when provided.
+RUN dotnet build "Server/UdapEd.Server.csproj" -p:TargetFramework=net10.0 ${TAG_NAME:+-p:Version=${TAG_NAME#v}} -c Release --no-restore -o /app/build
 
 
 FROM build AS publish
 ARG TAG_NAME
 ENV UseMauiEssentials=false
-RUN dotnet publish "Server/UdapEd.Server.csproj" -p:TargetFramework=net10.0  -c Release --no-restore -o /app/publish /p:UseAppHost=false 
+RUN dotnet publish "Server/UdapEd.Server.csproj" -p:TargetFramework=net10.0 ${TAG_NAME:+-p:Version=${TAG_NAME#v}} -c Release --no-restore -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
