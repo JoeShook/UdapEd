@@ -15,6 +15,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.FluentUI.AspNetCore.Components;
+using Microsoft.Maui.LifecycleEvents;
 using MudBlazor.Services;
 using Serilog;
 using Serilog.Events;
@@ -255,6 +256,46 @@ public static class MauiProgram
 #if WINDOWS
         builder.Services.AddSingleton<IExternalWebAuthenticator, WebAuthenticatorForWindows>();
         builder.Services.AddSingleton<IPlatformResourceLoader, MauiPlatformResourceLoader>();
+
+        // Caption buttons (minimize/maximize/close) can render with a foreground that
+        // matches the title-bar background in unpackaged builds, making them appear
+        // invisible until hovered. Force a theme-contrasting glyph color per window.
+        builder.ConfigureLifecycleEvents(events =>
+        {
+            events.AddWindows(windows => windows.OnWindowCreated(nativeWindow =>
+            {
+                if (!Microsoft.UI.Windowing.AppWindowTitleBar.IsCustomizationSupported())
+                {
+                    return;
+                }
+
+                var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(nativeWindow);
+                var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hwnd);
+                var titleBar = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId).TitleBar;
+
+                void ApplyCaptionButtonColors()
+                {
+                    var isDark = Microsoft.Maui.Controls.Application.Current?.RequestedTheme
+                                 == Microsoft.Maui.ApplicationModel.AppTheme.Dark;
+                    var glyph = isDark ? Microsoft.UI.Colors.White : Microsoft.UI.Colors.Black;
+                    titleBar.ButtonForegroundColor = glyph;
+                    titleBar.ButtonInactiveForegroundColor = glyph;
+                    titleBar.ButtonHoverForegroundColor = glyph;
+                    titleBar.ButtonPressedForegroundColor = glyph;
+                    // Leave the hover/pressed *background* at the system default so the
+                    // highlight still looks native; only the rest state is transparent.
+                    titleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
+                    titleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
+                }
+
+                ApplyCaptionButtonColors();
+
+                if (Microsoft.Maui.Controls.Application.Current is { } app)
+                {
+                    app.RequestedThemeChanged += (_, _) => ApplyCaptionButtonColors();
+                }
+            }));
+        });
 #else
         builder.Services.AddSingleton<IExternalWebAuthenticator, WebAuthenticatorForDevice>();
 #endif
