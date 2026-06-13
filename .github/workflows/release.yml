@@ -112,12 +112,20 @@ jobs:
   # Uploads the .dmg as a CI artifact (no Release yet).
   # ---------------------------------------------------------------------------
   build-macos:
-    runs-on: macos-latest
+    # macos-26 ships Xcode 26.5; the MacCatalyst workload (26.5.x) requires it.
+    # macos-latest is still macOS 15 and tops out at Xcode 16.4 (NETSDK error).
+    runs-on: macos-26
     timeout-minutes: 45
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+
+    - name: Select Xcode 26.5
+      # The image default is 26.4.1; the MacCatalyst SDK requires 26.5 specifically.
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '26.5'
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
