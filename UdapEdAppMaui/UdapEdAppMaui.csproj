@@ -148,6 +148,11 @@
     <PackageReference Include="WinUIEx" Version="2.9.0" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'" />
   </ItemGroup>
 
+  <!-- One-click installer + auto-update for the Windows desktop head (see .github/workflows/release.yml). -->
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+    <PackageReference Include="Velopack" Version="1.2.0" />
+  </ItemGroup>
+
   <!-- Windows splash screen workaround: the resizetizer generates splashSplashScreen.scale-*.png
        but WinUI packaging expects Assets\splash.png. Supply a static fallback. -->
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">

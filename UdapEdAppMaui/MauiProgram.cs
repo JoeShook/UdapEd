@@ -41,6 +41,12 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+#if WINDOWS && !DEBUG
+        // Release-only: compiled out for local `dotnet run` / debugging (Debug config).
+        // Velopack must run before anything else so its install/update/uninstall
+        // hooks are processed (this call may exit the process during those hooks).
+        Velopack.VelopackApp.Build().Run();
+#endif
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiCommunityToolkit();
         var flushInterval = new TimeSpan(0, 0, 1);
@@ -264,6 +270,41 @@ public static class MauiProgram
         builder.Services.AddSingleton<IMainPageService, UdapEdAppMaui.Services.MainPageService>();
         builder.Services.AddSingleton<IFileSaveService, FileSaveService>();
 
+#if WINDOWS && !DEBUG
+        // Fire-and-forget: check GitHub Releases for a newer Velopack release and
+        // stage it to apply on next launch (no forced restart). Release-only.
+        _ = CheckForUpdatesAsync();
+#endif
+
         return builder.Build();
     }
+
+#if WINDOWS && !DEBUG
+    private static async Task CheckForUpdatesAsync()
+    {
+        try
+        {
+            var mgr = new Velopack.UpdateManager(
+                new Velopack.Sources.GithubSource("https://github.com/JoeShook/UdapEd", null, false));
+
+            if (!mgr.IsInstalled)
+            {
+                return; // running unpackaged (dev) — nothing to update
+            }
+
+            var updates = await mgr.CheckForUpdatesAsync();
+            if (updates is null)
+            {
+                return; // already on the latest release
+            }
+
+            await mgr.DownloadUpdatesAsync(updates);
+            mgr.WaitExitThenApplyUpdates(updates); // applied on next launch, no surprise restart
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Velopack update check failed");
+        }
+    }
+#endif
 }

@@ -1,12 +1,19 @@
-name: Tagged Release to Nuget.org
+name: Tagged Release
 
 on:
   push:
     tags:
     - "v[0-9]+.[0-9]+.[0-9]+.[0-9]+"
 
+permissions:
+  contents: write   # create the GitHub Release and upload desktop assets
+  packages: write   # push the Docker image to GHCR
+
 jobs:
-  build:
+  # ---------------------------------------------------------------------------
+  # Server image -> GHCR (unchanged behavior). Independent of the desktop builds.
+  # ---------------------------------------------------------------------------
+  build-docker:
     runs-on: ubuntu-latest
 
     steps:
@@ -39,3 +46,138 @@ jobs:
         tags: |
           ghcr.io/${{ steps.to_lowercase.outputs.lower_repo }}:${{ steps.extract_tag.outputs.tag }}
           ghcr.io/${{ steps.to_lowercase.outputs.lower_repo }}:latest
+
+  # ---------------------------------------------------------------------------
+  # Windows desktop (MAUI) -> Velopack one-click installer + auto-update feed.
+  # Builds x64 and arm64. Uploads the output as a CI artifact (no Release yet).
+  # ---------------------------------------------------------------------------
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Install .NET MAUI workload
+      run: dotnet workload install maui
+
+    - name: Install Velopack CLI (vpk)
+      run: dotnet tool install -g vpk
+
+    - name: Build Velopack installers (x64 + arm64)
+      shell: pwsh
+      run: |
+        $ver = "${{ github.ref_name }}".TrimStart('v')
+        foreach ($rid in @('win-x64','win-arm64')) {
+          Write-Host "=== Publishing $rid ==="
+          dotnet publish UdapEdAppMaui/UdapEdAppMaui.csproj `
+            -f net10.0-windows10.0.19041.0 -c Release `
+            -r $rid --self-contained true `
+            -p:WindowsPackageType=None -p:Version=$ver `
+            -o "publish/$rid"
+          if ($LASTEXITCODE -ne 0) { throw "publish failed for $rid" }
+
+          Write-Host "=== Packing $rid ==="
+          vpk pack `
+            --packId UdapEd `
+            --packVersion $ver `
+            --packTitle UdapEd `
+            --packDir "publish/$rid" `
+            --mainExe UdapEdAppMaui.exe `
+            --runtime $rid `
+            --channel $rid `
+            -o releases
+          if ($LASTEXITCODE -ne 0) { throw "vpk pack failed for $rid" }
+        }
+
+    - name: Upload Windows artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-installers
+        path: releases/*
+        if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # macOS desktop (MacCatalyst) -> universal .dmg, Tier 1 (ad-hoc signed, no
+  # Apple Developer account required). Independent of the Windows build.
+  # Uploads the .dmg as a CI artifact (no Release yet).
+  # ---------------------------------------------------------------------------
+  build-macos:
+    runs-on: macos-latest
+    timeout-minutes: 45
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Install .NET MAUI workload
+      run: dotnet workload install maui
+
+    - name: Publish MacCatalyst (universal, unsigned)
+      run: |
+        ver="${GITHUB_REF_NAME#v}"
+        # Override the csproj's Apple Development signing + hardened runtime so no
+        # Apple secrets are needed and an ad-hoc signature can launch (Tier 1).
+        dotnet publish UdapEdAppMaui/UdapEdAppMaui.csproj \
+          -f net10.0-maccatalyst -c Release \
+          -p:RuntimeIdentifiers="maccatalyst-x64;maccatalyst-arm64" \
+          -p:CreatePackage=false \
+          -p:EnableCodeSigning=false \
+          -p:UseHardenedRuntime=false \
+          -p:CodesignKey= \
+          -p:CodesignProvision= \
+          -p:Version=$ver
+
+    - name: Ad-hoc sign and package .dmg
+      run: |
+        ver="${GITHUB_REF_NAME#v}"
+        app=$(find UdapEdAppMaui/bin/Release/net10.0-maccatalyst -maxdepth 3 -name '*.app' | head -n 1)
+        if [ -z "$app" ]; then echo "No .app produced"; exit 1; fi
+        echo "Found app bundle: $app"
+        codesign --force --deep --sign - "$app"
+        brew install create-dmg
+        create-dmg \
+          --volname "UdapEd" \
+          --app-drop-link 450 160 \
+          --icon "$(basename "$app")" 150 160 \
+          "UdapEd-$ver.dmg" "$app" \
+        || hdiutil create -volname "UdapEd" -srcfolder "$app" -ov -format UDZO "UdapEd-$ver.dmg"
+
+    - name: Upload macOS artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-dmg
+        path: UdapEd-*.dmg
+        if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # Assemble one GitHub Release from the desktop artifacts. Runs after both
+  # desktop builds so neither depends on the other; either failing means no
+  # Release is published (re-tag after the fix).
+  # ---------------------------------------------------------------------------
+  publish-release:
+    runs-on: ubuntu-latest
+    needs: [build-windows, build-macos]
+
+    steps:
+    - name: Download all build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: dist
+
+    - name: Publish GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ github.ref_name }}
+        files: dist/**/*

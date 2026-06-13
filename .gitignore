@@ -225,4 +225,5 @@ examples/clients/UdapEd/Client/wwwroot/temp/MudBlazor.min.css
 /Client/Program.cs
 /.idea
 /Client/wwwroot/temp
-.claude/settings.local.json
+# Claude Code local config — never commit
+/.claude/
