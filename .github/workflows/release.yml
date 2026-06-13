@@ -99,6 +99,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "vpk pack failed for $rid" }
         }
 
+        # Only publish the installers + auto-update feed; drop the portable zips
+        # (vpk always emits them and has no flag to skip).
+        Remove-Item releases/*-Portable.zip -ErrorAction SilentlyContinue
+
     - name: Upload Windows artifacts
       uses: actions/upload-artifact@v4
       with:
