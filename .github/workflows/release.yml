@@ -132,12 +132,12 @@ jobs:
         ver="${GITHUB_REF_NAME#v}"
         # Override the csproj's Apple Development signing + hardened runtime so no
         # Apple secrets are needed and an ad-hoc signature can launch (Tier 1).
-        # Universal build = one .app with both arches (MAUI lipo-merges them). The two
-        # RIDs must be one property value; the ';' is escaped as %3B because MSBuild's
-        # command-line parser otherwise treats it as a property separator (MSB1006).
+        # Do NOT pass RuntimeIdentifiers: in Release config MAUI already defaults
+        # MacCatalyst to a universal x64+arm64 build, applied locally to this app.
+        # Passing it globally leaks onto the referenced Shared project, which rejects
+        # the two-RID string as a single unrecognized RID (NETSDK1083).
         dotnet publish UdapEdAppMaui/UdapEdAppMaui.csproj \
           -f net10.0-maccatalyst -c Release \
-          -p:RuntimeIdentifiers=maccatalyst-x64%3Bmaccatalyst-arm64 \
           -p:CreatePackage=false \
           -p:EnableCodeSigning=false \
           -p:UseHardenedRuntime=false \
