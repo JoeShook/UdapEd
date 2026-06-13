@@ -3,7 +3,7 @@ name: Tagged Release
 on:
   push:
     tags:
-    - "v[0-9]+.[0-9]+.[0-9]+.[0-9]+"
+    - "v[0-9]+.[0-9]+.[0-9]+"
 
 permissions:
   contents: write   # create the GitHub Release and upload desktop assets
@@ -73,8 +73,7 @@ jobs:
     - name: Build Velopack installers (x64 + arm64)
       shell: pwsh
       run: |
-        $ver = "${{ github.ref_name }}".TrimStart('v')          # full 4-part tag, e.g. 1.2.3.4
-        $packVer = ($ver -split '\.')[0..2] -join '.'           # Velopack needs 3-part SemVer, e.g. 1.2.3
+        $ver = "${{ github.ref_name }}".TrimStart('v')          # 3-part SemVer tag, e.g. 1.2.3
         foreach ($rid in @('win-x64','win-arm64')) {
           Write-Host "=== Publishing $rid ($ver) ==="
           # -p:WindowsRid scopes the RID + self-contained to the Windows TFM (see csproj):
@@ -87,10 +86,10 @@ jobs:
             -o "publish/$rid"
           if ($LASTEXITCODE -ne 0) { throw "publish failed for $rid" }
 
-          Write-Host "=== Packing $rid ($packVer) ==="
+          Write-Host "=== Packing $rid ($ver) ==="
           vpk pack `
             --packId UdapEd `
-            --packVersion $packVer `
+            --packVersion $ver `
             --packTitle UdapEd `
             --packDir "publish/$rid" `
             --mainExe UdapEdAppMaui.exe `
@@ -133,9 +132,12 @@ jobs:
         ver="${GITHUB_REF_NAME#v}"
         # Override the csproj's Apple Development signing + hardened runtime so no
         # Apple secrets are needed and an ad-hoc signature can launch (Tier 1).
+        # Universal build = one .app with both arches (MAUI lipo-merges them). The two
+        # RIDs must be one property value; the ';' is escaped as %3B because MSBuild's
+        # command-line parser otherwise treats it as a property separator (MSB1006).
         dotnet publish UdapEdAppMaui/UdapEdAppMaui.csproj \
           -f net10.0-maccatalyst -c Release \
-          -p:RuntimeIdentifiers="maccatalyst-x64;maccatalyst-arm64" \
+          -p:RuntimeIdentifiers=maccatalyst-x64%3Bmaccatalyst-arm64 \
           -p:CreatePackage=false \
           -p:EnableCodeSigning=false \
           -p:UseHardenedRuntime=false \
