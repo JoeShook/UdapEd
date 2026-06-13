@@ -14,6 +14,13 @@ public partial class App : MauiWinUIApplication
     /// </summary>
     public App()
     {
+#if !DEBUG
+        // Velopack's install/update/uninstall hooks must run before any other code.
+        // This ctor is the Windows entry point (logical WinMain), so it's the correct
+        // place. Release-only: local debug / `dotnet run` never touches Velopack.
+        Velopack.VelopackApp.Build().Run();
+#endif
+
         //
         // See: https://dotmorten.github.io/WinUIEx/concepts/Maui.html#use-winuiexs-webauthenticator-instead-of-net-mauis
         //

@@ -73,20 +73,24 @@ jobs:
     - name: Build Velopack installers (x64 + arm64)
       shell: pwsh
       run: |
-        $ver = "${{ github.ref_name }}".TrimStart('v')
+        $ver = "${{ github.ref_name }}".TrimStart('v')          # full 4-part tag, e.g. 1.2.3.4
+        $packVer = ($ver -split '\.')[0..2] -join '.'           # Velopack needs 3-part SemVer, e.g. 1.2.3
         foreach ($rid in @('win-x64','win-arm64')) {
-          Write-Host "=== Publishing $rid ==="
+          Write-Host "=== Publishing $rid ($ver) ==="
+          # -p:WindowsRid scopes the RID + self-contained to the Windows TFM (see csproj):
+          # passing -r/--self-contained globally leaks onto the android TFM during restore
+          # and fails resolving a nonexistent Mono.win-x64 runtime pack.
           dotnet publish UdapEdAppMaui/UdapEdAppMaui.csproj `
             -f net10.0-windows10.0.19041.0 -c Release `
-            -r $rid --self-contained true `
+            -p:WindowsRid=$rid `
             -p:WindowsPackageType=None -p:Version=$ver `
             -o "publish/$rid"
           if ($LASTEXITCODE -ne 0) { throw "publish failed for $rid" }
 
-          Write-Host "=== Packing $rid ==="
+          Write-Host "=== Packing $rid ($packVer) ==="
           vpk pack `
             --packId UdapEd `
-            --packVersion $ver `
+            --packVersion $packVer `
             --packTitle UdapEd `
             --packDir "publish/$rid" `
             --mainExe UdapEdAppMaui.exe `

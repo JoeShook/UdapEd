@@ -41,12 +41,9 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
-#if WINDOWS && !DEBUG
-        // Release-only: compiled out for local `dotnet run` / debugging (Debug config).
-        // Velopack must run before anything else so its install/update/uninstall
-        // hooks are processed (this call may exit the process during those hooks).
-        Velopack.VelopackApp.Build().Run();
-#endif
+        // Note: Velopack's VelopackApp.Build().Run() bootstrap lives in the Windows
+        // entry point (Platforms/Windows/App.xaml.cs ctor), which is the earliest
+        // authored code. The background update check is kicked off below.
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiCommunityToolkit();
         var flushInterval = new TimeSpan(0, 0, 1);

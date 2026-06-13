@@ -153,6 +153,16 @@
     <PackageReference Include="Velopack" Version="1.2.0" />
   </ItemGroup>
 
+  <!-- CI Velopack publish passes -p:WindowsRid=win-x64 (or win-arm64). Scoping the RID and
+       SelfContained flag to the Windows TFM here, rather than passing them globally on the
+       command line, keeps them from leaking onto the android/ios/maccatalyst TFMs during
+       restore (which would otherwise try to resolve a nonexistent Mono.win-x64 runtime pack).
+       VS builds (no WindowsRid) are unaffected and keep using WindowsPackageType=MSIX. -->
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows' and '$(WindowsRid)' != ''">
+    <RuntimeIdentifier>$(WindowsRid)</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+  </PropertyGroup>
+
   <!-- Windows splash screen workaround: the resizetizer generates splashSplashScreen.scale-*.png
        but WinUI packaging expects Assets\splash.png. Supply a static fallback. -->
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
