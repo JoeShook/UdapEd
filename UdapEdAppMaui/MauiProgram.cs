@@ -264,12 +264,28 @@ public static class MauiProgram
         {
             events.AddWindows(windows => windows.OnWindowCreated(nativeWindow =>
             {
+                var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(nativeWindow);
+
+                // Win11: force a visible window border on all edges (including the top,
+                // which otherwise blends into a dark title bar, hiding where the window
+                // ends on a dark background). DWMWA_BORDER_COLOR = 34; COLORREF = 0x00BBGGRR.
+                try
+                {
+                    var accent = new Windows.UI.ViewManagement.UISettings()
+                        .GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent);
+                    int borderColor = accent.R | (accent.G << 8) | (accent.B << 16);
+                    _ = DwmSetWindowAttribute(hwnd, 34, ref borderColor, sizeof(int));
+                }
+                catch
+                {
+                    // Attribute unsupported on older Windows; ignore.
+                }
+
                 if (!Microsoft.UI.Windowing.AppWindowTitleBar.IsCustomizationSupported())
                 {
                     return;
                 }
 
-                var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(nativeWindow);
                 var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hwnd);
                 var titleBar = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId).TitleBar;
 
@@ -316,6 +332,11 @@ public static class MauiProgram
 
         return builder.Build();
     }
+
+#if WINDOWS
+    [System.Runtime.InteropServices.DllImport("dwmapi.dll", PreserveSig = true)]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
+#endif
 
 #if WINDOWS && !DEBUG
     private static async Task CheckForUpdatesAsync()
