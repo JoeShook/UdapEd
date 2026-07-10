@@ -18,7 +18,11 @@
     @if (MissingTreatmentOrgIdentifier)
     {
         <MudText Color="Color.Warning" Typo="Typo.caption">
-            Treatment XP SOP v2.0 §6.2: organization_name should include the provider's NPI and/or TIN for Treatment queries.
+            <MudLink Href="https://rce.sequoiaproject.org/wp-content/uploads/2026/07/Treatment-XP-SOP-v2.0_7.1.2026_508.pdf#page=8"
+                     Target="_blank"
+                     Typo="Typo.caption"
+                     Color="Color.Warning"
+                     Underline="Underline.Always">Treatment XP SOP v2.0 §6.2</MudLink>: organization_name should include the provider's NPI and/or TIN for Treatment queries.
         </MudText>
     }
     <MudTextField @bind-Value="_hl7B2BModel.OrganizationId" Label="Organization ID" Required="true"
