@@ -13,7 +13,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
-using Udap.Client.Client.Extensions;
+using Udap.Client.Extensions;
 using Udap.Model.Access;
 using Udap.Model.UdapAuthenticationExtensions;
 using UdapEd.Server.Extensions;

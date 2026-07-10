@@ -21,7 +21,7 @@ using Serilog;
 using Serilog.Events;
 using System.Net;
 using System.Reflection;
-using Udap.Client.Client;
+using Udap.Client;
 using Udap.Client.Configuration;
 using Udap.Common.Certificates;
 using UdapEd.Shared.Services;

@@ -17,7 +17,7 @@ using Serilog.Sinks.SystemConsole.Themes;
 using System.Net;
 using System.Text.Json.Serialization;
 using Udap.CdsHooks.Model;
-using Udap.Client.Client;
+using Udap.Client;
 using Udap.Client.Configuration;
 using Udap.Common.Certificates;
 using UdapEd.Server.Extensions;

@@ -14,7 +14,7 @@ using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
-using Udap.Client.Client;
+using Udap.Client;
 using Udap.Client.Configuration;
 using Udap.Common.Certificates;
 using Udap.Common.Extensions;
@@ -80,7 +80,7 @@ public class MetadataController : Controller
                 trustAnchorStore,
                 community);
             
-            result.UdapServerMetaData = _udapClient.UdapServerMetaData;
+            result.UdapServerMetaData = _udapClient.UdapServerMetadata;
             HttpContext.Session.SetString(UdapEdConstants.BASE_URL, metadataUrl);
 
             return Ok(result);

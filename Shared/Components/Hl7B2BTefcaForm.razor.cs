@@ -7,8 +7,8 @@
 // */
 #endregion
 
-using System.Reflection;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
@@ -54,19 +54,32 @@ public partial class Hl7B2BTefcaForm : ComponentBase
         }
         else
         {
-            // default starter template with TEFCA exchange purpose
+            // default starter template with TEFCA exchange purpose; org fields follow
+            // Treatment XP SOP v2.0 Section 6.2 (NPI appended to organization_name,
+            // RCE Directory Organization ResourceID as organization_id)
             _hl7B2BModel = JsonSerializer.Deserialize<HL7B2BAuthorizationExtension>(
-                $"{{\"version\":\"1\",\"subject_id\":\"urn:oid:2.16.840.1.113883.4.6#1234567890\",\"organization_id\":\"https://fhirlabs.net/fhir/r4\",\"organization_name\":\"FhirLabs\",\"purpose_of_use\":[\"urn:oid:{TefcaConstants.ExchangePurposeCodes.Oid}#{TefcaConstants.ExchangePurposeCodes.TefcaRequiredTreatment}\"]}}");
+                $"{{\"version\":\"1\",\"subject_id\":\"urn:oid:2.16.840.1.113883.4.6#1234567890\",\"organization_id\":\"Organization/1.2.3\",\"organization_name\":\"FhirLabs | NPI 1234567890\",\"purpose_of_use\":[\"urn:oid:{TefcaConstants.ExchangePurposeCodes.Oid}#{TefcaConstants.ExchangePurposeCodes.TefcaRequiredTreatment}\"]}}");
         }
     }
 
+    /// <summary>
+    /// NPI (10 digits) or TIN (9 digits) appended to organization_name,
+    /// per Treatment XP SOP v2.0 Section 6.2.
+    /// </summary>
+    private static readonly Regex NpiOrTinPattern = new(@"\d{9,10}", RegexOptions.Compiled);
+
+    private bool HasTreatmentPurpose =>
+        _hl7B2BModel.PurposeOfUse?.Any(p =>
+            p.EndsWith($"#{TefcaConstants.ExchangePurposeCodes.Treatment}", StringComparison.Ordinal) ||
+            p.EndsWith($"#{TefcaConstants.ExchangePurposeCodes.TefcaRequiredTreatment}", StringComparison.Ordinal)) == true;
+
+    private bool MissingTreatmentOrgIdentifier =>
+        HasTreatmentPurpose &&
+        (_hl7B2BModel.OrganizationName == null || !NpiOrTinPattern.IsMatch(_hl7B2BModel.OrganizationName));
+
     private static List<string> GetExchangePurposeCodes()
     {
-        return typeof(TefcaConstants.ExchangePurposeCodes)
-            .GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
-            .Where(f => f.IsLiteral && !f.IsInitOnly && f.Name != nameof(TefcaConstants.ExchangePurposeCodes.Oid))
-            .Select(f => (string)f.GetRawConstantValue()!)
-            .ToList();
+        return TefcaConstants.ExchangePurposeCodes.All.ToList();
     }
 
     private Task<IEnumerable<string>> SearchPurposeOfUse(string value, CancellationToken ct)

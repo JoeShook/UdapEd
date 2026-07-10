@@ -112,12 +112,12 @@ public partial class Index
     private List<string> TefcaServerSans { get; set; } = new();
     private string _tefcaSanPrefix = "urn:oid:2.999";
 
-    private static readonly List<string> TefcaXpCodes = new()
-    {
-        "T-TRTMNT", "T-TREAT", "T-PYMNT", "T-HCO", "T-HCO-CC",
-        "T-HCO-HED", "T-HCO-QM", "T-PH", "T-PH-ECR", "T-PH-ELR",
-        "T-IAS", "T-GOVDTRM", "INVALID",
-    };
+    // XP codes from the Exchange Purposes SOP (via the SDK, so the list can't drift),
+    // plus one invalid entry for negative testing
+    private static readonly List<string> TefcaXpCodes =
+        Udap.Tefca.Model.TefcaConstants.ExchangePurposeCodes.All
+            .Append("INVALID")
+            .ToList();
 
     private List<string> TefcaClientSans => TefcaXpCodes
         .Select(xp => $"{_tefcaSanPrefix}#{xp}")

@@ -13,8 +13,16 @@
     <MudTextField @bind-Value="_hl7B2BModel.SubjectName" Label="Subject Name" />
     <MudTextField @bind-Value="_hl7B2BModel.SubjectId" Label="Subject ID" />
     <MudTextField @bind-Value="_hl7B2BModel.SubjectRole" Label="Subject Role" />
-    <MudTextField @bind-Value="_hl7B2BModel.OrganizationName" Label="Organization Name" Required="true" />
-    <MudTextField @bind-Value="_hl7B2BModel.OrganizationId" Label="Organization ID" Required="true" />
+    <MudTextField @bind-Value="_hl7B2BModel.OrganizationName" Label="Organization Name" Required="true"
+                  HelperText="For Treatment (T-TREAT/T-TRTMNT) append the NPI and/or TIN, e.g. 'FhirLabs | NPI 1234567890' (Treatment XP SOP v2.0 §6.2)" />
+    @if (MissingTreatmentOrgIdentifier)
+    {
+        <MudText Color="Color.Warning" Typo="Typo.caption">
+            Treatment XP SOP v2.0 §6.2: organization_name should include the provider's NPI and/or TIN for Treatment queries.
+        </MudText>
+    }
+    <MudTextField @bind-Value="_hl7B2BModel.OrganizationId" Label="Organization ID" Required="true"
+                  HelperText="ResourceID of the Organization entry in the RCE Directory Service, e.g. 'Organization/1.2.3'" />
     <MudAutocomplete T="string" @bind-Value="_newPurposeOfUse"
                      Label="New Purpose of Use"
                      SearchFunc="@SearchPurposeOfUse"

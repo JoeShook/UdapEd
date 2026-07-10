@@ -12,7 +12,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Udap.Client.Client.Extensions;
+using Udap.Client.Extensions;
 using Udap.Model.Access;
 using UdapEd.Shared;
 using UdapEd.Shared.Extensions;
