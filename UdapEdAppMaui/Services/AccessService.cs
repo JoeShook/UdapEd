@@ -13,6 +13,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Udap.Client.Extensions;
+using Udap.Client.Messages;
 using Udap.Model.Access;
 using UdapEd.Shared;
 using UdapEd.Shared.Extensions;
@@ -33,21 +34,23 @@ internal class AccessService : IAccessService
         _logger = logger;
     }
 
-    public async Task<AccessCodeRequestResult?> Get(string authorizeQuery)
+    public async Task<AccessCodeRequestResult?> Get(string authorizeQuery, AuthorizeHttpMethod method = AuthorizeHttpMethod.Get)
     {
         var handler = new HttpClientHandler() { AllowAutoRedirect = false };
         var httpClient = new HttpClient(handler);
 #if ANDROID || IOS || MACCATALYST || WINDOWS
-        var response = await httpClient.GetAsync(authorizeQuery, cancellationToken: default);
+        var response = await httpClient.AuthorizeAsync(authorizeQuery, method, cancellationToken: default);
 #else
         var response = await httpClient
-            .GetAsync(Base64UrlEncoder.Decode(authorizeQuery), cancellationToken: default);
+            .AuthorizeAsync(Base64UrlEncoder.Decode(authorizeQuery), method, cancellationToken: default);
 #endif
         var cookies = response.Headers.SingleOrDefault(header => header.Key == "Set-Cookie").Value;
 
         try
         {
-            if (!response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.Found)
+            if (!response.IsSuccessStatusCode &&
+                response.StatusCode != HttpStatusCode.Found &&
+                response.StatusCode != HttpStatusCode.SeeOther)
             {
                 var message = await response.Content.ReadAsStringAsync(default);
                 _logger.LogWarning(message);

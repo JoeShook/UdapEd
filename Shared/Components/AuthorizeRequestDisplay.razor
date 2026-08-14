@@ -1,0 +1,45 @@
+@using Udap.Client.Messages
+
+@if (Method == AuthorizeHttpMethod.Post)
+{
+    <pre style="white-space: pre-wrap; word-break: break-all;">POST @Endpoint HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+@FormBody</pre>
+}
+else
+{
+    <MudTextField T="string" ReadOnly="true" Value="@Link"></MudTextField>
+}
+
+@code {
+    /// <summary>
+    /// The fully built authorization request URL, including query string parameters.
+    /// </summary>
+    [Parameter] public string Link { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The HTTP method the request will be sent with.  POST renders the query string
+    /// as an application/x-www-form-urlencoded body, mirroring what
+    /// HttpClient.AuthorizeAsync sends on the wire.
+    /// </summary>
+    [Parameter] public AuthorizeHttpMethod Method { get; set; }
+
+    private string Endpoint
+    {
+        get
+        {
+            var queryIndex = Link.IndexOf('?');
+            return queryIndex < 0 ? Link : Link[..queryIndex];
+        }
+    }
+
+    private string FormBody
+    {
+        get
+        {
+            var queryIndex = Link.IndexOf('?');
+            return queryIndex < 0 ? string.Empty : Link[(queryIndex + 1)..];
+        }
+    }
+}

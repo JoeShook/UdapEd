@@ -56,6 +56,8 @@
             </MudCard>
     </MudCard>
 
+    <AuthorizeVerbSelector @bind-Method="AuthorizeMethod" />
+
     @* Step 2: Build Authorization Code Request *@
     <MudExpansionPanel @bind-Expanded="_step2Expanded">
         <TitleContent>
@@ -88,7 +90,17 @@
                             <MudText Align="Align.Right" Color="Color.Tertiary">3.1 Authorization Code Flow (part 1)</MudText>
                             @if (AppState.AuthorizationCodeRequest != null)
                             {
-                                <pre>GET /authorize?</pre>
+                                @if (AuthorizeMethod == AuthorizeHttpMethod.Post)
+                                {
+                                    <pre>POST /authorize HTTP/1.1</pre>
+                                    <pre>Host: @AppState.MetadataVerificationModel?.UdapServerMetaData?.AuthorizationEndpoint</pre>
+                                    <pre>Content-Type: application/x-www-form-urlencoded</pre>
+                                    <pre>&nbsp;</pre>
+                                }
+                                else
+                                {
+                                    <pre>GET /authorize?</pre>
+                                }
                                 <input Class="pre udap-indent-1" @bind-value="AppState.AuthorizationCodeRequest.ResponseType" @oninput="BuildAuthorizeLink" />
                                 <input Class="pre udap-indent-1" @bind-value="AppState.AuthorizationCodeRequest.State" @oninput="BuildAuthorizeLink" />
                                 <input Class="pre udap-indent-1" @bind-value="AppState.AuthorizationCodeRequest.ClientId" @oninput="BuildAuthorizeLink" />
@@ -101,7 +113,10 @@
                                     <input Class="pre udap-indent-1" @bind-value="AppState.Pkce.CodeChallenge" @oninput="BuildAuthorizeLink" />
                                     <input Class="pre udap-indent-1" @bind-value="AppState.Pkce.CodeChallengeMethod" @oninput="BuildAuthorizeLink" />
                                 }
-                                <pre>Host: @AppState.MetadataVerificationModel?.UdapServerMetaData?.AuthorizationEndpoint</pre>
+                                @if (AuthorizeMethod == AuthorizeHttpMethod.Get)
+                                {
+                                    <pre>Host: @AppState.MetadataVerificationModel?.UdapServerMetaData?.AuthorizationEndpoint</pre>
+                                }
                             }
                         </MudPaper>
                     </MudItem>
@@ -111,7 +126,7 @@
                             <MudText Typo="Typo.body2"><a href="https://www.udap.org/udap-user-auth-stu1.html" target="_blank">See section 2. of UDAP TIERED OAUTH FOR USER AUTHENTICATION</a> and</MudText>
                             <MudText Typo="Typo.body2"><a href="https://hl7.org/fhir/us/udap-security/user.html#tiered-oauth-for-user-authentication" target="_blank">section 6 of Tiered OAuth for User Authentication</a></MudText>
                             <MudDivider DividerType="DividerType.Middle" Class="my-4" />
-                            <MudText Typo="Typo.body2">Build of the GET request to the Authorization servers "authorize" endpoint.  This is the endpoint discovered in the resource servers metadata.
+                            <MudText Typo="Typo.body2">Build of the @AuthorizeVerb request to the Authorization servers "authorize" endpoint.  This is the endpoint discovered in the resource servers metadata.
                               Specifically the authorization_endpoint metadata item. Notice the included "hint" specified by the idp parameter and the "udap" scope.  These are
                               signals to the Resource Holder that UDAP Tiered OAuth for User Authentication is being requested.</MudText>
                         </MudPaper>
@@ -136,9 +151,10 @@
                            Variant="Variant.Filled"
                            ButtonType="ButtonType.Button"
                            OnClick="GetAccessCode">View Intermediate Redirect</MudButton>
+                <MudChip T="string" Color="Color.Info" Size="Size.Small" Class="mt-3 ml-4">@AuthorizeVerb</MudChip>
             </MudCardActions>
             <MudCardContent>
-                <MudTextField ReadOnly="true" @bind-Value="AuthCodeRequestLink"></MudTextField>
+                <AuthorizeRequestDisplay Link="@AuthCodeRequestLink" Method="AuthorizeMethod" />
                 <MudGrid Spacing="1">
                     <MudItem sm="6" xs="12">
                         <MudPaper Class="udap-input" Elevation="3">
@@ -198,6 +214,7 @@
                         Run Authorize Code Request
                     </MudButton>
                 </MudItem>
+                <MudChip T="string" Color="Color.Info" Size="Size.Small" Class="mt-3">@AuthorizeVerb</MudChip>
             </MudCardActions>
             <MudCardContent>
                 <MudGrid Spacing="1" >
@@ -220,8 +237,8 @@
                             <MudText Align="Align.Right" Color="Color.Tertiary">3.1 Authorization Code Flow (part 3)</MudText>
                             <a href="https://www.udap.org/udap-jwt-client-auth.html#3.1" target="_blank">See section 3.1 of the JWT Client Authentication UDAP Profile</a>
                             <MudDivider DividerType="DividerType.Middle" Class="my-4" />
-                            <MudText Typo="Typo.body2">The Login Redirect is constructed by the Authorization server in response to GET request to the authorize_endpoint.</MudText>
-                            <MudText Typo="Typo.body2">This button will launch GET request in part 1 and follow the redirect from part 2.</MudText>
+                            <MudText Typo="Typo.body2">The Login Redirect is constructed by the Authorization server in response to @AuthorizeVerb request to the authorize_endpoint.</MudText>
+                            <MudText Typo="Typo.body2">This button will launch @AuthorizeVerb request in part 1 and follow the redirect from part 2.</MudText>
                             <MudText Typo="Typo.body2">The 302 response on the left is the redirect from the Authorization server back to this page after successfully entering valid credentials</MudText>
                         </MudPaper>
                     </MudItem>

@@ -109,9 +109,9 @@ internal class DiscoveryService : IDiscoveryService
 
                     try
                     {
-                        await udapClient.ValidateResource(metadataUrl, trustAnchorStore, community, token: token);
+                        await udapClient.ValidateResource(metadataUrl, trustAnchorStore, community, cancellationToken: token);
 
-                        result.UdapServerMetaData = udapClient.UdapServerMetaData;
+                        result.UdapServerMetaData = udapClient.UdapServerMetadata;
                         await SecureStorage.Default.SetAsync(UdapEdConstants.BASE_URL, metadataUrl);
 
                         return result;

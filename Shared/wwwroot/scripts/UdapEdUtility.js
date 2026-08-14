@@ -1,4 +1,20 @@
-﻿function downloadFileFromBytes(bytes, mimeType, fileName) {
+﻿function postToAuthorize(authorizeUrl) {
+  const url = new URL(authorizeUrl);
+  const form = document.createElement('form');
+  form.method = 'post';
+  form.action = url.origin + url.pathname;
+  for (const [key, value] of url.searchParams.entries()) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = key;
+    input.value = value;
+    form.appendChild(input);
+  }
+  document.body.appendChild(form);
+  form.submit();
+}
+
+function downloadFileFromBytes(bytes, mimeType, fileName) {
   const blob = new Blob([new Uint8Array(bytes)], { type: mimeType });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);

@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
+using Udap.Client.Messages;
 using Udap.Common.Extensions;
 using Udap.Model;
 using UdapEd.Shared.Components;
@@ -48,6 +49,10 @@ public partial class UdapConsumer
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
 
     private string AuthCodeRequestLink { get; set; } = string.Empty;
+
+    private AuthorizeHttpMethod AuthorizeMethod { get; set; } = AuthorizeHttpMethod.Get;
+
+    private string AuthorizeVerb => AuthorizeMethod.ToString().ToUpperInvariant();
 
     private bool _enableDPoP;
     public bool EnableDPoP
@@ -250,7 +255,7 @@ public partial class UdapConsumer
         //
         // Builds an anchor href link the user clicks to initiate a user login page at the authorization server
         //
-        var loginLink = await AccessService.Get(accessCodeRequestUrl);
+        var loginLink = await AccessService.Get(accessCodeRequestUrl, AuthorizeMethod);
 
         await AppState.SetPropertyAsync(this, nameof(AppState.AccessCodeRequestResult), loginLink);
         LoginRedirectLinkText = "Login Redirect";
@@ -485,6 +490,10 @@ public partial class UdapConsumer
                 sb.AppendLine($"{resultProperty.Key}={resultProperty.Value}");
             }
             _webAuthenticorResponseProps = sb.ToString();
+        }
+        else if (AuthorizeMethod == AuthorizeHttpMethod.Post)
+        {
+            await JsRuntime.InvokeVoidAsync("postToAuthorize", AuthCodeRequestLink);
         }
         else
         {

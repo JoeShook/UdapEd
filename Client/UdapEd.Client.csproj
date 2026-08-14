@@ -11,15 +11,15 @@
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.5" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.10" />
     <PackageReference Include="MudBlazor" Version="9.2.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shared\UdapEd.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Udap.CdsHooks.Model" Version="0.9.1" />
-    <PackageReference Include="Udap.Common" Version="0.9.1" />
+    <PackageReference Include="Udap.CdsHooks.Model" Version="0.9.4" />
+    <PackageReference Include="Udap.Common" Version="0.9.4" />
   </ItemGroup>
   <!-- From:: https://jonhilton.net/visual-studio-2022-blazor-css-intellisense/ -->
   <Target Name="CollectMudBlazorStaticAssets" DependsOnTargets="ResolveStaticWebAssetsInputs" AfterTargets="Build" Condition=" '$(Configuration)' == 'Debug' ">

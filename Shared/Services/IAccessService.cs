@@ -9,13 +9,14 @@
 
 #endregion
 
+using Udap.Client.Messages;
 using UdapEd.Shared.Model;
 
 namespace UdapEd.Shared.Services;
 
 public interface IAccessService
 {
-    Task<AccessCodeRequestResult?> Get(string authorizeQuery);
+    Task<AccessCodeRequestResult?> Get(string authorizeQuery, AuthorizeHttpMethod method = AuthorizeHttpMethod.Get);
 
     Task<UdapAuthorizationCodeTokenRequestModel?> BuildRequestAccessTokenForAuthCode(
         AuthorizationCodeTokenRequestModel tokenRequestModel,

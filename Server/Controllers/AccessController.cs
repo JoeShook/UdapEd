@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Udap.Client.Extensions;
+using Udap.Client.Messages;
 using Udap.Model.Access;
 using Udap.Model.UdapAuthenticationExtensions;
 using UdapEd.Server.Extensions;
@@ -42,20 +43,24 @@ public class AccessController : Controller
     }
 
     [HttpGet("{authorizeQuery}")]
-    public async Task<IActionResult> GetAuthorizationCode(string authorizeQuery, CancellationToken token)
+    public async Task<IActionResult> GetAuthorizationCode(
+        string authorizeQuery,
+        [FromQuery] AuthorizeHttpMethod method,
+        CancellationToken token)
     {
         var handler = new HttpClientHandler() { AllowAutoRedirect = false };
         var httpClient = new HttpClient(handler);
-        
+
         var response = await httpClient
-            .GetAsync(Base64UrlEncoder
-                .Decode(authorizeQuery), cancellationToken: token);
+            .AuthorizeAsync(Base64UrlEncoder.Decode(authorizeQuery), method, token);
 
         var cookies = response.Headers.SingleOrDefault(header => header.Key == "Set-Cookie").Value;
 
         try
         {
-            if (!response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.Found)
+            if (!response.IsSuccessStatusCode &&
+                response.StatusCode != HttpStatusCode.Found &&
+                response.StatusCode != HttpStatusCode.SeeOther)
             {
                 var message = await response.Content.ReadAsStringAsync(token);
                 _logger.LogWarning(message);

@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
+using Udap.Client.Messages;
 using Udap.Common.Extensions;
 using Udap.Model;
 using UdapEd.Shared.Components;
@@ -61,6 +62,10 @@ public partial class UdapBusinessToBusiness
     [Inject] IMainPageService? MainPageService { get; set; } = null!;
 
     private string AuthCodeRequestLink { get; set; } = string.Empty;
+
+    private AuthorizeHttpMethod AuthorizeMethod { get; set; } = AuthorizeHttpMethod.Get;
+
+    private string AuthorizeVerb => AuthorizeMethod.ToString().ToUpperInvariant();
 
     private bool _enableDPoP;
     public bool EnableDPoP
@@ -265,7 +270,7 @@ public partial class UdapBusinessToBusiness
         //
         // Builds an anchor href link the user clicks to initiate a user login page at the authorization server
         //
-        var loginLink = await AccessService.Get(accessCodeRequestUrl);
+        var loginLink = await AccessService.Get(accessCodeRequestUrl, AuthorizeMethod);
         
         AppState.SetProperty(this, nameof(AppState.AccessCodeRequestResult), loginLink);
         LoginRedirectLinkText = "Login Redirect";
@@ -595,6 +600,10 @@ public partial class UdapBusinessToBusiness
             _webAuthenticorResponseProps = sb.ToString();
 
             MainPageService?.BringToFront();
+        }
+        else if (AuthorizeMethod == AuthorizeHttpMethod.Post)
+        {
+            await JsRuntime.InvokeVoidAsync("postToAuthorize", AuthCodeRequestLink);
         }
         else
         {

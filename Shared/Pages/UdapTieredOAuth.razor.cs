@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
+using Udap.Client.Messages;
 using Udap.Common.Extensions;
 using Udap.Model;
 using UdapEd.Shared.Components;
@@ -207,6 +208,10 @@ public partial class UdapTieredOAuth
     }
 
         private string AuthCodeRequestLink { get; set; } = string.Empty;
+
+    private AuthorizeHttpMethod AuthorizeMethod { get; set; } = AuthorizeHttpMethod.Get;
+
+    private string AuthorizeVerb => AuthorizeMethod.ToString().ToUpperInvariant();
     
     private void BuildAuthorizeLink()
     {
@@ -254,7 +259,7 @@ public partial class UdapTieredOAuth
         //
         // Builds an anchor href link the user clicks to initiate a user login page at the authorization server
         //
-        var loginLink = await AccessService.Get(accessCodeRequestUrl);
+        var loginLink = await AccessService.Get(accessCodeRequestUrl, AuthorizeMethod);
         
         AppState.SetProperty(this, nameof(AppState.AccessCodeRequestResult), loginLink);
         LoginRedirectLinkText = "Login Redirect";
@@ -494,6 +499,10 @@ public partial class UdapTieredOAuth
             }
             _webAuthenticatorResponseProps = sb.ToString();
 
+        }
+        else if (AuthorizeMethod == AuthorizeHttpMethod.Post)
+        {
+            await JsRuntime.InvokeVoidAsync("postToAuthorize", AuthCodeRequestLink);
         }
         else
         {

@@ -10,6 +10,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.IdentityModel.Tokens;
+using Udap.Client.Messages;
 using UdapEd.Shared.Components;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Services;
@@ -27,12 +28,12 @@ public class AccessService : IAccessService
         _logger = logger;
     }
 
-    public async Task<AccessCodeRequestResult?> Get(string authorizeQuery)
+    public async Task<AccessCodeRequestResult?> Get(string authorizeQuery, AuthorizeHttpMethod method = AuthorizeHttpMethod.Get)
     {
         var response = await _httpClient
             .GetFromJsonAsync<AccessCodeRequestResult>(
-                $"/Access/{Base64UrlEncoder.Encode(authorizeQuery)}");
-        
+                $"/Access/{Base64UrlEncoder.Encode(authorizeQuery)}?method={method}");
+
         return response;
     }
 

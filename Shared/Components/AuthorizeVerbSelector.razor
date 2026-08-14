@@ -1,0 +1,32 @@
+@using Udap.Client.Messages
+
+<MudPaper Class="pa-4 mt-4 mb-2" Elevation="2">
+    <div class="d-flex align-center flex-wrap">
+        <MudIcon Icon="@Icons.Material.Filled.SwapHoriz" Class="mr-2" Color="Color.Primary" />
+        <MudText Typo="Typo.h6" Class="mr-8">Authorization Code Request Verb</MudText>
+        <MudRadioGroup T="AuthorizeHttpMethod" Value="Method" ValueChanged="OnMethodChanged">
+            <MudRadio T="AuthorizeHttpMethod" Value="AuthorizeHttpMethod.Get" Color="Color.Primary">GET</MudRadio>
+            <MudRadio T="AuthorizeHttpMethod" Value="AuthorizeHttpMethod.Post" Color="Color.Primary">POST</MudRadio>
+        </MudRadioGroup>
+    </div>
+    <MudText Typo="Typo.caption">
+        Per <MudLink Typo="Typo.caption" Href="https://jira.hl7.org/browse/FHIR-52960" Target="_blank">FHIR-52960</MudLink>,
+        Authorization Servers SHALL support both GET and POST requests to the authorization endpoint for the
+        authorization code flow.  The verb selected here is used when building and sending the authorize request in the steps below.
+    </MudText>
+</MudPaper>
+
+@code {
+    /// <summary>
+    /// The HTTP verb used for the authorization code request in the flow steps below this selector.
+    /// </summary>
+    [Parameter] public AuthorizeHttpMethod Method { get; set; }
+
+    [Parameter] public EventCallback<AuthorizeHttpMethod> MethodChanged { get; set; }
+
+    private Task OnMethodChanged(AuthorizeHttpMethod method)
+    {
+        Method = method;
+        return MethodChanged.InvokeAsync(method);
+    }
+}
