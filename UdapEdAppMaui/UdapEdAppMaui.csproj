@@ -180,9 +180,6 @@
     <None Update="CertificateStore\TefacaRce_EmrDirect_FhirLabs.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="CertificateStore\udap-sandbox-surescripts-2.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="CertificateStore\udap.emrdirect.client.certificate.p12">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
