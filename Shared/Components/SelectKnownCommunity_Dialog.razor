@@ -31,7 +31,7 @@
 
 	            </MudSelect>
             }
-			@if (BaseUrl != null && BaseUrl.Equals("https://dev-mtx-interop.meditech.com".TrimEnd('/'), StringComparison.Ordinal))
+			@if (BaseUrl != null && BaseUrl.StartsWith("https://dev-mtx-interop.meditech.com", StringComparison.Ordinal))
             {
 	            <MudSelect @bind-Value="Community"
 	                       Label="Select Community"

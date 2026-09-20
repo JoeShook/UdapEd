@@ -3,6 +3,7 @@
     "https://fhirlabs.net/fhir/r4",
     "https://stage.healthtogo.me:8181/fhir/r4/stage",
     "https://dev-mtx-interop.meditech.com",
+    "https://dev-mtx-interop.meditech.com/v2/uscore/STU6",
     "https://securefhir.zimt.work/udap-public",
     "https://identity-matching.fast.hl7.org/fhir",
     "https://national-directory.fast.hl7.org/fhir",
@@ -12,6 +13,7 @@
   ],
   "IdPBaseUrls": [
     "https://udap.zimt.work/oauth2/aus5wvee13EWm169M1d7",
-    "https://idp1.securedcontrols.net"
+    "https://idp1.securedcontrols.net",
+    "https://stage.healthtogo.me:8181/fhir/r4/idp"
   ]
 }
