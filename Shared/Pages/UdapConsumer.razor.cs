@@ -175,7 +175,7 @@ public partial class UdapConsumer
     private async Task BuildAuthCodeRequest()
     {
         AccessToken = string.Empty;
-        await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), string.Empty, true, false);
+        await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), null, true, false);
         AuthorizationCodeRequest = new AuthorizationCodeRequest
         {
             RedirectUri = "Loading..."

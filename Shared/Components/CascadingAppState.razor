@@ -297,7 +297,14 @@
     public AuthorizationCodeRequest? AuthorizationCodeRequest { get; private set; }
 
 
-    public Pkce Pkce { get; private set; } = new();
+    private Pkce? _pkce;
+
+    // Lazy like the properties below, so ResetStateAsync (which sets everything to null) cannot leave it null.
+    public Pkce Pkce
+    {
+        get { return _pkce ??= new Pkce(); }
+        private set => _pkce = value;
+    }
 
     private ClientRegistrations? _clientRegistrations;
 
