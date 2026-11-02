@@ -49,6 +49,9 @@ public class ClientCredentialsTests(BrowserFixture browser, ITestOutputHelper ou
 
             await ui.ExpandAsync("registration-step-body");
             await ui.ByTestId("registration-build-body").ClickAsync();
+            // The signed request body is built by a server round trip; Register posts it. Wait for the generated
+            // JSON key: the panel's static labels also say "software_statement" (without quotes).
+            await ui.WaitForTextAsync("registration-step-body", "\"software_statement\"");
 
             await ui.ExpandAsync("registration-step-register");
             await ui.ByTestId("registration-register").ClickAsync();
@@ -63,6 +66,9 @@ public class ClientCredentialsTests(BrowserFixture browser, ITestOutputHelper ou
 
             await ui.ExpandAsync("b2b-step-cc-request");
             await ui.ByTestId("b2b-cc-build-token-request").ClickAsync();
+            // The signed client assertion is built by a server round trip; Get Access Token sends it.
+            // "client_assertion=ey" is the start of the generated JWT, not a static label.
+            await ui.WaitForTextAsync("b2b-step-cc-request", "client_assertion=ey");
 
             await ui.ExpandAsync("b2b-step-token");
             await ui.ByTestId("b2b-get-access-token").ClickAsync();

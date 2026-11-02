@@ -27,8 +27,10 @@ public sealed class UdapEdPage(IPage page)
     /// <summary>Loads UdapEd at a page and waits for the WebAssembly app to render it.</summary>
     public async Task OpenAsync(string path, string readyTestId)
     {
-        await Page.GotoAsync(path);
-        await ByTestId(readyTestId).First.WaitForAsync(new LocatorWaitForOptions { Timeout = 90_000 });
+        // The WebAssembly download can be slow (cold start, slow network): wait for the app to render,
+        // not for every resource's load event.
+        await Page.GotoAsync(path, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 90_000 });
+        await ByTestId(readyTestId).First.WaitForAsync(new LocatorWaitForOptions { Timeout = 120_000 });
     }
 
     /// <summary>
