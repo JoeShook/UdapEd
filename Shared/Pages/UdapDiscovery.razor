@@ -11,7 +11,8 @@
                              Color="Color.Primary"
                              ButtonType="ButtonType.Button"
                              Variant="Variant.Filled"
-                             OnClick="GetMetadata">Query</MudButton>
+                             OnClick="GetMetadata"
+                             data-testid="discovery-query">Query</MudButton>
 
                   <MudButton Class="mt-3"
                              Color="Color.Primary"
@@ -37,7 +38,8 @@
                                        @bind-Text="BaseUrl"
                                        SearchFunc="@GetMetadata"
                                        ResetValueOnEmptyText="true"
-                                       DebounceInterval="10000" />
+                                       DebounceInterval="10000"
+                                       data-testid="discovery-base-url" />
                   </MudItem>
                   <MudItem xs="4">
 	                  <MudTextField
@@ -47,6 +49,7 @@
 		                  AdornmentIcon="@Icons.Material.Outlined.Input"
 		                  Adornment="@KnownCommunityAdornment"
 		                  OnAdornmentClick="SelectKnownCommunities"
+		                  data-testid="discovery-community"
 		                  ></MudTextField>
                   </MudItem>
               </MudGrid>
@@ -94,12 +97,12 @@
 	                                         Disabled="@string.IsNullOrEmpty(Result)"
 	                                         Title="Copy to clipboard"
 	                                         style="position: absolute; right: 0.5rem; top: 0.5rem; z-index: 1;" />
-	                          <pre style="padding-right: 2.5rem;">@Result</pre>
+	                          <pre style="padding-right: 2.5rem;" data-testid="discovery-result">@Result</pre>
                           </div>
                       }
                       else
                       {
-	                      <pre style="padding-right: 2.5rem;">@Result</pre>
+	                      <pre style="padding-right: 2.5rem;" data-testid="discovery-result">@Result</pre>
                       }
 		          </MudPaper>
 	          </MudItem>

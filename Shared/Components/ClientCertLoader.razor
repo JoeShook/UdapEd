@@ -13,10 +13,11 @@
              StartIcon="@AppState.CertificateIcon"
              Color="@PrePackagedCertLoadedColor"
              Size="Size.Small"
-             Variant="Variant.Filled">
+             Variant="Variant.Filled"
+             data-testid="cert-prepackaged-menu">
         @foreach (var cert in _prePackagedCerts)
         {
-            <MudMenuItem OnClick="@(() => LoadPrePackagedCert(cert))" Title="@cert.Description">@cert.Name</MudMenuItem>
+            <MudMenuItem OnClick="@(() => LoadPrePackagedCert(cert))" Title="@cert.Description" data-testid="@($"cert-prepackaged-{cert.Name}")">@cert.Name</MudMenuItem>
         }
     </MudMenu>
 </MudStack>
@@ -31,7 +32,7 @@
     }
     <MudText Typo="Typo.body2"><b>Subject:</b> @AppState.UdapClientCertificateInfo?.DistinguishedName</MudText>
     <MudText Typo="Typo.caption"><b>Thumbprint (sha1)</b></MudText>
-    <MudText Typo="Typo.body2">@AppState.UdapClientCertificateInfo?.Thumbprint</MudText>
+    <MudText Typo="Typo.body2" data-testid="cert-thumbprint">@AppState.UdapClientCertificateInfo?.Thumbprint</MudText>
     <MudText Typo="Typo.body2"><b>Issuer:</b> @AppState.UdapClientCertificateInfo?.Issuer</MudText>
 
     @if (AppState.UdapClientCertificateInfo.CertLoaded == CertLoadedEnum.Expired)

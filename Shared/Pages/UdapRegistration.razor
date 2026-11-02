@@ -126,6 +126,7 @@
                         <MudGrid Justify="Justify.FlexStart">
                             <MudItem md="4" sm="6" xs="12">
                                 <MudSelect @bind-Value="Oauth2Flow"
+                                           data-testid="registration-flow"
                                            Label="Select OAuth2Flow Flow"
                                            Placeholder="Please Select"
                                            AdornmentIcon="@Icons.Material.Outlined.ArrowDropDown"
@@ -142,6 +143,7 @@
                             {
                                 <MudItem md="4" sm="6" xs="12">
                                     <MudSelect @bind-Value="SubjectAltName"
+                                               data-testid="registration-san"
                                                Label="Select Subject Alt Name"
                                                T="string"
                                                Clearable="true"
@@ -161,6 +163,7 @@
 
                             <MudItem md="4" sm="6" xs="12">
                                 <MudSelect @bind-Value="SigningAlgorithm"
+                                           data-testid="registration-alg"
                                            Label="Select Signing Algorithm"
                                            T="string"
                                            Clearable="true"
@@ -185,7 +188,7 @@
             </MudCard>
 
             @* amamamamamamamamamamam Step 2: Build Software Statements amamamamamamamamamamam *@
-            <MudExpansionPanel @bind-Expanded="_regStep2Expanded">
+            <MudExpansionPanel @bind-Expanded="_regStep2Expanded" data-testid="registration-step-statement">
                 <TitleContent>
                     <div class="d-flex align-center">
                         <MudIcon Icon="@Icons.Material.Filled.Description" Class="mr-2" Color="Color.Primary"/>
@@ -201,7 +204,8 @@
                                            ButtonType="ButtonType.Button"
                                            Variant="Variant.Filled"
                                            Disabled="@(!AppState.CertificateLoaded)"
-                                           OnClick="BuildRawSoftwareStatement">Build Register</MudButton>
+                                           OnClick="BuildRawSoftwareStatement"
+                                           data-testid="registration-build">Build Register</MudButton>
                             </MudItem>
 
                             <MudItem>
@@ -312,7 +316,7 @@
                                         @if (!string.IsNullOrEmpty(RawSoftwareStatementError))
                                         {
                                             <MudItem xs="12" Class="d-inline-flex pa-2">
-                                                <MudAlert Severity="Severity.Error">@RawSoftwareStatementError</MudAlert>
+                                                <MudAlert Severity="Severity.Error" data-testid="registration-statement-error">@RawSoftwareStatementError</MudAlert>
                                             </MudItem>
                                         }
                                     </MudGrid>
@@ -443,7 +447,7 @@
             </MudExpansionPanel>
 
             @* amamamamamamamamamamam Step 3: Build Request Body amamamamamamamamamamam *@
-            <MudExpansionPanel @bind-Expanded="_regStep3Expanded">
+            <MudExpansionPanel @bind-Expanded="_regStep3Expanded" data-testid="registration-step-body">
                 <TitleContent>
                     <div class="d-flex align-center">
                         <MudIcon Icon="@Icons.Material.Filled.Code" Class="mr-2" Color="Color.Primary"/>
@@ -457,7 +461,8 @@
                                    ButtonType="ButtonType.Button"
                                    Variant="Variant.Filled"
                                    Disabled="@(!AppState.CertificateLoaded)"
-                                   OnClick="BuildRequestBody">Build Request Body</MudButton>
+                                   OnClick="BuildRequestBody"
+                                   data-testid="registration-build-body">Build Request Body</MudButton>
                     </MudCardActions>
                     <MudCardContent>
                         <MudGrid Spacing="1" Class="mt-8">
@@ -497,7 +502,7 @@
             </MudExpansionPanel>
 
             @* amamamamamamamamamamam Step 4: Register (DCR) amamamamamamamamamamam *@
-            <MudExpansionPanel @bind-Expanded="_regStep4Expanded">
+            <MudExpansionPanel @bind-Expanded="_regStep4Expanded" data-testid="registration-step-register">
                 <TitleContent>
                     <div class="d-flex align-center">
                         <MudIcon Icon="@Icons.Material.Filled.AppRegistration" Class="mr-2" Color="Color.Primary"/>
@@ -511,14 +516,15 @@
                                    ButtonType="ButtonType.Button"
                                    Variant="Variant.Filled"
                                    Disabled="@(!AppState.CertificateLoaded)"
-                                   OnClick="PerformRegistration">Register (DCR)</MudButton>
+                                   OnClick="PerformRegistration"
+                                   data-testid="registration-register">Register (DCR)</MudButton>
                     </MudCardActions>
                     <MudCardContent>
                         <MudGrid Spacing="1" Class="mt-8">
                             <MudItem sm="6" xs="12">
                                 <MudPaper Class="udap - input" Elevation="3">
                                     <MudText Align="Align.Right" Color="Color.Tertiary">Registration Response</MudText>
-                                    <pre>@((MarkupString)RegistrationResult.HighlightScope())</pre>
+                                    <pre data-testid="registration-result">@((MarkupString)RegistrationResult.HighlightScope())</pre>
                                 </MudPaper>
 
                                 @if (AppState.ClientRegistrations.SelectedRegistration?.Scope == null)

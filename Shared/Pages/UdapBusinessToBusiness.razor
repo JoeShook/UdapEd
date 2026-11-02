@@ -66,7 +66,7 @@
       @* amamamamamamamamamamam Step 3: Build Token Request amamamamamamamamamamam *@
       @if (AppState.Oauth2Flow == Oauth2FlowEnum.client_credentials)
       {
-          <MudExpansionPanel @bind-Expanded="_step3Expanded">
+          <MudExpansionPanel @bind-Expanded="_step3Expanded" data-testid="b2b-step-cc-request">
               <TitleContent>
                   <div class="d-flex align-center">
                       <MudIcon Icon="@Icons.Material.Filled.Token" Class="mr-2" Color="Color.Primary"/>
@@ -82,7 +82,8 @@
                                          ButtonType="ButtonType.Button"
                                          Variant="Variant.Filled"
                                          Disabled="@(ClientSelectedInUi == null)"
-                                         OnClick="BuildAccessTokenRequest">Build Access Token Request</MudButton>
+                                         OnClick="BuildAccessTokenRequest"
+                                         data-testid="b2b-cc-build-token-request">Build Access Token Request</MudButton>
                           </MudItem>
                           <MudItem md="3" sm="6" xs="12">
                               <MudSelect @bind-Value="SigningAlgorithm"
@@ -198,7 +199,7 @@
           <AuthorizeVerbSelector @bind-Method="AuthorizeMethod" />
 
           @* amamamamamamamamamamam Step 3a: Build Authorization Code Request amamamamamamamamamamam *@
-          <MudExpansionPanel @bind-Expanded="_step3Expanded">
+          <MudExpansionPanel @bind-Expanded="_step3Expanded" data-testid="b2b-step-code-request">
               <TitleContent>
                   <div class="d-flex align-center">
                       <MudIcon Icon="@Icons.Material.Filled.Code" Class="mr-2" Color="Color.Primary"/>
@@ -484,7 +485,7 @@
       }
 
       @* amamamamamamamamamamam Final Step: Get Access Token amamamamamamamamamamam *@
-      <MudExpansionPanel @bind-Expanded="_stepTokenExpanded">
+      <MudExpansionPanel @bind-Expanded="_stepTokenExpanded" data-testid="b2b-step-token">
           <TitleContent>
               <div class="d-flex align-center">
                   <MudIcon Icon="@Icons.Material.Filled.Key" Class="mr-2" Color="Color.Primary"/>
@@ -497,7 +498,8 @@
                              Color="Color.Primary"
                              ButtonType="ButtonType.Button"
                              Variant="Variant.Filled"
-                             OnClick="GetAccessToken">Get Access Token</MudButton>
+                             OnClick="GetAccessToken"
+                             data-testid="b2b-get-access-token">Get Access Token</MudButton>
               </MudCardActions>
               <MudCardContent>
                   <MudGrid Spacing="1">
@@ -506,11 +508,13 @@
                               <MudText Align="Align.Right" Color="Color.Tertiary">OpenID Connect/OAuth 2 Response</MudText>
                               @if (AppState.AccessTokens is { IsError: true })
                               {
-                                  <TokenErrorResponse TokenResponse="AppState.AccessTokens" />
+                                  <div data-testid="b2b-token-error">
+                                      <TokenErrorResponse TokenResponse="AppState.AccessTokens" />
+                                  </div>
                               }
                               else
                               {
-                                  <pre>@AccessToken</pre>
+                                  <pre data-testid="b2b-access-token">@AccessToken</pre>
                                   <ResponseHeadersTable Headers="@AppState.AccessTokens?.Headers" />
                               }
                           </MudPaper>
