@@ -22,27 +22,19 @@ public class ClientCredentialsTests(BrowserFixture browser, ITestOutputHelper ou
     [E2EFact]
     public async Task Register_And_Get_Access_Token()
     {
+        var certificate = await E2ECertificate.EnsureAsync(output.WriteLine);
         var page = await browser.NewPageAsync();
         var ui = new UdapEdPage(page);
 
         try
         {
-            // Discovery: query the FHIR server's UDAP metadata.
-            await ui.OpenAsync("/udapDiscovery", "discovery-query");
-            await ui.InputOf("discovery-base-url").FillAsync(E2ESettings.FhirBaseUrl);
-            if (E2ESettings.Community.Length > 0)
-            {
-                await ui.InputOf("discovery-community").FillAsync(E2ESettings.Community);
-            }
-            await ui.ByTestId("discovery-query").ClickAsync();
-            await ui.WaitForTextAsync("discovery-result", "registration_endpoint");
-            output.WriteLine($"Discovered UDAP metadata for {E2ESettings.FhirBaseUrl}");
+            // Discovery: the FHIR server's UDAP metadata for the FhirLabs community.
+            await ui.DiscoverAsync();
+            output.WriteLine($"Discovered UDAP metadata for {E2ESettings.FhirBaseUrl} in {E2ESettings.Community}");
 
-            // Registration: client_credentials with the configured subject alt name.
+            // Registration: client_credentials with the flow's own subject alt name.
             await ui.NavigateAsync("udapRegistration", "cert-prepackaged-menu");
-            await ui.ByTestId("cert-prepackaged-menu").ClickAsync();
-            await ui.ByTestId($"cert-prepackaged-{E2ESettings.ClientCertificate}").ClickAsync();
-            await ui.ByTestId("cert-thumbprint").WaitForAsync();
+            await ui.UploadCertificateAsync(certificate, E2ESettings.CertificatePassword);
 
             await ui.SelectAsync("registration-flow", "client_credentials");
             await ui.SelectAsync("registration-san", E2ESettings.ClientCredentialsSan);

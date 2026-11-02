@@ -70,6 +70,28 @@ public sealed class UdapEdPage(IPage page)
         await Page.Locator(".mud-popover-open").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Detached });
     }
 
+    /// <summary>Opens UdapEd on the discovery page and queries the FHIR server's UDAP metadata for the configured community.</summary>
+    public async Task DiscoverAsync()
+    {
+        await OpenAsync("/udapDiscovery", "discovery-query");
+        await InputOf("discovery-base-url").FillAsync(E2ESettings.FhirBaseUrl);
+        await InputOf("discovery-community").FillAsync(E2ESettings.Community);
+        await ByTestId("discovery-query").ClickAsync();
+        await WaitForTextAsync("discovery-result", "registration_endpoint");
+    }
+
+    /// <summary>
+    /// Loads a client certificate the way a user does: the Upload button, then the password dialog.
+    /// Works on any page that shows the certificate loader.
+    /// </summary>
+    public async Task UploadCertificateAsync(string path, string password)
+    {
+        await Page.Locator("#fileInput").SetInputFilesAsync(path);
+        await InputOf("cert-password").FillAsync(password);
+        await ByTestId("cert-password-ok").ClickAsync();
+        await ByTestId("cert-thumbprint").WaitForAsync();
+    }
+
     /// <summary>Waits until an element's text contains the given value and returns the text.</summary>
     public async Task<string> WaitForTextAsync(string testId, string contains, float timeout = 60_000)
     {
