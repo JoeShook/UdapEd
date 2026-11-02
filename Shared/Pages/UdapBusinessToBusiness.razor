@@ -214,11 +214,13 @@
                                          Color="Color.Primary"
                                          ButtonType="ButtonType.Button"
                                          Variant="Variant.Filled"
-                                         OnClick="BuildAuthCodeRequest">Build Access Code Request</MudButton>
+                                         OnClick="BuildAuthCodeRequest"
+                                         data-testid="b2b-code-build-authorize">Build Access Code Request</MudButton>
                           </MudItem>
                           <MudItem Class="d-inline-flex">
                               <MudCheckBox @bind-Value="EnablePkce" T="bool"
-                                           Label="Enable PKCE" />
+                                           Label="Enable PKCE"
+                                           data-testid="b2b-code-pkce" />
                           </MudItem>
                           <MudSpacer/>
                       </MudGrid>
@@ -329,7 +331,7 @@
           </MudExpansionPanel>
 
           @* amamamamamamamamamamam Step 5: Run Authorize Code Request amamamamamamamamamamam *@
-          <MudExpansionPanel @bind-Expanded="_step5Expanded">
+          <MudExpansionPanel @bind-Expanded="_step5Expanded" data-testid="b2b-step-code-launch">
               <TitleContent>
                   <div class="d-flex align-center">
                       <MudIcon Icon="@Icons.Material.Filled.Login" Class="mr-2" Color="Color.Primary"/>
@@ -343,7 +345,8 @@
                                      Color="Color.Primary"
                                      Variant="Variant.Filled"
                                      Disabled="@(string.IsNullOrWhiteSpace(AuthCodeRequestLink))"
-                                     OnClick="@LaunchAuthorize">
+                                     OnClick="@LaunchAuthorize"
+                                     data-testid="b2b-code-launch">
                               Run Authorize Code Request
                           </MudButton>
                       </MudItem>
@@ -380,7 +383,7 @@
           </MudExpansionPanel>
 
           @* amamamamamamamamamamam Step 6: Build Access Token Request amamamamamamamamamamam *@
-          <MudExpansionPanel @bind-Expanded="_step6Expanded">
+          <MudExpansionPanel @bind-Expanded="_step6Expanded" data-testid="b2b-step-code-token-request">
               <TitleContent>
                   <div class="d-flex align-center">
                       <MudIcon Icon="@Icons.Material.Filled.Token" Class="mr-2" Color="Color.Primary"/>
@@ -394,7 +397,8 @@
                               <MudButton ButtonType="ButtonType.Button"
                                      Color="Color.Primary"
                                      Variant="Variant.Filled"
-                                     OnClick="BuildAccessTokenRequest">Build Access Token Request</MudButton>
+                                     OnClick="BuildAccessTokenRequest"
+                                     data-testid="b2b-code-build-token-request">Build Access Token Request</MudButton>
                           </MudItem>
                           <MudItem md="3" sm="6" xs="12">
                               <MudSelect @bind-Value="SigningAlgorithm"

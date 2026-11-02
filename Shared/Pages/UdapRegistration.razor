@@ -269,6 +269,7 @@
                                             <MudItem Class="d-inline-flex pa-2">
                                                 <MudSelect @bind-Value="AppSharedState.ScopeLevelSelected"
                                                            @bind-Value:after="@(() => SetRedirectUrl())"
+                                                           data-testid="registration-scope-level"
                                                            T="string"
                                                            Label="Level"
                                                            Clearable="true"
