@@ -9,3 +9,4 @@ UdapEdAppMaui\**
 appsetting.json
 appsettings.Development.json
 _tests\**
+publish\**
