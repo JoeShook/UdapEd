@@ -7,8 +7,6 @@
 // */
 #endregion
 
-using System.Text.RegularExpressions;
-using Microsoft.Playwright;
 using Xunit.Abstractions;
 
 namespace UdapEd.E2E;
@@ -33,31 +31,7 @@ public class ClientCredentialsTests(BrowserFixture browser, ITestOutputHelper ou
             output.WriteLine($"Discovered UDAP metadata for {E2ESettings.FhirBaseUrl} in {E2ESettings.Community}");
 
             // Registration: client_credentials with the flow's own subject alt name.
-            await ui.NavigateAsync("udapRegistration", "cert-prepackaged-menu");
-            await ui.UploadCertificateAsync(certificate, E2ESettings.CertificatePassword);
-
-            await ui.SelectAsync("registration-flow", "client_credentials");
-            await ui.SelectAsync("registration-san", E2ESettings.ClientCredentialsSan);
-            await ui.SelectAsync("registration-alg", "RS256");
-
-            await ui.ExpandAsync("registration-step-statement");
-            await ui.ByTestId("registration-build").ClickAsync();
-            // Build Register fills the software statement asynchronously; the next step posts it.
-            await Assertions.Expect(page.Locator("#softwareStatementTextarea"))
-                .ToHaveValueAsync(new Regex("client_credentials"), new LocatorAssertionsToHaveValueOptions { Timeout = 30_000 });
-            await Assertions.Expect(ui.ByTestId("registration-statement-error")).ToHaveCountAsync(0);
-
-            await ui.ExpandAsync("registration-step-body");
-            await ui.ByTestId("registration-build-body").ClickAsync();
-            // The signed request body is built by a server round trip; Register posts it. Wait for the generated
-            // JSON key: the panel's static labels also say "software_statement" (without quotes).
-            await ui.WaitForTextAsync("registration-step-body", "\"software_statement\"");
-
-            await ui.ExpandAsync("registration-step-register");
-            await ui.ByTestId("registration-register").ClickAsync();
-            var registration = await ui.WaitForTextAsync("registration-result", "client_id");
-            var clientId = Regex.Match(registration, "\"client_id\"\\s*:\\s*\"(?<id>[^\"]+)\"").Groups["id"].Value;
-            Assert.False(string.IsNullOrEmpty(clientId), $"No client_id in the registration response:\n{registration}");
+            var clientId = await ui.RegisterAsync(certificate, "client_credentials", E2ESettings.ClientCredentialsSan);
             output.WriteLine($"Registered client_id {clientId} for {E2ESettings.ClientCredentialsSan}");
 
             // Token: client_credentials request signed with the registered certificate.
@@ -70,14 +44,7 @@ public class ClientCredentialsTests(BrowserFixture browser, ITestOutputHelper ou
             // "client_assertion=ey" is the start of the generated JWT, not a static label.
             await ui.WaitForTextAsync("b2b-step-cc-request", "client_assertion=ey");
 
-            await ui.ExpandAsync("b2b-step-token");
-            await ui.ByTestId("b2b-get-access-token").ClickAsync();
-
-            var tokenOrError = page.Locator("[data-testid='b2b-access-token']:has-text('access_token'), [data-testid='b2b-token-error']").First;
-            await tokenOrError.WaitForAsync(new LocatorWaitForOptions { Timeout = 60_000 });
-            Assert.Equal(0, await ui.ByTestId("b2b-token-error").CountAsync());
-
-            var token = await ui.ByTestId("b2b-access-token").InnerTextAsync();
+            var token = await ui.GetAccessTokenAsync();
             Assert.Contains("access_token", token);
             output.WriteLine("Received an access token for the client_credentials registration");
         }

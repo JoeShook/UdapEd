@@ -6,6 +6,7 @@ Playwright tests that drive the UdapEd UI through real UDAP flows against the de
 | Test | Flow |
 |---|---|
 | `ClientCredentialsTests.Register_And_Get_Access_Token` | discovery → DCR for `client_credentials` → token request |
+| `AuthorizationCodeTests.Register_Sign_In_And_Get_Access_Token` | discovery → DCR for `authorization_code` (user scopes, B2B redirect) → authorize with PKCE → sign in with a test account and allow consent → code exchange |
 
 The tests are skipped unless `UDAPED_URL` is set, so `dotnet test UdapEd.sln` never touches the live servers by accident.
 

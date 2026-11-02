@@ -7,6 +7,7 @@
 // */
 #endregion
 
+using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 
 namespace UdapEd.E2E;
@@ -63,6 +64,17 @@ public sealed class UdapEdPage(IPage page)
         }
     }
 
+    /// <summary>Ticks a MudCheckBox unless it is already checked.</summary>
+    public async Task CheckAsync(string checkBoxTestId)
+    {
+        var input = Page.Locator($"input[type='checkbox'][data-testid='{checkBoxTestId}'], [data-testid='{checkBoxTestId}'] input[type='checkbox']").First;
+        if (!await input.IsCheckedAsync())
+        {
+            await input.CheckAsync(new LocatorCheckOptions { Force = true });
+        }
+        await Assertions.Expect(input).ToBeCheckedAsync();
+    }
+
     /// <summary>Picks an option in a MudSelect by its visible text.</summary>
     public async Task SelectAsync(string selectTestId, string optionText)
     {
@@ -92,6 +104,84 @@ public sealed class UdapEdPage(IPage page)
         await InputOf("cert-password").FillAsync(password);
         await ByTestId("cert-password-ok").ClickAsync();
         await ByTestId("cert-thumbprint").WaitForAsync();
+    }
+
+    /// <summary>
+    /// Registers a client on the registration page and returns its client_id: uploads the certificate, picks the
+    /// flow, subject alt name and RS256, builds the software statement and request body, and runs DCR.
+    /// <paramref name="chooseScopes"/> runs inside the expanded "Build Software Statements" panel before the build.
+    /// </summary>
+    public async Task<string> RegisterAsync(string certificatePath, string flow, string subjectAltName, Func<Task>? chooseScopes = null)
+    {
+        await NavigateAsync("udapRegistration", "cert-prepackaged-menu");
+        await UploadCertificateAsync(certificatePath, E2ESettings.CertificatePassword);
+
+        await SelectAsync("registration-flow", flow);
+        await SelectAsync("registration-san", subjectAltName);
+        await SelectAsync("registration-alg", "RS256");
+
+        await ExpandAsync("registration-step-statement");
+        if (chooseScopes != null)
+        {
+            await chooseScopes();
+        }
+
+        await ByTestId("registration-build").ClickAsync();
+        // Build Register fills the software statement asynchronously; the next step posts it.
+        await Assertions.Expect(Page.Locator("#softwareStatementTextarea"))
+            .ToHaveValueAsync(new Regex(Regex.Escape(subjectAltName)), new LocatorAssertionsToHaveValueOptions { Timeout = 30_000 });
+        await Assertions.Expect(ByTestId("registration-statement-error")).ToHaveCountAsync(0);
+
+        await ExpandAsync("registration-step-body");
+        await ByTestId("registration-build-body").ClickAsync();
+        // The signed request body is built by a server round trip; Register posts it. Wait for the generated
+        // JSON key: the panel's static labels also say "software_statement" (without quotes).
+        await WaitForTextAsync("registration-step-body", "\"software_statement\"");
+
+        await ExpandAsync("registration-step-register");
+        await ByTestId("registration-register").ClickAsync();
+        var registration = await WaitForTextAsync("registration-result", "client_id");
+        var clientId = Regex.Match(registration, "\"client_id\"\\s*:\\s*\"(?<id>[^\"]+)\"").Groups["id"].Value;
+        Assert.False(string.IsNullOrEmpty(clientId), $"No client_id in the registration response:\n{registration}");
+
+        return clientId;
+    }
+
+    /// <summary>
+    /// Signs in on an authorization server or IdP sign-in page with its first test account. Handles both page styles:
+    /// the SecuredControls one-click account buttons, and Udap.UI's fill-in buttons followed by Login.
+    /// </summary>
+    public async Task SignInWithTestAccountAsync()
+    {
+        var oneClick = Page.Locator("button.sc-account");
+        var fillIn = Page.Locator("[data-test-account='true']");
+        await oneClick.Or(fillIn).First.WaitForAsync(new LocatorWaitForOptions { Timeout = 60_000 });
+
+        if (await oneClick.CountAsync() > 0)
+        {
+            await oneClick.First.ClickAsync();
+        }
+        else
+        {
+            await fillIn.First.ClickAsync();
+            await Page.Locator("button[name='Input.Button'][value='login']").First.ClickAsync();
+        }
+    }
+
+    /// <summary>Requests the token on the B2B page's final step and returns the response text; fails on a token error.</summary>
+    public async Task<string> GetAccessTokenAsync()
+    {
+        await ExpandAsync("b2b-step-token");
+        await ByTestId("b2b-get-access-token").ClickAsync();
+
+        var tokenOrError = Page.Locator("[data-testid='b2b-access-token']:has-text('access_token'), [data-testid='b2b-token-error']").First;
+        await tokenOrError.WaitForAsync(new LocatorWaitForOptions { Timeout = 60_000 });
+        if (await ByTestId("b2b-token-error").CountAsync() > 0)
+        {
+            Assert.Fail($"Token request failed:\n{await ByTestId("b2b-token-error").InnerTextAsync()}");
+        }
+
+        return await ByTestId("b2b-access-token").InnerTextAsync();
     }
 
     /// <summary>Waits until an element's text contains the given value and returns the text.</summary>
