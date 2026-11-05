@@ -33,6 +33,7 @@
     {
         <MudItem lg="4" sm="6" md="6" xs="12">
             <MudTextField @bind-Value="IdPBaseUrl"
+                          data-testid="tiered-idp"
                           Label="OpenID Connect IdP"
                           @onblur="SelectIdPBaseUrl"
                           AdornmentIcon="@Icons.Material.Outlined.Input"
