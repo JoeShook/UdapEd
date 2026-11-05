@@ -3,13 +3,32 @@ name: Tagged Release
 on:
   push:
     tags:
-    - "v[0-9]+.[0-9]+.[0-9]+"
+    - "v[0-9]+.[0-9]+.[0-9]+"          # full release: Docker image + desktop installers
+    - "v[0-9]+.[0-9]+.[0-9]+.[0-9]+"   # server hotfix: Docker image only (vpk needs 3-part SemVer)
 
 permissions:
   contents: write   # create the GitHub Release and upload desktop assets
   packages: write   # push the Docker image to GHCR
 
 jobs:
+  # ---------------------------------------------------------------------------
+  # Classify the tag. Desktop builds (Velopack) require a 3-part SemVer version,
+  # so a 4-part tag (e.g. v1.2.3.4) ships only the server Docker image.
+  # ---------------------------------------------------------------------------
+  classify-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      desktop: ${{ steps.classify.outputs.desktop }}
+    steps:
+    - name: Check tag part count
+      id: classify
+      run: |
+        ver="${GITHUB_REF_NAME#v}"
+        parts=$(echo "$ver" | awk -F. '{print NF}')
+        if [ "$parts" -eq 3 ]; then desktop=true; else desktop=false; fi
+        echo "Tag $GITHUB_REF_NAME has $parts parts; desktop builds: $desktop"
+        echo "desktop=$desktop" >> "$GITHUB_OUTPUT"
+
   # ---------------------------------------------------------------------------
   # Server image -> GHCR (unchanged behavior). Independent of the desktop builds.
   # ---------------------------------------------------------------------------
@@ -52,6 +71,8 @@ jobs:
   # Builds x64 and arm64. Uploads the output as a CI artifact (no Release yet).
   # ---------------------------------------------------------------------------
   build-windows:
+    needs: classify-tag
+    if: needs.classify-tag.outputs.desktop == 'true'
     runs-on: windows-latest
     timeout-minutes: 45
 
@@ -118,6 +139,8 @@ jobs:
   build-macos:
     # macos-26 ships Xcode 26.5; the MacCatalyst workload (26.5.x) requires it.
     # macos-latest is still macOS 15 and tops out at Xcode 16.4 (NETSDK error).
+    needs: classify-tag
+    if: needs.classify-tag.outputs.desktop == 'true'
     runs-on: macos-26
     timeout-minutes: 45
 
@@ -182,7 +205,8 @@ jobs:
   # ---------------------------------------------------------------------------
   # Assemble one GitHub Release from the desktop artifacts. Runs after both
   # desktop builds so neither depends on the other; either failing means no
-  # Release is published (re-tag after the fix).
+  # Release is published (re-tag after the fix). Skipped automatically for
+  # 4-part tags, since both desktop jobs are skipped.
   # ---------------------------------------------------------------------------
   publish-release:
     runs-on: ubuntu-latest
