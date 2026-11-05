@@ -44,7 +44,8 @@ public class TieredOAuthTests(BrowserFixture browser, ITestOutputHelper output) 
             await ui.NavigateAsync("udapTieredOAuth", "client-select");
             await ui.SelectAsync("client-select", clientId);
 
-            var idpField = ui.Hook("tiered-idp", ui.FieldLabeled("OpenID Connect IdP")).Locator("input").First;
+            var idpField = page.Locator("input[data-testid='tiered-idp'], [data-testid='tiered-idp'] input")
+                .Or(ui.FieldLabeled("OpenID Connect IdP").Locator("input")).First;
             await idpField.FillAsync(E2ESettings.TieredIdP);
             await idpField.PressAsync("Tab"); // the IdP is saved when the field loses focus
 
