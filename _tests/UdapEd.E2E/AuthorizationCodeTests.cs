@@ -56,7 +56,7 @@ public class AuthorizationCodeTests(BrowserFixture browser, ITestOutputHelper ou
             await ui.SignInWithTestAccountAsync();
             output.WriteLine("Signed in at the authorization server with a test account");
 
-            var allow = page.Locator("button[name='Input.Button'][value='yes']");
+            var allow = page.Locator("button[name='Input.Button' i][value='yes']");
             var tokenRequestPanel = ui.Hook("b2b-step-code-token-request", ui.PanelTitled("6. Build Access Token Request"));
             var backInUdapEd = ui.Hook("b2b-code-build-token-request",
                 tokenRequestPanel.GetByRole(AriaRole.Button, new LocatorGetByRoleOptions { Name = "Build Access Token Request" }));

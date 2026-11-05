@@ -6,6 +6,7 @@ Playwright tests that drive the UdapEd UI through real UDAP flows against the de
 | Test | Flow |
 |---|---|
 | `ClientCredentialsTests.Register_And_Get_Access_Token` | discovery → DCR for `client_credentials` → token request |
+| `TieredOAuthTests.Register_Sign_In_At_IdP_And_Get_Access_Token` | discovery → DCR for `authorization_code` with Tiered OAuth (`udap` + `openid`) → authorize naming `idp=https://idp1.securedcontrols.net` with PKCE → authorization server hands off to idp1 → sign in and allow consent at idp1, then at the authorization server → code exchange; the identity token must show `idp: TieredOAuth` and `amr: external` |
 | `AuthorizationCodeTests.Register_Sign_In_And_Get_Access_Token` | discovery → DCR for `authorization_code` (user scopes, B2B redirect) → authorize with PKCE → sign in with a test account and allow consent → code exchange |
 
 The tests are skipped unless `UDAPED_URL` is set, so `dotnet test UdapEd.sln` never touches the live servers by accident.
@@ -40,7 +41,8 @@ The tests find UI elements by their `data-testid` attributes. Where a hook was a
 test falls back to the element's visible label (field label, button text, panel title), so it also runs against a
 UdapEd deployed before that hook existed.
 
-Watch a run: add `UDAPED_HEADED=1 UDAPED_SLOWMO=500`.
+Watch a run: add `UDAPED_HEADED=1 UDAPED_SLOWMO=500`. The browser opens maximized at 67% zoom
+(`UDAPED_ZOOM=0.8` for 80%, and so on).
 
 ## The E2E client certificate
 
@@ -75,6 +77,8 @@ authorization server instead of creating another, so repeated runs do not accumu
 | `UDAPED_CC_SAN` | `https://fhirlabs.net/udaped-e2e/client-credentials` | SAN for the client_credentials registration |
 | `UDAPED_CODE_SAN` | `https://fhirlabs.net/udaped-e2e/authorization-code` | SAN for the authorization_code registration |
 | `UDAPED_TIERED_SAN` | `https://fhirlabs.net/udaped-e2e/tiered-oauth` | SAN for the Tiered OAuth registration |
+| `UDAPED_TIERED_IDP` | `https://idp1.securedcontrols.net` | OpenID Connect IdP named in the Tiered OAuth authorize request |
+| `UDAPED_ZOOM` | `0.67` | zoom of the headed browser window |
 | `UDAPED_E2E_CERT` | `%LOCALAPPDATA%\UdapEd.E2E\udaped-e2e-client.p12` | where the E2E certificate is kept |
 | `UDAPED_E2E_CERT_PASSWORD` | `udap-test` | its password |
 | `UDAPED_CERT_ISSUER_URL` | the deployed UdapEd | UdapEd that issues the E2E certificate |

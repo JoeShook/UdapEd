@@ -32,7 +32,11 @@ public sealed class BrowserFixture : IAsyncLifetime
         Browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
         {
             Headless = !E2ESettings.Headed,
-            SlowMo = E2ESettings.SlowMo
+            SlowMo = E2ESettings.SlowMo,
+            // When watching, fill the screen and zoom out so whole pages fit (UDAPED_ZOOM, default 67%).
+            Args = E2ESettings.Headed
+                ? ["--start-maximized", $"--force-device-scale-factor={E2ESettings.Zoom.ToString(System.Globalization.CultureInfo.InvariantCulture)}"]
+                : []
         });
     }
 
@@ -46,7 +50,8 @@ public sealed class BrowserFixture : IAsyncLifetime
             BaseURL = E2ESettings.UdapEdUrl,
             // A local UdapEd serves the ASP.NET development certificate.
             IgnoreHTTPSErrors = true,
-            ViewportSize = new ViewportSize { Width = 1600, Height = 1000 }
+            // Headed: the page follows the maximized window. Headless: a fixed desktop-sized viewport.
+            ViewportSize = E2ESettings.Headed ? ViewportSize.NoViewport : new ViewportSize { Width = 1600, Height = 1000 }
         });
 
         context.SetDefaultTimeout(30_000);

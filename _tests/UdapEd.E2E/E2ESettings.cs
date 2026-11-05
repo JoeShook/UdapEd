@@ -44,6 +44,9 @@ public static class E2ESettings
     /// <summary>Subject alt name the Tiered OAuth registration uses.</summary>
     public static string TieredOAuthSan => Get("UDAPED_TIERED_SAN", "https://fhirlabs.net/udaped-e2e/tiered-oauth");
 
+    /// <summary>OpenID Connect IdP the Tiered OAuth test names in its authorize request.</summary>
+    public static string TieredIdP => Get("UDAPED_TIERED_IDP", "https://idp1.securedcontrols.net");
+
     /// <summary>The E2E client certificate's SANs, one per flow, so no flow overwrites another's registration.</summary>
     public static IReadOnlyList<string> CertificateSans => [ClientCredentialsSan, AuthorizationCodeSan, TieredOAuthSan];
 
@@ -63,6 +66,11 @@ public static class E2ESettings
 
     /// <summary>Show the browser instead of running headless (UDAPED_HEADED=1).</summary>
     public static bool Headed => Environment.GetEnvironmentVariable("UDAPED_HEADED") == "1";
+
+    /// <summary>Zoom of the headed browser window (UDAPED_ZOOM, e.g. 0.67 for 67%).</summary>
+    public static double Zoom =>
+        double.TryParse(Environment.GetEnvironmentVariable("UDAPED_ZOOM"), System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out var zoom) && zoom > 0 ? zoom : 0.67;
 
     /// <summary>Milliseconds to pause between browser actions when watching a run.</summary>
     public static float SlowMo => float.TryParse(Environment.GetEnvironmentVariable("UDAPED_SLOWMO"), out var ms) ? ms : 0;
