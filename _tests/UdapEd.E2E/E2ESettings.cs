@@ -32,6 +32,9 @@ public static class E2ESettings
     /// </summary>
     public static string Community => Get("UDAPED_COMMUNITY", "udap://fhirlabs.net/");
 
+    /// <summary>UdapEd's pre-packaged trust anchor for the community: the SureFhirLabs CA anchors udap://fhirlabs.net/.</summary>
+    public static string Anchor => Get("UDAPED_ANCHOR", "FhirLabs Test CA");
+
     /// <summary>Subject alt name the client_credentials registration uses.</summary>
     public static string ClientCredentialsSan => Get("UDAPED_CC_SAN", "https://fhirlabs.net/udaped-e2e/client-credentials");
 

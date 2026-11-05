@@ -21,6 +21,27 @@ public sealed class UdapEdPage(IPage page)
 
     public ILocator ByTestId(string testId) => Page.Locator($"[data-testid='{testId}']");
 
+    /// <summary>
+    /// The element with a data-testid, or, in a UdapEd built before that hook existed, the element found by its
+    /// visible label. Lets the tests run against an older deployment.
+    /// </summary>
+    public ILocator Hook(string testId, ILocator fallback) => ByTestId(testId).Or(fallback).First;
+
+    /// <summary>A MudExpansionPanel found by the text of its header, e.g. "5. Run Authorize Code Request".</summary>
+    public ILocator PanelTitled(string title) =>
+        Page.Locator(".mud-expand-panel").Filter(new LocatorFilterOptions
+        {
+            Has = Page.Locator(".mud-expand-panel-header", new PageLocatorOptions { HasText = title })
+        }).First;
+
+    /// <summary>A MudBlazor input control (select, text field) found by its exact label text.</summary>
+    public ILocator FieldLabeled(string label) =>
+        Page.Locator($".mud-input-control:has(label:text-is('{label}'))").First;
+
+    /// <summary>The checkbox input of a MudCheckBox found by its label text.</summary>
+    public ILocator CheckBoxLabeled(string label) =>
+        Page.Locator($"label.mud-checkbox:has-text('{label}') input[type='checkbox']").First;
+
     /// <summary>The input element of a MudBlazor field, whether the test id lands on the input or its wrapper.</summary>
     public ILocator InputOf(string testId) =>
         Page.Locator($"input[data-testid='{testId}'], [data-testid='{testId}'] input").First;
@@ -53,9 +74,11 @@ public sealed class UdapEdPage(IPage page)
     }
 
     /// <summary>Opens a MudExpansionPanel unless it is already expanded.</summary>
-    public async Task ExpandAsync(string panelTestId)
+    public Task ExpandAsync(string panelTestId) => ExpandAsync(ByTestId(panelTestId).First);
+
+    /// <summary>Opens a MudExpansionPanel unless it is already expanded.</summary>
+    public async Task ExpandAsync(ILocator panel)
     {
-        var panel = ByTestId(panelTestId);
         await panel.WaitForAsync();
         var classes = await panel.GetAttributeAsync("class") ?? string.Empty;
         if (!classes.Contains("mud-panel-expanded"))
@@ -64,34 +87,59 @@ public sealed class UdapEdPage(IPage page)
         }
     }
 
-    /// <summary>Ticks a MudCheckBox unless it is already checked.</summary>
-    public async Task CheckAsync(string checkBoxTestId)
+    /// <summary>Ticks a MudCheckBox input unless it is already checked.</summary>
+    public async Task CheckAsync(ILocator checkBoxInput)
     {
-        var input = Page.Locator($"input[type='checkbox'][data-testid='{checkBoxTestId}'], [data-testid='{checkBoxTestId}'] input[type='checkbox']").First;
-        if (!await input.IsCheckedAsync())
+        if (!await checkBoxInput.IsCheckedAsync())
         {
-            await input.CheckAsync(new LocatorCheckOptions { Force = true });
+            await checkBoxInput.CheckAsync(new LocatorCheckOptions { Force = true });
         }
-        await Assertions.Expect(input).ToBeCheckedAsync();
+        await Assertions.Expect(checkBoxInput).ToBeCheckedAsync();
     }
 
+    /// <summary>The checkbox input of a MudCheckBox with a data-testid, whether the id lands on the input or its wrapper.</summary>
+    public ILocator CheckBoxOf(string testId) =>
+        Page.Locator($"input[type='checkbox'][data-testid='{testId}'], [data-testid='{testId}'] input[type='checkbox']").First;
+
     /// <summary>Picks an option in a MudSelect by its visible text.</summary>
-    public async Task SelectAsync(string selectTestId, string optionText)
+    public Task SelectAsync(string selectTestId, string optionText) => SelectAsync(ByTestId(selectTestId).First, optionText);
+
+    /// <summary>Picks an option in a MudSelect by its visible text.</summary>
+    public async Task SelectAsync(ILocator select, string optionText)
     {
-        await ByTestId(selectTestId).First.ClickAsync();
+        await select.ClickAsync();
         var option = Page.Locator(".mud-popover-open .mud-list-item").Filter(new LocatorFilterOptions { HasText = optionText }).First;
         await option.ClickAsync();
         await Page.Locator(".mud-popover-open").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Detached });
     }
 
-    /// <summary>Opens UdapEd on the discovery page and queries the FHIR server's UDAP metadata for the configured community.</summary>
+    /// <summary>
+    /// Opens UdapEd on the discovery page, loads the community's trust anchor, queries the FHIR server's UDAP
+    /// metadata for the configured community, and requires the metadata to be trusted (no error alerts).
+    /// </summary>
     public async Task DiscoverAsync()
     {
         await OpenAsync("/udapDiscovery", "discovery-query");
+
+        // Trust anchor: UdapEd's pre-packaged anchor for the community (FhirLabs Test CA for udap://fhirlabs.net/).
+        var anchorCard = Page.Locator(".mud-card:has-text('Choose Trust Anchor Certificate')").First;
+        await anchorCard.GetByRole(AriaRole.Button, new LocatorGetByRoleOptions { Name = "Load Pre-packaged Anchor" }).ClickAsync();
+        await Page.Locator(".mud-popover-open")
+            .GetByText(E2ESettings.Anchor, new LocatorGetByTextOptions { Exact = true }).First.ClickAsync();
+        await Assertions.Expect(anchorCard).ToContainTextAsync("Thumbprint", new LocatorAssertionsToContainTextOptions { Timeout = 30_000 });
+
         await InputOf("discovery-base-url").FillAsync(E2ESettings.FhirBaseUrl);
         await InputOf("discovery-community").FillAsync(E2ESettings.Community);
         await ByTestId("discovery-query").ClickAsync();
         await WaitForTextAsync("discovery-result", "registration_endpoint");
+
+        // Untrusted metadata and signed-metadata token errors are shown as error alerts.
+        var errors = Page.Locator(".mud-alert-text-error, .mud-alert-filled-error, .mud-alert-outlined-error");
+        if (await errors.CountAsync() > 0)
+        {
+            Assert.Fail($"UDAP metadata for {E2ESettings.FhirBaseUrl} in {E2ESettings.Community} is not trusted with the " +
+                        $"{E2ESettings.Anchor} anchor:\n{string.Join("\n", await errors.AllInnerTextsAsync())}");
+        }
     }
 
     /// <summary>
@@ -185,9 +233,12 @@ public sealed class UdapEdPage(IPage page)
     }
 
     /// <summary>Waits until an element's text contains the given value and returns the text.</summary>
-    public async Task<string> WaitForTextAsync(string testId, string contains, float timeout = 60_000)
+    public Task<string> WaitForTextAsync(string testId, string contains, float timeout = 60_000) =>
+        WaitForTextAsync(ByTestId(testId).First, contains, timeout);
+
+    /// <summary>Waits until an element's text contains the given value and returns the text.</summary>
+    public async Task<string> WaitForTextAsync(ILocator locator, string contains, float timeout = 60_000)
     {
-        var locator = ByTestId(testId).First;
         await Assertions.Expect(locator).ToContainTextAsync(contains, new LocatorAssertionsToContainTextOptions { Timeout = timeout });
         return await locator.InnerTextAsync();
     }

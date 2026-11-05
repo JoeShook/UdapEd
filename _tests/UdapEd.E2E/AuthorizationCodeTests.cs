@@ -32,7 +32,7 @@ public class AuthorizationCodeTests(BrowserFixture browser, ITestOutputHelper ou
 
             // Registration: authorization_code with user-level scopes, which selects the B2B page as redirect URI.
             var clientId = await ui.RegisterAsync(certificate, "authorization_code", E2ESettings.AuthorizationCodeSan,
-                () => ui.SelectAsync("registration-scope-level", "user"));
+                () => ui.SelectAsync(ui.Hook("registration-scope-level", ui.FieldLabeled("Level")), "user"));
             output.WriteLine($"Registered client_id {clientId} for {E2ESettings.AuthorizationCodeSan}");
 
             // Authorize: build the request and send the browser to the authorization server.
@@ -41,19 +41,25 @@ public class AuthorizationCodeTests(BrowserFixture browser, ITestOutputHelper ou
 
             await ui.ExpandAsync("b2b-step-code-request");
             // SSRAA 2.0 requires PKCE (S256); the authorization server rejects an authorize request without it.
-            await ui.CheckAsync("b2b-code-pkce");
-            await ui.ByTestId("b2b-code-build-authorize").ClickAsync();
+            await ui.CheckAsync(ui.CheckBoxOf("b2b-code-pkce").Or(ui.CheckBoxLabeled("Enable PKCE")).First);
+            await ui.Hook("b2b-code-build-authorize",
+                page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Build Access Code Request" })).ClickAsync();
 
-            await ui.ExpandAsync("b2b-step-code-launch");
-            await Assertions.Expect(ui.ByTestId("b2b-code-launch")).ToBeEnabledAsync();
-            await ui.ByTestId("b2b-code-launch").ClickAsync();
+            var launchPanel = ui.Hook("b2b-step-code-launch", ui.PanelTitled("5. Run Authorize Code Request"));
+            await ui.ExpandAsync(launchPanel);
+            var launch = ui.Hook("b2b-code-launch",
+                launchPanel.GetByRole(AriaRole.Button, new LocatorGetByRoleOptions { Name = "Run Authorize Code Request" }));
+            await Assertions.Expect(launch).ToBeEnabledAsync();
+            await launch.ClickAsync();
 
             // Sign in with one of the authorization server's test accounts, then allow consent if it is asked.
             await ui.SignInWithTestAccountAsync();
             output.WriteLine("Signed in at the authorization server with a test account");
 
             var allow = page.Locator("button[name='Input.Button'][value='yes']");
-            var backInUdapEd = ui.ByTestId("b2b-code-build-token-request");
+            var tokenRequestPanel = ui.Hook("b2b-step-code-token-request", ui.PanelTitled("6. Build Access Token Request"));
+            var backInUdapEd = ui.Hook("b2b-code-build-token-request",
+                tokenRequestPanel.GetByRole(AriaRole.Button, new LocatorGetByRoleOptions { Name = "Build Access Token Request" }));
             await allow.Or(backInUdapEd).First.WaitForAsync(new LocatorWaitForOptions { Timeout = 120_000 });
             if (await allow.IsVisibleAsync())
             {
@@ -66,10 +72,10 @@ public class AuthorizationCodeTests(BrowserFixture browser, ITestOutputHelper ou
             Assert.Contains("code=", page.Url);
             output.WriteLine("Returned to UdapEd with an authorization code");
 
-            await ui.ExpandAsync("b2b-step-code-token-request");
-            await ui.ByTestId("b2b-code-build-token-request").ClickAsync();
+            await ui.ExpandAsync(tokenRequestPanel);
+            await backInUdapEd.ClickAsync();
             // The signed client assertion is built by a server round trip; Get Access Token sends it.
-            await ui.WaitForTextAsync("b2b-step-code-token-request", "client_assertion=ey");
+            await ui.WaitForTextAsync(tokenRequestPanel, "client_assertion=ey");
 
             var token = await ui.GetAccessTokenAsync();
             Assert.Contains("access_token", token);

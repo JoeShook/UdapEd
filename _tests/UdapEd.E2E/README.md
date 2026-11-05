@@ -36,8 +36,11 @@ PowerShell: `$env:UDAPED_URL="https://localhost:7041"; dotnet test _tests/UdapEd
 UDAPED_URL=https://fhirlabs-udaped-v46zp6zteq-uw.a.run.app dotnet test _tests/UdapEd.E2E
 ```
 
-The tests find UI elements by their `data-testid` attributes, so the deployed UdapEd must include them
-(any build after the commit that added them).
+The tests find UI elements by their `data-testid` attributes. Where a hook was added after a deployed build, the
+test falls back to the element's visible label (field label, button text, panel title), so it also runs against a
+UdapEd deployed before that hook existed.
+
+Watch a run: add `UDAPED_HEADED=1 UDAPED_SLOWMO=500`.
 
 ## The E2E client certificate
 
@@ -54,8 +57,9 @@ longer match), by the deployed UdapEd, which can read the CA from GCP. It is sav
 `%LOCALAPPDATA%\UdapEd.E2E\udaped-e2e-client.p12`, and uploaded into the UdapEd under test with the Upload button
 and password dialog. Delete the file to get a fresh one.
 
-Because the certificate chains to the SureFhirLabs CA, discovery uses the `udap://fhirlabs.net/` community;
-fhirlabs.net's default community is a different one.
+Because the certificate chains to the SureFhirLabs CA, discovery loads UdapEd's pre-packaged **FhirLabs Test CA**
+trust anchor and queries the `udap://fhirlabs.net/` community (fhirlabs.net's default community is a different one).
+A test fails if the metadata is not trusted with that anchor.
 
 Registering again with the same subject alt name in the same community updates the existing client on the
 authorization server instead of creating another, so repeated runs do not accumulate registrations.
