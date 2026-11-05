@@ -64,6 +64,12 @@ public static class E2ESettings
     /// </summary>
     public static string CertificateIssuerUrl => Get("UDAPED_CERT_ISSUER_URL", DeployedUdapEdUrl).TrimEnd('/');
 
+    /// <summary>
+    /// Use only data-testid hooks, never the visible-label fallbacks (UDAPED_STRICT_HOOKS=1). Proves a UdapEd build
+    /// carries every hook the tests use.
+    /// </summary>
+    public static bool StrictHooks => Environment.GetEnvironmentVariable("UDAPED_STRICT_HOOKS") == "1";
+
     /// <summary>Show the browser instead of running headless (UDAPED_HEADED=1).</summary>
     public static bool Headed => Environment.GetEnvironmentVariable("UDAPED_HEADED") == "1";
 

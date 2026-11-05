@@ -79,6 +79,7 @@ authorization server instead of creating another, so repeated runs do not accumu
 | `UDAPED_TIERED_SAN` | `https://fhirlabs.net/udaped-e2e/tiered-oauth` | SAN for the Tiered OAuth registration |
 | `UDAPED_TIERED_IDP` | `https://idp1.securedcontrols.net` | OpenID Connect IdP named in the Tiered OAuth authorize request |
 | `UDAPED_ZOOM` | `0.67` | zoom of the headed browser window |
+| `UDAPED_STRICT_HOOKS` | `0` | `1` uses only `data-testid` hooks, never the label fallbacks: proves a build carries every hook |
 | `UDAPED_E2E_CERT` | `%LOCALAPPDATA%\UdapEd.E2E\udaped-e2e-client.p12` | where the E2E certificate is kept |
 | `UDAPED_E2E_CERT_PASSWORD` | `udap-test` | its password |
 | `UDAPED_CERT_ISSUER_URL` | the deployed UdapEd | UdapEd that issues the E2E certificate |

@@ -41,7 +41,7 @@ public class AuthorizationCodeTests(BrowserFixture browser, ITestOutputHelper ou
 
             await ui.ExpandAsync("b2b-step-code-request");
             // SSRAA 2.0 requires PKCE (S256); the authorization server rejects an authorize request without it.
-            await ui.CheckAsync(ui.CheckBoxOf("b2b-code-pkce").Or(ui.CheckBoxLabeled("Enable PKCE")).First);
+            await ui.CheckAsync(ui.Either(ui.CheckBoxOf("b2b-code-pkce"), ui.CheckBoxLabeled("Enable PKCE")));
             await ui.Hook("b2b-code-build-authorize",
                 page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Build Access Code Request" })).ClickAsync();
 

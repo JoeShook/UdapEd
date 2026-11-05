@@ -36,7 +36,7 @@ public class TieredOAuthTests(BrowserFixture browser, ITestOutputHelper output) 
             var clientId = await ui.RegisterAsync(certificate, "authorization_code", E2ESettings.TieredOAuthSan, async () =>
             {
                 await ui.SelectAsync(ui.Hook("registration-scope-level", ui.FieldLabeled("Level")), "user");
-                await ui.CheckAsync(ui.CheckBoxOf("registration-tiered-oauth").Or(ui.CheckBoxLabeled("Tiered Oauth")).First);
+                await ui.CheckAsync(ui.Either(ui.CheckBoxOf("registration-tiered-oauth"), ui.CheckBoxLabeled("Tiered Oauth")));
             });
             output.WriteLine($"Registered client_id {clientId} for {E2ESettings.TieredOAuthSan}");
 
@@ -44,15 +44,15 @@ public class TieredOAuthTests(BrowserFixture browser, ITestOutputHelper output) 
             await ui.NavigateAsync("udapTieredOAuth", "client-select");
             await ui.SelectAsync("client-select", clientId);
 
-            var idpField = page.Locator("input[data-testid='tiered-idp'], [data-testid='tiered-idp'] input")
-                .Or(ui.FieldLabeled("OpenID Connect IdP").Locator("input")).First;
+            var idpField = ui.Either(ui.InputOf("tiered-idp"), ui.FieldLabeled("OpenID Connect IdP").Locator("input").First);
             await idpField.FillAsync(E2ESettings.TieredIdP);
             await idpField.PressAsync("Tab"); // the IdP is saved when the field loses focus
 
             var requestPanel = ui.Hook("tiered-step-code-request", ui.PanelTitled("2. Build Authorization Code Request"));
             await ui.ExpandAsync(requestPanel);
             // SSRAA 2.0 requires PKCE (S256).
-            await ui.CheckAsync(ui.CheckBoxOf("tiered-code-pkce").Or(requestPanel.Locator("label.mud-checkbox:has-text('Enable PKCE') input[type='checkbox']")).First);
+            await ui.CheckAsync(ui.Either(ui.CheckBoxOf("tiered-code-pkce"),
+                requestPanel.Locator("label.mud-checkbox:has-text('Enable PKCE') input[type='checkbox']").First));
             await ui.Hook("tiered-code-build-authorize",
                 requestPanel.GetByRole(AriaRole.Button, new LocatorGetByRoleOptions { Name = "Build Access Code Request" })).ClickAsync();
 

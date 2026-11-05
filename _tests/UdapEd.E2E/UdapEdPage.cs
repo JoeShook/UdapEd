@@ -25,7 +25,14 @@ public sealed class UdapEdPage(IPage page)
     /// The element with a data-testid, or, in a UdapEd built before that hook existed, the element found by its
     /// visible label. Lets the tests run against an older deployment.
     /// </summary>
-    public ILocator Hook(string testId, ILocator fallback) => ByTestId(testId).Or(fallback).First;
+    public ILocator Hook(string testId, ILocator fallback) => Either(ByTestId(testId).First, fallback);
+
+    /// <summary>
+    /// The hooked locator, or the label-based fallback when the hook is absent. With UDAPED_STRICT_HOOKS=1 the
+    /// fallback is not used, so a missing data-testid fails the test instead of passing silently.
+    /// </summary>
+    public ILocator Either(ILocator hooked, ILocator fallback) =>
+        E2ESettings.StrictHooks ? hooked : hooked.Or(fallback).First;
 
     /// <summary>A MudExpansionPanel found by the text of its header, e.g. "5. Run Authorize Code Request".</summary>
     public ILocator PanelTitled(string title) =>
