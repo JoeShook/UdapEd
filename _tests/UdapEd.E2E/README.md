@@ -71,6 +71,7 @@ authorization server instead of creating another, so repeated runs do not accumu
 | `UDAPED_URL` | *(none: tests skip)* | UdapEd under test |
 | `UDAPED_FHIR_BASE_URL` | `https://fhirlabs.net/fhir/r4` | FHIR server whose UDAP metadata starts each flow |
 | `UDAPED_COMMUNITY` | `udap://fhirlabs.net/` | UDAP community to discover |
+| `UDAPED_ANCHOR` | `FhirLabs Test CA` | UdapEd pre-packaged trust anchor loaded before discovery |
 | `UDAPED_CC_SAN` | `https://fhirlabs.net/udaped-e2e/client-credentials` | SAN for the client_credentials registration |
 | `UDAPED_CODE_SAN` | `https://fhirlabs.net/udaped-e2e/authorization-code` | SAN for the authorization_code registration |
 | `UDAPED_TIERED_SAN` | `https://fhirlabs.net/udaped-e2e/tiered-oauth` | SAN for the Tiered OAuth registration |
