@@ -309,6 +309,7 @@ internal class DiscoveryService : IDiscoveryService
             if (result != null)
             {
                 result.Size = base64StringSize;
+                result.X5cWarning = X5cChain.MissingIssuerWarning(base64EncodedCertificate);
             }
 
             return result;

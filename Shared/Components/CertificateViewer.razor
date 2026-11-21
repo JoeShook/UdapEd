@@ -20,8 +20,15 @@
 		            }
 	            </MudStack>
             </TitleContent>
-           
+
             <ChildContent >
+
+                @if (EnableAddToClaim && !string.IsNullOrEmpty(JwtHeader) && !string.IsNullOrEmpty(_certificateView?.X5cWarning))
+                {
+                    <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-2" data-testid="x5c-missing-intermediate-warning">
+                        @_certificateView.X5cWarning
+                    </MudAlert>
+                }
 
                 @if (StoreCache != null && StoreCache.Any(c => c.Cached))
                 {
