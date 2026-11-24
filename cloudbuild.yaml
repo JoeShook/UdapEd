@@ -24,7 +24,7 @@ steps:
   '--concurrency', '5',
   '--set-env-vars', 'MyIp=34.82.29.68,DOTNET_SYSTEM_NET_HTTP_SOCKETSHTTPHANDLER_HTTP3SUPPORT=false',
   '--set-secrets', '/secret/udapEdAppsettings=udapEdAppsettings:latest',
-  '--vpc-connector', 'udaped-connect-us-west1',
+  '--network', 'udap-idp-vpc', '--subnet', 'udaped-direct', 
   '--vpc-egress', 'all-traffic'
   ]
 
