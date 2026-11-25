@@ -194,18 +194,25 @@ jobs:
     - name: Install .NET MAUI workload
       # Pinned: workload sets after 10.0.401 ship MacCatalyst 27.x, which needs Xcode 27.x,
       # and the macos-26 image tops out at Xcode 26.6. 10.0.401 carries MacCatalyst
-      # 26.5.10318 (Xcode 26.5). Raise this once the image ships Xcode 27.
-      run: dotnet workload install maui --version 10.0.401
+      # 26.5.10318 (Xcode 26.5). Raise this (here and in the next step) once the image
+      # ships Xcode 27.
+      run: dotnet workload install maui --version "$MAUI_WORKLOAD_VERSION"
+      env:
+        MAUI_WORKLOAD_VERSION: '10.0.401'
 
     - name: Select the Xcode the MacCatalyst workload requires
-      # Each MacCatalyst SDK pack requires the Xcode whose version matches its own
-      # major.minor (pack 27.2.x needs Xcode 27.2). The workload moves with each SDK
-      # update, so read the installed pack instead of naming an Xcode here.
+      # Each MacCatalyst SDK version requires the Xcode with the same major.minor
+      # (26.5.x needs Xcode 26.5). Read it from the pinned workload set's manifest list,
+      # not from the packs folder: the runner image ships other packs (e.g. 27.2) too.
+      env:
+        MAUI_WORKLOAD_VERSION: '10.0.401'
       run: |
-        pack=$(ls -d "$DOTNET_ROOT"/packs/Microsoft.MacCatalyst.Sdk.net10.0_*/* | sort -V | tail -n1)
-        xcode=$(basename "$pack" | cut -d. -f1,2)
+        sdkver=$(dotnet workload search version "$MAUI_WORKLOAD_VERSION" --format json \
+          | grep -io '"microsoft.net.sdk.maccatalyst"[^,}]*' | sed -E 's/.*: *"([0-9.]+)\/.*/\1/')
+        if [ -z "$sdkver" ]; then echo "Could not read the MacCatalyst version of workload set $MAUI_WORKLOAD_VERSION"; exit 1; fi
+        xcode=$(echo "$sdkver" | cut -d. -f1,2)
         app="/Applications/Xcode_$xcode.app"
-        echo "MacCatalyst pack $(basename "$pack") requires Xcode $xcode"
+        echo "Workload set $MAUI_WORKLOAD_VERSION has MacCatalyst $sdkver, which requires Xcode $xcode"
         if [ ! -d "$app" ]; then
           echo "Xcode $xcode is not installed on this runner. Installed:"
           ls -d /Applications/Xcode_*.app
