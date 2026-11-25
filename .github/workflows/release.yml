@@ -213,6 +213,9 @@ jobs:
         if [ -z "$sdkver" ]; then echo "Could not read the MacCatalyst version of workload set $MAUI_WORKLOAD_VERSION"; exit 1; fi
         major=$(echo "$sdkver" | cut -d. -f1)
         app=$(ls -d /Applications/Xcode_"$major".*.app 2>/dev/null | sort -V | tail -n1)
+        # The image's Xcode_X.Y.0.app names are symlinks; xcodebuild cannot find the SDK
+        # through them, so select the real bundle.
+        [ -n "$app" ] && app=$(cd "$app" && pwd -P)
         echo "Workload set $MAUI_WORKLOAD_VERSION has MacCatalyst $sdkver; using ${app:-no Xcode $major.x}"
         if [ -z "$app" ]; then
           echo "No Xcode $major.x is installed on this runner. Installed:"
