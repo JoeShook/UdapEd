@@ -11,6 +11,9 @@ Playwright tests that drive the UdapEd UI through real UDAP flows against the de
 
 The tests are skipped unless `UDAPED_URL` is set, so `dotnet test UdapEd.sln` never touches the live servers by accident.
 
+They run one at a time. Each test loads UdapEd in a fresh browser, and several first loads at once overrun the single
+Cloud Run instance, which then answers part of the `_framework` downloads with 429 and UdapEd never starts.
+
 ## One-time setup
 
 ```bash

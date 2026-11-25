@@ -7,6 +7,10 @@
 // */
 #endregion
 
+// One test at a time: each test opens UdapEd in a fresh browser, and several first loads at once (each fetches
+// well over 100 _framework files) overrun the single Cloud Run instance, which answers the overflow with 429.
+[assembly: Xunit.CollectionBehavior(DisableTestParallelization = true)]
+
 namespace UdapEd.E2E;
 
 /// <summary>
