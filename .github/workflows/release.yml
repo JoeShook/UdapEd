@@ -5,6 +5,14 @@ on:
     tags:
     - "v[0-9]+.[0-9]+.[0-9]+"          # full release: Docker image + desktop installers
     - "v[0-9]+.[0-9]+.[0-9]+.[0-9]+"   # server hotfix: Docker image only (vpk needs 3-part SemVer)
+  # Dry run from the Actions tab: builds the Windows and macOS desktop packages and
+  # uploads them as workflow artifacts. No Docker image is pushed and no Release is made.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "3-part version stamped on the dry-run build"
+        required: true
+        default: "0.0.1"
 
 permissions:
   contents: write   # create the GitHub Release and upload desktop assets
@@ -19,20 +27,29 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       desktop: ${{ steps.classify.outputs.desktop }}
+      version: ${{ steps.classify.outputs.version }}
     steps:
     - name: Check tag part count
       id: classify
+      env:
+        DRY_RUN_VERSION: ${{ inputs.version }}
       run: |
-        ver="${GITHUB_REF_NAME#v}"
+        if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+          ver="$DRY_RUN_VERSION"
+        else
+          ver="${GITHUB_REF_NAME#v}"
+        fi
+        echo "version=$ver" >> "$GITHUB_OUTPUT"
         parts=$(echo "$ver" | awk -F. '{print NF}')
         if [ "$parts" -eq 3 ]; then desktop=true; else desktop=false; fi
-        echo "Tag $GITHUB_REF_NAME has $parts parts; desktop builds: $desktop"
+        echo "Version $ver has $parts parts; desktop builds: $desktop"
         echo "desktop=$desktop" >> "$GITHUB_OUTPUT"
 
   # ---------------------------------------------------------------------------
   # Server image -> GHCR (unchanged behavior). Independent of the desktop builds.
   # ---------------------------------------------------------------------------
   build-docker:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
@@ -104,7 +121,7 @@ jobs:
     - name: Build Velopack installers (x64 + arm64)
       shell: pwsh
       run: |
-        $ver = "${{ github.ref_name }}".TrimStart('v')          # 3-part SemVer tag, e.g. 1.2.3
+        $ver = "${{ needs.classify-tag.outputs.version }}"      # 3-part SemVer, e.g. 1.2.3
         foreach ($rid in @('win-x64','win-arm64')) {
           Write-Host "=== Publishing $rid ($ver) ==="
           # -p:WindowsRid scopes the RID + self-contained to the Windows TFM (see csproj):
@@ -153,6 +170,8 @@ jobs:
     if: needs.classify-tag.outputs.desktop == 'true'
     runs-on: macos-26
     timeout-minutes: 45
+    env:
+      VERSION: ${{ needs.classify-tag.outputs.version }}
 
     steps:
     - name: Checkout repository
@@ -184,7 +203,7 @@ jobs:
 
     - name: Publish MacCatalyst (universal, unsigned)
       run: |
-        ver="${GITHUB_REF_NAME#v}"
+        ver="$VERSION"
         # Override the csproj's Apple Development signing + hardened runtime so no
         # Apple secrets are needed and an ad-hoc signature can launch (Tier 1).
         # Do NOT pass RuntimeIdentifiers: in Release config MAUI already defaults
@@ -202,7 +221,7 @@ jobs:
 
     - name: Ad-hoc sign and package .dmg
       run: |
-        ver="${GITHUB_REF_NAME#v}"
+        ver="$VERSION"
         app=$(find UdapEdAppMaui/bin/Release/net10.0-maccatalyst -maxdepth 3 -name '*.app' | head -n 1)
         if [ -z "$app" ]; then echo "No .app produced"; exit 1; fi
         echo "Found app bundle: $app"
@@ -229,6 +248,7 @@ jobs:
   # 4-part tags, since both desktop jobs are skipped.
   # ---------------------------------------------------------------------------
   publish-release:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     needs: [build-windows, build-macos]
 
