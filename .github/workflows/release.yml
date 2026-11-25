@@ -85,6 +85,16 @@ jobs:
       with:
         dotnet-version: '10.0.x'
 
+    - name: Pin the .NET 10 SDK
+      # The repo's global.json ("10.0.*") is not a valid pin, so a newer SDK on the
+      # image would be used and install that SDK's MAUI workload. Pin the SDK that
+      # setup-dotnet just installed so the workload and publish match .NET 10.
+      shell: bash
+      run: |
+        sdk=$(dotnet --list-sdks | awk '/^10\./{print $1}' | tail -n1)
+        echo "Pinning SDK $sdk"
+        dotnet new globaljson --sdk-version "$sdk" --force
+
     - name: Install .NET MAUI workload
       run: dotnet workload install maui
 
@@ -158,6 +168,16 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10.0.x'
+
+    - name: Pin the .NET 10 SDK
+      # macos-26 also ships the .NET 11 SDK. Without a valid pin, `dotnet workload
+      # install maui` runs under SDK 11, whose net10 MacCatalyst pack requires
+      # Xcode 26.0, and the publish fails against the Xcode 26.5 selected above.
+      shell: bash
+      run: |
+        sdk=$(dotnet --list-sdks | awk '/^10\./{print $1}' | tail -n1)
+        echo "Pinning SDK $sdk"
+        dotnet new globaljson --sdk-version "$sdk" --force
 
     - name: Install .NET MAUI workload
       run: dotnet workload install maui
