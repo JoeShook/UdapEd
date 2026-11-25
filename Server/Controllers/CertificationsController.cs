@@ -59,7 +59,13 @@ public class CertificationsController : Controller
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             HttpContext.Session.SetString(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
             HttpContext.Session.SetInt32(UdapEdConstants.CERTIFICATION_UPLOADED_CERTIFICATE, 0);
-            HttpContext.Session.Remove(UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
+            HttpContext.Session.StorePkcs12Intermediates(
+                UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES,
+                UdapEdConstants.CERTIFICATION_PKCS12_INTERMEDIATE_CERTIFICATES,
+                System.IO.File.ReadAllBytes(testClientCert),
+                "udap-test",
+                certificate,
+                _logger);
             result.DistinguishedName = subjectName;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -97,6 +103,7 @@ public class CertificationsController : Controller
         HttpContext.Session.SetString(UdapEdConstants.CERTIFICATION_CERTIFICATE, base64String);
         HttpContext.Session.SetInt32(UdapEdConstants.CERTIFICATION_UPLOADED_CERTIFICATE, 1);
         HttpContext.Session.Remove(UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
+        HttpContext.Session.Remove(UdapEdConstants.CERTIFICATION_PKCS12_INTERMEDIATE_CERTIFICATES);
 
         return Ok();
     }
@@ -124,6 +131,9 @@ public class CertificationsController : Controller
             var certificate = new X509Certificate2(certBytes, password, X509KeyStorageFlags.Exportable);
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             HttpContext.Session.SetString(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
+            HttpContext.Session.StorePkcs12Intermediates(
+                UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES,
+                UdapEdConstants.CERTIFICATION_PKCS12_INTERMEDIATE_CERTIFICATES, certBytes, password, certificate, _logger);
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -161,6 +171,7 @@ public class CertificationsController : Controller
         HttpContext.Session.Remove(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY);
         HttpContext.Session.Remove(UdapEdConstants.CERTIFICATION_UPLOADED_CERTIFICATE);
         HttpContext.Session.Remove(UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
+        HttpContext.Session.Remove(UdapEdConstants.CERTIFICATION_PKCS12_INTERMEDIATE_CERTIFICATES);
 
         return Ok();
     }
@@ -240,14 +251,7 @@ public class CertificationsController : Controller
         var certBytes = Convert.FromBase64String(clientCertWithKey);
         var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
-        var x5cCerts = new List<X509Certificate2> { clientCert };
-        var intermediatesStored = HttpContext.Session.GetString(UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
-        var intermediateCerts = intermediatesStored.DeserializeCertificates();
-
-        if (intermediateCerts != null && intermediateCerts.Any())
-        {
-            x5cCerts.AddRange(intermediateCerts);
-        }
+        var x5cCerts = HttpContext.Session.GetX5cCertificates(clientCert, UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
 
         var certificationBuilder = UdapCertificationsAndEndorsementBuilderUnchecked.Create(request.CertificationName, x5cCerts);
 
@@ -319,14 +323,7 @@ public class CertificationsController : Controller
         var certBytes = Convert.FromBase64String(clientCertWithKey);
         var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
-        var x5cCerts = new List<X509Certificate2> { clientCert };
-        var intermediatesStored = HttpContext.Session.GetString(UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
-        var intermediateCerts = intermediatesStored.DeserializeCertificates();
-
-        if (intermediateCerts != null && intermediateCerts.Any())
-        {
-            x5cCerts.AddRange(intermediateCerts);
-        }
+        var x5cCerts = HttpContext.Session.GetX5cCertificates(clientCert, UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
 
         var document = JsonSerializer
             .Deserialize<UdapCertificationAndEndorsementDocument>(request.SoftwareStatement)!;

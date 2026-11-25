@@ -102,14 +102,7 @@ public class AccessController : Controller
         var certBytes = Convert.FromBase64String(clientCertWithKey);
         var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
-        var x5cCerts = new List<X509Certificate2> { clientCert };
-        var intermediatesStored = HttpContext.Session.GetString(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
-        var intermediateCerts = intermediatesStored.DeserializeCertificates();
-
-        if (intermediateCerts != null && intermediateCerts.Any())
-        {
-            x5cCerts.AddRange(intermediateCerts);
-        }
+        var x5cCerts = HttpContext.Session.GetX5cCertificates(clientCert, UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
 
         var tokenRequestBuilder = AccessTokenRequestForAuthorizationCodeBuilder.Create(
             tokenRequestModel.ClientId,
@@ -164,14 +157,7 @@ public class AccessController : Controller
         var certBytes = Convert.FromBase64String(clientCertWithKey);
         var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
-        var x5cCerts = new List<X509Certificate2> { clientCert };
-        var intermediatesStored = HttpContext.Session.GetString(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
-        var intermediateCerts = intermediatesStored.DeserializeCertificates();
-
-        if (intermediateCerts != null && intermediateCerts.Any())
-        {
-            x5cCerts.AddRange(intermediateCerts);
-        }
+        var x5cCerts = HttpContext.Session.GetX5cCertificates(clientCert, UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
 
         var tokenRequestBuilder = AccessTokenRequestForClientCredentialsBuilder.Create(
             tokenRequestModel.ClientId,

@@ -21,4 +21,10 @@ public  class CertificateViewModel
     /// OpenSSL or CertUtil verbose display
     /// </summary>
     public string PlatformToolDisplay { get; set; }
+
+    /// <summary>
+    /// Set when the certificates came from a JWT x5c header that does not carry the
+    /// certificate that issued the signing certificate.
+    /// </summary>
+    public string? X5cWarning { get; set; }
 }

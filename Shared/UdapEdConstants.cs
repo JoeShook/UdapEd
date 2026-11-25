@@ -7,6 +7,9 @@ public static class UdapEdConstants
     public const string UDAP_CLIENT_CERTIFICATE = "udap_clientCertificate";
     public const string UDAP_CLIENT_UPLOADED_CERTIFICATE = "udap_client_upladed_cert";
     public static string CERTIFICATION_INTERMEDIATE_CERTIFICATES = "certification_intermediateCertificates";
+    // Intermediates found in the loaded PKCS#12 file: available for x5c, sent only once included.
+    public const string UDAP_PKCS12_INTERMEDIATE_CERTIFICATES = "udap_pkcs12IntermediateCertificates";
+    public const string CERTIFICATION_PKCS12_INTERMEDIATE_CERTIFICATES = "certification_pkcs12IntermediateCertificates";
     public const string CERTIFICATION_CERTIFICATE_WITH_KEY = "certification_CertificateWithKey";
     public const string CERTIFICATION_CERTIFICATE = "certification_certificate";
     public const string CERTIFICATION_UPLOADED_CERTIFICATE = "certification_upladed_cert";

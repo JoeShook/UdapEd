@@ -330,6 +330,7 @@ public class MetadataController : Controller
         if (result != null)
         {
             result.Size = base64StringSize;
+            result.X5cWarning = X5cChain.MissingIssuerWarning(certificates);
         }
 
         return Ok(result);

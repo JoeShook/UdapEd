@@ -129,6 +129,12 @@ public class InfrastructureController : Controller
         }
     }
 
+    /// <summary>
+    /// Includes the signing certificate's issuer chain in x5c: the issuer path found among the intermediates of the
+    /// loaded PKCS#12 file, the certificates its AIA extension points to, and the loaded anchor when it is an
+    /// intermediate. Called automatically for a TEFCA server, and when the user asks for the intermediate.
+    /// Returns the base64 certificates that were added.
+    /// </summary>
     [HttpGet("ResolveAiaIntermediates")]
     public async Task<IActionResult> ResolveAiaIntermediates(string? certContext, CancellationToken token)
     {
@@ -137,48 +143,40 @@ public class InfrastructureController : Controller
             var certSessionKey = certContext == "certification"
                 ? UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY
                 : UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY;
-            var intermediateSessionKey = certContext == "certification"
+            var x5cSessionKey = certContext == "certification"
                 ? UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES
                 : UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES;
+            var pkcs12SessionKey = certContext == "certification"
+                ? UdapEdConstants.CERTIFICATION_PKCS12_INTERMEDIATE_CERTIFICATES
+                : UdapEdConstants.UDAP_PKCS12_INTERMEDIATE_CERTIFICATES;
 
             var clientCertWithKey = HttpContext.Session.GetString(certSessionKey);
             if (clientCertWithKey == null)
             {
-                return Ok();
+                return Ok(new List<string>());
             }
 
             var certBytes = Convert.FromBase64String(clientCertWithKey);
             var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
+            var aiaCerts = new List<X509Certificate2>();
             var aiaExtension = clientCert.Extensions["1.3.6.1.5.5.7.1.1"] as X509AuthorityInformationAccessExtension;
-            if (aiaExtension == null)
-            {
-                return Ok();
-            }
 
-            var intermediateCertsStored = HttpContext.Session.GetString(intermediateSessionKey);
-            var intermediateCerts = intermediateCertsStored.DeserializeCertificates();
-
-            foreach (var aiaUrl in aiaExtension.EnumerateCAIssuersUris())
+            if (aiaExtension != null)
             {
-                var encodedCert = await _infrastructure.GetIntermediateX509(aiaUrl);
-                if (encodedCert != null)
+                foreach (var aiaUrl in aiaExtension.EnumerateCAIssuersUris())
                 {
-                    var certData = Convert.FromBase64String(encodedCert);
-                    var intermediateCert = new X509Certificate2(certData);
-                    if (intermediateCerts.All(i => i.Thumbprint != intermediateCert.Thumbprint))
+                    var encodedCert = await _infrastructure.GetIntermediateX509(aiaUrl);
+                    if (encodedCert != null)
                     {
-                        intermediateCerts.Add(intermediateCert);
+                        aiaCerts.Add(new X509Certificate2(Convert.FromBase64String(encodedCert)));
                     }
                 }
             }
 
-            if (intermediateCerts.Any())
-            {
-                HttpContext.Session.SetString(intermediateSessionKey, intermediateCerts.SerializeCertificates());
-            }
+            var added = HttpContext.Session.IncludeIssuerChain(clientCert, x5cSessionKey, pkcs12SessionKey, aiaCerts);
 
-            return Ok();
+            return Ok(added.Select(c => Convert.ToBase64String(c.RawData)).ToList());
         }
         catch (Exception ex)
         {

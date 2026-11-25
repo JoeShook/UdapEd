@@ -111,6 +111,25 @@ public class Infrastructure : IInfrastructure
         }
     }
 
+    public async Task<List<string>> IncludeIssuerInX5c(string? certContext = null)
+    {
+        try
+        {
+            var requestUrl = "Infrastructure/ResolveAiaIntermediates";
+            if (!string.IsNullOrEmpty(certContext))
+            {
+                requestUrl += $"?certContext={Uri.EscapeDataString(certContext)}";
+            }
+
+            return await _httpClient.GetFromJsonAsync<List<string>>(requestUrl) ?? new List<string>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to include the issuer chain in x5c");
+            return new List<string>();
+        }
+    }
+
     public async Task<string?> GetIntermediateX509(string url, string? certContext = null)
     {
         try
