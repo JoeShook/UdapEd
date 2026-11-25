@@ -201,20 +201,21 @@ jobs:
         MAUI_WORKLOAD_VERSION: '10.0.401'
 
     - name: Select the Xcode the MacCatalyst workload requires
-      # Each MacCatalyst SDK version requires the Xcode with the same major.minor
-      # (26.5.x needs Xcode 26.5). Read it from the pinned workload set's manifest list,
-      # not from the packs folder: the runner image ships other packs (e.g. 27.2) too.
+      # A MacCatalyst SDK needs an Xcode of its own major version, usually the newest
+      # minor at the time it shipped (26.5.10318 needs Xcode 26.6), so pick the newest
+      # installed Xcode with that major. Read the SDK version from the pinned workload
+      # set, not the packs folder: the runner image ships other packs (e.g. 27.2) too.
       env:
         MAUI_WORKLOAD_VERSION: '10.0.401'
       run: |
         sdkver=$(dotnet workload search version "$MAUI_WORKLOAD_VERSION" --format json \
           | grep -io '"microsoft.net.sdk.maccatalyst"[^,}]*' | sed -E 's/.*: *"([0-9.]+)\/.*/\1/')
         if [ -z "$sdkver" ]; then echo "Could not read the MacCatalyst version of workload set $MAUI_WORKLOAD_VERSION"; exit 1; fi
-        xcode=$(echo "$sdkver" | cut -d. -f1,2)
-        app="/Applications/Xcode_$xcode.app"
-        echo "Workload set $MAUI_WORKLOAD_VERSION has MacCatalyst $sdkver, which requires Xcode $xcode"
-        if [ ! -d "$app" ]; then
-          echo "Xcode $xcode is not installed on this runner. Installed:"
+        major=$(echo "$sdkver" | cut -d. -f1)
+        app=$(ls -d /Applications/Xcode_"$major".*.app 2>/dev/null | sort -V | tail -n1)
+        echo "Workload set $MAUI_WORKLOAD_VERSION has MacCatalyst $sdkver; using ${app:-no Xcode $major.x}"
+        if [ -z "$app" ]; then
+          echo "No Xcode $major.x is installed on this runner. Installed:"
           ls -d /Applications/Xcode_*.app
           exit 1
         fi
