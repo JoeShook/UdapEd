@@ -192,7 +192,10 @@ jobs:
         dotnet new globaljson --sdk-version "$sdk" --force
 
     - name: Install .NET MAUI workload
-      run: dotnet workload install maui
+      # Pinned: workload sets after 10.0.401 ship MacCatalyst 27.x, which needs Xcode 27.x,
+      # and the macos-26 image tops out at Xcode 26.6. 10.0.401 carries MacCatalyst
+      # 26.5.10318 (Xcode 26.5). Raise this once the image ships Xcode 27.
+      run: dotnet workload install maui --version 10.0.401
 
     - name: Select the Xcode the MacCatalyst workload requires
       # Each MacCatalyst SDK pack requires the Xcode whose version matches its own
