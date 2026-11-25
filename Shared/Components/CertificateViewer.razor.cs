@@ -23,6 +23,18 @@ public partial class CertificateViewer : ComponentBase
     [Parameter ]public bool EnableAddToClaim { get; set; }
     [Parameter] public string? CertContext { get; set; }
 
+    [CascadingParameter] public CascadingAppState? AppState { get; set; }
+
+    /// <summary>
+    /// TEFCA servers (basic-app-certification required) need the issuing intermediate in x5c; UdapEd includes it
+    /// automatically for them. Other servers get it only when the user asks.
+    /// </summary>
+    private bool IssuerRequiredInX5c =>
+        AppState?.MetadataVerificationModel?.UdapServerMetaData?.UdapCertificationsRequired
+            ?.Contains("https://rce.sequoiaproject.org/udap/profiles/basic-app-certification") == true;
+
+    private string? _includeIssuerMessage;
+
 
     [Parameter] public string Class { get; set; }
 
@@ -163,6 +175,24 @@ public partial class CertificateViewer : ComponentBase
     {
         var certBase64 = await Infrastructure.GetIntermediateX509(url, CertContext);
         await IntermediateAddedToX5cEvent.InvokeAsync(certBase64);
+    }
+
+    private async Task IncludeIssuerInX5c()
+    {
+        _includeIssuerMessage = null;
+        var added = await Infrastructure.IncludeIssuerInX5c(CertContext);
+
+        if (added.Count == 0)
+        {
+            _includeIssuerMessage = "No issuing intermediate was found. Load a PKCS#12 file that includes it, load the " +
+                                    "intermediate as the anchor, or use \"Include in header x5c claim\" on the certificate's AIA entry.";
+            return;
+        }
+
+        foreach (var certBase64 in added)
+        {
+            await IntermediateAddedToX5cEvent.InvokeAsync(certBase64);
+        }
     }
 
     private async Task ResolveCrl(string url)

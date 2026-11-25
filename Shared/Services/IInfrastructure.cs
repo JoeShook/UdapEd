@@ -41,6 +41,12 @@ public interface IInfrastructure
     /// </summary>
     Task ResolveAiaIntermediates(string? certContext = null);
 
+    /// <summary>
+    /// Includes the signing certificate's issuer chain in x5c (from the loaded PKCS#12 file, AIA, or an intermediate
+    /// anchor) when the user asks for it, and returns the base64 certificates that were added.
+    /// </summary>
+    Task<List<string>> IncludeIssuerInX5c(string? certContext = null);
+
     Task<string?> GetCrldata(string url);
     Task<X509CacheSettings?> GetX509StoreCache(string thumbprint);
     Task<CrlFileCacheSettings?> GetCryptNetUrlCache(string? path);

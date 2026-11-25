@@ -224,6 +224,12 @@ public class Infrastructure : IInfrastructure
         return Task.CompletedTask;
     }
 
+    public virtual Task<List<string>> IncludeIssuerInX5c(string? certContext = null)
+    {
+        // Default: nothing to include; the server-backed client implements it.
+        return Task.FromResult(new List<string>());
+    }
+
     public virtual async Task<string?> GetIntermediateX509(string url, string? certContext = null)
     {
         var bytes = await HttpClient.GetByteArrayAsync(url);

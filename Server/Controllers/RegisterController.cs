@@ -74,6 +74,7 @@ public class RegisterController : Controller
             HttpContext.Session.SetInt32(UdapEdConstants.UDAP_CLIENT_UPLOADED_CERTIFICATE, 0);
             HttpContext.Session.StorePkcs12Intermediates(
                 UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES,
+                UdapEdConstants.UDAP_PKCS12_INTERMEDIATE_CERTIFICATES,
                 System.IO.File.ReadAllBytes(testClientCert),
                 password,
                 certificate,
@@ -112,6 +113,7 @@ public class RegisterController : Controller
         HttpContext.Session.SetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE, base64String);
         HttpContext.Session.SetInt32(UdapEdConstants.UDAP_CLIENT_UPLOADED_CERTIFICATE, 1);
         HttpContext.Session.Remove(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
+        HttpContext.Session.Remove(UdapEdConstants.UDAP_PKCS12_INTERMEDIATE_CERTIFICATES);
 
         return Ok();
     }
@@ -141,7 +143,8 @@ public class RegisterController : Controller
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             HttpContext.Session.SetString(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
             HttpContext.Session.StorePkcs12Intermediates(
-                UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES, certBytes, password, certificate, _logger);
+                UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES,
+                UdapEdConstants.UDAP_PKCS12_INTERMEDIATE_CERTIFICATES, certBytes, password, certificate, _logger);
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;

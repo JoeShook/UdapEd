@@ -88,9 +88,7 @@ public static class X5cChain
         }
 
         return $"The x5c header does not contain the certificate that issued the signing certificate " +
-               $"(issuer: {signingCertificate.Issuer}). TEFCA requires the signing certificate to be followed " +
-               "by its issuing intermediate. Load a PKCS#12 that includes the intermediate, load the intermediate " +
-               "as the anchor, or resolve it from the certificate's AIA extension and add it to x5c.";
+               $"(issuer: {signingCertificate.Issuer}).";
     }
 
     /// <summary>
