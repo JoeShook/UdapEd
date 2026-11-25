@@ -109,9 +109,11 @@ internal class DiscoveryService : IDiscoveryService
 
                     try
                     {
-                        await udapClient.ValidateResource(metadataUrl, trustAnchorStore, community, cancellationToken: token);
+                        var response = await udapClient.ValidateResource(metadataUrl, trustAnchorStore, community, cancellationToken: token);
 
-                        result.UdapServerMetaData = udapClient.UdapServerMetadata;
+                        // Show the metadata even when it failed validation, next to the problems found. The UdapClient
+                        // keeps only validated metadata in UdapServerMetadata; the response carries what was downloaded.
+                        result.UdapServerMetaData = udapClient.UdapServerMetadata ?? response.UnvalidatedMetadata;
                         await SecureStorage.Default.SetAsync(UdapEdConstants.BASE_URL, metadataUrl);
 
                         return result;
