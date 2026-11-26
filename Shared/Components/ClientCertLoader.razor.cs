@@ -35,7 +35,8 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
             clientCertificateLoadStatus.UserSuppliedCertificate = userSuppliedCertificate ?? false;
         }
 
-        await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), clientCertificateLoadStatus);
+        await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), clientCertificateLoadStatus,
+            saveChanges: !SameStatus(AppState.UdapClientCertificateInfo, clientCertificateLoadStatus));
 
         if (clientCertificateLoadStatus is { UserSuppliedCertificate: true })
         {
@@ -75,7 +76,8 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
             clientCertificateLoadStatus.UserSuppliedCertificate = userSuppliedCertificate ?? false;
         }
 
-        await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), clientCertificateLoadStatus);
+        await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), clientCertificateLoadStatus,
+            saveChanges: !SameStatus(AppState.UdapClientCertificateInfo, clientCertificateLoadStatus));
 
         if (clientCertificateLoadStatus is { UserSuppliedCertificate: true })
         {
@@ -97,14 +99,48 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
     private async Task LoadPrePackagedCert(ClientCertEntry cert)
     {
         var certViewModel = await RegisterService.LoadTestCertificate(cert.CertificateName);
-        SetCertLoadedColor(certViewModel?.CertLoaded, ref PrePackagedCertLoadedColor);
-        await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), certViewModel);
-        await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
-        await UpdateSelectedRegistrationForCurrentCert();
+        SetCertLoadedColor(certViewModel?.CertLoaded, ref PrePackagedCertLoadedColor, commit: false);
+        await ApplyLoadedCertificate(certViewModel);
+    }
+
+    /// <summary>
+    /// Records a newly loaded certificate in the app state. Every property is set without saving or re-rendering,
+    /// then the state is saved to local storage and the page re-rendered once: each save serializes the whole
+    /// app state, so one save per property made loading a certificate slow.
+    /// </summary>
+    private async Task ApplyLoadedCertificate(CertificateStatusViewModel? certViewModel)
+    {
+        await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), certViewModel, false, false);
+        if (AppState.ClientRegistrations == null)
+        {
+            // Nothing to re-select, so this is the single save and render.
+            await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
+        }
+        else
+        {
+            await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP, false, false);
+            await UpdateSelectedRegistrationForCurrentCert(); // saves and renders once
+        }
+
         await OnCertificateLoaded.InvokeAsync();
     }
 
-    private void SetCertLoadedColor(CertLoadedEnum? isCertLoaded, ref Color certColor)
+    /// <summary>
+    /// True when the server reports the certificate already in app state. The status is re-read on every page that
+    /// shows this loader; saving an identical copy each time re-serialized the whole app state on every navigation.
+    /// </summary>
+    private static bool SameStatus(CertificateStatusViewModel? a, CertificateStatusViewModel? b) =>
+        a is null ? b is null :
+        b is not null &&
+        a.CertLoaded == b.CertLoaded &&
+        a.Thumbprint == b.Thumbprint &&
+        a.DistinguishedName == b.DistinguishedName &&
+        a.UserSuppliedCertificate == b.UserSuppliedCertificate &&
+        a.PublicKeyAlgorithm == b.PublicKeyAlgorithm &&
+        a.Issuer == b.Issuer &&
+        a.SubjectAltNames.SequenceEqual(b.SubjectAltNames);
+
+    private void SetCertLoadedColor(CertLoadedEnum? isCertLoaded, ref Color certColor, bool commit = true)
     {
         CertLoadedColor = Color.Default;
         PrePackagedCertLoadedColor = Color.Default;
@@ -113,23 +149,23 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
         {
             case CertLoadedEnum.Negative:
                 certColor = Color.Default;
-                AppState.SetProperty(this, nameof(AppState.CertificateLoaded), false);
+                AppState.SetProperty(this, nameof(AppState.CertificateLoaded), false, commit, commit);
                 break;
             case CertLoadedEnum.Positive:
                 certColor = Color.Success;
-                AppState.SetProperty(this, nameof(AppState.CertificateLoaded), true);
+                AppState.SetProperty(this, nameof(AppState.CertificateLoaded), true, commit, commit);
                 break;
             case CertLoadedEnum.InvalidPassword:
                 certColor = Color.Warning;
-                AppState.SetProperty(this, nameof(AppState.CertificateLoaded), false);
+                AppState.SetProperty(this, nameof(AppState.CertificateLoaded), false, commit, commit);
                 break;
             case CertLoadedEnum.Expired:
                 certColor = Color.Error;
-                AppState.SetProperty(this, nameof(AppState.CertificateLoaded), false);
+                AppState.SetProperty(this, nameof(AppState.CertificateLoaded), false, commit, commit);
                 break;
             default:
                 certColor = Color.Error;
-                AppState.SetProperty(this, nameof(AppState.CertificateLoaded), false);
+                AppState.SetProperty(this, nameof(AppState.CertificateLoaded), false, commit, commit);
                 break;
         }
 
@@ -152,11 +188,8 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
         var dialog = await DialogService.ShowAsync<Password_Dialog>("Certificate Password", options);
         var result = await dialog.Result;
         var certViewModel = await RegisterService.ValidateCertificate(result.Data?.ToString() ?? "");
-        SetCertLoadedColor(certViewModel?.CertLoaded, ref CertLoadedColor);
-        await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), certViewModel);
-        await AppState.SetPropertyAsync(this, nameof(AppState.ClientMode), ClientSecureMode.UDAP);
-        await UpdateSelectedRegistrationForCurrentCert();
-        await OnCertificateLoaded.InvokeAsync();
+        SetCertLoadedColor(certViewModel?.CertLoaded, ref CertLoadedColor, commit: false);
+        await ApplyLoadedCertificate(certViewModel);
     }
 
     private async void RunTimer()

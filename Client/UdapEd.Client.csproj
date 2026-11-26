@@ -18,8 +18,27 @@
     <ProjectReference Include="..\Shared\UdapEd.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Udap.CdsHooks.Model" Version="0.9.22" />
-    <PackageReference Include="Udap.Common" Version="0.9.22" />
+    <PackageReference Include="Udap.CdsHooks.Model" Version="0.9.25" />
+    <PackageReference Include="Udap.Common" Version="0.9.25" />
+  </ItemGroup>
+  <!--
+    The default (partial) trim mode only trims assemblies marked trimmable, so these shipped whole to the browser.
+    The browser build never calls BouncyCastle or Google Cloud Storage (they serve MAUI and server-side work through
+    UdapEd.Shared), and AngleSharp is only reached through HtmlSanitizer. Trimming them saves about 2.2 MB brotli.
+    Hl7.Fhir and Newtonsoft.Json are left whole: they serialize by reflection. This only affects the WebAssembly
+    publish; the MAUI apps are unaffected.
+  -->
+  <ItemGroup>
+    <TrimmableAssembly Include="BouncyCastle.Cryptography" />
+    <TrimmableAssembly Include="Google.Apis" />
+    <TrimmableAssembly Include="Google.Apis.Core" />
+    <TrimmableAssembly Include="Google.Apis.Auth" />
+    <TrimmableAssembly Include="Google.Apis.Storage.v1" />
+    <TrimmableAssembly Include="Google.Cloud.Storage.V1" />
+    <TrimmableAssembly Include="Google.Api.Gax" />
+    <TrimmableAssembly Include="Google.Api.Gax.Rest" />
+    <TrimmableAssembly Include="AngleSharp" />
+    <TrimmableAssembly Include="AngleSharp.Css" />
   </ItemGroup>
   <!-- From:: https://jonhilton.net/visual-studio-2022-blazor-css-intellisense/ -->
   <Target Name="CollectMudBlazorStaticAssets" DependsOnTargets="ResolveStaticWebAssetsInputs" AfterTargets="Build" Condition=" '$(Configuration)' == 'Debug' ">

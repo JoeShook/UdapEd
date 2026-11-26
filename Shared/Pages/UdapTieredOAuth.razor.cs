@@ -168,8 +168,16 @@ public partial class UdapTieredOAuth
     /// Host: resourceholder.example.com
     /// </summary>
     /// <exception cref="NotImplementedException"></exception>
+    /// <summary>True once a usable OpenID Connect IdP is set for the selected registration; the request is built only then.</summary>
+    private bool HasIdP => ClientIdSelection.IsUsableIdP(AppState.ClientRegistrations?.SelectedRegistration?.IdPBaseUrl);
+
     private async Task BuildAuthCodeRequest()
     {
+        if (!HasIdP)
+        {
+            return;
+        }
+
         AccessToken = string.Empty;
         await AppState.SetPropertyAsync(this, nameof(AppState.AccessTokens), null, true, false);
         AuthorizationCodeRequest = new AuthorizationCodeRequest
@@ -287,7 +295,14 @@ public partial class UdapTieredOAuth
                 Issuer = queryParams.GetValueOrDefault("iss")
             };
 
-            AppState.SetProperty(this, nameof(AppState.LoginCallBackResult), loginCallbackResult, true, false);
+            // Called from the markup, so this runs on every render. Save only when the URL holds a different callback
+            // than app state: saving on every render made each later step slow. Comparing (rather than saving once)
+            // also restores the code if loading the saved app state after the redirect overwrites it.
+            if (AppState.LoginCallBackResult?.Code != loginCallbackResult.Code ||
+                AppState.LoginCallBackResult?.State != loginCallbackResult.State)
+            {
+                AppState.SetProperty(this, nameof(AppState.LoginCallBackResult), loginCallbackResult, true, false);
+            }
         }
 
         return uri.Query.Replace("&", "&\r\n");

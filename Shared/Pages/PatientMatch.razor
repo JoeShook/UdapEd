@@ -143,7 +143,7 @@
 						               Color="Color.Inherit"
 						               Size="Size.Small"
 						               @onclick="AddAddress"
-						               Label="Add"
+						               aria-label="Add"
 						               Class="px-2 mx-2"/></MudItem>
 				</MudGrid>
 
@@ -184,7 +184,7 @@
 								               Size="Size.Small"
 								               Color="Color.Warning"
 								               Icon="@Icons.Material.TwoTone.DeleteForever"
-								               Label="Delete"
+								               aria-label="Delete"
 								               class="ma-2"
 								               OnClick="@(() => DeleteAddress(context))"
 								               Disabled="@_addressIsInEditMode"/>
@@ -263,7 +263,7 @@
 								               Size="Size.Small"
 								               Color="Color.Warning"
 								               Icon="@Icons.Material.TwoTone.DeleteForever"
-								               Label="Delete"
+								               aria-label="Delete"
 								               class="ma-2"
 								               OnClick="@(() => DeleteContactSystem(context))"
 								               Disabled="@_contactSystemIsInEditMode"/>
@@ -318,7 +318,7 @@
 						               Color="Color.Inherit"
 						               Size="Size.Small"
 						               @onclick="AddVIdentityValueSetValue"
-						               Label="Add"
+						               aria-label="Add"
 						               Class="px-2 mx-2"/>
 					</MudItem>
 				</MudGrid>
@@ -355,7 +355,7 @@
 								               Size="Size.Small"
 								               Color="Color.Warning"
 								               Icon="@Icons.Material.TwoTone.DeleteForever"
-								               Label="Delete"
+								               aria-label="Delete"
 								               class="ma-2"
 								               OnClick="@(() => DeleteIdentityValueSet(context))"
 								               Disabled="@_v2IdentifierSystemIsInEditMode"/>
@@ -438,7 +438,7 @@
 @if (_entries != null || _outComeMessage != null)
 {
     <MudCard Elevation="3" Style="margin-top: 10px">
-        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-6">
             <MudTabPanel Text="Patient List">
 	            <MudCardContent>
 		            <FhirWireData CompressedSize="_compressedSize" DecompressedSize="_decompressedSize" />

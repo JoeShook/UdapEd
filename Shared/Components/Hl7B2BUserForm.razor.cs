@@ -92,7 +92,7 @@ public partial class Hl7B2BUserForm : ComponentBase
     {
         if (firstRender)
         {
-            return _form.Validate();
+            return _form.ValidateAsync();
         }
 
         return Task.CompletedTask;
@@ -174,7 +174,7 @@ public partial class Hl7B2BUserForm : ComponentBase
 
     private async Task HandleInclude()
     {
-        await _form.Validate();
+        await _form.ValidateAsync();
         if (_form.IsValid)
         {
             await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2BUSER, _hl7B2BModel, true);

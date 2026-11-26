@@ -32,13 +32,30 @@
     @if (TieredOauth)
     {
         <MudItem lg="4" sm="6" md="6" xs="12">
-            <MudTextField @bind-Value="IdPBaseUrl"
-                          data-testid="tiered-idp"
-                          Label="OpenID Connect IdP"
-                          @onblur="SelectIdPBaseUrl"
-                          AdornmentIcon="@Icons.Material.Outlined.Input"
-                          Adornment="@IdpAdornment"
-                          OnAdornmentClick="SelectKnownIdps"/>
+            <div class="d-flex align-center gap-2">
+                <MudTextField @bind-Value="IdPBaseUrl"
+                              data-testid="tiered-idp"
+                              Label="OpenID Connect IdP"
+                              Immediate="true"
+                              @onblur="SelectIdPBaseUrl"
+                              Error="@(IdPError(IdPBaseUrl) != null)"
+                              ErrorText="@IdPError(IdPBaseUrl)"
+                              HelperText="@(string.IsNullOrWhiteSpace(IdPBaseUrl) ? IdPRequiredText : null)"
+                              AdornmentIcon="@Icons.Material.Outlined.Input"
+                              Adornment="@IdpAdornment"
+                              OnAdornmentClick="SelectKnownIdps"/>
+                @{
+                    var idpMissing = string.IsNullOrWhiteSpace(IdPBaseUrl);
+                    var idpError = IdPError(IdPBaseUrl);
+                    var idpStatus = idpMissing ? IdPRequiredText : idpError ?? "Valid IdP base URL";
+                }
+                <MudTooltip Text="@idpStatus">
+                    <MudIcon data-testid="tiered-idp-status"
+                             Icon="@(idpMissing ? Icons.Material.Filled.ErrorOutline : idpError == null ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Error)"
+                             Color="@(idpMissing ? Color.Warning : idpError == null ? Color.Success : Color.Error)"
+                             aria-label="@idpStatus" />
+                </MudTooltip>
+            </div>
         </MudItem>
 
         <MudItem lg="4" sm="6" md="6" xs="12">
@@ -120,6 +137,48 @@
             }
         }
     }
+
+    /// <summary>
+    /// Why an IdP base URL would be refused, or null when it is usable. Mirrors the server's Tiered OAuth check:
+    /// an absolute URL with no user info, using https (http only for localhost), with no query or fragment.
+    /// </summary>
+    public static string? IdPError(string? idPBaseUrl)
+    {
+        if (string.IsNullOrWhiteSpace(idPBaseUrl))
+        {
+            return null;
+        }
+
+        if (!Uri.TryCreate(idPBaseUrl.Trim(), UriKind.Absolute, out var uri))
+        {
+            return "Enter an absolute URL, such as https://idp.example.com";
+        }
+
+        if (!string.IsNullOrEmpty(uri.UserInfo))
+        {
+            return "The URL must not contain a user name or password";
+        }
+
+        if (uri.Scheme != Uri.UriSchemeHttps && !(uri.Scheme == Uri.UriSchemeHttp && uri.IsLoopback))
+        {
+            return "Use https (http is only allowed for localhost)";
+        }
+
+        if (!string.IsNullOrEmpty(uri.Query) || !string.IsNullOrEmpty(uri.Fragment))
+        {
+            return "Use the IdP base URL without a query or fragment";
+        }
+
+        return null;
+    }
+
+    private string IdPRequiredText => ClientId == null
+        ? "Required: select a client, then enter the OpenID Connect IdP base URL"
+        : "Required: enter the OpenID Connect IdP base URL";
+
+    /// <summary>True when an IdP base URL is entered and usable.</summary>
+    public static bool IsUsableIdP(string? idPBaseUrl) =>
+        !string.IsNullOrWhiteSpace(idPBaseUrl) && IdPError(idPBaseUrl) == null;
 
     [Parameter]
     public EventCallback<string> IdPBaseUrlSelected { get; set; }

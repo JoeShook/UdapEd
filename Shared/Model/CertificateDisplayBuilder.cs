@@ -210,7 +210,7 @@ public class CertificateDisplayBuilder
         foreach (var distPoint in distPoints.GetDistributionPoints())
         {
             if (distPoint.DistributionPointName != null
-                && distPoint.DistributionPointName.PointType == DistributionPointName.FullName)
+                && distPoint.DistributionPointName.Type == DistributionPointName.FullName)
             {
                 var names = GeneralNames.GetInstance(distPoint.DistributionPointName.Name);
 

@@ -51,7 +51,11 @@ public sealed class BrowserFixture : IAsyncLifetime
             // A local UdapEd serves the ASP.NET development certificate.
             IgnoreHTTPSErrors = true,
             // Headed: the page follows the maximized window. Headless: a fixed desktop-sized viewport.
-            ViewportSize = E2ESettings.Headed ? ViewportSize.NoViewport : new ViewportSize { Width = 1600, Height = 1000 }
+            ViewportSize = E2ESettings.Headed ? ViewportSize.NoViewport : new ViewportSize { Width = 1600, Height = 1000 },
+            // UDAPED_HAR_DIR=<folder> records every request with its timings, to see where a flow spends its time.
+            RecordHarPath = Environment.GetEnvironmentVariable("UDAPED_HAR_DIR") is { Length: > 0 } harDir
+                ? Path.Combine(harDir, $"udaped-{DateTime.UtcNow:yyyyMMdd-HHmmss-fff}.har")
+                : null
         });
 
         context.SetDefaultTimeout(30_000);
@@ -75,6 +79,24 @@ public sealed class BrowserFixture : IAsyncLifetime
     {
         if (_playwright != null)
         {
+            // Closing each context writes its HAR file when UDAPED_HAR_DIR is set.
+            var storageDir = Environment.GetEnvironmentVariable("UDAPED_STORAGE_DIR");
+            foreach (var context in Browser.Contexts.ToList())
+            {
+                // UDAPED_STORAGE_DIR=<folder> keeps each test's final cookies and localStorage (UdapEd's app state),
+                // for reproducing a realistic state when profiling.
+                if (!string.IsNullOrEmpty(storageDir))
+                {
+                    Directory.CreateDirectory(storageDir);
+                    await context.StorageStateAsync(new BrowserContextStorageStateOptions
+                    {
+                        Path = Path.Combine(storageDir, $"udaped-state-{DateTime.UtcNow:yyyyMMdd-HHmmss-fff}.json")
+                    });
+                }
+
+                await context.CloseAsync();
+            }
+
             await Browser.DisposeAsync();
             _playwright.Dispose();
         }

@@ -75,7 +75,7 @@ public partial class Hl7B2BForm : ComponentBase
     {
         if (firstRender)
         {
-            return form.Validate();
+            return form.ValidateAsync();
         }
 
         return Task.CompletedTask;
@@ -138,7 +138,7 @@ public partial class Hl7B2BForm : ComponentBase
 
     private async Task HandleInclude()
     {
-        await form.Validate();
+        await form.ValidateAsync();
         if (form.IsValid)
         {
             await UpdateAppState(UdapConstants.UdapAuthorizationExtensions.Hl7B2B, _hl7B2BModel, true);

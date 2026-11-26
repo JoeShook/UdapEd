@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 64" width="440" height="128" role="img" aria-label="UdapEd">
+  <title>UdapEd</title>
+  <!-- UdapEd lockup: mark + wordmark. The wordmark is live text set in IBM Plex Sans
+       (semibold "Udap", regular "Ed" - the tool's name is UDAP + Education). Where Plex is not
+       installed it falls back to Segoe UI / Helvetica. Adapts to a dark colour scheme. -->
+  <style>
+    .ink { stroke: #152A38; }
+    .ink-fill { fill: #152A38; }
+    .anchor { fill: #1F7A8C; }
+    .word { font-family: 'IBM Plex Sans', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; font-size: 36px; letter-spacing: -0.5px; }
+    @media (prefers-color-scheme: dark) {
+      .ink { stroke: #E6EDF2; }
+      .ink-fill { fill: #E6EDF2; }
+      .anchor { fill: #5CB8CC; }
+    }
+  </style>
+  <path class="ink" d="M20 24V37a12 12 0 0 0 24 0V24" fill="none" stroke-width="6"/>
+  <circle class="anchor" cx="20" cy="18" r="6"/>
+  <circle class="ink" cx="44" cy="18" r="4.5" fill="none" stroke-width="3"/>
+  <text class="word ink-fill" x="66" y="45"><tspan font-weight="600">Udap</tspan><tspan font-weight="400">Ed</tspan></text>
+</svg>

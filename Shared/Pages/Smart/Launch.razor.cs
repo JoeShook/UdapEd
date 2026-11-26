@@ -92,7 +92,6 @@ public partial class Launch
                 ServiceUri = iss,
                 RedirectUri = redirectUri,
                 TokenUri = oAuthUris.Token,
-                CapabilityStatement = capabilityStatement.AsJson(),
                 AuthCodeUrlWithQueryString = builder.Build()
             };
 

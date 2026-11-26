@@ -100,7 +100,7 @@ public class AccessController : Controller
         }
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
-        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+        var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
         var x5cCerts = HttpContext.Session.GetX5cCertificates(clientCert, UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
 
@@ -155,7 +155,7 @@ public class AccessController : Controller
         }
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
-        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+        var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
         var x5cCerts = HttpContext.Session.GetX5cCertificates(clientCert, UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
 
@@ -218,7 +218,7 @@ public class AccessController : Controller
             if (clientCertWithKey != null && signingAlg != null)
             {
                 var certBytes = Convert.FromBase64String(clientCertWithKey);
-                var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+                var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
                 tokenRequest.DPoPProofToken = DPoPProofTokenGenerator.GenerateProofToken(
                     clientCert,
@@ -270,7 +270,7 @@ public class AccessController : Controller
             if (clientCertWithKey != null && signingAlg != null)
             {
                 var certBytes = Convert.FromBase64String(clientCertWithKey);
-                var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+                var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
                 tokenRequest.DPoPProofToken = DPoPProofTokenGenerator.GenerateProofToken(
                     clientCert,

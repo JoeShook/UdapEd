@@ -41,7 +41,7 @@ public class Infrastructure : UdapEd.Shared.Services.Infrastructure
             if (clientCertWithKey == null) return;
 
             var certBytes = Convert.FromBase64String(clientCertWithKey);
-            var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+            var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
             var aiaExtension = clientCert.Extensions["1.3.6.1.5.5.7.1.1"] as X509AuthorityInformationAccessExtension;
             if (aiaExtension == null) return;
@@ -63,7 +63,7 @@ public class Infrastructure : UdapEd.Shared.Services.Infrastructure
         {
             var bytes = await HttpClient.GetByteArrayAsync(url);
 
-            var certificate = new X509Certificate2(bytes);
+            var certificate = X509CertificateLoader.LoadCertificate(bytes);
             var sessionKey = certContext == "certification"
                 ? UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES
                 : UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES;

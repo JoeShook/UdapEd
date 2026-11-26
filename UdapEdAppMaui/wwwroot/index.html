@@ -3,16 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>UdapEdAppMaui</title>
+  <title>UdapEd</title>
   <base href="/" />
-  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+  <script>
+    // Paint the saved dark theme before the app loads; MainLayout applies the full theme once Blazor starts.
+    try { if (localStorage.getItem('udaped-theme') === 'dark') { document.documentElement.style.colorScheme = 'dark'; document.documentElement.style.background = '#121B23'; } } catch (e) { }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
   <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
   <link href="_content/UdapEd.Shared/css/app.css" rel="stylesheet" />
   <link href="_content/UdapEd.Shared/css/cds.css" rel="stylesheet" asp-append-version="true" />
   <link rel="stylesheet" href="_content/UdapEd.Shared/css/app.css" />
   <link rel="stylesheet" href="_content/UdapEd.Shared/css/cds.css" />
   <!-- <link rel="stylesheet" href="UdapEdAppMaui.styles.css" /> -->
-  <link rel="icon" type="image/png" href="_content/UdapEd.Shared/favicon.png" />
+  <link rel="icon" href="_content/UdapEd.Shared/favicon.ico" sizes="16x16 32x32 48x48" />
+  <link rel="icon" type="image/svg+xml" href="_content/UdapEd.Shared/favicon.svg" />
+  <link rel="apple-touch-icon" href="_content/UdapEd.Shared/apple-touch-icon.png" />
 </head>
 
 <body>
@@ -30,7 +36,7 @@
   <script src="_framework/blazor.webview.js" autostart="false"></script>
   <script src="_content/MudBlazor/MudBlazor.min.js" asp-append-version="true"></script>
   <script src="_content/UdapEd.Shared/scripts/AutoFocus.js"></script>
-  <script src="_content/UdapEd.Shared/scripts/UdapEdUtility.js?v=2"></script>
+  <script src="_content/UdapEd.Shared/scripts/UdapEdUtility.js?v=3"></script>
   <script src="_content/UdapEd.Shared/scripts/EventHandlers.js"></script>
 
   <script src="_content/BlazorMonaco/jsInterop.js"></script>

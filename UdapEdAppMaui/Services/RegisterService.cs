@@ -67,7 +67,7 @@ internal class RegisterService : IRegisterService
         {
             flags |= X509KeyStorageFlags.Exportable;
         }
-        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", flags);
+        var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", flags);
         var x5cCerts = new List<X509Certificate2> { clientCert };
         var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
         var intermediateCerts = intermediatesStored == null ? null : Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
@@ -158,7 +158,7 @@ internal class RegisterService : IRegisterService
         {
             flags |= X509KeyStorageFlags.Exportable;
         }
-        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", flags);
+        var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", flags);
         var x5cCerts = new List<X509Certificate2> { clientCert };
         var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
         var intermediateCerts = intermediatesStored == null ? null : Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
@@ -251,7 +251,7 @@ internal class RegisterService : IRegisterService
         {
             flags |= X509KeyStorageFlags.Exportable;
         }
-        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", flags);
+        var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", flags);
         var x5cCerts = new List<X509Certificate2> { clientCert };
         var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
         var intermediateCerts = intermediatesStored == null ? null : Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
@@ -335,7 +335,7 @@ internal class RegisterService : IRegisterService
         {
             flags |= X509KeyStorageFlags.Exportable;
         }
-        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", flags);
+        var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", flags);
         var x5cCerts = new List<X509Certificate2> { clientCert };
         var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
         var intermediateCerts = intermediatesStored == null? null: Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
@@ -478,7 +478,7 @@ internal class RegisterService : IRegisterService
             {
                 flags |= X509KeyStorageFlags.Exportable;
             }
-            var certificate = new X509Certificate2(certBytes, password, flags);
+            var certificate = X509CertificateLoader.LoadPkcs12(certBytes, password, flags);
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             await SessionExtensions.StoreInChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, clientCertWithKeyBytes);
@@ -540,7 +540,7 @@ internal class RegisterService : IRegisterService
                 {
                     flags |= X509KeyStorageFlags.Exportable;
                 }
-                var certificate = new X509Certificate2(certBytes, "ILikePasswords", flags);
+                var certificate = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", flags);
                 result.DistinguishedName = certificate.SubjectName.Name;
                 result.Thumbprint = certificate.Thumbprint;
                 result.CertLoaded = CertLoadedEnum.Positive;
@@ -595,11 +595,11 @@ internal class RegisterService : IRegisterService
             
             try
             {
-                certificate = new X509Certificate2(certBytes, "udap-test", flags);
+                certificate = X509CertificateLoader.LoadPkcs12(certBytes, "udap-test", flags);
             }
             catch
             {
-                certificate = new X509Certificate2(certBytes, _configuration["sampleKeyC"], flags);
+                certificate = X509CertificateLoader.LoadPkcs12(certBytes, _configuration["sampleKeyC"], flags);
             }
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");

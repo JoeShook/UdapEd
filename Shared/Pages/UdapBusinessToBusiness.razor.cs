@@ -298,7 +298,14 @@ public partial class UdapBusinessToBusiness
                 Issuer = queryParams.GetValueOrDefault("iss")
             };
 
-            AppState.SetProperty(this, nameof(AppState.LoginCallBackResult), loginCallbackResult, true, false);
+            // Called from the markup, so this runs on every render. Save only when the URL holds a different callback
+            // than app state: saving on every render made each later step slow. Comparing (rather than saving once)
+            // also restores the code if loading the saved app state after the redirect overwrites it.
+            if (AppState.LoginCallBackResult?.Code != loginCallbackResult.Code ||
+                AppState.LoginCallBackResult?.State != loginCallbackResult.State)
+            {
+                AppState.SetProperty(this, nameof(AppState.LoginCallBackResult), loginCallbackResult, true, false);
+            }
         }
 
         return uri.Query.Replace("&", "&\r\n");

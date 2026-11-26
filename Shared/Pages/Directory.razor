@@ -39,7 +39,7 @@
                                                                            Color="Color.Inherit"
                                                                            Size="Size.Small"
                                                                            @onclick="AddSearchParam"
-                                                                           Label="Add"
+                                                                           aria-label="Add"
                                                                            Class="px-2 mx-2"/>
                                                         
 
@@ -119,7 +119,7 @@
                                                                                Size="Size.Small"
                                                                                Color="Color.Warning"
                                                                                Icon="@Icons.Material.TwoTone.DeleteForever"
-                                                                               Label="Delete"
+                                                                               aria-label="Delete"
                                                                                class="ma-2"
                                                                                OnClick="@(() => DeleteParam(context))"/>
                                                             
@@ -132,31 +132,41 @@
                                     </MudItem>
                                     <MudItem sm="12" md="6">
                                         <MudExpansionPanels>
-                                            <MudExpansionPanel Text="Includes" Typo="Typo.h6" Color="Color.Primary" IsInitiallyExpanded="false">
-                                                @foreach (var include in CapabilityLookup.IncludeMap.Where(m => m.Key == _fhirSearch.ResourceName).SelectMany(m => m.Value))
-                                                {
-                                                    if (!_fhirSearch.Includes.ContainsKey(include))
+                                            <MudExpansionPanel>
+                                                <TitleContent>
+                                                    <MudText Typo="Typo.h6" Color="Color.Primary">Includes</MudText>
+                                                </TitleContent>
+                                                <ChildContent>
+                                                    @foreach (var include in CapabilityLookup.IncludeMap.Where(m => m.Key == _fhirSearch.ResourceName).SelectMany(m => m.Value))
                                                     {
-                                                        _fhirSearch.Includes.Add(include, false);
-                                                    }
+                                                        if (!_fhirSearch.Includes.ContainsKey(include))
+                                                        {
+                                                            _fhirSearch.Includes.Add(include, false);
+                                                        }
 
-                                                    <MudCheckBox @bind-Value="@_fhirSearch.Includes[include]" Label="@include" @bind-Value:after="BuildSearch"></MudCheckBox>
-                                                }
+                                                        <MudCheckBox @bind-Value="@_fhirSearch.Includes[include]" Label="@include" @bind-Value:after="BuildSearch"></MudCheckBox>
+                                                    }
+                                                </ChildContent>
                                             </MudExpansionPanel>
                                         </MudExpansionPanels>
                                     </MudItem>
                                     <MudItem sm="12" md="6">
                                         <MudExpansionPanels >
-                                            <MudExpansionPanel Text="Reverse Includes" Typo="Typo.h6" Color="Color.Primary" IsInitiallyExpanded="false">
-                                                @foreach (var revInclude in CapabilityLookup.ReverseIncludeMap.Where(m => m.Key == _fhirSearch.ResourceName).SelectMany(m => m.Value))
-                                                {
-                                                    if (!_fhirSearch.RevIncludes.ContainsKey(revInclude))
+                                            <MudExpansionPanel>
+                                                <TitleContent>
+                                                    <MudText Typo="Typo.h6" Color="Color.Primary">Reverse Includes</MudText>
+                                                </TitleContent>
+                                                <ChildContent>
+                                                    @foreach (var revInclude in CapabilityLookup.ReverseIncludeMap.Where(m => m.Key == _fhirSearch.ResourceName).SelectMany(m => m.Value))
                                                     {
-                                                        _fhirSearch.RevIncludes.Add(revInclude, false);
-                                                    }
+                                                        if (!_fhirSearch.RevIncludes.ContainsKey(revInclude))
+                                                        {
+                                                            _fhirSearch.RevIncludes.Add(revInclude, false);
+                                                        }
 
-                                                    <MudCheckBox @bind-Value="@_fhirSearch.RevIncludes[revInclude]" Label="@revInclude" @bind-Value:after="BuildSearch"></MudCheckBox>
-                                                }
+                                                        <MudCheckBox @bind-Value="@_fhirSearch.RevIncludes[revInclude]" Label="@revInclude" @bind-Value:after="BuildSearch"></MudCheckBox>
+                                                    }
+                                                </ChildContent>
                                             </MudExpansionPanel>
                                         </MudExpansionPanels>
                                     </MudItem>
@@ -170,7 +180,7 @@
                                     <MudCard Elevation="3" Style="margin-top: 10px">
                                         <MudCardContent>
                                             <MudText Typo="Typo.h6">@($"GET {_fhirSearch.BaseUrl}/{_fhirSearch.ResourceName}")</MudText>
-                                            <MudTextField AutoGrow @bind-Value="_searchString" class=@ValidStyle TextChanged="BuildManualGetSearch" />
+                                            <MudTextField Sizing="InputSizing.Auto" @bind-Value="_searchString" class=@ValidStyle TextChanged="BuildManualGetSearch" />
                                         </MudCardContent>
 
                                         <MudCardActions>
@@ -197,7 +207,7 @@
                                     <MudCard Elevation="3" Style="margin-top: 10px">
                                         <MudCardContent>
                                             <MudText Typo="Typo.h6">@($"POST {_fhirSearch.BaseUrl}/{_fhirSearch.ResourceName}/_search")</MudText>
-                                            <MudTextField AutoGrow @bind-Value="_postSearchString" class=@ValidStyle TextChanged="BuildManualPostSearch" />
+                                            <MudTextField Sizing="InputSizing.Auto" @bind-Value="_postSearchString" class=@ValidStyle TextChanged="BuildManualPostSearch" />
                                         </MudCardContent>
 
                                         <MudCardActions>
@@ -336,8 +346,6 @@
                                                                     {
                                                                         <MudLink Class="mt-3" Style="justify-self: start;"
                                                                                  Color="Color.Primary"
-                                                                                 ButtonType="ButtonType.Button"
-                                                                                 Variant="Variant.Filled"
                                                                                  OnClick="() => DynamicallyRegister(presenter)">Dynamically register with UDAP
                                                                             <MudIcon Class="absolute" Icon="@Icons.Material.Filled.OpenInNew"/>
                                                                         </MudLink>
@@ -430,9 +438,7 @@
                                 <FhirEditor
                                     Language="json"
                                     EditorContent="@_fhirResults.RawFhir"
-                                    DarkMode="false"
                                 />
-                                @* DarkMode="@(NavTracker?.IsDarkMode ?? true)" *@
 
                             </MudTabPanel>
                         </MudTabs>

@@ -17,6 +17,10 @@ public class FhirContextJsonConverter : JsonConverter<FhirContext>
 {
     private readonly bool _indent;
 
+    // Reused across calls: app state is saved on almost every change, and building these each time is costly.
+    private static readonly FhirJsonParser Parser = new();
+    private static readonly FhirJsonSerializer Serializer = new();
+
     public FhirContextJsonConverter(bool indent = false)
     {
         _indent = indent;
@@ -30,7 +34,7 @@ public class FhirContextJsonConverter : JsonConverter<FhirContext>
         }
 
         var fhirContext = new FhirContext();
-        var fhirJsonParser = new FhirJsonParser();
+        var fhirJsonParser = Parser;
 
         while (reader.Read())
         {
@@ -66,7 +70,7 @@ public class FhirContextJsonConverter : JsonConverter<FhirContext>
 
     public override void Write(Utf8JsonWriter writer, FhirContext value, JsonSerializerOptions options)
     {
-        var fhirJsonSerializer = new FhirJsonSerializer();
+        var fhirJsonSerializer = Serializer;
 
         writer.WriteStartObject();
 

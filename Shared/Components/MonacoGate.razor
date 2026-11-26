@@ -1,0 +1,43 @@
+@* Renders its content only after the Monaco editor scripts have loaded (udapEdMonaco.ensureLoaded in UdapEdUtility.js),
+   so pages without an editor never download them. *@
+@inject IJSRuntime JS
+
+@if (_ready)
+{
+    @ChildContent
+}
+else if (_error != null)
+{
+    <MudAlert Severity="Severity.Error" Dense="true">The editor could not load: @_error</MudAlert>
+}
+else
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-2" />
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private bool _ready;
+    private string? _error;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        try
+        {
+            await JS.InvokeVoidAsync("udapEdMonaco.ensureLoaded");
+            _ready = true;
+        }
+        catch (JSException ex)
+        {
+            _error = ex.Message;
+        }
+
+        StateHasChanged();
+    }
+}

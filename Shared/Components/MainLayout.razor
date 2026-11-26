@@ -1,28 +1,74 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
-<MudThemeProvider />
+<MudThemeProvider @ref="_themeProvider" Theme="_theme" @bind-IsDarkMode="_isDarkMode" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 <MudPopoverProvider />
-<MudLayout>
-    <Toolbar />
-    
+<MudLayout Class="udaped-layout">
+    <Toolbar IsDarkMode="_isDarkMode" IsDarkModeChanged="OnDarkModeChanged" />
+
     @if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsMacCatalyst() || OperatingSystem.IsWindows())
     {
-        <MudMainContent Style="font-family: Candara" Class="px-8 mb-20" MaxWidth="MaxWidth.False">
+        <MudMainContent Class="px-8 mb-20 udaped-main">
             @Body
         </MudMainContent>
     }
     else
     {
-        <MudMainContent Style="font-family: Candara" Class="@GetClass()" MaxWidth="MaxWidth.False">
+        <MudMainContent Class="@($"{GetClass()} udaped-main")">
             @Body
         </MudMainContent>
     }
 </MudLayout>
 
 @code {
+    private readonly MudTheme _theme = UdapEdTheme.Create();
+    private MudThemeProvider? _themeProvider;
+    private bool _isDarkMode;
+    private bool _userChoseMode;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _themeProvider != null)
+        {
+            // A mode picked in the app bar is saved and wins; otherwise follow the OS preference.
+            var saved = await JS.InvokeAsync<string?>("udapEdTheme.getSaved");
+            if (saved is "dark" or "light")
+            {
+                _userChoseMode = true;
+                _isDarkMode = saved == "dark";
+            }
+            else
+            {
+                _isDarkMode = await _themeProvider.GetSystemDarkModeAsync();
+            }
+
+            await _themeProvider.WatchSystemDarkModeAsync(OnSystemDarkModeChanged);
+            await JS.InvokeVoidAsync("udapEdTheme.apply", _isDarkMode);
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnSystemDarkModeChanged(bool isDark)
+    {
+        if (!_userChoseMode)
+        {
+            _isDarkMode = isDark;
+            await JS.InvokeVoidAsync("udapEdTheme.apply", _isDarkMode);
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnDarkModeChanged(bool isDark)
+    {
+        _userChoseMode = true;
+        _isDarkMode = isDark;
+        await JS.InvokeVoidAsync("udapEdTheme.save", _isDarkMode);
+        await JS.InvokeVoidAsync("udapEdTheme.apply", _isDarkMode);
+    }
+
     private string GetClass()
     {
         var uri = Navigation.Uri;
