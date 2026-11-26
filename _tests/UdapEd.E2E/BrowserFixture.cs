@@ -51,7 +51,11 @@ public sealed class BrowserFixture : IAsyncLifetime
             // A local UdapEd serves the ASP.NET development certificate.
             IgnoreHTTPSErrors = true,
             // Headed: the page follows the maximized window. Headless: a fixed desktop-sized viewport.
-            ViewportSize = E2ESettings.Headed ? ViewportSize.NoViewport : new ViewportSize { Width = 1600, Height = 1000 }
+            ViewportSize = E2ESettings.Headed ? ViewportSize.NoViewport : new ViewportSize { Width = 1600, Height = 1000 },
+            // UDAPED_HAR_DIR=<folder> records every request with its timings, to see where a flow spends its time.
+            RecordHarPath = Environment.GetEnvironmentVariable("UDAPED_HAR_DIR") is { Length: > 0 } harDir
+                ? Path.Combine(harDir, $"udaped-{DateTime.UtcNow:yyyyMMdd-HHmmss-fff}.har")
+                : null
         });
 
         context.SetDefaultTimeout(30_000);
@@ -75,6 +79,12 @@ public sealed class BrowserFixture : IAsyncLifetime
     {
         if (_playwright != null)
         {
+            // Closing each context writes its HAR file when UDAPED_HAR_DIR is set.
+            foreach (var context in Browser.Contexts.ToList())
+            {
+                await context.CloseAsync();
+            }
+
             await Browser.DisposeAsync();
             _playwright.Dispose();
         }
