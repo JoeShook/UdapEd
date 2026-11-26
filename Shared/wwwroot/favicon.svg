@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- UdapEd favicon: the app icon without the hairline frame, with heavier strokes so it
+       holds together at 16x16. Source of truth for favicon.ico and the small PNGs. -->
+  <style>
+    /* Dark browser chrome: lift the tile edge so the ink square does not sink into the tab strip. */
+    @media (prefers-color-scheme: dark) { .tile { stroke: #4A6375; } }
+  </style>
+  <rect class="tile" x="1" y="1" width="62" height="62" rx="11.5" fill="#152A38" stroke="#152A38" stroke-width="2"/>
+  <path d="M20 24V37a12 12 0 0 0 24 0V24" fill="none" stroke="#EEF3F6" stroke-width="7"/>
+  <circle cx="20" cy="17.5" r="6.5" fill="#5CB8CC"/>
+  <circle cx="44" cy="17.5" r="4.75" fill="none" stroke="#EEF3F6" stroke-width="3.5"/>
+</svg>

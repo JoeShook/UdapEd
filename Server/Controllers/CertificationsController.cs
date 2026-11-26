@@ -53,7 +53,7 @@ public class CertificationsController : Controller
 
         try
         {
-            var certificate = new X509Certificate2(testClientCert, "udap-test", X509KeyStorageFlags.Exportable);
+            var certificate = X509CertificateLoader.LoadPkcs12FromFile(testClientCert, "udap-test", X509KeyStorageFlags.Exportable);
          
             var subjectName = certificate.SubjectName.Name;
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
@@ -128,7 +128,7 @@ public class CertificationsController : Controller
         var certBytes = Convert.FromBase64String(clientCertSession);
         try
         {
-            var certificate = new X509Certificate2(certBytes, password, X509KeyStorageFlags.Exportable);
+            var certificate = X509CertificateLoader.LoadPkcs12(certBytes, password, X509KeyStorageFlags.Exportable);
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             HttpContext.Session.SetString(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY, Convert.ToBase64String(clientCertWithKeyBytes));
             HttpContext.Session.StorePkcs12Intermediates(
@@ -204,7 +204,7 @@ public class CertificationsController : Controller
             if (certBytesWithKey != null)
             {
                 var certBytes = Convert.FromBase64String(certBytesWithKey);
-                var certificate = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+                var certificate = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
                 result.DistinguishedName = certificate.SubjectName.Name;
                 result.Thumbprint = certificate.Thumbprint;
                 result.CertLoaded = CertLoadedEnum.Positive;
@@ -249,7 +249,7 @@ public class CertificationsController : Controller
         }
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
-        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+        var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
         var x5cCerts = HttpContext.Session.GetX5cCertificates(clientCert, UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
 
@@ -321,7 +321,7 @@ public class CertificationsController : Controller
         }
 
         var certBytes = Convert.FromBase64String(clientCertWithKey);
-        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+        var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
         var x5cCerts = HttpContext.Session.GetX5cCertificates(clientCert, UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
 

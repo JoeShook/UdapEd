@@ -94,7 +94,7 @@ internal class AccessService : IAccessService
         {
             flags |= X509KeyStorageFlags.Exportable;
         }
-        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", flags);
+        var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", flags);
 
         var x5cCerts = new List<X509Certificate2> { clientCert };
         var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
@@ -162,7 +162,7 @@ internal class AccessService : IAccessService
         {
             flags |= X509KeyStorageFlags.Exportable;
         }
-        var clientCert = new X509Certificate2(certBytes, "ILikePasswords", flags);
+        var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", flags);
 
         var x5cCerts = new List<X509Certificate2> { clientCert };
         var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
@@ -238,7 +238,7 @@ internal class AccessService : IAccessService
                 {
                     flags |= X509KeyStorageFlags.Exportable;
                 }
-                var clientCert = new X509Certificate2(certBytes, "ILikePasswords", flags);
+                var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", flags);
 
                 tokenRequest.DPoPProofToken = DPoPProofTokenGenerator.GenerateProofToken(
                     clientCert,
@@ -296,7 +296,7 @@ internal class AccessService : IAccessService
                 {
                     flags |= X509KeyStorageFlags.Exportable;
                 }
-                var clientCert = new X509Certificate2(certBytes, "ILikePasswords", flags);
+                var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", flags);
 
                 tokenRequest.DPoPProofToken = DPoPProofTokenGenerator.GenerateProofToken(
                     clientCert,

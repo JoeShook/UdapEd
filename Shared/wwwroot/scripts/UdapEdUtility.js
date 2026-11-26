@@ -1,4 +1,62 @@
-﻿function postToAuthorize(authorizeUrl) {
+﻿// Light/dark choice. The choice is kept in localStorage so it survives reloads, including the round trip through an
+// authorization server during the authorization code flow. Monaco's theme is global, so every editor follows it.
+window.udapEdTheme = {
+  _key: 'udaped-theme',
+  _dark: false,
+  getSaved: function () {
+    try { return localStorage.getItem(this._key); } catch (e) { return null; }
+  },
+  save: function (dark) {
+    try { localStorage.setItem(this._key, dark ? 'dark' : 'light'); } catch (e) { /* storage unavailable */ }
+  },
+  apply: function (dark) {
+    this._dark = !!dark;
+    document.documentElement.style.colorScheme = this._dark ? 'dark' : 'light';
+    this.applyMonaco();
+  },
+  applyMonaco: function () {
+    if (window.monaco && window.monaco.editor) {
+      window.monaco.editor.setTheme(this._dark ? 'vs-dark' : 'vs');
+    }
+  }
+};
+
+// Loads the Monaco editor scripts on first use instead of on every page. A host page that already includes them
+// (the MAUI index.html) resolves immediately.
+window.udapEdMonaco = {
+  _loading: null,
+  ensureLoaded: function () {
+    if (window.monaco && window.monaco.editor) {
+      return Promise.resolve();
+    }
+    if (!this._loading) {
+      const base = '_content/BlazorMonaco/lib/monaco-editor/min/vs/';
+      const addScript = (src) => new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error('Could not load ' + src));
+        document.body.appendChild(s);
+      });
+      const waitForMonaco = () => new Promise((resolve, reject) => {
+        const started = Date.now();
+        (function check() {
+          if (window.monaco && window.monaco.editor) { resolve(); return; }
+          if (Date.now() - started > 30000) { reject(new Error('Monaco did not initialise')); return; }
+          setTimeout(check, 25);
+        })();
+      });
+      this._loading = (typeof window.require === 'function' && window.require.config ? Promise.resolve() : addScript(base + 'loader.js'))
+        .then(() => addScript(base + 'editor/editor.main.js'))
+        .then(waitForMonaco)
+        .then(() => window.udapEdTheme.applyMonaco())
+        .catch((e) => { this._loading = null; throw e; });
+    }
+    return this._loading;
+  }
+};
+
+function postToAuthorize(authorizeUrl) {
   const url = new URL(authorizeUrl);
   const form = document.createElement('form');
   form.method = 'post';

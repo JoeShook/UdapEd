@@ -57,7 +57,7 @@ public class DPoPResourceHandler : DelegatingHandler
                 if (clientCertWithKey != null && signingAlg != null)
                 {
                     var certBytes = Convert.FromBase64String(clientCertWithKey);
-                    var clientCert = new X509Certificate2(
+                    var clientCert = X509CertificateLoader.LoadPkcs12(
                         certBytes, "ILikePasswords",
                         X509KeyStorageFlags.Exportable);
 

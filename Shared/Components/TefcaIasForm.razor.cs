@@ -114,7 +114,7 @@ public partial class TefcaIasForm : ComponentBase
     {
         if (firstRender)
         {
-            return _form.Validate();
+            return _form.ValidateAsync();
         }
 
         return Task.CompletedTask;

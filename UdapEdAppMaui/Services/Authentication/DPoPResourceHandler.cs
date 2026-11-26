@@ -58,7 +58,7 @@ public class DPoPResourceHandler : DelegatingHandler
                         flags = X509KeyStorageFlags.Exportable;
                     }
 
-                    var clientCert = new X509Certificate2(
+                    var clientCert = X509CertificateLoader.LoadPkcs12(
                         certBytes, "ILikePasswords", flags);
 
                     var proofToken = DPoPProofTokenGenerator.GenerateProofToken(

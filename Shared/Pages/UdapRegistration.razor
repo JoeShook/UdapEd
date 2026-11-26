@@ -32,7 +32,7 @@
                     </div>
                 </MudCardHeader>
                 <MudCardContent>
-                    <MudTabs Class="udap-rowgroup" Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
+                    <MudTabs Class="udap-rowgroup" Elevation="2" Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-2">
                         <MudTabPanel Text="Udap Client Certificate">
                             <MudGrid Spacing="2" Justify="Justify.FlexStart" align-start>
                                 <MudItem>
@@ -346,7 +346,7 @@
                     </MudCardActions>
 
                     <MudCardContent>
-                        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" KeepPanelsAlive="true">
+                        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-6" KeepPanelsAlive="true">
                             <MudTabPanel Text="Registration">
                                 <MudGrid Spacing="1" Class="mt-8">
                                     <MudItem sm="6" xs="12">
@@ -477,7 +477,7 @@
                             </MudItem>
                             <MudItem sm="6" xs="12">
                                 <MudPaper Class="udap-analyzed" Elevation="3">
-                                    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+                                    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-6">
                                         <MudTabPanel Text="Client Registration Decoded" OnClick="HighlightSoftwareStatement">
                                             <SignedJwtViewer Title="<b>Decoded software_statement::</b>"
                                                              SignedSoftwareStatement="@AppState.UdapRegistrationRequest?.SoftwareStatement"/>

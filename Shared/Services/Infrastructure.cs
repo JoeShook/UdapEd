@@ -53,8 +53,8 @@ public class Infrastructure : IInfrastructure
 
         var (caData, intermediateData) = await GetSigningCertificates();
 
-        using var rootCa = new X509Certificate2(caData, "udap-test");
-        using var subCa = new X509Certificate2(intermediateData, "udap-test");
+        using var rootCa = X509CertificateLoader.LoadPkcs12(caData, "udap-test");
+        using var subCa = X509CertificateLoader.LoadPkcs12(intermediateData, "udap-test");
 
         var certTooling = new CertificateTooling();
 
@@ -122,8 +122,8 @@ public class Infrastructure : IInfrastructure
 
         var (caData, intermediateData) = await GetTefcaSigningCertificates();
 
-        using var rootCa = new X509Certificate2(caData, "udap-test");
-        using var subCa = new X509Certificate2(intermediateData, "udap-test");
+        using var rootCa = X509CertificateLoader.LoadPkcs12(caData, "udap-test");
+        using var subCa = X509CertificateLoader.LoadPkcs12(intermediateData, "udap-test");
 
         var certTooling = new CertificateTooling();
 
@@ -165,8 +165,8 @@ public class Infrastructure : IInfrastructure
     {
         var (caData, intermediateData) = await GetSigningCertificates();
 
-        using var rootCa = new X509Certificate2(caData, "udap-test");
-        using var subCa = new X509Certificate2(intermediateData, "udap-test");
+        using var rootCa = X509CertificateLoader.LoadPkcs12(caData, "udap-test");
+        using var subCa = X509CertificateLoader.LoadPkcs12(intermediateData, "udap-test");
 
         var certTooling = new CertificateTooling();
 
@@ -200,7 +200,7 @@ public class Infrastructure : IInfrastructure
         {
             var bytes = await HttpClient.GetByteArrayAsync(url);
 
-            var cert = new X509Certificate2(bytes);
+            var cert = X509CertificateLoader.LoadCertificate(bytes);
             return new CertificateDisplayBuilder(cert).BuildCertificateDisplayData();
         }
         catch (Exception ex)

@@ -5,7 +5,7 @@
         <MudText Typo="Typo.h6">@CdsServiceModel.Url</MudText>
     </MudItem>
     <MudItem xs="6" Class="d-flex flex-column align-items-end">
-        <MudCheckBox  LabelPosition="LabelPosition.Start" @bind-Value="CdsServiceModel.CdsService.Enabled" Color="Color.Primary" Label="Enabled?" Class="ml-auto"  />
+        <MudCheckBox  LabelPlacement="Placement.Start" @bind-Value="CdsServiceModel.CdsService.Enabled" Color="Color.Primary" Label="Enabled?" Class="ml-auto"  />
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RemoveService" Class="ml-auto mt-2">
             Delete
         </MudButton>

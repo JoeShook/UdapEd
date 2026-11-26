@@ -8,7 +8,7 @@
 
 
     <MudExpansionPanels Class="@Class">
-        <MudExpansionPanel Expanded="true" Style="background-color: #E8F5E9">
+        <MudExpansionPanel Expanded="true" Style="background-color: var(--udaped-tint-success)">
             <TitleContent>
 	            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
 		            <MudText Typo="Typo.h6">@Title</MudText>
@@ -99,11 +99,11 @@
                        {
                            if (i % 2 == 0)
                            {
-                               color = "background-color: #E8F5E9;";
+                               color = "background-color: var(--udaped-tint-success);";
                            }
                            else
                            {
-                               color = "background-color: #EDE7F6";
+                               color = "background-color: var(--udaped-tint-primary)";
                            }
 
                            if (keyValuePair.Key.Contains("Authority Information Access"))

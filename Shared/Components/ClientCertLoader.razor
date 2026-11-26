@@ -6,7 +6,7 @@
             Color="@CertLoadedColor"
             StartIcon="@AppState.CertificateIcon"
             Label="Upload"
-            Title="Upload Client Certificate"
+            title="Upload Client Certificate"
             IconSize="Size.Small"
             for="fileInput"/>
     <MudMenu Label="Load Pre-packaged Cert"
@@ -17,7 +17,7 @@
              data-testid="cert-prepackaged-menu">
         @foreach (var cert in _prePackagedCerts)
         {
-            <MudMenuItem OnClick="@(() => LoadPrePackagedCert(cert))" Title="@cert.Description" data-testid="@($"cert-prepackaged-{cert.Name}")">@cert.Name</MudMenuItem>
+            <MudMenuItem OnClick="@(() => LoadPrePackagedCert(cert))" title="@cert.Description" data-testid="@($"cert-prepackaged-{cert.Name}")">@cert.Name</MudMenuItem>
         }
     </MudMenu>
 </MudStack>

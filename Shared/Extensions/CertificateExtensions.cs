@@ -124,7 +124,7 @@ public static class CertificateExtensions
         foreach (var base64String in base64Strings)
         {
             var certBytes = Convert.FromBase64String(base64String);
-            var certificate = new X509Certificate2(certBytes);
+            var certificate = X509CertificateLoader.LoadCertificate(certBytes);
             certificates.Add(certificate);
         }
 

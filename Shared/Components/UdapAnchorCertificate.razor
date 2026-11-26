@@ -15,7 +15,7 @@
                     Color="@AnchorLoadedColor"
                     StartIcon="@AppState.CertificateIcon"
                     Label="Upload"
-                    Title="Upload Anchor Certificate"
+                    title="Upload Anchor Certificate"
                     IconSize="Size.Small"
                     for="anchorFileInput"/>
             <MudMenu Label="Load Pre-packaged Anchor"
@@ -25,7 +25,7 @@
                      Variant="Variant.Filled">
                 @foreach (var anchor in _prePackagedAnchors)
                 {
-                    <MudMenuItem OnClick="@(() => LoadPrePackagedAnchor(anchor))" Title="@anchor.Description">@anchor.Name</MudMenuItem>
+                    <MudMenuItem OnClick="@(() => LoadPrePackagedAnchor(anchor))" title="@anchor.Description">@anchor.Name</MudMenuItem>
                 }
             </MudMenu>
         </MudStack>

@@ -144,14 +144,18 @@
                       <MudItem sm="6" xs="12">
                           <MudPaper Class="udap-input" Elevation="3">
                               <MudText Align="Align.Right" Color="Color.Tertiary">3.1 Authorization Code Flow (part 2)</MudText>
-                              <MudText Color="@(AppState.AccessCodeRequestResult is {IsError: true } ? Color.Error : Color.Primary)">
+                              <MudText Typo="Typo.subtitle1">
                                   @LoginRedirectLinkText
                               </MudText>
-                              <pre>@AppState.AccessCodeRequestResult?.RedirectUrl</pre>
+                              @if (!string.IsNullOrEmpty(AppState.AccessCodeRequestResult?.RedirectUrl))
+                              {
+                                  <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined" Icon="@Icons.Material.Outlined.CheckCircle">Redirect received</MudChip>
+                                  <pre>@AppState.AccessCodeRequestResult?.RedirectUrl</pre>
+                              }
                               @if (AppState.AccessCodeRequestResult?.IsError == true &&
                                    AppState.AccessCodeRequestResult.Message != null)
                               {
-                                  <pre>@AppState.AccessCodeRequestResult?.Message</pre>
+                                  <MudAlert Severity="Severity.Error" Dense="true" Class="my-2">@AppState.AccessCodeRequestResult?.Message</MudAlert>
                               }
                               @if (AppState.AccessCodeRequestResult?.Cookies != null)
                               {
@@ -281,21 +285,21 @@
                               <pre>@TokenRequest1</pre>
                               @if (EnableDPoP)
                               {
-                                  <pre style="background-color:lightcyan">@TokenRequestDPoPHeader</pre>
+                                  <pre class="udaped-highlight-alt">@TokenRequestDPoPHeader</pre>
                               }
                               <pre style="padding-left: 10px">@TokenRequest2</pre>
                               @if (EnableDPoP)
                               {
-                                  <pre style="padding-left:10px; background-color:lightcyan">@TokenRequestDPoP</pre>
+                                  <pre class="udaped-highlight-alt" style="padding-left:10px; ">@TokenRequestDPoP</pre>
                               }
-                              <pre style="padding-left:10px; background-color:lightyellow">@TokenRequest3</pre>
+                              <pre class="udaped-highlight" style="padding-left:10px; ">@TokenRequest3</pre>
                               <pre style="padding-left:10px">@TokenRequest4</pre>
                           </MudPaper>
                       </MudItem>
                       <MudItem sm="6" xs="12">
                           <MudPaper Class="udap-analyzed">
                               <MudText Align="Align.Right" Color="Color.Tertiary">Decoded</MudText>
-                              <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" KeepPanelsAlive="true">
+                              <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-6" KeepPanelsAlive="true">
                                   <MudTabPanel Text="Client Assertion">
                                       <SignedJwtViewer Title="<b>Decoded client_assertion::</b>"
                                                        SignedSoftwareStatement="@AppState.AuthorizationCodeTokenRequest?.ClientAssertion?.Value" />
@@ -312,7 +316,7 @@
                                   {
                                       <MudTabPanel>
                                           <TabContent>
-                                              <span style="background-color:lightcyan; padding:2px 8px; border-radius:4px;">DPoP Proof</span>
+                                              <span class="udaped-highlight-alt" style="padding:2px 8px; border-radius:4px;">DPoP Proof</span>
                                           </TabContent>
                                           <ChildContent>
                                               <SignedJwtViewer Title="<b>Decoded DPoP Proof::</b>"
@@ -322,7 +326,7 @@
                                               <MudText Typo="Typo.caption" Color="Color.Tertiary" Class="mb-2">
                                                   Base64url-encoded SHA-256 hash of the canonical JSON representation of the JWK's required members
                                               </MudText>
-                                              <pre style="background-color:lightcyan; padding:8px; border-radius:4px; word-break:break-all;">@AppState.AuthorizationCodeTokenRequest?.DPoPJkt</pre>
+                                              <pre class="udaped-highlight-alt" style="padding:8px; border-radius:4px; word-break:break-all;">@AppState.AuthorizationCodeTokenRequest?.DPoPJkt</pre>
                                           </ChildContent>
                                       </MudTabPanel>
                                   }
@@ -373,7 +377,7 @@
                           </MudPaper>
                           <MudPaper Class="udap-analyzed">
                               <MudText Align="Align.Right" Color="Color.Tertiary">Decoded</MudText>
-                              <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+                              <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-6">
                                   <MudTabPanel Text="Identity Token">
                                       <IdentityViewer Title="<h3>Decoded Identity Token::</h3>"
                                                       IdentityToken="@AppState.AccessTokens?.IdentityToken"/>

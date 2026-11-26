@@ -4,9 +4,14 @@
 @inject IJSRuntime JSRuntime
 @inject IRegisterService RegisterService
 
-<MudAppBar Elevation="3" Style="background-image: linear-gradient( 109.6deg,  rgba(240,240,240,1) 11.2%, rgba(240,240,240,1) 91.1% );">
-   <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Primary" Edge="Edge.Start"
-                  OnClick="@DrawerToggle" />
+<MudAppBar Elevation="0" Class="udaped-appbar">
+   <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
+                  OnClick="@DrawerToggle" aria-label="Toggle navigation" />
+
+   <a href="" class="udaped-lockup" aria-label="UdapEd home">
+       <BrandMark Size="28" />
+       <span class="udaped-wordmark"><span class="udaped-wordmark-strong">Udap</span>Ed</span>
+   </a>
 
     @if (AppState.LaunchContext != null)
     {
@@ -16,7 +21,7 @@
     }
     <MudSpacer />
     
-    <div Class="pl-1 pr-1 ml-2 mr-2 d-flex flex-nowrap" style="align-items: center; border-style: solid; border-width: 1px">
+    <div Class="pl-1 pr-1 ml-2 mr-2 d-flex flex-nowrap udaped-status">
         @if (AppState.ClientRegistrations.SelectedRegistration?.ClientId != null)
         {
             <MudTooltip Text="@($"ClientId: {@AppState.ClientRegistrations.SelectedRegistration.ClientId}")" >
@@ -39,34 +44,37 @@
         }
     </div>
    
-   <MudImage 
-       Class="cursor-pointer mud-ripple ma-2" 
-       Src="_content/UdapEd.Shared/images/hl7/icon-fhir-32.png" 
-       Alt="Fhir Icon" style="height: 36px; width: 36px; margin: 24px"
+   <MudTooltip Text="HL7 UDAP Security IG">
+   <MudImage
+       Class="cursor-pointer mud-ripple udaped-appbar-badge"
+       Src="_content/UdapEd.Shared/images/hl7/icon-fhir-32.png"
+       Alt="Fhir Icon"
        @onclick="@GoToIG" />
-   <MudImage 
-       Class="cursor-pointer mud-ripple" 
-       Src="_content/UdapEd.Shared/images/udap/UDAP_Ecosystem_Gears.png" 
-       Alt="UDAP Icon" style="height: 36px; width: 36px; margin: 24px"
+   </MudTooltip>
+   <MudTooltip Text="udap.org">
+   <MudImage
+       Class="cursor-pointer mud-ripple udaped-appbar-badge"
+       Src="_content/UdapEd.Shared/images/udap/UDAP_Ecosystem_Gears.png"
+       Alt="UDAP Icon"
        @onclick="@GoToUdapOrg" />
-   <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Dark"
-                   Href="https://github.com/JoeShook" Target="_blank" />
+   </MudTooltip>
+   <MudTooltip Text="@(IsDarkMode ? "Switch to light theme" : "Switch to dark theme")">
+       <MudIconButton Icon="@(IsDarkMode ? Icons.Material.Outlined.LightMode : Icons.Material.Outlined.DarkMode)"
+                      Color="Color.Inherit" OnClick="ToggleDarkMode" aria-label="Toggle dark theme" />
+   </MudTooltip>
+   <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit"
+                   Href="https://github.com/JoeShook" Target="_blank" aria-label="GitHub" />
 @*   $1$ <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Dark" Edge="Edge.End" /> #1# *@
 </MudAppBar>
 
-<MudDrawer @bind-Open="_drawerOpen" Elevation="2">
+<MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="0" Class="udaped-drawer">
 	<MudDrawerHeader>
 		<MudTooltip Placement="Placement.Bottom" Style="padding-top: 30px">
 			<ChildContent>
-				<MudStack Row="true">
-					<MudPaper Class="pa-1 ma-1" Elevation="0">
-						<MudText Typo="Typo.h5">UdapEd</MudText>
-						<MudText Typo="Typo.body2">version @Assembly.GetExecutingAssembly().GetName().Version?.ToString()</MudText>
-					</MudPaper>
-					<MudPaper Class="pa-1 ma-1" Elevation="0">
-						<MudImage Class="cursor-pointer mud-ripple" src="_content/UdapEd.Shared/images/UdapEdLogobyDesigner.png" Alt="UDAP Icon" style="height: 36px; width: 36px;"/>
-					</MudPaper>
-				</MudStack>
+				<div class="udaped-drawer-header">
+					<MudText Typo="Typo.subtitle2">UDAP client diagnostics</MudText>
+					<MudText Typo="Typo.caption" Class="udaped-version">version @(Assembly.GetExecutingAssembly().GetName().Version?.ToString())</MudText>
+				</div>
 			</ChildContent>
 			<TooltipContent>
 				<MudText Typo="Typo.h6">UDAP Education Tool</MudText>
@@ -83,7 +91,11 @@
     
     [CascadingParameter] CascadingAppState AppState { get; set; } = null!;
     [Inject] IAccessService AccessService { get; set; } = null!;
+    [Parameter] public bool IsDarkMode { get; set; }
+    [Parameter] public EventCallback<bool> IsDarkModeChanged { get; set; }
     bool _drawerOpen = true;
+
+    Task ToggleDarkMode() => IsDarkModeChanged.InvokeAsync(!IsDarkMode);
 
     void DrawerToggle()
     {

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="UdapEd">
+  <title>UdapEd</title>
+  <!-- UdapEd mark without the tile. Ink on light backgrounds, switches to light strokes
+       when the viewer prefers a dark colour scheme. -->
+  <style>
+    .ink { stroke: #152A38; }
+    .anchor { fill: #1F7A8C; }
+    @media (prefers-color-scheme: dark) {
+      .ink { stroke: #E6EDF2; }
+      .anchor { fill: #5CB8CC; }
+    }
+  </style>
+  <path class="ink" d="M20 24V37a12 12 0 0 0 24 0V24" fill="none" stroke-width="6"/>
+  <circle class="anchor" cx="20" cy="18" r="6"/>
+  <circle class="ink" cx="44" cy="18" r="4.5" fill="none" stroke-width="3"/>
+</svg>

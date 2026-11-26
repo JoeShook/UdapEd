@@ -4,14 +4,26 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Fhirlabs Client</title>
+  <title>UdapEd</title>
   <base href="/" />
-  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+  <script>
+    // Paint the saved dark theme before the app loads, so a reload (such as returning from an authorization
+    // server) doesn't flash light. MainLayout applies the full theme once Blazor starts.
+    try { if (localStorage.getItem('udaped-theme') === 'dark') { document.documentElement.style.colorScheme = 'dark'; document.documentElement.style.background = '#121B23'; } } catch (e) { }
+  </script>
+  <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#121B23" media="(prefers-color-scheme: dark)" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
   <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
   <link href="_content/UdapEd.Shared/css/app.css" rel="stylesheet" asp-append-version="true" />
   <link href="_content/UdapEd.Shared/css/cds.css" rel="stylesheet" asp-append-version="true" />
   <link href="css/monaco.css" rel="stylesheet" />
-  <link rel="icon" type="image/png" href="favicon.png" />
   <!-- <link href="UdapEd.Client.styles.css" rel="stylesheet" /> -->
 </head>
 
@@ -32,12 +44,11 @@
   <script src="_framework/blazor.webassembly.js"></script>
   <script src="_content/MudBlazor/MudBlazor.min.js" asp-append-version="true"></script>
   <script src="_content/UdapEd.Shared/scripts/AutoFocus.js"></script>
-  <script src="_content/UdapEd.Shared/scripts/UdapEdUtility.js?v=2"></script>
+  <script src="_content/UdapEd.Shared/scripts/UdapEdUtility.js?v=3"></script>
   <script src="_content/UdapEd.Shared/scripts/EventHandlers.js"></script>
 
   <script src="_content/BlazorMonaco/jsInterop.js"></script>
-  <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
-  <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
+  <!-- The Monaco editor (about 1.4 MB) loads on first use: see udapEdMonaco.ensureLoaded in UdapEdUtility.js. -->
 
   <!-- todo package in RCL -->
   <script type="text/javascript">

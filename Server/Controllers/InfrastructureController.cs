@@ -107,7 +107,7 @@ public class InfrastructureController : Controller
             if (encodedCertificate != null)
             {
                 byte[] certificateBytes = Convert.FromBase64String(encodedCertificate);
-                var certificate = new X509Certificate2(certificateBytes);
+                var certificate = X509CertificateLoader.LoadCertificate(certificateBytes);
                 var sessionKey = certContext == "certification"
                     ? UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES
                     : UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES;
@@ -157,7 +157,7 @@ public class InfrastructureController : Controller
             }
 
             var certBytes = Convert.FromBase64String(clientCertWithKey);
-            var clientCert = new X509Certificate2(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
+            var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
             var aiaCerts = new List<X509Certificate2>();
             var aiaExtension = clientCert.Extensions["1.3.6.1.5.5.7.1.1"] as X509AuthorityInformationAccessExtension;
@@ -169,7 +169,7 @@ public class InfrastructureController : Controller
                     var encodedCert = await _infrastructure.GetIntermediateX509(aiaUrl);
                     if (encodedCert != null)
                     {
-                        aiaCerts.Add(new X509Certificate2(Convert.FromBase64String(encodedCert)));
+                        aiaCerts.Add(X509CertificateLoader.LoadCertificate(Convert.FromBase64String(encodedCert)));
                     }
                 }
             }
