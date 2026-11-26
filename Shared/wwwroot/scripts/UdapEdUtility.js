@@ -185,3 +185,110 @@ function toggleText() {
     indicator.textContent = '[-]';
   }
 }
+
+// Draggable divider for SplitPanes.razor. One set of document listeners serves every splitter on every page.
+// The left pane's width is the --udaped-split custom property on the container, set here and never by .NET
+// after the first render, so a drag needs no interop. Arrow keys move a focused divider; double-click resets it.
+window.udapEdSplit = {
+  _storageKey: function (container) {
+    return container.dataset.splitKey ? 'udaped-split:' + container.dataset.splitKey : null;
+  },
+
+  _set: function (container, percent, save) {
+    const min = parseFloat(container.dataset.splitMin || '15');
+    percent = Math.min(100 - min, Math.max(min, percent));
+    container.style.setProperty('--udaped-split', percent + '%');
+    container.dataset.splitNow = String(percent);
+    const gutter = container.querySelector(':scope > .udaped-split-gutter');
+    if (gutter) {
+      gutter.setAttribute('aria-valuenow', String(Math.round(percent)));
+    }
+    const key = this._storageKey(container);
+    if (save && key) {
+      try { localStorage.setItem(key, String(percent)); } catch (e) { }
+    }
+  },
+
+  _current: function (container) {
+    return parseFloat(container.dataset.splitNow || container.dataset.splitInitial || '50');
+  },
+
+  restore: function (container) {
+    const key = container && this._storageKey(container);
+    if (!key) {
+      return;
+    }
+    try {
+      const saved = parseFloat(localStorage.getItem(key));
+      if (!isNaN(saved)) {
+        this._set(container, saved, false);
+      }
+    } catch (e) { }
+  },
+
+  _init: function () {
+    const self = this;
+    const gutterOf = function (event) {
+      const gutter = event.target instanceof Element ? event.target.closest('.udaped-split-gutter') : null;
+      return gutter && gutter.parentElement && gutter.parentElement.classList.contains('udaped-split') ? gutter : null;
+    };
+
+    document.addEventListener('pointerdown', function (event) {
+      const gutter = gutterOf(event);
+      if (!gutter || event.button !== 0) {
+        return;
+      }
+      event.preventDefault();
+      const container = gutter.parentElement;
+      const move = function (e) {
+        const rect = container.getBoundingClientRect();
+        if (rect.width > 0) {
+          self._set(container, (e.clientX - rect.left) / rect.width * 100, false);
+        }
+      };
+      const end = function () {
+        gutter.removeEventListener('pointermove', move);
+        gutter.removeEventListener('pointerup', end);
+        gutter.removeEventListener('pointercancel', end);
+        container.classList.remove('udaped-split-dragging');
+        self._set(container, self._current(container), true);
+      };
+      gutter.setPointerCapture(event.pointerId);
+      container.classList.add('udaped-split-dragging');
+      gutter.addEventListener('pointermove', move);
+      gutter.addEventListener('pointerup', end);
+      gutter.addEventListener('pointercancel', end);
+    });
+
+    document.addEventListener('dblclick', function (event) {
+      const gutter = gutterOf(event);
+      if (gutter) {
+        const container = gutter.parentElement;
+        self._set(container, parseFloat(container.dataset.splitInitial || '50'), true);
+      }
+    });
+
+    document.addEventListener('keydown', function (event) {
+      const gutter = gutterOf(event);
+      if (!gutter) {
+        return;
+      }
+      const container = gutter.parentElement;
+      const min = parseFloat(container.dataset.splitMin || '15');
+      const steps = { ArrowLeft: -5, ArrowRight: 5 };
+      let next = null;
+      if (event.key in steps) {
+        next = self._current(container) + steps[event.key];
+      } else if (event.key === 'Home') {
+        next = min;
+      } else if (event.key === 'End') {
+        next = 100 - min;
+      }
+      if (next !== null) {
+        event.preventDefault();
+        self._set(container, next, true);
+      }
+    });
+  }
+};
+window.udapEdSplit._init();

@@ -81,8 +81,9 @@
 	              </MudAlert>
               }
           </MudItem>
-          <MudGrid Spacing="1" Class="mt-8">
-	          <MudItem sm="6" xs="12">
+          <MudItem xs="12" Class="mt-8">
+            <SplitPanes StorageKey="discovery">
+              <Left>
 		          <MudPaper Class="udap-input" Elevation="3">
                       @if (!_isLoading && ModelSizeInBytes.HasValue && !string.IsNullOrEmpty(Result))
                       {
@@ -105,8 +106,8 @@
 	                      <pre style="padding-right: 2.5rem;" data-testid="discovery-result">@Result</pre>
                       }
 		          </MudPaper>
-	          </MudItem>
-              <MudItem sm="6" xs="12">
+              </Left>
+              <Right>
                   <MudPaper Class="udap-analyzed" Elevation="3">
                       <MudText Align="Align.Right" Color="Color.Tertiary">Discovery | Metadata | Signed | Communities</MudText>
                       <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-2" KeepPanelsAlive="true">
@@ -118,8 +119,9 @@
                           </MudTabPanel>
                       </MudTabs>
                   </MudPaper>
-              </MudItem>
-          </MudGrid>
+              </Right>
+            </SplitPanes>
+          </MudItem>
       </MudGrid>
 
   </ChildContent>

@@ -348,8 +348,8 @@
                     <MudCardContent>
                         <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-6" KeepPanelsAlive="true">
                             <MudTabPanel Text="Registration">
-                                <MudGrid Spacing="1" Class="mt-8">
-                                    <MudItem sm="6" xs="12">
+                                <SplitPanes StorageKey="registration-1" Class="mt-8">
+                                    <Left>
                                         <MudPaper Class="udap-input" Elevation="3">
                                             <MudText Align="Align.Right" Color="Color.Tertiary">Raw Software Statement</MudText>
                                             <pre Class="@ValidRawSoftwareStatementStyle">[</pre>
@@ -378,8 +378,8 @@
                                         {
                                             <MudAlert Severity="Severity.Warning">Don't forget a scope</MudAlert>
                                         }
-                                    </MudItem>
-                                    <MudItem sm="6" xs="12">
+                                    </Left>
+                                    <Right>
                                         <MudPaper Class="udap-analyzed" Elevation="3">
                                             <MudText Align="Align.Right" Color="Color.Tertiary">x509 certificates from x5c</MudText>
                                             <CertificatePKIViewer
@@ -389,13 +389,13 @@
                                                 EndCertificate="true"
                                                 IntermediateAddedToX5cEvent="@OnRegistrationIntermediateAdded"/>
                                         </MudPaper>
-                                    </MudItem>
-                                </MudGrid>
+                                    </Right>
+                                </SplitPanes>
                             </MudTabPanel>
 
                             <MudTabPanel Text="Certifications">
-                                <MudGrid Spacing="1" Class="mt-8">
-                                    <MudItem sm="6" xs="12">
+                                <SplitPanes StorageKey="registration-2" Class="mt-8">
+                                    <Left>
                                         <MudPaper Class="udap-input" Elevation="3">
                                             <MudText Align="Align.Right" Color="Color.Tertiary">Raw Software Statement</MudText>
                                             <pre Class="@ValidCertRawSoftwareStatementStyle">[</pre>
@@ -434,14 +434,14 @@
                                         {
                                             <MudAlert Severity="Severity.Warning">Don't forget a scope</MudAlert>
                                         }
-                                    </MudItem>
-                                    <MudItem sm="6" xs="12">
+                                    </Left>
+                                    <Right>
                                         <MudPaper Class="udap-analyzed" Elevation="3">
                                             <MudText Align="Align.Right" Color="Color.Tertiary">x509 certificates from x5c</MudText>
                                             <CertificatePKIViewer  @ref="_certificateViewerForCertification"  JwtHeaderWithx5c="@CertSoftwareStatementBeforeEncodingHeader" EnableAddToClaim="true" CertContext="certification" IntermediateAddedToX5cEvent="@OnCertificationIntermediateAdded" />
                                         </MudPaper>
-                                    </MudItem>
-                                </MudGrid>
+                                    </Right>
+                                </SplitPanes>
                             </MudTabPanel>
                         </MudTabs>
                     </MudCardContent>
@@ -467,15 +467,15 @@
                                    data-testid="registration-build-body">Build Request Body</MudButton>
                     </MudCardActions>
                     <MudCardContent>
-                        <MudGrid Spacing="1" Class="mt-8">
-                            <MudItem sm="6" xs="12">
+                        <SplitPanes StorageKey="registration-3" Class="mt-8">
+                            <Left>
                                 <MudPaper Class="udap-input" Elevation="3">
                                     <MudText Align="Align.Right" Color="Color.Tertiary">Request Body</MudText>
                                     <MudText Align="Align.Right" Color="Color.Tertiary">Actual software_statement</MudText>
                                     <pre>@((MarkupString)RequestBody)</pre>
                                 </MudPaper>
-                            </MudItem>
-                            <MudItem sm="6" xs="12">
+                            </Left>
+                            <Right>
                                 <MudPaper Class="udap-analyzed" Elevation="3">
                                     <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-6">
                                         <MudTabPanel Text="Client Registration Decoded" OnClick="HighlightSoftwareStatement">
@@ -497,8 +497,8 @@
                                         </MudTabPanel>
                                     </MudTabs>
                                 </MudPaper>
-                            </MudItem>
-                        </MudGrid>
+                            </Right>
+                        </SplitPanes>
                     </MudCardContent>
                 </ChildContent>
             </MudExpansionPanel>
@@ -522,8 +522,8 @@
                                    data-testid="registration-register">Register (DCR)</MudButton>
                     </MudCardActions>
                     <MudCardContent>
-                        <MudGrid Spacing="1" Class="mt-8">
-                            <MudItem sm="6" xs="12">
+                        <SplitPanes StorageKey="registration-4" Class="mt-8">
+                            <Left>
                                 <MudPaper Class="udap - input" Elevation="3">
                                     <MudText Align="Align.Right" Color="Color.Tertiary">Registration Response</MudText>
                                     <pre data-testid="registration-result">@((MarkupString)RegistrationResult.HighlightScope())</pre>
@@ -540,8 +540,8 @@
                                         <MudButton StartIcon="@Icons.Material.Filled.Save" OnClick="SaveScopesToClient">Save Scopes</MudButton>
                                     </MudPaper>
                                 }
-                            </MudItem>
-                            <MudItem sm="6" xs="12">
+                            </Left>
+                            <Right>
                                 <MudPaper Class="udap-knowledge" Elevation="3">
                                     <pre>
 <a href="http://hl7.org/fhir/us/udap-security/registration.html#request-body" target="_blank">Per UDAP Security IG</a>
@@ -557,8 +557,8 @@ If a new registration is successful, the Authorization Server SHALL return a reg
                                                      SignedSoftwareStatement="@AppState.RegistrationDocument?.SoftwareStatement"
                                                      HighlightScopes="true" />
                                 </MudPaper>
-                            </MudItem>
-                        </MudGrid>
+                            </Right>
+                        </SplitPanes>
                     </MudCardContent>
                 </ChildContent>
             </MudExpansionPanel>

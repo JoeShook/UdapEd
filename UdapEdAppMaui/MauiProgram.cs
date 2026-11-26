@@ -14,7 +14,6 @@ using Hl7.Fhir.Rest;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.FluentUI.AspNetCore.Components;
 using Microsoft.Maui.LifecycleEvents;
 using MudBlazor.Services;
 using Serilog;
@@ -250,7 +249,6 @@ public static class MauiProgram
             return new FhirClient(url, httpClient, settings);
         });
 
-        builder.Services.AddFluentUIComponents();
         builder.Services.AddSingleton<HtmlSanitizer>();
 
 #if WINDOWS

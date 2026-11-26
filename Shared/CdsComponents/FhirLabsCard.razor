@@ -1,41 +1,28 @@
-﻿@using Microsoft.FluentUI.AspNetCore.Components
-@using System.Collections.Generic
+﻿@using System.Collections.Generic
 @using Udap.CdsHooks.Model
 @inject NavigationManager Navigation
 
-<FluentCard Class="cds-card">
-    <h3>
-        @CdsCard.Summary
-    </h3>
-    
-    <h5>
-        Source: <a href="@($"{Navigation.Uri}/#")">@CdsCard.Source?.Label</a>
-    </h5>
+<MudPaper Class="cds-card" Elevation="0">
+    <MudText Typo="Typo.h6">@CdsCard.Summary</MudText>
 
-    <div>
-        @if (CdsCard.Suggestions != null)
-        {
-            foreach (var suggestion in CdsCard.Suggestions)
+    <MudText Typo="Typo.subtitle2" Class="mb-2">
+        Source: <MudLink Href="@($"{Navigation.Uri}/#")">@CdsCard.Source?.Label</MudLink>
+    </MudText>
+
+    @if (CdsCard.Suggestions != null)
+    {
+        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2">
+            @foreach (var suggestion in CdsCard.Suggestions)
             {
-                <FluentButton Appearance="Appearance.Accent" Class="Button-module__emphasis">
-                    @suggestion.Label
-                </FluentButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary">@suggestion.Label</MudButton>
             }
-        }
-    </div>
-    
-    <FluentDivider Class="cds-divider" Style="width: 100%;" Role="@DividerRole.Presentation"></FluentDivider>
-    <div class="_DropdownButtonBase-module__dropdown-button-base">
+        </MudStack>
+    }
 
-        <FluentButton Appearance="Appearance.Accent" OnClick="HandleDismiss">
-            Dismiss
-        </FluentButton>
-        @* <FluentButton Appearance="Appearance.Neutral" aria-haspopup="menu" aria-expanded="false" aria-label="More Options" OnClick="HandleMoreOptions"> *@
-        @*     <span class="SplitButton-module__caret-icon"></span> *@
-        @* </FluentButton> *@
-    </div>
+    <MudDivider Class="my-3" />
 
-</FluentCard>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="HandleDismiss">Dismiss</MudButton>
+</MudPaper>
 
 @code {
 

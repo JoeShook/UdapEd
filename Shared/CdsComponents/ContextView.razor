@@ -1,5 +1,4 @@
-﻿@using Microsoft.FluentUI.AspNetCore.Components
-@code {
+﻿@code {
     [Parameter]
     public string Class { get; set; } = string.Empty;
 
@@ -13,29 +12,20 @@
     public string MessagesJson { get; set; } = string.Empty;
 }
 
-<FluentCard Class="@Class" Style="display: flex; flex-direction: column; height: 100%;">
+<MudPaper Class="@Class" Elevation="1" Style="display: flex; flex-direction: column; height: 100%;">
     <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-        <h1>CDS Developer Panel</h1>
+        <MudText Typo="Typo.h5" Class="my-4">CDS Developer Panel</MudText>
 
-        <FluentAccordion Style="flex: 1; overflow: hidden;">
-            <FluentAccordionItem Expanded="true">
-                <h3 slot="heading">Request</h3>
-                <div style="flex: 1; overflow: auto;">
-                    <pre style="background-color:#3e4e76;color:white;padding: .2% 2%;white-space:pre;overflow:auto;max-height:100%;">@RequestJson</pre>
-                </div>
-            </FluentAccordionItem>
-            <FluentAccordionItem Expanded="true">
-                <h3 slot="heading">Response</h3>
-                <div style="flex: 1; overflow: auto;">
-                    <pre style="background-color:#3e4e76;color:white;padding: .2% 2%;white-space:pre;overflow:auto;max-height:100%;">@ResponseJson</pre>
-                </div>
-            </FluentAccordionItem>
-            <FluentAccordionItem Expanded="true">
-                <h3 slot="heading">Messages</h3>
-                <div style="flex: 1; overflow: auto;">
-                    <pre style="background-color:#3e4e76;color:white;padding: .2% 2%;white-space:pre;overflow:auto;max-height:100%;">@MessagesJson</pre>
-                </div>
-            </FluentAccordionItem>
-        </FluentAccordion>
+        <MudExpansionPanels MultiExpansion="true" Style="flex: 1; overflow: auto;">
+            <MudExpansionPanel Text="Request" Expanded="true">
+                <pre class="cds-json">@RequestJson</pre>
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="Response" Expanded="true">
+                <pre class="cds-json">@ResponseJson</pre>
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="Messages" Expanded="true">
+                <pre class="cds-json">@MessagesJson</pre>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
     </div>
-</FluentCard>
+</MudPaper>

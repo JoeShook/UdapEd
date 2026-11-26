@@ -1,5 +1,4 @@
 ﻿@using Hl7.Fhir.Model
-@using Microsoft.FluentUI.AspNetCore.Components
 @using Udap.CdsHooks.Model
 
 
@@ -28,7 +27,7 @@
     
 }
 
-<FluentCard class="@Class">
+<MudPaper Class="@Class" Elevation="1">
     @if (_firstQueryParam == "PatientView")
     {
         <PatientView Patient="@Patient" />
@@ -50,4 +49,4 @@
     {
         <p>Component not found</p>
     }
-</FluentCard>
+</MudPaper>
