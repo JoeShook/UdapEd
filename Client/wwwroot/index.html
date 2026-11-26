@@ -20,10 +20,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
-  <link href="_content/UdapEd.Shared/css/app.css" rel="stylesheet" asp-append-version="true" />
-  <link href="_content/UdapEd.Shared/css/cds.css" rel="stylesheet" asp-append-version="true" />
-  <link href="css/monaco.css" rel="stylesheet" />
+  <!-- These files have no fingerprint in their names and the CDN in front of the site caches them for an hour,
+       so each link carries ?v=<release>. Bump it every release, here and in the scripts below. -->
+  <link href="_content/MudBlazor/MudBlazor.min.css?v=0.9.26" rel="stylesheet" />
+  <link href="_content/UdapEd.Shared/css/app.css?v=0.9.26" rel="stylesheet" />
+  <link href="_content/UdapEd.Shared/css/cds.css?v=0.9.26" rel="stylesheet" />
+  <link href="css/monaco.css?v=0.9.26" rel="stylesheet" />
   <!-- <link href="UdapEd.Client.styles.css" rel="stylesheet" /> -->
 </head>
 
@@ -42,12 +44,12 @@
     <a class="dismiss">🗙</a>
   </div>
   <script src="_framework/blazor.webassembly.js"></script>
-  <script src="_content/MudBlazor/MudBlazor.min.js" asp-append-version="true"></script>
-  <script src="_content/UdapEd.Shared/scripts/AutoFocus.js"></script>
-  <script src="_content/UdapEd.Shared/scripts/UdapEdUtility.js?v=3"></script>
-  <script src="_content/UdapEd.Shared/scripts/EventHandlers.js"></script>
+  <script src="_content/MudBlazor/MudBlazor.min.js?v=0.9.26"></script>
+  <script src="_content/UdapEd.Shared/scripts/AutoFocus.js?v=0.9.26"></script>
+  <script src="_content/UdapEd.Shared/scripts/UdapEdUtility.js?v=0.9.26"></script>
+  <script src="_content/UdapEd.Shared/scripts/EventHandlers.js?v=0.9.26"></script>
 
-  <script src="_content/BlazorMonaco/jsInterop.js"></script>
+  <script src="_content/BlazorMonaco/jsInterop.js?v=0.9.26"></script>
   <!-- The Monaco editor (about 1.4 MB) loads on first use: see udapEdMonaco.ensureLoaded in UdapEdUtility.js. -->
 
   <!-- todo package in RCL -->
