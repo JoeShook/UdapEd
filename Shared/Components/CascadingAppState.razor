@@ -80,8 +80,9 @@
             if (prop != null)
             {
                 this._caller = caller.GetType().Name;
+                var unchanged = IsUnchanged(prop.GetValue(this), propertyValue);
                 prop.SetValue(this, propertyValue);
-                if (saveChanges)
+                if (saveChanges && !unchanged)
                 {
                     // Console.WriteLine($"SaveChanges for propertyName: {propertyName}");
                     this.SaveChanges(); //WASM:: Cannot .GetAwaiter().GetResult() will not work.  Error: "Cannot wait on monitors on this runtime
@@ -100,6 +101,15 @@
         }
     }
 
+    /// <summary>
+    /// True when setting the value cannot change what is saved: both null, or an equal value type or string.
+    /// Objects are never treated as unchanged, because callers often mutate one and set the same instance again
+    /// to save it.
+    /// </summary>
+    private static bool IsUnchanged(object? current, object? next) =>
+        (current is null && next is null) ||
+        (next is ValueType or string && Equals(current, next));
+
     public async Task SetPropertyAsync(
         ComponentBase caller,
         string propertyName,
@@ -113,8 +123,9 @@
             if (prop != null)
             {
                 this._caller = caller.GetType().Name;
+                var unchanged = IsUnchanged(prop.GetValue(this), propertyValue);
                 prop.SetValue(this, propertyValue);
-                if (saveChanges)
+                if (saveChanges && !unchanged)
                 {
                     // Console.WriteLine($"SaveChanges(Async) for propertyName: {propertyName}");
                     await SaveChanges();
@@ -378,7 +389,8 @@
                     {
                         var type = property.PropertyType;
                         var value = property.GetValue(appStateData);
-                        SetProperty(this, property.Name, value, false);
+                        // No render per property; one render follows the loop.
+                        SetProperty(this, property.Name, value, false, false);
                     }
                     // Re-render
                     await InvokeAsync(StateHasChanged);

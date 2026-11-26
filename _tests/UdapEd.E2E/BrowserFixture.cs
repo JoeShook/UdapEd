@@ -80,8 +80,20 @@ public sealed class BrowserFixture : IAsyncLifetime
         if (_playwright != null)
         {
             // Closing each context writes its HAR file when UDAPED_HAR_DIR is set.
+            var storageDir = Environment.GetEnvironmentVariable("UDAPED_STORAGE_DIR");
             foreach (var context in Browser.Contexts.ToList())
             {
+                // UDAPED_STORAGE_DIR=<folder> keeps each test's final cookies and localStorage (UdapEd's app state),
+                // for reproducing a realistic state when profiling.
+                if (!string.IsNullOrEmpty(storageDir))
+                {
+                    Directory.CreateDirectory(storageDir);
+                    await context.StorageStateAsync(new BrowserContextStorageStateOptions
+                    {
+                        Path = Path.Combine(storageDir, $"udaped-state-{DateTime.UtcNow:yyyyMMdd-HHmmss-fff}.json")
+                    });
+                }
+
                 await context.CloseAsync();
             }
 

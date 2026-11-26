@@ -35,7 +35,8 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
             clientCertificateLoadStatus.UserSuppliedCertificate = userSuppliedCertificate ?? false;
         }
 
-        await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), clientCertificateLoadStatus);
+        await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), clientCertificateLoadStatus,
+            saveChanges: !SameStatus(AppState.UdapClientCertificateInfo, clientCertificateLoadStatus));
 
         if (clientCertificateLoadStatus is { UserSuppliedCertificate: true })
         {
@@ -75,7 +76,8 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
             clientCertificateLoadStatus.UserSuppliedCertificate = userSuppliedCertificate ?? false;
         }
 
-        await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), clientCertificateLoadStatus);
+        await AppState.SetPropertyAsync(this, nameof(AppState.UdapClientCertificateInfo), clientCertificateLoadStatus,
+            saveChanges: !SameStatus(AppState.UdapClientCertificateInfo, clientCertificateLoadStatus));
 
         if (clientCertificateLoadStatus is { UserSuppliedCertificate: true })
         {
@@ -122,6 +124,21 @@ public partial class ClientCertLoader: ComponentBase, IDisposable
 
         await OnCertificateLoaded.InvokeAsync();
     }
+
+    /// <summary>
+    /// True when the server reports the certificate already in app state. The status is re-read on every page that
+    /// shows this loader; saving an identical copy each time re-serialized the whole app state on every navigation.
+    /// </summary>
+    private static bool SameStatus(CertificateStatusViewModel? a, CertificateStatusViewModel? b) =>
+        a is null ? b is null :
+        b is not null &&
+        a.CertLoaded == b.CertLoaded &&
+        a.Thumbprint == b.Thumbprint &&
+        a.DistinguishedName == b.DistinguishedName &&
+        a.UserSuppliedCertificate == b.UserSuppliedCertificate &&
+        a.PublicKeyAlgorithm == b.PublicKeyAlgorithm &&
+        a.Issuer == b.Issuer &&
+        a.SubjectAltNames.SequenceEqual(b.SubjectAltNames);
 
     private void SetCertLoadedColor(CertLoadedEnum? isCertLoaded, ref Color certColor, bool commit = true)
     {
