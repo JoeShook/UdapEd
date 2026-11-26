@@ -261,6 +261,10 @@ public partial class UdapConsumer
         LoginRedirectLinkText = "Login Redirect";
     }
 
+    // LoginCallback runs on every render (it is called from the markup). Saving app state on each render made
+    // every later step slow, so the callback is saved once per redirect.
+    private string? _savedCallbackQuery;
+
     private string LoginCallback(bool reset = false)
     {
         if (reset)
@@ -270,7 +274,7 @@ public partial class UdapConsumer
 
         var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
 
-        if (!string.IsNullOrEmpty(uri.Query))
+        if (!string.IsNullOrEmpty(uri.Query) && uri.Query != _savedCallbackQuery)
         {
             var queryParams = QueryHelpers.ParseQuery(uri.Query);
 
@@ -284,6 +288,7 @@ public partial class UdapConsumer
             };
 
             AppState.SetProperty(this, nameof(AppState.LoginCallBackResult), loginCallbackResult, true, false);
+            _savedCallbackQuery = uri.Query;
         }
 
         return uri.Query.Replace("&", "&\r\n");

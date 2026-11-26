@@ -273,6 +273,10 @@ public partial class UdapTieredOAuth
         LoginRedirectLinkText = "Login Redirect";
     }
 
+    // LoginCallback runs on every render (it is called from the markup). Saving app state on each render made
+    // every later step slow, so the callback is saved once per redirect.
+    private string? _savedCallbackQuery;
+
     public string LoginCallback(bool reset = false)
     {
         if (reset)
@@ -282,7 +286,7 @@ public partial class UdapTieredOAuth
 
         var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
 
-        if (!string.IsNullOrEmpty(uri.Query))
+        if (!string.IsNullOrEmpty(uri.Query) && uri.Query != _savedCallbackQuery)
         {
             var queryParams = QueryHelpers.ParseQuery(uri.Query);
 
@@ -296,6 +300,7 @@ public partial class UdapTieredOAuth
             };
 
             AppState.SetProperty(this, nameof(AppState.LoginCallBackResult), loginCallbackResult, true, false);
+            _savedCallbackQuery = uri.Query;
         }
 
         return uri.Query.Replace("&", "&\r\n");
