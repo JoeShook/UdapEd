@@ -40,19 +40,21 @@
                               @onblur="SelectIdPBaseUrl"
                               Error="@(IdPError(IdPBaseUrl) != null)"
                               ErrorText="@IdPError(IdPBaseUrl)"
+                              HelperText="@(string.IsNullOrWhiteSpace(IdPBaseUrl) ? IdPRequiredText : null)"
                               AdornmentIcon="@Icons.Material.Outlined.Input"
                               Adornment="@IdpAdornment"
                               OnAdornmentClick="SelectKnownIdps"/>
-                @if (!string.IsNullOrWhiteSpace(IdPBaseUrl))
-                {
+                @{
+                    var idpMissing = string.IsNullOrWhiteSpace(IdPBaseUrl);
                     var idpError = IdPError(IdPBaseUrl);
-                    <MudTooltip Text="@(idpError ?? "Valid IdP base URL")">
-                        <MudIcon data-testid="tiered-idp-status"
-                                 Icon="@(idpError == null ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Error)"
-                                 Color="@(idpError == null ? Color.Success : Color.Error)"
-                                 aria-label="@(idpError ?? "Valid IdP base URL")" />
-                    </MudTooltip>
+                    var idpStatus = idpMissing ? IdPRequiredText : idpError ?? "Valid IdP base URL";
                 }
+                <MudTooltip Text="@idpStatus">
+                    <MudIcon data-testid="tiered-idp-status"
+                             Icon="@(idpMissing ? Icons.Material.Filled.ErrorOutline : idpError == null ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Error)"
+                             Color="@(idpMissing ? Color.Warning : idpError == null ? Color.Success : Color.Error)"
+                             aria-label="@idpStatus" />
+                </MudTooltip>
             </div>
         </MudItem>
 
@@ -169,6 +171,10 @@
 
         return null;
     }
+
+    private string IdPRequiredText => ClientId == null
+        ? "Required: select a client, then enter the OpenID Connect IdP base URL"
+        : "Required: enter the OpenID Connect IdP base URL";
 
     /// <summary>True when an IdP base URL is entered and usable.</summary>
     public static bool IsUsableIdP(string? idPBaseUrl) =>
