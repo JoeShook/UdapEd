@@ -168,8 +168,8 @@ public partial class UdapTieredOAuth
     /// Host: resourceholder.example.com
     /// </summary>
     /// <exception cref="NotImplementedException"></exception>
-    /// <summary>True once an OpenID Connect IdP is set for the selected registration; the request is built only then.</summary>
-    private bool HasIdP => !string.IsNullOrWhiteSpace(AppState.ClientRegistrations?.SelectedRegistration?.IdPBaseUrl);
+    /// <summary>True once a usable OpenID Connect IdP is set for the selected registration; the request is built only then.</summary>
+    private bool HasIdP => ClientIdSelection.IsUsableIdP(AppState.ClientRegistrations?.SelectedRegistration?.IdPBaseUrl);
 
     private async Task BuildAuthCodeRequest()
     {
