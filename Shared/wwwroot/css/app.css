@@ -315,6 +315,78 @@ input.pre, textarea.pre {
   margin: 8px;
 }
 
+/* SplitPanes: two panes with a draggable divider. udapEdSplit in UdapEdUtility.js sets --udaped-split. */
+.udaped-split {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.udaped-split > .udaped-split-pane {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.udaped-split > .udaped-split-left {
+  flex: 0 0 var(--udaped-split, 50%);
+}
+
+.udaped-split > .udaped-split-right {
+  flex: 1 1 0;
+}
+
+.udaped-split > .udaped-split-gutter {
+  flex: 0 0 12px;
+  position: relative;
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+}
+
+.udaped-split > .udaped-split-gutter::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 5px;
+  width: 2px;
+  border-radius: 2px;
+  background-color: var(--mud-palette-lines-default);
+  transition: background-color .15s, left .15s, width .15s;
+}
+
+.udaped-split > .udaped-split-gutter:hover::after,
+.udaped-split > .udaped-split-gutter:focus-visible::after,
+.udaped-split.udaped-split-dragging > .udaped-split-gutter::after {
+  left: 4px;
+  width: 4px;
+  background-color: var(--mud-palette-primary);
+}
+
+.udaped-split.udaped-split-dragging {
+  cursor: col-resize;
+  user-select: none;
+}
+
+/* Monaco editors and other iframes would swallow pointer events mid-drag. */
+.udaped-split.udaped-split-dragging .udaped-split-pane {
+  pointer-events: none;
+}
+
+@media (max-width: 599.98px) {
+  .udaped-split {
+    flex-direction: column;
+  }
+
+  .udaped-split > .udaped-split-left {
+    flex-basis: auto;
+  }
+
+  .udaped-split > .udaped-split-gutter {
+    display: none;
+  }
+}
+
 .epoch-tooltip {
   position: relative;
   border-bottom: 1px dashed currentColor;

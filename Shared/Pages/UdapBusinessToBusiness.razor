@@ -122,8 +122,8 @@
                       </MudGrid>
                   </MudCardActions>
                   <MudCardContent>
-                      <MudGrid Spacing="1">
-                          <MudItem sm="6" xs="12">
+                      <SplitPanes StorageKey="b2b-1">
+                          <Left>
                               <MudPaper Class="udap-input" Elevation="3">
                                   <MudText Align="Align.Right" Color="Color.Tertiary">
                                       5.2 Client Credentials Flow Request
@@ -145,8 +145,8 @@
                                   <pre style="padding-left: 10px">@TokenRequestScope</pre>
                                   <pre style="padding-left:10px">@TokenRequest4</pre>
                               </MudPaper>
-                          </MudItem>
-                          <MudItem sm="6" xs="12">
+                          </Left>
+                          <Right>
                               <MudPaper Class="udap-analyzed" Elevation="3">
                                   <MudText Align="Align.Right" Color="Color.Tertiary">Decoded</MudText>
                                   <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-6" KeepPanelsAlive="true">
@@ -187,8 +187,8 @@
                                       }
                                   </MudTabs>
                               </MudPaper>
-                          </MudItem>
-                      </MudGrid>
+                          </Right>
+                      </SplitPanes>
                   </MudCardContent>
               </ChildContent>
           </MudExpansionPanel>
@@ -226,8 +226,8 @@
                       </MudGrid>
                   </MudCardActions>
                   <MudCardContent>
-                      <MudGrid Spacing="1">
-                          <MudItem sm="6" xs="12">
+                      <SplitPanes StorageKey="b2b-2">
+                          <Left>
                               <MudPaper Class="udap-input" Elevation="3">
                                   <MudText Align="Align.Right" Color="Color.Tertiary">3.1 Authorization Code Flow (part 1)</MudText>
                                   @if (AppState.AuthorizationCodeRequest != null)
@@ -260,15 +260,15 @@
                                       }
                                   }
                               </MudPaper>
-                          </MudItem>
-                          <MudItem sm="6" xs="12">
+                          </Left>
+                          <Right>
                               <MudPaper Class="udap-knowledge" Elevation="3">
                                   <MudText Align="Align.Right" Color="Color.Tertiary">3.1 Authorization Code Flow (part 1)</MudText>
                                   <a href="https://www.udap.org/udap-jwt-client-auth.html#3.1">See section 3.1 of the JWT Client Authentication UDAP Profile</a>
                                   <pre>The build of the @AuthorizeVerb request to the Authorization servers "authorize" endpoint.  This is the endpoint discovered in the resource servers metadata.  Specifically the authorization_endpoint metadata item.</pre>
                               </MudPaper>
-                          </MudItem>
-                      </MudGrid>
+                          </Right>
+                      </SplitPanes>
                   </MudCardContent>
               </ChildContent>
           </MudExpansionPanel>
@@ -292,8 +292,8 @@
                   </MudCardActions>
                   <MudCardContent>
                       <AuthorizeRequestDisplay Link="@AuthCodeRequestLink" Method="AuthorizeMethod" />
-                      <MudGrid Spacing="1">
-                          <MudItem sm="6" xs="12">
+                      <SplitPanes StorageKey="b2b-3">
+                          <Left>
                               <MudPaper Class="udap-input" Elevation="3">
                                   <MudText Align="Align.Right" Color="Color.Tertiary">3.1 Authorization Code Flow (part 2)</MudText>
                                   <MudText Typo="Typo.subtitle1">
@@ -320,16 +320,16 @@
                                       }
                                   }
                               </MudPaper>
-                          </MudItem>
-                          <MudItem sm="6" xs="12">
+                          </Left>
+                          <Right>
                               <MudPaper Class="udap-knowledge" Elevation="3">
                                   <MudText Align="Align.Right" Color="Color.Tertiary">3.1 Authorization Code Flow (part 2)</MudText>
                                   <a href="https://www.udap.org/udap-jwt-client-auth.html#3.1">See section 3.1 of the JWT Client Authentication UDAP Profile</a>
                                   <pre>The Login Redirect is constructed by the Authorization server in response to GET request to the authorize_endpoint.</pre>
                                   <pre>The text on the left captures that redirect rather than following it for illustration.</pre>
                               </MudPaper>
-                          </MudItem>
-                      </MudGrid>
+                          </Right>
+                      </SplitPanes>
                   </MudCardContent>
               </ChildContent>
           </MudExpansionPanel>
@@ -357,8 +357,8 @@
                       <MudChip T="string" Color="Color.Info" Size="Size.Small" Class="mt-3">@AuthorizeVerb</MudChip>
                   </MudCardActions>
                   <MudCardContent>
-                      <MudGrid Spacing="1" >
-                          <MudItem sm="6" xs="12">
+                      <SplitPanes StorageKey="b2b-4">
+                          <Left>
                               <MudPaper Class="udap-input" Elevation="3">
                                   <MudText Align="Align.Right" Color="Color.Tertiary">3.1 Authorization Code Flow (part 3)</MudText>
                                   <pre>HTTP/1.1 302 Found</pre>
@@ -371,8 +371,8 @@
                                       <pre style="padding-left: 10px">@LoginCallback()</pre>
                                   }
                               </MudPaper>
-                          </MudItem>
-                          <MudItem sm="6" xs="12">
+                          </Left>
+                          <Right>
                               <MudPaper Class="udap-knowledge" Elevation="3">
                                   <MudText Align="Align.Right" Color="Color.Tertiary">3.1 Authorization Code Flow (part 3)</MudText>
                                   <a href="https://www.udap.org/udap-jwt-client-auth.html#3.1">See section 3.1 of the JWT Client Authentication UDAP Profile</a>
@@ -380,8 +380,8 @@
                                   <pre>This button will launch @AuthorizeVerb request in part 1 and follow the redirect from part 2.</pre>
                                   <pre>The 302 response on the left is the redirect from the Authorization server back to this page after success fully entering valid credentials</pre>
                               </MudPaper>
-                          </MudItem>
-                      </MudGrid>
+                          </Right>
+                      </SplitPanes>
                   </MudCardContent>
               </ChildContent>
           </MudExpansionPanel>
@@ -431,8 +431,8 @@
                       </MudGrid>
                   </MudCardActions>
                   <MudCardContent>
-                      <MudGrid Spacing="1">
-                          <MudItem sm="6" xs="12">
+                      <SplitPanes StorageKey="b2b-5">
+                          <Left>
                               <MudPaper Class="udap-input">
                                   <MudText Align="Align.Right" Color="Color.Tertiary">5.1 Authorization Code Flow</MudText>
                                   <MudText Align="Align.Right" Color="Color.Tertiary">Cash Code in for Access Token</MudText>
@@ -449,8 +449,8 @@
                                   <pre class="udaped-highlight" style="padding-left:10px; ">@TokenRequest3</pre>
                                   <pre style="padding-left:10px">@TokenRequest4</pre>
                               </MudPaper>
-                          </MudItem>
-                          <MudItem sm="6" xs="12">
+                          </Left>
+                          <Right>
                               <MudPaper Class="udap-analyzed">
                                   <MudText Align="Align.Right" Color="Color.Tertiary">Decoded</MudText>
                                   <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-6" KeepPanelsAlive="true">
@@ -485,8 +485,8 @@
                                       }
                                   </MudTabs>
                               </MudPaper>
-                          </MudItem>
-                      </MudGrid>
+                          </Right>
+                      </SplitPanes>
                   </MudCardContent>
               </ChildContent>
           </MudExpansionPanel>
@@ -510,8 +510,8 @@
                              data-testid="b2b-get-access-token">Get Access Token</MudButton>
               </MudCardActions>
               <MudCardContent>
-                  <MudGrid Spacing="1">
-                      <MudItem sm="6" xs="12">
+                  <SplitPanes StorageKey="b2b-6">
+                      <Left>
                           <MudPaper Class="pa-4 ma-2" Elevation="3">
                               <MudText Align="Align.Right" Color="Color.Tertiary">OpenID Connect/OAuth 2 Response</MudText>
                               @if (AppState.AccessTokens is { IsError: true })
@@ -526,8 +526,8 @@
                                   <ResponseHeadersTable Headers="@AppState.AccessTokens?.Headers" />
                               }
                           </MudPaper>
-                      </MudItem>
-                      <MudItem sm="6" xs="12">
+                      </Left>
+                      <Right>
                           <MudPaper Class="udap-knowledge" Elevation="3">
                               <MudText Align="Align.Left" Color="Color.Tertiary">See <a href="https://build.fhir.org/ig/HL7/fhir-identity-matching-ig/digital-identity.html#requirements-for-digital-identifiers-for-individuals">Requirements for Digital Identifiers for Individuals</a>
                                   to understand more about the Identity Token. During Tiered OAuth the hl7_identifier is used in this tool as the context</MudText>
@@ -545,8 +545,8 @@
                                   </MudTabPanel>
                               </MudTabs>
                           </MudPaper>
-                      </MudItem>
-                  </MudGrid>
+                      </Right>
+                  </SplitPanes>
               </MudCardContent>
           </ChildContent>
       </MudExpansionPanel>

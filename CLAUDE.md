@@ -83,8 +83,8 @@ Uses **Firely** (`Hl7.Fhir.*`) for FHIR resource parsing, validation, and FhirPa
 `BouncyCastle.Cryptography` is used for certificate operations (trust chain building, CRL checking). There is a `CrlCacheService` for caching certificate revocation lists.
 
 ### UI
-- **MudBlazor** — primary component library for Blazor UI
-- **Microsoft FluentUI** — secondary UI components
+- **MudBlazor** — the component library for the whole UI (FluentUI was removed)
+- **SplitPanes** (`Shared/Components/SplitPanes.razor`) — side-by-side panes with a draggable divider
 - **BlazorMonaco** — embedded Monaco editor for JSON/FHIR editing
 
 ## Important Configuration

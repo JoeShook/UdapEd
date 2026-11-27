@@ -1,0 +1,63 @@
+﻿@using System.Globalization
+@inject IJSRuntime JS
+
+@*
+    Two panes side by side with a draggable divider between them. Dragging runs entirely in udapEdSplit
+    (UdapEdUtility.js), which sets the left pane's width through the --udaped-split CSS property, so a drag
+    never waits on .NET. With a StorageKey the width is remembered in localStorage. Below the sm breakpoint
+    the panes stack and the divider is hidden.
+*@
+<div @ref="_element"
+     class="udaped-split @Class"
+     style="--udaped-split: @(Percent(InitialPercent));"
+     data-split-key="@StorageKey"
+     data-split-min="@MinPercent.ToString(CultureInfo.InvariantCulture)"
+     data-split-initial="@InitialPercent.ToString(CultureInfo.InvariantCulture)">
+    <div class="udaped-split-pane udaped-split-left">@Left</div>
+    <div class="udaped-split-gutter"
+         role="separator"
+         tabindex="0"
+         aria-orientation="vertical"
+         aria-label="Resize panes"
+         aria-valuemin="@MinPercent.ToString(CultureInfo.InvariantCulture)"
+         aria-valuemax="@((100 - MinPercent).ToString(CultureInfo.InvariantCulture))"
+         aria-valuenow="@InitialPercent.ToString(CultureInfo.InvariantCulture)"
+         title="Drag to resize. Double-click to reset."></div>
+    <div class="udaped-split-pane udaped-split-right">@Right</div>
+</div>
+
+@code {
+    private ElementReference _element;
+
+    [Parameter, EditorRequired] public RenderFragment? Left { get; set; }
+
+    [Parameter, EditorRequired] public RenderFragment? Right { get; set; }
+
+    /// <summary>The left pane's starting width, as a percentage of the whole. Double-clicking the divider returns to it.</summary>
+    [Parameter] public double InitialPercent { get; set; } = 50;
+
+    /// <summary>Neither pane can be dragged narrower than this percentage.</summary>
+    [Parameter] public double MinPercent { get; set; } = 15;
+
+    /// <summary>Remembers the width in localStorage under this name. Give each split on a page its own.</summary>
+    [Parameter] public string? StorageKey { get; set; }
+
+    [Parameter] public string? Class { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !string.IsNullOrEmpty(StorageKey))
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("udapEdSplit.restore", _element);
+            }
+            catch (JSException)
+            {
+                // The saved width is a convenience; the panes still work at their initial width.
+            }
+        }
+    }
+
+    private static string Percent(double value) => value.ToString(CultureInfo.InvariantCulture) + "%";
+}

@@ -159,8 +159,8 @@
 			        <MudCardContent>
 				        @if (_outgoingRequestFormatted != null)
 				        {
-					        <MudGrid Spacing="1">
-						        <MudItem sm="6" xs="12">
+					        <SplitPanes StorageKey="patient-search-1">
+						        <Left>
 							        <MudPaper Class="udap-input" Elevation="3">
 								        <MudText Align="Align.Right" Color="Color.Tertiary">Outgoing FHIR Request</MudText>
 								        <pre>@_outgoingRequestLine</pre>
@@ -184,9 +184,9 @@
 									        <pre style="margin-top:8px; padding-top:8px; border-top:1px solid #ccc">@_outgoingRequestBody</pre>
 								        }
 							        </MudPaper>
-						        </MudItem>
+						        </Left>
 
-						        <MudItem sm="6" xs="12">
+						        <Right>
 							        <MudPaper Class="udap-analyzed" Elevation="3">
 								        <MudText Align="Align.Right" Color="Color.Tertiary">Decoded</MudText>
 								        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-6" KeepPanelsAlive="true">
@@ -291,8 +291,8 @@
 									        }
 								        </MudTabs>
 							        </MudPaper>
-						        </MudItem>
-					        </MudGrid>
+						        </Right>
+					        </SplitPanes>
 				        }
 				        else
 				        {

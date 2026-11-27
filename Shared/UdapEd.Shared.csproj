@@ -35,7 +35,6 @@
     <PackageReference Include="Udap.Common" Version="0.9.25" />
 
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.14" />
-    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="4.14.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.14" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.14" />
 

@@ -1,5 +1,4 @@
 ﻿@using Udap.CdsHooks.Model
-@using Microsoft.FluentUI.AspNetCore.Components
 
 @code {
     [Parameter]
@@ -8,7 +7,7 @@
     public EventCallback TakeSuggestion { get; set; }
 }
 
-<FluentStack>
+<MudStack Row="true" Wrap="Wrap.Wrap" Spacing="0">
     @if (CdsResponse?.Cards != null)
     {
         foreach (var cdsCard in CdsResponse.Cards)
@@ -16,4 +15,4 @@
             <FhirLabsCard CdsCard="cdsCard"/>
         }
     }
-</FluentStack>
+</MudStack>
