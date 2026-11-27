@@ -1,0 +1,237 @@
+name: Deploy to Cloud Run
+
+# Deploys the server to the fhirlabs-udaped Cloud Run service with cloudbuild.yaml.
+#
+# A release tag deploys only after the regression tests pass against the exact image the
+# deploy would ship. To deploy anyway, run this workflow from the Actions tab with "force"
+# ticked: the regression job is skipped and the run is marked as forced.
+#
+# One-time GCP setup (Workload Identity Federation, no stored keys): tools/gcp-github-deploy-setup.sh
+# Repository variables it needs: GCP_WIF_PROVIDER, GCP_DEPLOY_SA.
+
+on:
+  push:
+    tags:
+    - "v[0-9]+.[0-9]+.[0-9]+"
+    - "v[0-9]+.[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to stamp and tag the image with, e.g. 0.9.26.1"
+        required: true
+      force:
+        description: "Force: skip the regression tests and deploy anyway"
+        type: boolean
+        default: false
+
+# One deploy at a time; a second one waits instead of cancelling the first.
+concurrency:
+  group: deploy-fhirlabs-udaped
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  GCP_PROJECT: udap-idp
+  GCP_REGION: us-west1
+  SERVICE: fhirlabs-udaped
+  DEPLOYED_URL: https://fhirlabs-udaped-v46zp6zteq-uw.a.run.app
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      forced: ${{ steps.version.outputs.forced }}
+    steps:
+    - name: Work out the version
+      id: version
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_FORCE: ${{ inputs.force }}
+      run: |
+        if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+          ver="$INPUT_VERSION"
+          forced="$INPUT_FORCE"
+        else
+          ver="$GITHUB_REF_NAME"
+          forced=false
+        fi
+        ver="${ver#v}"
+        if ! echo "$ver" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$'; then
+          echo "::error::'$ver' is not a version like 0.9.26 or 0.9.26.1"
+          exit 1
+        fi
+        echo "version=$ver" >> "$GITHUB_OUTPUT"
+        echo "forced=$forced" >> "$GITHUB_OUTPUT"
+        echo "Version $ver, forced: $forced"
+
+  # ---------------------------------------------------------------------------
+  # Regression gate: unit tests, then the Playwright flows (client credentials,
+  # authorization code, Tiered OAuth) against the image built from this commit.
+  # ---------------------------------------------------------------------------
+  regression:
+    needs: prepare
+    if: needs.prepare.outputs.forced != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-dotnet@v4
+      with:
+        global-json-file: global.json
+
+    - name: Unit tests
+      run: dotnet test _tests/UtilityTests/UtilityTests.csproj -c Release --logger "trx;LogFileName=utility.trx" --results-directory test-results
+
+    - name: Build the image the deploy would ship
+      env:
+        VERSION: ${{ needs.prepare.outputs.version }}
+      run: docker build --build-arg "TAG_NAME=$VERSION" -t udaped:candidate -f Server/Dockerfile.gcp .
+
+    # Over https: the authorization code flows register a redirect URI on UdapEd's own origin,
+    # and authorization servers only accept https redirect URIs.
+    - name: Start it
+      run: |
+        mkdir -p "$RUNNER_TEMP/https"
+        dotnet dev-certs https -ep "$RUNNER_TEMP/https/udaped.pfx" -p ci
+        chmod 644 "$RUNNER_TEMP/https/udaped.pfx"
+        docker run -d --name udaped -p 8443:8443 -v "$RUNNER_TEMP/https:/https:ro" \
+          -e "ASPNETCORE_URLS=https://+:8443;http://+:8080" \
+          -e ASPNETCORE_Kestrel__Certificates__Default__Path=/https/udaped.pfx \
+          -e ASPNETCORE_Kestrel__Certificates__Default__Password=ci \
+          udaped:candidate
+        for i in $(seq 1 60); do
+          if curl -fsSk -o /dev/null https://localhost:8443/; then echo "UdapEd is up"; exit 0; fi
+          sleep 2
+        done
+        echo "::error::UdapEd did not start"
+        docker logs udaped
+        exit 1
+
+    - name: Install Playwright Chromium
+      run: |
+        dotnet build _tests/UdapEd.E2E -c Release
+        pwsh _tests/UdapEd.E2E/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+
+    - name: End-to-end tests against the candidate image
+      env:
+        UDAPED_URL: https://localhost:8443
+      run: dotnet test _tests/UdapEd.E2E -c Release --no-build --logger "trx;LogFileName=e2e.trx" --results-directory test-results
+
+    - name: Container log
+      if: failure()
+      run: docker logs udaped || true
+
+    - name: Keep the test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: regression-results
+        path: test-results
+        if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # Deploy. Runs when the regression job passed, or when the run was forced.
+  # ---------------------------------------------------------------------------
+  deploy:
+    needs: [prepare, regression]
+    if: >-
+      !cancelled() && needs.prepare.result == 'success' &&
+      (needs.regression.result == 'success' || needs.prepare.outputs.forced == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    # The WIF provider only trusts tokens from this environment. Add required reviewers to it
+    # (Settings > Environments > production) if you also want a manual approval step.
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      previous: ${{ steps.previous.outputs.revision }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Say the deploy was forced
+      if: needs.prepare.outputs.forced == 'true'
+      run: |
+        echo "::warning::Forced deploy: the regression tests were skipped."
+        echo "### :warning: Forced deploy, regression tests skipped" >> "$GITHUB_STEP_SUMMARY"
+
+    - uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+        service_account: ${{ vars.GCP_DEPLOY_SA }}
+
+    - uses: google-github-actions/setup-gcloud@v2
+
+    - name: Note the revision serving now
+      id: previous
+      run: |
+        rev=$(gcloud run services describe "$SERVICE" --region "$GCP_REGION" --project "$GCP_PROJECT" \
+          --format='value(status.traffic[0].revisionName)')
+        echo "revision=$rev" >> "$GITHUB_OUTPUT"
+        echo "Serving before this deploy: $rev"
+
+    - name: Build and deploy with Cloud Build
+      env:
+        VERSION: ${{ needs.prepare.outputs.version }}
+      run: gcloud builds submit --project "$GCP_PROJECT" --config cloudbuild.yaml --substitutions "TAG_NAME=$VERSION" .
+
+    - name: Summary
+      env:
+        VERSION: ${{ needs.prepare.outputs.version }}
+        PREVIOUS: ${{ steps.previous.outputs.revision }}
+      run: |
+        {
+          echo "Deployed **$VERSION** to $SERVICE."
+          echo ""
+          echo "Roll back to the previous revision:"
+          echo '```'
+          echo "gcloud run services update-traffic $SERVICE --region $GCP_REGION --project $GCP_PROJECT --to-revisions=$PREVIOUS=100"
+          echo '```'
+        } >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------
+  # Smoke test the live service. A failure turns the run red and prints the
+  # rollback command; it does not roll back on its own.
+  # ---------------------------------------------------------------------------
+  smoke:
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-dotnet@v4
+      with:
+        global-json-file: global.json
+
+    - name: Install Playwright Chromium
+      run: |
+        dotnet build _tests/UdapEd.E2E -c Release
+        pwsh _tests/UdapEd.E2E/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+
+    - name: End-to-end tests against the deployed service
+      env:
+        UDAPED_URL: ${{ env.DEPLOYED_URL }}
+      run: dotnet test _tests/UdapEd.E2E -c Release --no-build --logger "trx;LogFileName=smoke.trx" --results-directory test-results
+
+    - name: How to roll back
+      if: failure()
+      env:
+        PREVIOUS: ${{ needs.deploy.outputs.previous }}
+      run: |
+        msg="Smoke tests failed on the live service. Roll back with: gcloud run services update-traffic $SERVICE --region $GCP_REGION --project $GCP_PROJECT --to-revisions=$PREVIOUS=100"
+        echo "::error::$msg"
+        echo "### :x: $msg" >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Keep the test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: smoke-results
+        path: test-results
+        if-no-files-found: ignore
