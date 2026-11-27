@@ -7,6 +7,8 @@
 // */
 #endregion
 
+using UdapEd.Shared.Spec;
+
 namespace UdapEd.Shared.Conformance;
 
 /// <summary>
@@ -17,21 +19,24 @@ namespace UdapEd.Shared.Conformance;
 /// </summary>
 public static class IgText
 {
-    /// <summary>SSRAA §2.2, discovery.html</summary>
+    /// <summary>
+    /// SSRAA §2.2, discovery.html. Checks on one parameter highlight its name in the first column of the
+    /// "Metadata parameter values" table, picked out by the "required" or "conditional" badge that follows it.
+    /// </summary>
     public static class Metadata
     {
-        public const string Required = "The metadata returned from the UDAP metadata endpoint defined above";
-        public const string Versions = "A fixed array with one string element";
-        public const string Core = "for UDAP JWT-Based Client Authentication";
-        public const string Authz = "for UDAP Client Authorization Grants using JSON Web Tokens";
-        public const string To = "for UDAP Tiered OAuth for User Authentication";
-        public const string ExtPresent = "udap_authorization_extensions_supported parameter is not an empty array";
-        public const string ExtSubset = "SHALL NOT include key names that are not also elements of the";
-        public const string CertPresent = "udap_certifications_supported parameter is not an empty array";
-        public const string CertSubset = "SHALL NOT include certification URIs that are not also elements of the";
-        public const string Refresh = "grant type SHALL only be included if the";
-        public const string AuthzEndpoint = "This parameter SHALL be present if the value of the grant_types_supported parameter includes the string";
-        public const string AuthMethods = "Fixed array with one value";
+        public static readonly TextDirective Required = new("Metadata parameter values");
+        public static readonly TextDirective Versions = new("udap_versions_supported", "required");
+        public static readonly TextDirective Core = new("udap_profiles_supported", "required");
+        public static readonly TextDirective Authz = new("udap_profiles_supported", "required");
+        public static readonly TextDirective To = new("udap_profiles_supported", "required");
+        public static readonly TextDirective ExtPresent = new("udap_authorization_extensions_required", "conditional");
+        public static readonly TextDirective ExtSubset = new("udap_authorization_extensions_required", "conditional");
+        public static readonly TextDirective CertPresent = new("udap_certifications_required", "conditional");
+        public static readonly TextDirective CertSubset = new("udap_certifications_required", "conditional");
+        public static readonly TextDirective Refresh = new("grant_types_supported", "required");
+        public static readonly TextDirective AuthzEndpoint = new("authorization_endpoint", "conditional");
+        public static readonly TextDirective AuthMethods = new("token_endpoint_auth_methods_supported", "required");
         public const string Scopes = "SHALL list all scopes supported by the server";
     }
 

@@ -7,6 +7,8 @@
 // */
 #endregion
 
+using UdapEd.Shared.Spec;
+
 namespace UdapEd.Shared.Conformance;
 
 public enum CheckOutcome
@@ -35,7 +37,7 @@ public sealed record ConformanceCheck(string SpecKey, string Requirement, CheckO
     /// The guide's own words for this requirement (an <see cref="IgText"/> constant). The check's chip links to the
     /// section with this text highlighted.
     /// </summary>
-    public string? Highlight { get; init; }
+    public TextDirective? Highlight { get; init; }
 
     public static ConformanceCheck Of(string specKey, string requirement, bool met, string? detailWhenNotMet = null, CheckOutcome whenNotMet = CheckOutcome.Fail) =>
         new(specKey, requirement, met ? CheckOutcome.Pass : whenNotMet, met ? null : detailWhenNotMet);

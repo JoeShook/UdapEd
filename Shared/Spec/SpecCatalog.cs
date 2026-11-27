@@ -36,9 +36,9 @@ public sealed record SpecSection(string Key, SpecSource Source, string Number, s
     /// A link to this section that scrolls to and highlights <paramref name="highlight"/> (a text fragment, what a
     /// browser's "Copy link to highlight" makes). Without highlight text it is the section link.
     /// </summary>
-    public string LinkTo(string? highlight)
+    public string LinkTo(TextDirective? highlight)
     {
-        if (string.IsNullOrEmpty(highlight))
+        if (highlight == null)
         {
             return Url;
         }
@@ -46,7 +46,7 @@ public sealed record SpecSection(string Key, SpecSource Source, string Number, s
         // A UDAP.org section link already carries a text fragment for its heading; replace it.
         var directive = Url.IndexOf(":~:", StringComparison.Ordinal);
         var link = directive >= 0 ? Url[..directive].TrimEnd('#') : Url;
-        return $"{link}{(link.Contains('#') ? "" : "#")}:~:text={SpecCatalog.TextFragment(highlight)}";
+        return $"{link}{(link.Contains('#') ? "" : "#")}:~:text={highlight.Encode()}";
     }
 
     /// <summary>True when <see cref="Text"/> is the specification's own wording (with "…" marking skipped text).</summary>

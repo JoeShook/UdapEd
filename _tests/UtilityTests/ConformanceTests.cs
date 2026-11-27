@@ -186,7 +186,7 @@ public class ConformanceTests
             .Concat(RegistrationConformance.EvaluateRegistrationResponse(201, new JsonObject { ["client_id"] = "abc" }))
             .Concat(RegistrationConformance.EvaluateRegistrationError(400, """{"error":"invalid_software_statement"}"""));
 
-        checks.ShouldAllBe(c => !string.IsNullOrEmpty(c.Highlight));
+        checks.ShouldAllBe(c => c.Highlight != null && c.Highlight.Start.Length > 0);
     }
 
     [Fact]
@@ -199,6 +199,10 @@ public class ConformanceTests
         SpecCatalog.Find("udap-dcr:5")!.Url.ShouldContain("#:~:text=5.%20Authorization%20Server%20responds%20to%20request");
         SpecCatalog.Find("udap-dcr:5")!.LinkTo("the software statement as submitted by the Client App")
             .ShouldBe("https://www.udap.org/udap-dynamic-client-registration-stu1.html#:~:text=the%20software%20statement%20as%20submitted%20by%20the%20Client%20App");
+
+        // A parameter's row: its name in the first column, picked out by the badge after it.
+        SpecCatalog.Find("ssraa:2.2")!.LinkTo(IgText.Metadata.Versions)
+            .ShouldEndWith("#required-udap-metadata:~:text=udap_versions_supported,-required");
 
         // '-' is text-fragment syntax, so it is encoded.
         SpecCatalog.TextFragment("JWT-Based").ShouldBe("JWT%2DBased");
