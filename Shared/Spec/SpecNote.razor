@@ -1,0 +1,34 @@
+@using UdapEd.Shared.Spec
+
+@*
+    The "knowledge" box beside a step: what the step does, in UdapEd's words, with chips for the spec sections
+    behind it. The chips come from SpecCatalog, so every page cites the same sections the same way.
+*@
+<MudPaper Class="udap-knowledge" Elevation="3">
+    @if (!string.IsNullOrEmpty(Title))
+    {
+        <MudText Align="Align.Right" Color="Color.Tertiary">@Title</MudText>
+    }
+    <div class="d-flex flex-wrap align-center gap-1 mb-2">
+        <MudText Typo="Typo.caption" Class="mr-1">Spec:</MudText>
+        @foreach (var key in _keys)
+        {
+            <SpecRef Key="@key" />
+        }
+    </div>
+    @ChildContent
+</MudPaper>
+
+@code {
+    [Parameter] public string? Title { get; set; }
+
+    /// <summary>Comma-separated <see cref="SpecCatalog"/> keys, e.g. "ssraa:4.1, ssraa:7.2".</summary>
+    [Parameter, EditorRequired] public string Keys { get; set; } = string.Empty;
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string[] _keys = [];
+
+    protected override void OnParametersSet() =>
+        _keys = Keys.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+}

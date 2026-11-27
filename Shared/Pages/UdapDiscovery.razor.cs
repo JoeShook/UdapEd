@@ -11,6 +11,7 @@ using System.Collections;
 using System.Collections.Specialized;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -20,6 +21,7 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using Udap.Model;
 using UdapEd.Shared.Components;
+using UdapEd.Shared.Conformance;
 using UdapEd.Shared.Services;
 using UdapEd.Shared.Model.Discovery;
 
@@ -137,6 +139,33 @@ public partial class UdapDiscovery
     }
 
     private bool _isLoading;
+
+    private string? _discoveryChecksFor;
+    private List<ConformanceCheck>? _discoveryChecks;
+
+    /// <summary>The metadata on screen, checked against SSRAA §2. Re-evaluated only when the metadata or base URL changes.</summary>
+    private List<ConformanceCheck>? DiscoveryChecks
+    {
+        get
+        {
+            var metadata = AppState.MetadataVerificationModel?.UdapServerMetaData;
+            if (metadata == null)
+            {
+                return null;
+            }
+
+            var key = $"{metadata.SignedMetadata}|{metadata.TokenEndpoint}|{BaseUrl}";
+            if (key != _discoveryChecksFor)
+            {
+                var json = JsonSerializer.SerializeToNode(metadata,
+                    new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }) as JsonObject;
+                _discoveryChecks = json == null ? null : DiscoveryConformance.Evaluate(json, BaseUrl);
+                _discoveryChecksFor = key;
+            }
+
+            return _discoveryChecks;
+        }
+    }
     
 
     protected override async Task OnInitializedAsync()

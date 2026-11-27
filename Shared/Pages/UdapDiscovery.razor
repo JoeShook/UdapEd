@@ -111,6 +111,18 @@
                   <MudPaper Class="udap-analyzed" Elevation="3">
                       <MudText Align="Align.Right" Color="Color.Tertiary">Discovery | Metadata | Signed | Communities</MudText>
                       <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-2" KeepPanelsAlive="true">
+                          <MudTabPanel Text="IG Conformance">
+                              <SpecNote Keys="ssraa:2.1, ssraa:2.2, ssraa:2.3, ssraa:2.4, udap-metadata:1, udap-metadata:3">
+                                  <MudText Typo="Typo.body2">
+                                      The client asks <code>{baseURL}/.well-known/udap</code> for the server's UDAP metadata, without
+                                      authenticating. The <code>signed_metadata</code> JWT repeats the endpoints, signed with the server's
+                                      certificate, so the client can trust them before registering. Below, each SSRAA requirement for the
+                                      metadata is checked against the response on the left.
+                                  </MudText>
+                              </SpecNote>
+                              <ConformancePanel Checks="@DiscoveryChecks" TestId="discovery-conformance"
+                                                EmptyText="Query a server's metadata to check it against SSRAA §2." />
+                          </MudTabPanel>
                           <MudTabPanel Text="Signed Software Statement">
                               <SignedJwtViewer Title="<b>Decoded software_statement::</b>" SignedSoftwareStatement="@AppState.MetadataVerificationModel?.UdapServerMetaData?.SignedMetadata" />
                           </MudTabPanel>
