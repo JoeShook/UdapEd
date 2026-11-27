@@ -2,7 +2,7 @@
 // /*
 //  Authors:
 //     Joseph Shook   Joseph.Shook@Surescripts.com
-// 
+//
 //  See LICENSE in the project root for license information.
 // */
 #endregion
@@ -19,7 +19,7 @@ public class CdsService : ICdsService
 {
     private readonly HttpClient _httpClient;
 
-    private static JsonSerializerOptions jsonOptions = new JsonSerializerOptions()
+    private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions()
     {
         PropertyNameCaseInsensitive = true,
         Converters = { new FhirResourceConverter() }
@@ -30,16 +30,33 @@ public class CdsService : ICdsService
         _httpClient = httpClient;
     }
 
-    public Task<List<CdsServiceViewModel>?> FetchCdsServices()
+    public async Task<List<CdsServiceViewModel>?> FetchCdsServices(string discoveryUrl)
     {
-        return _httpClient.GetFromJsonAsync<List<CdsServiceViewModel>> ("CdsServices/FetchCdsServices");
+        var response = await _httpClient.GetAsync($"CdsServices/FetchCdsServices?discoveryUrl={Uri.EscapeDataString(discoveryUrl)}");
+        await EnsureSuccess(response);
+
+        return await response.Content.ReadFromJsonAsync<List<CdsServiceViewModel>>(JsonOptions);
     }
 
-    public async Task<CdsResponse?> GetCdsService(CdsRequest request)
+    public async Task<CdsResponse?> GetCdsService(string serviceUrl, CdsRequest request)
     {
-        var response = await  _httpClient.PostAsJsonAsync("CdsServices/GetCdsService", request, jsonOptions);
-        var cdsResponses = await response.Content.ReadFromJsonAsync<CdsResponse>();
+        var response = await _httpClient.PostAsJsonAsync(
+            $"CdsServices/GetCdsService?serviceUrl={Uri.EscapeDataString(serviceUrl)}", request, JsonOptions);
+        await EnsureSuccess(response);
 
-        return cdsResponses;
+        return await response.Content.ReadFromJsonAsync<CdsResponse>(JsonOptions);
+    }
+
+    // The server answers a failed call with the reason as plain text; surface it to the page.
+    private static async Task EnsureSuccess(HttpResponseMessage response)
+    {
+        if (!response.IsSuccessStatusCode)
+        {
+            var reason = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException(
+                string.IsNullOrWhiteSpace(reason) ? $"{(int)response.StatusCode} {response.ReasonPhrase}" : reason,
+                null,
+                response.StatusCode);
+        }
     }
 }

@@ -2,7 +2,7 @@
 // /*
 //  Authors:
 //     Joseph Shook   Joseph.Shook@Surescripts.com
-// 
+//
 //  See LICENSE in the project root for license information.
 // */
 #endregion
@@ -14,6 +14,9 @@ namespace UdapEd.Shared.Services;
 
 public interface ICdsService
 {
-    Task<List<CdsServiceViewModel>?> FetchCdsServices();
-    Task<CdsResponse?> GetCdsService(CdsRequest request);
+    /// <summary>Reads a CDS Hooks discovery endpoint (…/cds-services) and lists the services it offers.</summary>
+    Task<List<CdsServiceViewModel>?> FetchCdsServices(string discoveryUrl);
+
+    /// <summary>Calls one CDS service with a hook request.</summary>
+    Task<CdsResponse?> GetCdsService(string serviceUrl, CdsRequest request);
 }

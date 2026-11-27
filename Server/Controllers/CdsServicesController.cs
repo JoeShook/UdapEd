@@ -2,7 +2,7 @@
 // /*
 //  Authors:
 //     Joseph Shook   Joseph.Shook@Surescripts.com
-// 
+//
 //  See LICENSE in the project root for license information.
 // */
 #endregion
@@ -27,16 +27,35 @@ public class CdsServicesController : Controller
     }
 
     [HttpGet("FetchCdsServices")]
-    public async Task<IActionResult> FetchCdsServices()
+    public async Task<IActionResult> FetchCdsServices([FromQuery] string discoveryUrl)
     {
-        var services = await _cdsService.FetchCdsServices();
-        return Ok(services);
+        try
+        {
+            return Ok(await _cdsService.FetchCdsServices(discoveryUrl));
+        }
+        catch (Exception ex) when (IsServiceProblem(ex))
+        {
+            return Failed(ex);
+        }
     }
 
     [HttpPost("GetCdsService")]
-    public async Task<IActionResult> GetCdsService([FromBody] CdsRequest request)
+    public async Task<IActionResult> GetCdsService([FromQuery] string serviceUrl, [FromBody] CdsRequest request)
     {
-        var services = await _cdsService.GetCdsService(request);
-        return Ok(services);
+        try
+        {
+            return Ok(await _cdsService.GetCdsService(serviceUrl, request));
+        }
+        catch (Exception ex) when (IsServiceProblem(ex))
+        {
+            return Failed(ex);
+        }
     }
+
+    private static bool IsServiceProblem(Exception ex) =>
+        ex is HttpRequestException or ArgumentException or TaskCanceledException or System.Text.Json.JsonException;
+
+    // Unreachable services, bad URLs and non-JSON answers go back as text the page can show.
+    private IActionResult Failed(Exception ex) =>
+        StatusCode(ex is ArgumentException ? StatusCodes.Status400BadRequest : StatusCodes.Status502BadGateway, ex.Message);
 }

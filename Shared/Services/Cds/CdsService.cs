@@ -2,7 +2,7 @@
 // /*
 //  Authors:
 //     Joseph Shook   Joseph.Shook@Surescripts.com
-// 
+//
 //  See LICENSE in the project root for license information.
 // */
 #endregion
@@ -10,7 +10,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Google.Apis.Logging;
 using Microsoft.Extensions.Logging;
 using Udap.CdsHooks.Model;
 using UdapEd.Shared.Model.CdsHooks;
@@ -21,8 +20,7 @@ public class CdsService : ICdsService
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<CdsService> _logger;
-    private string? _defaultSandboxCdsService = "https://sandbox-services.cds-hooks.org/cds-services";
-    private static JsonSerializerOptions  jsonSerializerOptions = new JsonSerializerOptions
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions
     {
         Converters = { new FhirResourceConverter() },
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -35,50 +33,73 @@ public class CdsService : ICdsService
         _logger = logger;
     }
 
-    public async Task<List<CdsServiceViewModel>?> FetchCdsServices()
+    public async Task<List<CdsServiceViewModel>?> FetchCdsServices(string discoveryUrl)
     {
-        var response = await _httpClient.GetAsync(_defaultSandboxCdsService);
-        response.EnsureSuccessStatusCode();
+        var discovery = RequireHttpUrl(discoveryUrl, nameof(discoveryUrl));
+        var response = await _httpClient.GetAsync(discovery);
+        await EnsureSuccess(response, discovery);
 
-        var services = await response.Content.ReadFromJsonAsync<Udap.CdsHooks.Model.CdsServices>();
-
-        var cdsServiceViewModel = new List<CdsServiceViewModel>();
-
-        if (services?.Services != null)
-        {
-            foreach (var service in services.Services)
-            {
-                var serviceUrl = $"{_defaultSandboxCdsService}/{service.Id}";
-
-                cdsServiceViewModel.Add(new CdsServiceViewModel()
-                {
-                    Url = serviceUrl,
-                    CdsService = new Model.CdsHooks.CdsService(service) { Enabled = true }
-                });
-            }
-        }
-        else
+        var services = await response.Content.ReadFromJsonAsync<CdsServices>();
+        if (services?.Services == null)
         {
             return null;
         }
 
-        return cdsServiceViewModel;
+        // Each service is called at {discovery endpoint}/{id} (CDS Hooks, "Calling a CDS Service").
+        var baseUrl = discovery.AbsoluteUri.TrimEnd('/');
+        return services.Services
+            .Select(service => new CdsServiceViewModel
+            {
+                Url = $"{baseUrl}/{service.Id}",
+                CdsService = new Model.CdsHooks.CdsService(service) { Enabled = true }
+            })
+            .ToList();
     }
 
-    public async Task<CdsResponse?> GetCdsService(CdsRequest request)
+    public async Task<CdsResponse?> GetCdsService(string serviceUrl, CdsRequest request)
     {
-        if (request == null)
+        ArgumentNullException.ThrowIfNull(request);
+        var service = RequireHttpUrl(serviceUrl, nameof(serviceUrl));
+
+        _logger.LogInformation("Calling CDS service {ServiceUrl} for hook {Hook}", service, request.Hook);
+        // Sent buffered, with a Content-Length, rather than chunked: simple CDS services may not read chunked bodies.
+        using var content = new StringContent(JsonSerializer.Serialize(request, JsonSerializerOptions), System.Text.Encoding.UTF8, "application/json");
+        var response = await _httpClient.PostAsync(service, content);
+        await EnsureSuccess(response, service);
+
+        return await response.Content.ReadFromJsonAsync<CdsResponse>();
+    }
+
+    private static Uri RequireHttpUrl(string? value, string name)
+    {
+        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) || (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp))
         {
-            throw new ArgumentNullException(nameof(request));
+            throw new ArgumentException($"'{value}' is not an http or https URL.", name);
         }
 
-        var serviceUrl = "https://sandbox-services.cds-hooks.org/cds-services/patient-greeting";
-        _logger.LogInformation($"Hello::{serviceUrl}");
-        var response = await _httpClient.PostAsJsonAsync(serviceUrl, request, jsonSerializerOptions);
-        response.EnsureSuccessStatusCode();
-        var cdsResponses = await response.Content.ReadFromJsonAsync<CdsResponse>();
-        _logger.LogInformation("Joe");
-        _logger.LogInformation(cdsResponses.Cards.First().Summary);
-        return cdsResponses;
+        return uri;
+    }
+
+    private static async Task EnsureSuccess(HttpResponseMessage response, Uri url)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        // An HTML error page says nothing the status line doesn't; keep only JSON or text bodies.
+        var mediaType = response.Content.Headers.ContentType?.MediaType ?? string.Empty;
+        var body = mediaType.Contains("html", StringComparison.OrdinalIgnoreCase)
+            ? string.Empty
+            : await response.Content.ReadAsStringAsync();
+        if (body.Length > 500)
+        {
+            body = body[..500] + "…";
+        }
+
+        throw new HttpRequestException(
+            $"{url} answered {(int)response.StatusCode} {response.ReasonPhrase}. {body}".Trim(),
+            null,
+            response.StatusCode);
     }
 }

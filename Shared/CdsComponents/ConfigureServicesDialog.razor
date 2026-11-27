@@ -1,31 +1,144 @@
 ﻿@using UdapEd.Shared.Model.CdsHooks
 
-<MudDialog Style="margin: 20px">
+@*
+    Picks the CDS service the CDS Hooks page calls: read a discovery endpoint, list its services, choose one.
+    The page only sends patient-view, so services for other hooks are listed but cannot be chosen.
+*@
+<MudDialog>
     <DialogContent>
-        
-        @if (Services != null)
+        <MudText Typo="Typo.body2" Class="mb-4">
+            Enter a CDS Hooks discovery endpoint (it ends in <code>/cds-services</code>). UdapEd reads the services it
+            offers; choose the one to call. This page sends the <code>@PatientViewHook</code> hook.
+        </MudText>
+
+        <MudStack Row="true" AlignItems="AlignItems.Center">
+            <MudTextField T="string" @bind-Value="_discoveryUrl" Immediate="true"
+                          Label="Discovery endpoint" Placeholder="https://example.org/cds-services"
+                          Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadServices"
+                       Disabled="@(_loading || string.IsNullOrWhiteSpace(_discoveryUrl))">
+                Load services
+            </MudButton>
+        </MudStack>
+
+        @if (_loading)
         {
-            foreach (var service in Services)
-            {
-                <ServiceDisplay CdsServiceModel="service"/>
-            }
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="my-3" />
+        }
+
+        @if (_error != null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-4">@_error</MudAlert>
+        }
+
+        @if (_services is { Count: 0 })
+        {
+            <MudAlert Severity="Severity.Info" Class="mt-4">The discovery endpoint lists no services.</MudAlert>
+        }
+
+        @if (_services is { Count: > 0 })
+        {
+            <MudRadioGroup T="string" @bind-Value="_selectedUrl" Class="mt-4">
+                <div class="d-flex flex-column mud-width-full">
+                @foreach (var model in _services)
+                {
+                    var service = model.CdsService;
+                    var callable = service.Hook == PatientViewHook;
+                    <MudPaper Outlined="true" Class="pa-3 mb-2">
+                        <MudRadio T="string" Value="@model.Url" Disabled="@(!callable)" Color="Color.Primary">
+                            <MudText Typo="Typo.subtitle1">@(service.Title ?? service.Id)</MudText>
+                        </MudRadio>
+                        <div class="ml-10">
+                            <MudChip T="string" Size="Size.Small" Color="@(callable ? Color.Primary : Color.Default)">@service.Hook</MudChip>
+                            @if (!string.IsNullOrEmpty(service.Description))
+                            {
+                                <MudText Typo="Typo.body2">@service.Description</MudText>
+                            }
+                            <MudText Typo="Typo.caption">@model.Url</MudText>
+                            @if (!callable)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Warning" Class="d-block">
+                                    This page sends @PatientViewHook, so this service can't be called from here.
+                                </MudText>
+                            }
+                        </div>
+                    </MudPaper>
+                }
+                </div>
+            </MudRadioGroup>
         }
     </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save" Disabled="@(_selectedUrl == null)">Save</MudButton>
+    </DialogActions>
 </MudDialog>
 
 @code {
+    public const string PatientViewHook = "patient-view";
+
+    /// <summary>What the dialog returns on Save.</summary>
+    public sealed record CdsServiceSelection(string DiscoveryUrl, string ServiceUrl);
+
     [CascadingParameter]
     IMudDialogInstance MudDialog { get; set; } = null!;
 
-    [Inject] ICdsService CdaService { get; set; } = null!;
-    
-    [Parameter]
-    public List<CdsServiceViewModel>? Services { get; set; }
+    [Inject] ICdsService CdsService { get; set; } = null!;
 
-    void Submit() => MudDialog.Close();
-    
+    [Parameter] public string? DiscoveryUrl { get; set; }
+
+    [Parameter] public string? ServiceUrl { get; set; }
+
+    private string? _discoveryUrl;
+    private string? _selectedUrl;
+    private List<CdsServiceViewModel>? _services;
+    private string? _error;
+    private bool _loading;
+
+    /// <summary>Offered when nothing has been chosen yet: FhirLabs runs a patient-view service.</summary>
+    public const string SuggestedDiscoveryUrl = "https://fhirlabs.net/fhir/r4/cds-services";
+
     protected override async Task OnInitializedAsync()
     {
-        Services = await CdaService.FetchCdsServices();
+        _selectedUrl = ServiceUrl;
+
+        if (!string.IsNullOrWhiteSpace(DiscoveryUrl))
+        {
+            _discoveryUrl = DiscoveryUrl;
+            await LoadServices();
+        }
+        else
+        {
+            _discoveryUrl = SuggestedDiscoveryUrl;
+        }
     }
+
+    private async Task LoadServices()
+    {
+        _loading = true;
+        _error = null;
+        _services = null;
+
+        try
+        {
+            _services = await CdsService.FetchCdsServices(_discoveryUrl!.Trim()) ?? [];
+
+            if (_services.All(s => s.Url != _selectedUrl))
+            {
+                _selectedUrl = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Could not read the services: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void Save() => MudDialog.Close(DialogResult.Ok(new CdsServiceSelection(_discoveryUrl!.Trim(), _selectedUrl!)));
+
+    private void Cancel() => MudDialog.Cancel();
 }
