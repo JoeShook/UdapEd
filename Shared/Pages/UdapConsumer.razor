@@ -77,7 +77,7 @@
                   <SplitPanes StorageKey="consumer-1">
                       <Left>
                           <MudPaper Class="udap-input" Elevation="3">
-                              <MudText Align="Align.Right" Color="Color.Tertiary">3.1 Authorization Code Flow (part 1)</MudText>
+                              <MudText Align="Align.Right" Color="Color.Tertiary">Authorization code flow (part 1)</MudText>
                               @if (AppState.AuthorizationCodeRequest != null)
                               {
                                   @if (AuthorizeMethod == AuthorizeHttpMethod.Post)
@@ -110,11 +110,9 @@
                           </MudPaper>
                       </Left>
                       <Right>
-                          <MudPaper Class="udap-knowledge" Elevation="3">
-                              <MudText Align="Align.Right" Color="Color.Tertiary">3.1 Authorization Code Flow (part 1)</MudText>
-                              <a href="https://www.udap.org/udap-jwt-client-auth.html#3.1">See section 3.1 of the JWT Client Authentication UDAP Profile</a>
+                          <SpecNote Title="Authorization code flow (part 1)" Keys="ssraa:4.1, ssraa:7.2, ssraa:7.2.1, ssraa:7.2.2">
                               <pre>The build of the @AuthorizeVerb request to the Authorization servers "authorize" endpoint.  This is the endpoint discovered in the resource servers metadata.  Specifically the authorization_endpoint metadata item.</pre>
-                          </MudPaper>
+                          </SpecNote>
                       </Right>
                   </SplitPanes>
               </MudCardContent>
@@ -143,7 +141,7 @@
                   <SplitPanes StorageKey="consumer-2">
                       <Left>
                           <MudPaper Class="udap-input" Elevation="3">
-                              <MudText Align="Align.Right" Color="Color.Tertiary">3.1 Authorization Code Flow (part 2)</MudText>
+                              <MudText Align="Align.Right" Color="Color.Tertiary">Authorization code flow (part 2)</MudText>
                               <MudText Typo="Typo.subtitle1">
                                   @LoginRedirectLinkText
                               </MudText>
@@ -170,12 +168,10 @@
                           </MudPaper>
                       </Left>
                       <Right>
-                          <MudPaper Class="udap-knowledge" Elevation="3">
-                              <MudText Align="Align.Right" Color="Color.Tertiary">3.1 Authorization Code Flow (part 2)</MudText>
-                              <a href="https://www.udap.org/udap-jwt-client-auth.html#3.1">See section 3.1 of the JWT Client Authentication UDAP Profile</a>
+                          <SpecNote Title="Authorization code flow (part 2)" Keys="ssraa:4.1, ssraa:7.2">
                               <pre>The Login Redirect is constructed by the Authorization server in response to GET request to the authorize_endpoint.</pre>
                               <pre>The text on the left captures that redirect rather than following it for illustration.</pre>
-                          </MudPaper>
+                          </SpecNote>
                       </Right>
                   </SplitPanes>
               </MudCardContent>
@@ -207,7 +203,7 @@
                   <SplitPanes StorageKey="consumer-3">
                       <Left>
                           <MudPaper Class="udap-input" Elevation="3">
-                              <MudText Align="Align.Right" Color="Color.Tertiary">3.1 Authorization Code Flow (part 3)</MudText>
+                              <MudText Align="Align.Right" Color="Color.Tertiary">Authorization code flow (part 3)</MudText>
                               <pre>HTTP/1.1 302 Found</pre>
                               @if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsMacCatalyst() || OperatingSystem.IsWindows())
                               {
@@ -220,13 +216,11 @@
                           </MudPaper>
                       </Left>
                       <Right>
-                          <MudPaper Class="udap-knowledge" Elevation="3">
-                              <MudText Align="Align.Right" Color="Color.Tertiary">3.1 Authorization Code Flow (part 3)</MudText>
-                              <a href="https://www.udap.org/udap-jwt-client-auth.html#3.1">See section 3.1 of the JWT Client Authentication UDAP Profile</a>
+                          <SpecNote Title="Authorization code flow (part 3)" Keys="ssraa:7.2.1, ssraa:4.2">
                               <pre>The Login Redirect is constructed by the Authorization server in response to a @AuthorizeVerb request to the authorize_endpoint.</pre>
                               <pre>This button will launch @AuthorizeVerb request in part 1 and follow the redirect from part 2.</pre>
                               <pre>The 302 response on the left is the redirect from the Authorization server back to this page after success fully entering valid credentials</pre>
-                          </MudPaper>
+                          </SpecNote>
                       </Right>
                   </SplitPanes>
               </MudCardContent>
@@ -372,7 +366,7 @@
                       </Left>
                       <Right>
                           <MudPaper Class="udap-knowledge" Elevation="3">
-                              <MudText Align="Align.Left" Color="Color.Tertiary">See <a href="https://build.fhir.org/ig/HL7/fhir-identity-matching-ig/digital-identity.html#requirements-for-digital-identifiers-for-individuals">Requirements for Digital Identifiers for Individuals</a>
+                              <MudText Align="Align.Left" Color="Color.Tertiary">See <a href="https://build.fhir.org/ig/HL7/fhir-identity-matching-ig/digital-identity.html#requirements-for-digital-identifiers-for-individuals" target="_blank">Requirements for Digital Identifiers for Individuals</a>
                                   to understand more about the Identity Token. During Tiered OAuth the hl7_identifier is used in this tool as the context</MudText>
                           </MudPaper>
                           <MudPaper Class="udap-analyzed">

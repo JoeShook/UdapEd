@@ -85,6 +85,12 @@ Uses **Firely** (`Hl7.Fhir.*`) for FHIR resource parsing, validation, and FhirPa
 ### UI
 - **MudBlazor** — the component library for the whole UI (FluentUI was removed)
 - **SplitPanes** (`Shared/Components/SplitPanes.razor`) — side-by-side panes with a draggable divider
+- **Spec catalog** (`Shared/Spec/SpecCatalog.cs`) — every IG/specification section the UI cites, by key (`ssraa:2.3`,
+  `udap-dcr:5`). Cite with `<SpecRef Key=…/>` or `<SpecNote Keys=…>`, never a hand-written link. SSRAA (HL7, CC0) text is
+  quoted; UDAP.org text is summarized and linked (its license allows reproduction only in full). A unit test fails on
+  any key the catalog lacks.
+- **Conformance checks** (`Shared/Conformance/`) — pure functions that mark SSRAA requirements against the traffic on
+  screen (`DiscoveryConformance`, `RegistrationConformance`), shown with `ConformancePanel`. Tests: `UtilityTests/ConformanceTests.cs`.
 - **BlazorMonaco** — embedded Monaco editor for JSON/FHIR editing
 
 ## Important Configuration

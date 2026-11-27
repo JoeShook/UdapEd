@@ -315,6 +315,44 @@ input.pre, textarea.pre {
   margin: 8px;
 }
 
+/* Spec citations (SpecRef, SpecNote) and IG conformance checks (ConformancePanel) */
+.udaped-spec-quote {
+    margin: 8px 0;
+    padding: 4px 12px;
+    border-left: 3px solid var(--mud-palette-info);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.udaped-rfc2119 {
+    font-weight: 700;
+    color: var(--mud-palette-primary);
+}
+
+.udaped-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+    font-size: 0.875rem;
+}
+
+.udaped-check-icon {
+    flex: 0 0 auto;
+    margin-top: 2px;
+}
+
+.udaped-check-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.udaped-check-detail {
+    color: var(--mud-palette-text-secondary);
+}
+
 /* SplitPanes: two panes with a draggable divider. udapEdSplit in UdapEdUtility.js sets --udaped-split. */
 .udaped-split {
   display: flex;

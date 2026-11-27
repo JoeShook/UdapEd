@@ -416,11 +416,11 @@
                                                     <TitleContent>
                                                         <div class="d-flex justify-space-between align-center" style="width:100%">
                                                             <MudText Color="Color.Tertiary">Template Highlights</MudText>
-                                                            <MudLink Href="https://rce.sequoiaproject.org/wp-content/uploads/2024/02/Facilitated-FHIR-Implementation-Guide-v2.0.pdf#page=14"
+                                                            <MudLink Href="https://rce.sequoiaproject.org/wp-content/uploads/2026/02/SOP-Facilitated-FHIR-Implementation-2.0-Draft-508.pdf#page=14"
                                                                      Target="_blank"
                                                                      Color="Color.Info"
                                                                      Typo="Typo.caption">
-                                                                Facilitated FHIR IG (section 6.11.6)
+                                                                TEFCA Facilitated FHIR SOP v2.0 (basic app certification)
                                                             </MudLink>
                                                         </div>
                                                     </TitleContent>
@@ -482,6 +482,17 @@
                                             <SignedJwtViewer Title="<b>Decoded software_statement::</b>"
                                                              SignedSoftwareStatement="@AppState.UdapRegistrationRequest?.SoftwareStatement"/>
                                         </MudTabPanel>
+                                        <MudTabPanel Text="IG Conformance">
+                                            <SpecNote Keys="ssraa:3.1, ssraa:7.1.3, ssraa:7.1.5, udap-dcr:2">
+                                                <MudText Typo="Typo.body2">
+                                                    The software statement is the client's signed registration request: a JWT signed with the
+                                                    private key of the client certificate in <code>x5c</code>. Its <code>iss</code> must match
+                                                    a SAN URI in that certificate exactly, and it may live at most five minutes.
+                                                </MudText>
+                                            </SpecNote>
+                                            <ConformancePanel Checks="@SoftwareStatementChecks" TestId="registration-statement-conformance"
+                                                              EmptyText="Build the request body to check its software statement against SSRAA §3.1." />
+                                        </MudTabPanel>
                                         <MudTabPanel Text="Certifications and Endorsements Decoded" OnClick="HighlightCertifications">
                                             @if (AppState.UdapRegistrationRequest?.Certifications?.FirstOrDefault() != null)
                                             {
@@ -542,16 +553,16 @@
                                 }
                             </Left>
                             <Right>
-                                <MudPaper Class="udap-knowledge" Elevation="3">
-                                    <pre>
-<a href="http://hl7.org/fhir/us/udap-security/registration.html#request-body" target="_blank">Per UDAP Security IG</a>
-If a new registration is successful, the Authorization Server SHALL return a registration response with a 201 Created HTTP response code as per Section 5.1 of UDAP Dynamic Client Registration, including the unique client_id assigned by the Authorization Server to that client app. If a new registration is not successful, e.g. it is rejected by the server for any reason, the Authorization Server SHALL return an error response as per <a href="https://www.udap.org/udap-dynamic-client-registration-stu1.html#section-5.1" target="_blank">Section 5.2</a> of UDAP Dynamic Client Registration.
-
-<a href="https://www.udap.org/udap-dynamic-client-registration-stu1.html#section-6" target="_blank">For Modifying or Cancelling previous registration see section 6</a>
-
-<br />
-</pre>
-                                </MudPaper>
+                                <SpecNote Keys="ssraa:3.2.3, ssraa:3.4, udap-dcr:4, udap-dcr:5, udap-dcr:6">
+                                    <MudText Typo="Typo.body2">
+                                        The server validates the software statement and certificate chain, then answers
+                                        <b>201 Created</b> with a <code>client_id</code>, or an RFC 7591 error. Registering again with
+                                        the same certificate identity modifies the registration; an empty <code>grant_types</code>
+                                        cancels it.
+                                    </MudText>
+                                    <ConformancePanel Checks="@_registrationChecks" TestId="registration-response-conformance"
+                                                      EmptyText="Register to check the server's response against SSRAA §3.2.3." />
+                                </SpecNote>
                                 <MudPaper Class="udap-analyzed" Elevation="3">
                                     <SignedJwtViewer Title="<b>Decoded software_statement::</b>"
                                                      SignedSoftwareStatement="@AppState.RegistrationDocument?.SoftwareStatement"

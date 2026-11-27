@@ -1,0 +1,74 @@
+@using UdapEd.Shared.Conformance
+@using UdapEd.Shared.Spec
+
+@*
+    The IG's requirements for one piece of traffic, each marked against what was actually sent or received.
+*@
+<div class="udaped-conformance" data-testid="@TestId">
+    @if (Checks == null || Checks.Count == 0)
+    {
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@EmptyText</MudText>
+    }
+    else
+    {
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
+            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text" Icon="@Icons.Material.Filled.CheckCircle">@Count(CheckOutcome.Pass) met</MudChip>
+                <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Text" Icon="@Icons.Material.Filled.Cancel">@Count(CheckOutcome.Fail) not met</MudChip>
+                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text" Icon="@Icons.Material.Filled.Warning">@Count(CheckOutcome.Warning) to review</MudChip>
+            </MudStack>
+            <MudSwitch T="bool" @bind-Value="_onlyProblems" Label="Only problems" Color="Color.Primary" Size="Size.Small" />
+        </MudStack>
+
+        @foreach (var check in Visible)
+        {
+            <div class="udaped-check udaped-check-@check.Outcome.ToString().ToLowerInvariant()">
+                <MudIcon Icon="@Icon(check.Outcome)" Color="@OutcomeColor(check.Outcome)" Size="Size.Small" Class="udaped-check-icon" />
+                <div class="udaped-check-body">
+                    <div>@check.Requirement</div>
+                    @if (!string.IsNullOrEmpty(check.Detail))
+                    {
+                        <MudText Typo="Typo.caption" Class="d-block udaped-check-detail">@check.Detail</MudText>
+                    }
+                </div>
+                <SpecRef Key="@check.SpecKey" />
+            </div>
+        }
+
+        <MudText Typo="Typo.caption" Class="d-block mt-3" Color="Color.Secondary">
+            These checks read the data shown here. Signatures and certificate trust are validated by the step itself.
+        </MudText>
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<ConformanceCheck>? Checks { get; set; }
+
+    [Parameter] public string EmptyText { get; set; } = "Run this step to check it against the IG.";
+
+    [Parameter] public string? TestId { get; set; }
+
+    private bool _onlyProblems;
+
+    private IEnumerable<ConformanceCheck> Visible => _onlyProblems
+        ? Checks!.Where(c => c.Outcome is CheckOutcome.Fail or CheckOutcome.Warning)
+        : Checks!;
+
+    private int Count(CheckOutcome outcome) => Checks!.Count(c => c.Outcome == outcome);
+
+    private static string Icon(CheckOutcome outcome) => outcome switch
+    {
+        CheckOutcome.Pass => Icons.Material.Filled.CheckCircle,
+        CheckOutcome.Fail => Icons.Material.Filled.Cancel,
+        CheckOutcome.Warning => Icons.Material.Filled.Warning,
+        _ => Icons.Material.Filled.Info
+    };
+
+    private static Color OutcomeColor(CheckOutcome outcome) => outcome switch
+    {
+        CheckOutcome.Pass => Color.Success,
+        CheckOutcome.Fail => Color.Error,
+        CheckOutcome.Warning => Color.Warning,
+        _ => Color.Info
+    };
+}

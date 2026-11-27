@@ -23,6 +23,7 @@ using System.Text.RegularExpressions;
 using Udap.Model;
 using Udap.Model.Registration;
 using UdapEd.Shared.Components;
+using UdapEd.Shared.Conformance;
 using UdapEd.Shared.Extensions;
 using UdapEd.Shared.Model;
 using UdapEd.Shared.Model.Registration;
@@ -39,6 +40,33 @@ public partial class UdapRegistration : IAsyncDisposable
     private bool _regStep2Expanded;
     private bool _regStep3Expanded;
     private bool _regStep4Expanded;
+
+    private string? _statementChecksFor;
+    private List<ConformanceCheck>? _statementChecks;
+    private List<ConformanceCheck>? _registrationChecks;
+
+    /// <summary>The software statement in the request body, checked against SSRAA §3.1.</summary>
+    private List<ConformanceCheck>? SoftwareStatementChecks
+    {
+        get
+        {
+            var statement = AppState.UdapRegistrationRequest?.SoftwareStatement;
+            if (string.IsNullOrEmpty(statement))
+            {
+                return null;
+            }
+
+            var registrationEndpoint = AppState.MetadataVerificationModel?.UdapServerMetaData?.RegistrationEndpoint;
+            var key = $"{statement}|{registrationEndpoint}";
+            if (key != _statementChecksFor)
+            {
+                _statementChecks = RegistrationConformance.EvaluateSoftwareStatement(statement, registrationEndpoint);
+                _statementChecksFor = key;
+            }
+
+            return _statementChecks;
+        }
+    }
 
     private bool TieredOauth
     {
@@ -801,6 +829,7 @@ public partial class UdapRegistration : IAsyncDisposable
         }
 
         RegistrationResult = string.Empty;
+        _registrationChecks = null;
         await AppState.SetPropertyAsync(this, nameof(AppState.RegistrationDocument), null);
 
         HighlightSoftwareStatement();
@@ -872,6 +901,7 @@ public partial class UdapRegistration : IAsyncDisposable
     private async Task PerformRegistration()
     {
         RegistrationResult = "Loading ...";
+        _registrationChecks = null;
         await Task.Delay(50);
 
         var registrationRequest = new RegistrationRequest
@@ -900,6 +930,12 @@ public partial class UdapRegistration : IAsyncDisposable
                     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
                 });
 
+            if (JsonSerializer.SerializeToNode(resultModel.Result,
+                    new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }) is JsonObject responseJson)
+            {
+                _registrationChecks = RegistrationConformance.EvaluateRegistrationResponse((int)resultModel.HttpStatusCode, responseJson);
+            }
+
             if (_cancelRegistration)
             { // cancel registration
                 AppState.ClientRegistrations?.CancelRegistration(resultModel.Result);
@@ -922,6 +958,7 @@ public partial class UdapRegistration : IAsyncDisposable
             RegistrationResult = $"HTTP/{resultModel.Version} {(int)resultModel.HttpStatusCode} {resultModel.HttpStatusCode}" +
                                  $"{Environment.NewLine}{Environment.NewLine}";
             RegistrationResult += resultModel.ErrorMessage ?? string .Empty;
+            _registrationChecks = RegistrationConformance.EvaluateRegistrationError((int)resultModel.HttpStatusCode, resultModel.ErrorMessage);
             
             await AppState.SetPropertyAsync(this, nameof(AppState.RegistrationDocument), null);
         }

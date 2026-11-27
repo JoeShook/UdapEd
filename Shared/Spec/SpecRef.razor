@@ -1,0 +1,63 @@
+@using UdapEd.Shared.Spec
+
+@*
+    A citation chip such as "SSRAA §2.3". Clicking it shows the section's text (quoted where the license allows,
+    summarized otherwise) and a link to the section in the published guide.
+*@
+@if (_section == null)
+{
+    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Error" title="Not in the spec catalog">@Key</MudChip>
+}
+else
+{
+    <span class="udaped-specref">
+        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info"
+                 Icon="@Icons.Material.Outlined.MenuBook" OnClick="Toggle" title="@_section.Title"
+                 data-spec-key="@_section.Key">@(Label ?? _section.Label)</MudChip>
+        @* Rendered only while open: a page can carry dozens of chips. *@
+        @if (_open)
+        {
+        <MudPopover Open="true" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft"
+                    Class="udaped-spec-popover pa-4" Elevation="8">
+            @* MudPopover sets max-width: none on itself, so the width limit lives on this wrapper. *@
+            <div style="max-width: min(560px, calc(100vw - 64px));">
+            <MudText Typo="Typo.subtitle2">@_section.Label · @_section.Title</MudText>
+            @if (_section.IsQuote)
+            {
+                <blockquote class="udaped-spec-quote">@SpecText.Highlight(_section.Text)</blockquote>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Class="my-2">@SpecText.Highlight(_section.Text)</MudText>
+            }
+            <MudText Typo="Typo.caption" Class="d-block">@_section.Source.Title @_section.Source.Version. @_section.Source.Attribution</MudText>
+            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mt-2">
+                <MudLink Href="@_section.Url" Target="_blank" rel="noopener" Typo="Typo.body2">
+                    Open §@_section.Number in the @(_section.Source.QuotesVerbatim ? "IG" : "specification")
+                    <MudIcon Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small" Style="vertical-align: middle" />
+                </MudLink>
+                <MudButton Size="Size.Small" OnClick="Close">Close</MudButton>
+            </MudStack>
+            </div>
+        </MudPopover>
+        <MudOverlay Visible="true" OnClick="Close" Modal="false" />
+        }
+    </span>
+}
+
+@code {
+    /// <summary>A <see cref="SpecCatalog"/> key, e.g. "ssraa:2.3".</summary>
+    [Parameter, EditorRequired] public string Key { get; set; } = string.Empty;
+
+    /// <summary>Overrides the chip text.</summary>
+    [Parameter] public string? Label { get; set; }
+
+    private SpecSection? _section;
+    private bool _open;
+
+    protected override void OnParametersSet() => _section = SpecCatalog.Find(Key);
+
+    private void Toggle() => _open = !_open;
+
+    private void Close() => _open = false;
+}
