@@ -11,6 +11,7 @@ public partial class CertificatePKIViewer : ComponentBase
     [Parameter] public bool EnableAddToClaim { get; set; }
     [Parameter] public string? CertContext { get; set; }
     [Parameter] public EventCallback<string?> IntermediateAddedToX5cEvent { get; set; }
+    [Parameter] public EventCallback IntermediatesRemovedFromX5cEvent { get; set; }
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }

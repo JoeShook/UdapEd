@@ -633,6 +633,8 @@ public partial class UdapBusinessToBusiness
     private string _clientCredentialsJwtHeader = string.Empty;
     private string _authCodeJwtHeader = string.Empty;
 
+    private async Task OnIntermediatesRemoved() => await BuildAccessTokenRequest();
+
     private async Task OnClientCredentialsIntermediateAdded(string? certBase64)
     {
         if (string.IsNullOrEmpty(certBase64)) return;

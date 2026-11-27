@@ -48,13 +48,13 @@ internal class RegisterService : IRegisterService
         var certBytes = Convert.FromBase64String(base64EncodedBytes);
         await SessionExtensions.StoreInChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE, certBytes);
         await SessionExtensions.RemoveChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
+        await SessionExtensions.RemoveChunks(UdapEdConstants.UDAP_PKCS12_INTERMEDIATE_CERTIFICATES);
     }
 
     public async Task<RawSoftwareStatementAndHeader?> BuildSoftwareStatementForClientCredentials(
         UdapDynamicClientRegistrationDocument request, string signingAlgorithm)
     {
         var clientCertWithKey = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
-        await SessionExtensions.RemoveChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
 
         if (clientCertWithKey == null)
         {
@@ -68,14 +68,8 @@ internal class RegisterService : IRegisterService
             flags |= X509KeyStorageFlags.Exportable;
         }
         var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", flags);
-        var x5cCerts = new List<X509Certificate2> { clientCert };
-        var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
-        var intermediateCerts = intermediatesStored == null ? null : Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
-
-        if (intermediateCerts != null && intermediateCerts.Any())
-        {
-            x5cCerts.AddRange(intermediateCerts);
-        }
+        // The signing certificate, then the intermediates chosen for x5c, issuer path first.
+        var x5cCerts = await X5cStore.GetX5cCertificates(clientCert, UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
 
         UdapDcrBuilderForClientCredentialsUnchecked dcrBuilder;
 
@@ -145,7 +139,6 @@ internal class RegisterService : IRegisterService
     public async Task<RawSoftwareStatementAndHeader?> BuildSoftwareStatementForAuthorizationCode(UdapDynamicClientRegistrationDocument request, string signingAlgorithm)
     {
         var clientCertWithKey = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY);
-        await SessionExtensions.RemoveChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
 
         if (clientCertWithKey == null)
         {
@@ -159,14 +152,8 @@ internal class RegisterService : IRegisterService
             flags |= X509KeyStorageFlags.Exportable;
         }
         var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", flags);
-        var x5cCerts = new List<X509Certificate2> { clientCert };
-        var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
-        var intermediateCerts = intermediatesStored == null ? null : Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
-
-        if (intermediateCerts != null && intermediateCerts.Any())
-        {
-            x5cCerts.AddRange(intermediateCerts);
-        }
+        // The signing certificate, then the intermediates chosen for x5c, issuer path first.
+        var x5cCerts = await X5cStore.GetX5cCertificates(clientCert, UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
 
         UdapDcrBuilderForAuthorizationCodeUnchecked dcrBuilder;
 
@@ -252,14 +239,8 @@ internal class RegisterService : IRegisterService
             flags |= X509KeyStorageFlags.Exportable;
         }
         var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", flags);
-        var x5cCerts = new List<X509Certificate2> { clientCert };
-        var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
-        var intermediateCerts = intermediatesStored == null ? null : Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
-
-        if (intermediateCerts != null && intermediateCerts.Any())
-        {
-            x5cCerts.AddRange(intermediateCerts);
-        }
+        // The signing certificate, then the intermediates chosen for x5c, issuer path first.
+        var x5cCerts = await X5cStore.GetX5cCertificates(clientCert, UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
 
         var document = JsonSerializer
             .Deserialize<UdapDynamicClientRegistrationDocument>(request.SoftwareStatement)!;
@@ -336,14 +317,8 @@ internal class RegisterService : IRegisterService
             flags |= X509KeyStorageFlags.Exportable;
         }
         var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", flags);
-        var x5cCerts = new List<X509Certificate2> { clientCert };
-        var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
-        var intermediateCerts = intermediatesStored == null? null: Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
-
-        if (intermediateCerts != null && intermediateCerts.Any())
-        {
-            x5cCerts.AddRange(intermediateCerts);
-        }
+        // The signing certificate, then the intermediates chosen for x5c, issuer path first.
+        var x5cCerts = await X5cStore.GetX5cCertificates(clientCert, UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
 
         var document = JsonSerializer
             .Deserialize<UdapDynamicClientRegistrationDocument>(request.SoftwareStatement)!;
@@ -482,6 +457,7 @@ internal class RegisterService : IRegisterService
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             await SessionExtensions.StoreInChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, clientCertWithKeyBytes);
+            await X5cStore.StorePkcs12Intermediates(null, certBytes, password, certificate, _logger);
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -593,18 +569,20 @@ internal class RegisterService : IRegisterService
                 flags |= X509KeyStorageFlags.Exportable;
             }
             
+            string? password = "udap-test";
             try
             {
-                certificate = X509CertificateLoader.LoadPkcs12(certBytes, "udap-test", flags);
+                certificate = X509CertificateLoader.LoadPkcs12(certBytes, password, flags);
             }
             catch
             {
-                certificate = X509CertificateLoader.LoadPkcs12(certBytes, _configuration["sampleKeyC"], flags);
+                password = _configuration["sampleKeyC"];
+                certificate = X509CertificateLoader.LoadPkcs12(certBytes, password, flags);
             }
 
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             await SessionExtensions.StoreInChunks(UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY, clientCertWithKeyBytes);
-            await SessionExtensions.RemoveChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
+            await X5cStore.StorePkcs12Intermediates(null, certBytes, password, certificate, _logger);
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;

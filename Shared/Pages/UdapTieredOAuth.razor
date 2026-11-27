@@ -331,7 +331,8 @@
                                         JwtHeaderWithx5c="@_authCodeJwtHeader"
                                         EnableAddToClaim="true"
                                         EndCertificate="true"
-                                        IntermediateAddedToX5cEvent="@OnIntermediateAdded"/>
+                                        IntermediateAddedToX5cEvent="@OnIntermediateAdded"
+                                              IntermediatesRemovedFromX5cEvent="@OnIntermediatesRemoved"/>
                                 </MudTabPanel>
                                 @if (EnableDPoP)
                                 {
