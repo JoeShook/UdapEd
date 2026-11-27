@@ -519,6 +519,46 @@ public partial class UdapRegistration : IAsyncDisposable
         }
     }
 
+    /// <summary>Keeps only the signing certificate (the first element) in the header's x5c.</summary>
+    private static void TrimX5cHeaderToSigningCertificate(ref string headerField)
+    {
+        if (string.IsNullOrEmpty(headerField))
+        {
+            return;
+        }
+
+        try
+        {
+            var headerNode = JsonNode.Parse(headerField);
+            if (headerNode?["x5c"] is JsonArray x5cArray && x5cArray.Count > 1)
+            {
+                while (x5cArray.Count > 1)
+                {
+                    x5cArray.RemoveAt(x5cArray.Count - 1);
+                }
+
+                headerField = headerNode.ToJsonString(new JsonSerializerOptions { WriteIndented = true })
+                    .Replace("\\u002B", "+");
+            }
+        }
+        catch
+        {
+            // ignored
+        }
+    }
+
+    private void OnRegistrationIntermediatesRemoved()
+    {
+        TrimX5cHeaderToSigningCertificate(ref _beforeEncodingHeader);
+        StateHasChanged();
+    }
+
+    private void OnCertificationIntermediatesRemoved()
+    {
+        TrimX5cHeaderToSigningCertificate(ref _beforeCertificationEncodingHeader);
+        StateHasChanged();
+    }
+
     private void OnRegistrationIntermediateAdded(string? certBase64)
     {
         AppendCertToX5cHeader(certBase64, ref _beforeEncodingHeader);

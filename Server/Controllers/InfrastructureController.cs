@@ -135,6 +135,20 @@ public class InfrastructureController : Controller
     /// intermediate. Called automatically for a TEFCA server, and when the user asks for the intermediate.
     /// Returns the base64 certificates that were added.
     /// </summary>
+    /// <summary>
+    /// Empties the x5c store for the certificate context, so the signing certificate goes alone in x5c. The PKCS#12
+    /// intermediates are kept, so "Include issuing intermediate" can add them again.
+    /// </summary>
+    [HttpPost("RemoveIntermediatesFromX5c")]
+    public IActionResult RemoveIntermediatesFromX5c(string? certContext)
+    {
+        HttpContext.Session.Remove(certContext == "certification"
+            ? UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES
+            : UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
+
+        return Ok();
+    }
+
     [HttpGet("ResolveAiaIntermediates")]
     public async Task<IActionResult> ResolveAiaIntermediates(string? certContext, CancellationToken token)
     {

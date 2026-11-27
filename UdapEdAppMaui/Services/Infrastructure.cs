@@ -26,61 +26,72 @@ public class Infrastructure : UdapEd.Shared.Services.Infrastructure
     }
 
 
+    /// <summary>
+    /// For a TEFCA server UdapEd includes the issuer chain automatically; same as <see cref="IncludeIssuerInX5c"/>.
+    /// </summary>
     public override async Task ResolveAiaIntermediates(string? certContext = null)
+    {
+        await IncludeIssuerInX5c(certContext);
+    }
+
+    /// <summary>
+    /// Includes the signing certificate's issuer chain in x5c: the issuer path found among the intermediates of the
+    /// loaded PKCS#12 file, the certificates its AIA extension points to, and the loaded anchor when it is an
+    /// intermediate. Returns the base64 certificates that were added.
+    /// </summary>
+    public override async Task<List<string>> IncludeIssuerInX5c(string? certContext = null)
     {
         try
         {
-            var certSessionKey = certContext == "certification"
-                ? UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY
-                : UdapEdConstants.UDAP_CLIENT_CERTIFICATE_WITH_KEY;
-            var intermediateSessionKey = certContext == "certification"
-                ? UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES
-                : UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES;
-
-            var clientCertWithKey = await SessionExtensions.RetrieveFromChunks(certSessionKey);
-            if (clientCertWithKey == null) return;
-
-            var certBytes = Convert.FromBase64String(clientCertWithKey);
-            var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
-
-            var aiaExtension = clientCert.Extensions["1.3.6.1.5.5.7.1.1"] as X509AuthorityInformationAccessExtension;
-            if (aiaExtension == null) return;
-
-            foreach (var aiaUrl in aiaExtension.EnumerateCAIssuersUris())
+            var clientCertWithKey = await SessionExtensions.RetrieveFromChunks(X5cStore.SigningCertificateKey(certContext));
+            if (clientCertWithKey == null)
             {
-                await GetIntermediateX509(aiaUrl, certContext);
+                return [];
             }
+
+            var clientCert = X509CertificateLoader.LoadPkcs12(Convert.FromBase64String(clientCertWithKey), "ILikePasswords", X509KeyStorageFlags.Exportable);
+
+            var aiaCerts = new List<X509Certificate2>();
+            if (clientCert.Extensions["1.3.6.1.5.5.7.1.1"] is X509AuthorityInformationAccessExtension aiaExtension)
+            {
+                foreach (var aiaUrl in aiaExtension.EnumerateCAIssuersUris())
+                {
+                    try
+                    {
+                        aiaCerts.Add(X509CertificateLoader.LoadCertificate(await HttpClient.GetByteArrayAsync(aiaUrl)));
+                    }
+                    catch (HttpRequestException)
+                    {
+                        // An unreachable AIA URL; the PKCS#12 file or the anchor may still supply the issuer.
+                    }
+                }
+            }
+
+            var added = await X5cStore.IncludeIssuerChain(certContext, clientCert, aiaCerts);
+            return added.Select(c => Convert.ToBase64String(c.RawData)).ToList();
         }
         catch (Exception)
         {
-            // ignored
+            return [];
         }
     }
+
+    /// <summary>Empties the x5c store; the PKCS#12 intermediates stay available to include again.</summary>
+    public override Task RemoveIntermediatesFromX5c(string? certContext = null) =>
+        X5cStore.Clear(X5cStore.X5cKey(certContext));
 
     public override async Task<string?> GetIntermediateX509(string url, string? certContext = null)
     {
         try
         {
             var bytes = await HttpClient.GetByteArrayAsync(url);
-
             var certificate = X509CertificateLoader.LoadCertificate(bytes);
-            var sessionKey = certContext == "certification"
-                ? UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES
-                : UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES;
-            var intermediatesStored = await SessionExtensions.RetrieveFromChunks(sessionKey);
-            var intermediateCerts =
-                intermediatesStored == null ? new X509Certificate2Collection() :
-                Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates() ?? new X509Certificate2Collection();
+            await X5cStore.Add(X5cStore.X5cKey(certContext), certificate);
 
-            if (intermediateCerts.All(i => i.Thumbprint != certificate.Thumbprint))
-            {
-                intermediateCerts.Add(certificate);
-                await SessionExtensions.StoreInChunks(sessionKey, intermediateCerts.SerializeCertificates());
-            }
-
-            return certificate.GetRawCertDataString();
+            // Base64, as it goes into the x5c header (the server returns the same).
+            return Convert.ToBase64String(certificate.RawData);
         }
-        catch (HttpRequestException ex)
+        catch (HttpRequestException)
         {
             return null;
         }

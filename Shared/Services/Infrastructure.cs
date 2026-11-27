@@ -230,6 +230,12 @@ public class Infrastructure : IInfrastructure
         return Task.FromResult(new List<string>());
     }
 
+    public virtual Task RemoveIntermediatesFromX5c(string? certContext = null)
+    {
+        // Default: nothing was included; the server-backed client implements it.
+        return Task.CompletedTask;
+    }
+
     public virtual async Task<string?> GetIntermediateX509(string url, string? certContext = null)
     {
         var bytes = await HttpClient.GetByteArrayAsync(url);

@@ -96,16 +96,8 @@ internal class AccessService : IAccessService
         }
         var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", flags);
 
-        var x5cCerts = new List<X509Certificate2> { clientCert };
-        var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
-        if (intermediatesStored != null)
-        {
-            var intermediateCerts = Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
-            if (intermediateCerts != null && intermediateCerts.Any())
-            {
-                x5cCerts.AddRange(intermediateCerts);
-            }
-        }
+        // The signing certificate, then the intermediates chosen for x5c, issuer path first.
+        var x5cCerts = await X5cStore.GetX5cCertificates(clientCert, UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
 
         var tokenRequestBuilder = AccessTokenRequestForAuthorizationCodeBuilder.Create(
             tokenRequestModel.ClientId,
@@ -164,16 +156,8 @@ internal class AccessService : IAccessService
         }
         var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", flags);
 
-        var x5cCerts = new List<X509Certificate2> { clientCert };
-        var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
-        if (intermediatesStored != null)
-        {
-            var intermediateCerts = Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
-            if (intermediateCerts != null && intermediateCerts.Any())
-            {
-                x5cCerts.AddRange(intermediateCerts);
-            }
-        }
+        // The signing certificate, then the intermediates chosen for x5c, issuer path first.
+        var x5cCerts = await X5cStore.GetX5cCertificates(clientCert, UdapEdConstants.UDAP_INTERMEDIATE_CERTIFICATES);
 
         var tokenRequestBuilder = AccessTokenRequestForClientCredentialsBuilder.Create(
             tokenRequestModel.ClientId,

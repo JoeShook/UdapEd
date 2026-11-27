@@ -283,6 +283,14 @@ input.pre, textarea.pre {
   border-radius: 4px;
 }
 
+/* The grip resizes height only. Dragging it sideways would pin a pixel width, and the box would stop following its
+   pane when the SplitPanes divider moves. */
+textarea.pre {
+  resize: vertical;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
 .udap-indent-1 {
   padding-left: 10px
 }

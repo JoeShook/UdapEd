@@ -539,6 +539,8 @@ public partial class UdapTieredOAuth
     private CertificatePKIViewer _certificateViewer;
     private string _authCodeJwtHeader = string.Empty;
 
+    private async Task OnIntermediatesRemoved() => await BuildAccessTokenRequest();
+
     private async Task OnIntermediateAdded(string? certBase64)
     {
         if (string.IsNullOrEmpty(certBase64)) return;

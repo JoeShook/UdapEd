@@ -47,6 +47,12 @@ public interface IInfrastructure
     /// </summary>
     Task<List<string>> IncludeIssuerInX5c(string? certContext = null);
 
+    /// <summary>
+    /// Takes the intermediates out of x5c again, so the signing certificate goes alone. Intermediates read from the
+    /// loaded PKCS#12 file stay available, so they can be included again.
+    /// </summary>
+    Task RemoveIntermediatesFromX5c(string? certContext = null);
+
     Task<string?> GetCrldata(string url);
     Task<X509CacheSettings?> GetX509StoreCache(string thumbprint);
     Task<CrlFileCacheSettings?> GetCryptNetUrlCache(string? path);

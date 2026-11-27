@@ -54,6 +54,7 @@ public class CertificationService : ICertificationService
             var subjectName = certificate.SubjectName.Name;
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             await StoreInChunks(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY, clientCertWithKeyBytes);
+            await X5cStore.StorePkcs12Intermediates("certification", certBytes, "udap-test", certificate, _logger);
             result.DistinguishedName = subjectName;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -89,6 +90,8 @@ public class CertificationService : ICertificationService
     {
         var certBytes = Convert.FromBase64String(base64EncodedBytes);
         await StoreInChunks(UdapEdConstants.CERTIFICATION_CERTIFICATE, certBytes);
+        await SessionExtensions.RemoveChunks(UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
+        await SessionExtensions.RemoveChunks(UdapEdConstants.CERTIFICATION_PKCS12_INTERMEDIATE_CERTIFICATES);
     }
 
 
@@ -113,6 +116,7 @@ public class CertificationService : ICertificationService
             var certificate = X509CertificateLoader.LoadPkcs12(certBytes, password, X509KeyStorageFlags.Exportable);
             var clientCertWithKeyBytes = certificate.Export(X509ContentType.Pkcs12, "ILikePasswords");
             await StoreInChunks(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY, clientCertWithKeyBytes);
+            await X5cStore.StorePkcs12Intermediates("certification", certBytes, password, certificate, _logger);
             result.DistinguishedName = certificate.SubjectName.Name;
             result.Thumbprint = certificate.Thumbprint;
             result.CertLoaded = CertLoadedEnum.Positive;
@@ -205,7 +209,9 @@ public class CertificationService : ICertificationService
     {
         await SessionExtensions.RemoveChunks(UdapEdConstants.CERTIFICATION_CERTIFICATE);
         await SessionExtensions.RemoveChunks(UdapEdConstants.CERTIFICATION_CERTIFICATE_WITH_KEY);
-        
+        await SessionExtensions.RemoveChunks(UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
+        await SessionExtensions.RemoveChunks(UdapEdConstants.CERTIFICATION_PKCS12_INTERMEDIATE_CERTIFICATES);
+
         return true;
     }
 
@@ -221,16 +227,8 @@ public class CertificationService : ICertificationService
         var certBytes = Convert.FromBase64String(clientCertWithKey);
         var clientCert = X509CertificateLoader.LoadPkcs12(certBytes, "ILikePasswords", X509KeyStorageFlags.Exportable);
 
-        var x5cCerts = new List<X509Certificate2> { clientCert };
-        var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
-        if (intermediatesStored != null)
-        {
-            var intermediateCerts = Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
-            if (intermediateCerts != null && intermediateCerts.Any())
-            {
-                x5cCerts.AddRange(intermediateCerts);
-            }
-        }
+        // The signing certificate, then the intermediates chosen for x5c, issuer path first.
+        var x5cCerts = await X5cStore.GetX5cCertificates(clientCert, UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
 
         var certificationBuilder = UdapCertificationsAndEndorsementBuilderUnchecked.Create(request.CertificationName, x5cCerts);
 
@@ -294,16 +292,8 @@ public class CertificationService : ICertificationService
         var document = JsonSerializer
             .Deserialize<UdapCertificationAndEndorsementDocument>(request.SoftwareStatement)!;
 
-        var x5cCerts = new List<X509Certificate2> { clientCert };
-        var intermediatesStored = await SessionExtensions.RetrieveFromChunks(UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
-        if (intermediatesStored != null)
-        {
-            var intermediateCerts = Base64UrlEncoder.Decode(intermediatesStored).DeserializeCertificates();
-            if (intermediateCerts != null && intermediateCerts.Any())
-            {
-                x5cCerts.AddRange(intermediateCerts);
-            }
-        }
+        // The signing certificate, then the intermediates chosen for x5c, issuer path first.
+        var x5cCerts = await X5cStore.GetX5cCertificates(clientCert, UdapEdConstants.CERTIFICATION_INTERMEDIATE_CERTIFICATES);
 
         var certificationBuilder = UdapCertificationsAndEndorsementBuilderUnchecked.Create(document.CertificationName, x5cCerts);
 

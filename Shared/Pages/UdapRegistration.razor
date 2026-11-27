@@ -387,7 +387,8 @@
                                                 JwtHeaderWithx5c="@SoftwareStatementBeforeEncodingHeader"
                                                 EnableAddToClaim="true"
                                                 EndCertificate="true"
-                                                IntermediateAddedToX5cEvent="@OnRegistrationIntermediateAdded"/>
+                                                IntermediateAddedToX5cEvent="@OnRegistrationIntermediateAdded"
+                                                IntermediatesRemovedFromX5cEvent="@OnRegistrationIntermediatesRemoved"/>
                                         </MudPaper>
                                     </Right>
                                 </SplitPanes>
@@ -438,7 +439,7 @@
                                     <Right>
                                         <MudPaper Class="udap-analyzed" Elevation="3">
                                             <MudText Align="Align.Right" Color="Color.Tertiary">x509 certificates from x5c</MudText>
-                                            <CertificatePKIViewer  @ref="_certificateViewerForCertification"  JwtHeaderWithx5c="@CertSoftwareStatementBeforeEncodingHeader" EnableAddToClaim="true" CertContext="certification" IntermediateAddedToX5cEvent="@OnCertificationIntermediateAdded" />
+                                            <CertificatePKIViewer  @ref="_certificateViewerForCertification"  JwtHeaderWithx5c="@CertSoftwareStatementBeforeEncodingHeader" EnableAddToClaim="true" CertContext="certification" IntermediateAddedToX5cEvent="@OnCertificationIntermediateAdded" IntermediatesRemovedFromX5cEvent="@OnCertificationIntermediatesRemoved" />
                                         </MudPaper>
                                     </Right>
                                 </SplitPanes>

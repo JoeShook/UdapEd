@@ -35,6 +35,29 @@ public partial class CertificateViewer : ComponentBase
 
     private string? _includeIssuerMessage;
 
+    /// <summary>How many certificates follow the signing certificate in the x5c header.</summary>
+    private int X5cIntermediateCount
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(JwtHeader))
+            {
+                return 0;
+            }
+
+            try
+            {
+                return System.Text.Json.Nodes.JsonNode.Parse(JwtHeader)?["x5c"] is System.Text.Json.Nodes.JsonArray x5c && x5c.Count > 1
+                    ? x5c.Count - 1
+                    : 0;
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                return 0;
+            }
+        }
+    }
+
 
     [Parameter] public string Class { get; set; }
 
@@ -79,6 +102,10 @@ public partial class CertificateViewer : ComponentBase
     /// </summary>
     [Parameter]
     public EventCallback<string?> IntermediateAddedToX5cEvent { get; set; }
+
+    /// <summary>The intermediates were taken out of x5c; the page should rebuild or trim the header it shows.</summary>
+    [Parameter]
+    public EventCallback IntermediatesRemovedFromX5cEvent { get; set; }
 
     public List<X509CacheSettings>? StoreCache { get; set; }
     public List<CrlFileCacheSettings>? FileCache { get; set; }
@@ -175,6 +202,13 @@ public partial class CertificateViewer : ComponentBase
     {
         var certBase64 = await Infrastructure.GetIntermediateX509(url, CertContext);
         await IntermediateAddedToX5cEvent.InvokeAsync(certBase64);
+    }
+
+    private async Task RemoveIntermediatesFromX5c()
+    {
+        _includeIssuerMessage = null;
+        await Infrastructure.RemoveIntermediatesFromX5c(CertContext);
+        await IntermediatesRemovedFromX5cEvent.InvokeAsync();
     }
 
     private async Task IncludeIssuerInX5c()

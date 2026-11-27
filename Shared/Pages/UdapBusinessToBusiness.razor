@@ -165,7 +165,8 @@
                                               JwtHeaderWithx5c="@_clientCredentialsJwtHeader"
                                               EnableAddToClaim="true"
                                               EndCertificate="true"
-                                              IntermediateAddedToX5cEvent="@OnClientCredentialsIntermediateAdded"/>
+                                              IntermediateAddedToX5cEvent="@OnClientCredentialsIntermediateAdded"
+                                              IntermediatesRemovedFromX5cEvent="@OnIntermediatesRemoved"/>
                                       </MudTabPanel>
                                       @if (EnableDPoP)
                                       {
@@ -457,7 +458,8 @@
                                               JwtHeaderWithx5c="@_authCodeJwtHeader"
                                               EnableAddToClaim="true"
                                               EndCertificate="true"
-                                              IntermediateAddedToX5cEvent="@OnAuthCodeIntermediateAdded"/>
+                                              IntermediateAddedToX5cEvent="@OnAuthCodeIntermediateAdded"
+                                              IntermediatesRemovedFromX5cEvent="@OnIntermediatesRemoved"/>
                                       </MudTabPanel>
                                       @if (EnableDPoP)
                                       {

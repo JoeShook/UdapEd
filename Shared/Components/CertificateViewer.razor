@@ -30,17 +30,43 @@
                         @(IssuerRequiredInX5c
                             ? " TEFCA requires the signing certificate to be followed by its issuing intermediate."
                             : " This server does not require it; include it if the server needs the chain.")
-                        <MudButton Size="Size.Small"
-                                   Color="Color.Info"
-                                   StartIcon="@Icons.Material.Filled.Add"
-                                   OnClick="IncludeIssuerInX5c"
-                                   data-testid="x5c-include-intermediate">
-                            Include issuing intermediate in x5c
-                        </MudButton>
+                        @* The fix gets its own row and a filled button, so it reads as an action rather than part of the sentence. *@
+                        <div class="d-flex justify-end mt-2">
+                            <MudButton Size="Size.Small"
+                                       Variant="Variant.Filled"
+                                       Color="@(IssuerRequiredInX5c ? Color.Warning : Color.Primary)"
+                                       StartIcon="@Icons.Material.Filled.Add"
+                                       OnClick="IncludeIssuerInX5c"
+                                       data-testid="x5c-include-intermediate">
+                                Include issuing intermediate in x5c
+                            </MudButton>
+                        </div>
                         @if (!string.IsNullOrEmpty(_includeIssuerMessage))
                         {
                             <MudText Typo="Typo.body2" Color="Color.Warning">@_includeIssuerMessage</MudText>
                         }
+                    </MudAlert>
+                }
+
+                @if (EnableAddToClaim && X5cIntermediateCount > 0)
+                {
+                    <MudAlert Severity="Severity.Normal" Dense="true" Class="mb-2" data-testid="x5c-intermediates-included">
+                        x5c carries @X5cIntermediateCount intermediate @(X5cIntermediateCount == 1 ? "certificate" : "certificates")
+                        after the signing certificate.
+                        @if (IssuerRequiredInX5c)
+                        {
+                            <text> TEFCA requires the issuing intermediate; UdapEd adds it back the next time it builds a request for this server.</text>
+                        }
+                        <div class="d-flex justify-end mt-2">
+                            <MudButton Size="Size.Small"
+                                       Variant="Variant.Outlined"
+                                       Color="@(IssuerRequiredInX5c ? Color.Warning : Color.Primary)"
+                                       StartIcon="@Icons.Material.Filled.Remove"
+                                       OnClick="RemoveIntermediatesFromX5c"
+                                       data-testid="x5c-remove-intermediates">
+                                Remove intermediates from x5c
+                            </MudButton>
+                        </div>
                     </MudAlert>
                 }
 

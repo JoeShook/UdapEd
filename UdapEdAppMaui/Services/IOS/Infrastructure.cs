@@ -132,6 +132,18 @@ public class Infrastructure : IInfrastructure
         }
     }
 
+    public async Task RemoveIntermediatesFromX5c(string? certContext = null)
+    {
+        var requestUrl = "Infrastructure/RemoveIntermediatesFromX5c";
+        if (!string.IsNullOrEmpty(certContext))
+        {
+            requestUrl += $"?certContext={Uri.EscapeDataString(certContext)}";
+        }
+
+        var response = await _httpClient.PostAsync(requestUrl, null);
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task<string?> GetIntermediateX509(string url, string? certContext = null)
     {
         try
