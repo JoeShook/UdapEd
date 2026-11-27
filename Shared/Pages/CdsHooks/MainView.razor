@@ -8,7 +8,14 @@
 @using T = System.Threading.Tasks
 
 @code {
+    // The chosen discovery endpoint and service are remembered in this browser.
+    private const string DiscoveryUrlKey = "udaped-cds-discovery-url";
+    private const string ServiceUrlKey = "udaped-cds-service-url";
+
     [Inject] public required IDialogService DialogService { get; set; }
+    [Inject] ICdsService CdsService { get; set; } = null!;
+    [Inject] private IFhirService FhirService { get; set; } = null!;
+    [Inject] private ILocalStorageService LocalStorage { get; set; } = null!;
 
     private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
     {
@@ -22,60 +29,144 @@
     private readonly FhirSearch _fhirSearch = new() { BaseUrl = "https://launch.smarthealthit.org/v/r2/fhir" };
     private Hl7.Fhir.Model.Patient? _patient;
     private CdsResponse? _cdsResponse;
-    private string RequestJson;
-    private string ResponseJson;
-    private string Messages;
-    
-    private async T.Task OpenDialog()
-    {
-        var options = new DialogOptions { FullScreen = true, CloseButton = true};
-        var dialog = await DialogService.ShowAsync<ConfigureServicesDialog>("Configure CDS Services", options);
-        await dialog.Result;
-    }
+    private string? RequestJson;
+    private string? ResponseJson;
+    private string? Messages;
 
-    [Inject] ICdsService CdsService { get; set; } = null!;
-    [Inject] private IFhirService FhirService { get; set; } = null!;
+    private string? _discoveryUrl;
+    private string? _serviceUrl;
+    private string? _error;
+    private bool _calling;
 
     protected override async T.Task OnInitializedAsync()
     {
         try
         {
-            _fhirSearch.ResourceName = "Patient";
-            var result = await FhirService.Get($" {_fhirSearch.BaseUrl}/{_fhirSearch.ResourceName}/{_searchString}");
-            //var response = await Http.GetFromJsonAsync<CdsResponse>("/api/PatientData?patientId=example-patient-id&fhirAccessToken=example-token&fhirServerUrl=https://example.com/fhir");
-            _patient = result.Result as Patient;
+            _discoveryUrl = await LocalStorage.GetItemAsync<string>(DiscoveryUrlKey);
+            _serviceUrl = await LocalStorage.GetItemAsync<string>(ServiceUrlKey);
+        }
+        catch (Exception)
+        {
+            // No saved choice; the page asks for one.
+        }
 
-            var cdsRequest = new CdsRequest
+        await LoadPatient();
+        await CallService();
+    }
+
+    private async T.Task LoadPatient()
+    {
+        try
+        {
+            _fhirSearch.ResourceName = "Patient";
+            var result = await FhirService.Get($"{_fhirSearch.BaseUrl}/{_fhirSearch.ResourceName}/{_searchString}");
+            _patient = result.Result as Patient;
+            if (_patient == null)
             {
-                HookInstance = Guid.NewGuid().ToString(),
-                Hook = "patient-view",
-                Context = new CdsContext { PatientId = _patient.Id, UserId = "Practitioner/COREPRACTITIONER1" },
-                    Prefetch = new Dictionary<string, Hl7.Fhir.Model.Resource>() { { "patient", _patient } }
-            };
-            
-            RequestJson = JsonSerializer.Serialize(cdsRequest, JsonOptions);
-            _cdsResponse = await CdsService.GetCdsService(cdsRequest);
-            Console.WriteLine(_cdsResponse.Cards.First().Summary);
+                _error = $"Could not load the test patient {_searchString} from {_fhirSearch.BaseUrl}.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Could not load the test patient {_searchString} from {_fhirSearch.BaseUrl}: {ex.Message}";
+        }
+    }
+
+    private async T.Task CallService()
+    {
+        if (_patient == null || string.IsNullOrEmpty(_serviceUrl))
+        {
+            return;
+        }
+
+        _calling = true;
+        _error = null;
+        _cdsResponse = null;
+        ResponseJson = null;
+
+        var cdsRequest = new CdsRequest
+        {
+            HookInstance = Guid.NewGuid().ToString(),
+            Hook = ConfigureServicesDialog.PatientViewHook,
+            Context = new CdsContext { PatientId = _patient.Id, UserId = "Practitioner/COREPRACTITIONER1" },
+            Prefetch = new Dictionary<string, Hl7.Fhir.Model.Resource> { { "patient", _patient } }
+        };
+        RequestJson = JsonSerializer.Serialize(cdsRequest, JsonOptions);
+
+        try
+        {
+            _cdsResponse = await CdsService.GetCdsService(_serviceUrl, cdsRequest);
             ResponseJson = JsonSerializer.Serialize(_cdsResponse, JsonOptions);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error fetching patient data: {ex.Message}");
+            _error = $"The CDS service call failed: {ex.Message}";
+        }
+        finally
+        {
+            _calling = false;
+        }
+    }
+
+    private async T.Task OpenDialog()
+    {
+        var parameters = new DialogParameters<ConfigureServicesDialog>
+        {
+            { x => x.DiscoveryUrl, _discoveryUrl },
+            { x => x.ServiceUrl, _serviceUrl }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<ConfigureServicesDialog>("CDS Services", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: ConfigureServicesDialog.CdsServiceSelection selection })
+        {
+            _discoveryUrl = selection.DiscoveryUrl;
+            _serviceUrl = selection.ServiceUrl;
+            try
+            {
+                await LocalStorage.SetItemAsync(DiscoveryUrlKey, _discoveryUrl);
+                await LocalStorage.SetItemAsync(ServiceUrlKey, _serviceUrl);
+            }
+            catch (Exception)
+            {
+                // Not remembered this time; the choice still applies to this visit.
+            }
+
+            await CallService();
         }
     }
 }
 
 <MudToolBar Style="background-color:#3e4e76">
+    <MudText Typo="Typo.body2" Style="color:white">@(_serviceUrl ?? "No CDS service chosen")</MudText>
     <MudSpacer />
-    <MudMenu Label="Settings" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Settings" AriaLabel="">
-        <MudMenuItem OnClick="@(() => OpenDialog())">Add CDS Servicesg</MudMenuItem>
-        <MudMenuItem OnClick="@(() => OpenDialog())">Configure CDS Services</MudMenuItem>
-        <MudMenuItem OnClick="@(() => OpenDialog())">Change Patient</MudMenuItem>
-        <MudMenuItem OnClick="@(() => OpenDialog())">Change FHIR Server</MudMenuItem>
-        <MudMenuItem OnClick="@(() => OpenDialog())">Reset Configuration</MudMenuItem>
+    <MudButton Color="Color.Inherit" Style="color:white" StartIcon="@Icons.Material.Filled.Refresh" OnClick="CallService"
+               Disabled="@(_calling || _patient == null || string.IsNullOrEmpty(_serviceUrl))">
+        Call again
+    </MudButton>
+    <MudMenu Label="Settings" Color="Color.Inherit" Style="color:white" StartIcon="@Icons.Material.Filled.Settings" AriaLabel="CDS settings">
+        <MudMenuItem OnClick="OpenDialog">CDS Services</MudMenuItem>
     </MudMenu>
 </MudToolBar>
 
+@if (_calling)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+
+@if (string.IsNullOrEmpty(_serviceUrl))
+{
+    <MudAlert Severity="Severity.Info" Class="ma-4">
+        No CDS service is chosen yet. Open <b>Settings → CDS Services</b>, enter a CDS Hooks discovery endpoint,
+        and choose a patient-view service.
+    </MudAlert>
+}
+
+@if (_error != null)
+{
+    <MudAlert Severity="Severity.Error" Class="ma-4">@_error</MudAlert>
+}
 
 <SplitPanes StorageKey="cds-hooks">
     <Left>
@@ -90,6 +181,6 @@
 <style>
 
     .cds-full-height {
-        height: 100vh; /* Ensure the parent container takes the full viewport height */      
+        height: 100vh; /* Ensure the parent container takes the full viewport height */
     }
 </style>
