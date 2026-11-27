@@ -1,0 +1,49 @@
+﻿@*
+    Chooses the FHIR server and patient the CDS Hooks page opens. The patient is read from
+    {FHIR base URL}/Patient/{id} and sent to the CDS service as the patient-view context and prefetch.
+*@
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            The page reads the patient from <code>{FHIR base URL}/Patient/{id}</code>, shows it, and sends it to the
+            CDS service in the hook's <code>context</code>, <code>prefetch</code> and <code>fhirServer</code>.
+        </MudText>
+        <MudTextField T="string" @bind-Value="_fhirBaseUrl" Immediate="true" Label="FHIR base URL"
+                      Placeholder="https://launch.smarthealthit.org/v/r2/fhir" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" />
+        <MudTextField T="string" @bind-Value="_patientId" Immediate="true" Label="Patient ID"
+                      Placeholder="smart-1288992" Variant="Variant.Outlined" Margin="Margin.Dense" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save"
+                   Disabled="@(string.IsNullOrWhiteSpace(_fhirBaseUrl) || string.IsNullOrWhiteSpace(_patientId))">
+            Save
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    /// <summary>What the dialog returns on Save.</summary>
+    public sealed record PatientSource(string FhirBaseUrl, string PatientId);
+
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public string? FhirBaseUrl { get; set; }
+
+    [Parameter] public string? PatientId { get; set; }
+
+    private string? _fhirBaseUrl;
+    private string? _patientId;
+
+    protected override void OnInitialized()
+    {
+        _fhirBaseUrl = FhirBaseUrl;
+        _patientId = PatientId;
+    }
+
+    private void Save() =>
+        MudDialog.Close(DialogResult.Ok(new PatientSource(_fhirBaseUrl!.Trim().TrimEnd('/'), _patientId!.Trim())));
+
+    private void Cancel() => MudDialog.Cancel();
+}

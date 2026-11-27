@@ -95,14 +95,21 @@
     private string? _error;
     private bool _loading;
 
+    /// <summary>Offered when nothing has been chosen yet: FhirLabs runs a patient-view service.</summary>
+    public const string SuggestedDiscoveryUrl = "https://fhirlabs.net/fhir/r4/cds-services";
+
     protected override async Task OnInitializedAsync()
     {
-        _discoveryUrl = DiscoveryUrl;
         _selectedUrl = ServiceUrl;
 
-        if (!string.IsNullOrWhiteSpace(_discoveryUrl))
+        if (!string.IsNullOrWhiteSpace(DiscoveryUrl))
         {
+            _discoveryUrl = DiscoveryUrl;
             await LoadServices();
+        }
+        else
+        {
+            _discoveryUrl = SuggestedDiscoveryUrl;
         }
     }
 
