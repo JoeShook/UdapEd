@@ -8,6 +8,14 @@
 {
     <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Error" title="Not in the spec catalog">@Key</MudChip>
 }
+else if (!string.IsNullOrEmpty(Highlight))
+{
+    @* With highlight text the chip is a link straight to that text in the guide. *@
+    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info"
+             Icon="@Icons.Material.Outlined.MenuBook" Href="@_section.LinkTo(Highlight)" Target="_blank"
+             title="@($"Open {_section.Label} at: “{Highlight}”")"
+             data-spec-key="@_section.Key">@(Label ?? _section.Label)</MudChip>
+}
 else
 {
     <span class="udaped-specref">
@@ -48,6 +56,12 @@ else
 @code {
     /// <summary>A <see cref="SpecCatalog"/> key, e.g. "ssraa:2.3".</summary>
     [Parameter, EditorRequired] public string Key { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Text in the section to highlight. When set, the chip links straight to it in the guide instead of opening a
+    /// summary.
+    /// </summary>
+    [Parameter] public string? Highlight { get; set; }
 
     /// <summary>Overrides the chip text.</summary>
     [Parameter] public string? Label { get; set; }

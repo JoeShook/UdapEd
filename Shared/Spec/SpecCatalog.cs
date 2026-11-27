@@ -32,6 +32,23 @@ public sealed record SpecSection(string Key, SpecSource Source, string Number, s
     /// <summary>Chip label, e.g. "SSRAA §2.3".</summary>
     public string Label => $"{Source.ShortName} §{Number}";
 
+    /// <summary>
+    /// A link to this section that scrolls to and highlights <paramref name="highlight"/> (a text fragment, what a
+    /// browser's "Copy link to highlight" makes). Without highlight text it is the section link.
+    /// </summary>
+    public string LinkTo(string? highlight)
+    {
+        if (string.IsNullOrEmpty(highlight))
+        {
+            return Url;
+        }
+
+        // A UDAP.org section link already carries a text fragment for its heading; replace it.
+        var directive = Url.IndexOf(":~:", StringComparison.Ordinal);
+        var link = directive >= 0 ? Url[..directive].TrimEnd('#') : Url;
+        return $"{link}{(link.Contains('#') ? "" : "#")}:~:text={SpecCatalog.TextFragment(highlight)}";
+    }
+
     /// <summary>True when <see cref="Text"/> is the specification's own wording (with "…" marking skipped text).</summary>
     public bool IsQuote => Source.QuotesVerbatim && !Summary;
 }
@@ -144,34 +161,34 @@ public static class SpecCatalog
 
         // ---- UDAP.org (summaries; see QuotesVerbatim) ----
         new("udap-metadata:1", UdapMetadata, "1", "Supported metadata elements",
-            "https://www.udap.org/udap-server-metadata-stu1.html#section-1",
+            Udap("udap-server-metadata-stu1", "1 Supported metadata elements"),
             "Lists the metadata elements a server publishes at .well-known/udap: the UDAP versions and profiles it supports, its endpoints, and the algorithms and certifications it accepts."),
         new("udap-metadata:3", UdapMetadata, "3", "Client validation of signed endpoints",
-            "https://www.udap.org/udap-server-metadata-stu1.html#section-3",
+            Udap("udap-server-metadata-stu1", "3 Client validation of signed endpoints"),
             "Before trusting the endpoints, the client verifies the signed_metadata JWT: the signature with the leaf certificate's key, a trusted chain to an anchor with revocation checking, and that iss names the server and matches a SAN URI in the certificate."),
         new("udap-dcr:2", UdapDcr, "2", "Software statement",
-            "https://www.udap.org/udap-dynamic-client-registration-stu1.html#section-2",
+            Udap("udap-dynamic-client-registration-stu1", "2. The Client App prepares a software statement"),
             "The client builds a software statement: a JWT signed with the private key of its certificate, whose x5c header carries the certificate and whose claims carry the registration parameters."),
         new("udap-dcr:4", UdapDcr, "4", "Authorization Server validation",
-            "https://www.udap.org/udap-dynamic-client-registration-stu1.html#section-4",
+            Udap("udap-dynamic-client-registration-stu1", "4. Authorization Server validates request"),
             "The server checks the signature, builds a trusted chain from the client certificate to an anchor, checks iss against the certificate's SAN URIs, sub against iss, aud against its registration endpoint, the expiry, and the requested parameters."),
         new("udap-dcr:5", UdapDcr, "5", "Registration response",
-            "https://www.udap.org/udap-dynamic-client-registration-stu1.html#section-5.1",
+            Udap("udap-dynamic-client-registration-stu1", "5. Authorization Server responds to request"),
             "A granted request returns the client_id with the registration parameters (5.1). A denied one returns an RFC 7591 error, such as unapproved_software_statement for trust failures or invalid_software_statement for bad signatures (5.2)."),
         new("udap-dcr:6", UdapDcr, "6", "Modifying or cancelling registrations",
-            "https://www.udap.org/udap-dynamic-client-registration-stu1.html#section-6",
+            Udap("udap-dynamic-client-registration-stu1", "6 Modifying or Cancelling previous registrations"),
             "A client changes or cancels its registration by registering again with the same certificate identity; an empty grant_types array asks the server to cancel it."),
         new("udap-authn:5", UdapAuthn, "5", "Token request with an authentication token",
-            "https://www.udap.org/udap-jwt-client-auth-stu1.html#section-5.1",
+            Udap("udap-jwt-client-auth-stu1", "5. The client uses this AnT to authenticate itself"),
             "Instead of a client secret, the client signs a short-lived JWT (the authentication token) with its private key and sends it as client_assertion, with udap=1, to the token endpoint."),
         new("udap-to:2", UdapTieredOAuth, "2", "Client requests a preferred IdP",
-            "https://www.udap.org/udap-user-auth-stu1.html",
+            Udap("udap-user-auth-stu1", "2. The Client App directs the user’s browser"),
             "The client adds the udap scope and an idp parameter naming the preferred identity provider to its authorization request."),
         new("udap-to:3", UdapTieredOAuth, "3", "Data holder trusts and registers with the IdP",
-            "https://www.udap.org/udap-user-auth-stu1.html",
+            Udap("udap-user-auth-stu1", "3. Resource Holder interaction with IdP"),
             "The data holder reads the IdP's UDAP metadata, decides whether to trust it, registers with it dynamically if needed, and redirects the user to it; an untrusted IdP ends in the invalid_idp error."),
         new("udap-to:4", UdapTieredOAuth, "4", "IdP authenticates the user",
-            "https://www.udap.org/udap-user-auth-stu1.html",
+            Udap("udap-user-auth-stu1", "4. IdP interaction with the user"),
             "The IdP authenticates the user with OpenID Connect and returns a code; the data holder redeems it with its own UDAP authentication token, validates the ID token, and maps the user before asking for consent."),
     ];
 
@@ -180,6 +197,18 @@ public static class SpecCatalog
     public static IReadOnlyCollection<SpecSection> Sections => All;
 
     public static SpecSection? Find(string key) => ByKey.GetValueOrDefault(key.Trim());
+
+    /// <summary>
+    /// UDAP.org pages have no section anchors, so the link carries a text fragment (#:~:text=, what a browser's
+    /// "Copy link to highlight" makes) naming the section heading: the browser scrolls to it and highlights it.
+    /// A browser without text-fragment support just opens the page.
+    /// </summary>
+    internal static string Udap(string page, string headingText) =>
+        $"https://www.udap.org/{page}.html#:~:text={TextFragment(headingText)}";
+
+    /// <summary>Percent-encodes text for a text fragment; '-', ',' and '&amp;' are syntax there, so they are encoded too.</summary>
+    public static string TextFragment(string text) =>
+        Uri.EscapeDataString(text).Replace("-", "%2D");
 
     private static SpecSection Ssraa_(string number, string title, string page, string text, bool summary = false) =>
         new($"ssraa:{number}", Ssraa, number, title, SsraaBase + page, text, summary);

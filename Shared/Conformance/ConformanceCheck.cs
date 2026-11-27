@@ -31,6 +31,12 @@ public enum CheckOutcome
 /// <param name="Detail">What was found, when it helps, e.g. the actual value.</param>
 public sealed record ConformanceCheck(string SpecKey, string Requirement, CheckOutcome Outcome, string? Detail = null)
 {
+    /// <summary>
+    /// The guide's own words for this requirement (an <see cref="IgText"/> constant). The check's chip links to the
+    /// section with this text highlighted.
+    /// </summary>
+    public string? Highlight { get; init; }
+
     public static ConformanceCheck Of(string specKey, string requirement, bool met, string? detailWhenNotMet = null, CheckOutcome whenNotMet = CheckOutcome.Fail) =>
         new(specKey, requirement, met ? CheckOutcome.Pass : whenNotMet, met ? null : detailWhenNotMet);
 }

@@ -176,6 +176,34 @@ public class ConformanceTests
         checks.ShouldContain(c => c.Outcome == CheckOutcome.Info && c.Requirement.Contains("didn't trust"));
     }
 
+    // ---------- Links into the guide ----------
+
+    [Fact]
+    public void EveryCheckLinksToItsTextInTheGuide()
+    {
+        var checks = DiscoveryConformance.Evaluate(Metadata(), BaseUrl)
+            .Concat(RegistrationConformance.EvaluateSoftwareStatement(Statement(), RegistrationEndpoint))
+            .Concat(RegistrationConformance.EvaluateRegistrationResponse(201, new JsonObject { ["client_id"] = "abc" }))
+            .Concat(RegistrationConformance.EvaluateRegistrationError(400, """{"error":"invalid_software_statement"}"""));
+
+        checks.ShouldAllBe(c => !string.IsNullOrEmpty(c.Highlight));
+    }
+
+    [Fact]
+    public void HighlightLinksUseATextFragment()
+    {
+        SpecCatalog.Find("ssraa:2.2")!.LinkTo("A fixed array with one string element")
+            .ShouldBe("https://hl7.org/fhir/us/udap-security/STU2/discovery.html#required-udap-metadata:~:text=A%20fixed%20array%20with%20one%20string%20element");
+
+        // UDAP.org links already point at their heading with a text fragment; a highlight replaces it.
+        SpecCatalog.Find("udap-dcr:5")!.Url.ShouldContain("#:~:text=5.%20Authorization%20Server%20responds%20to%20request");
+        SpecCatalog.Find("udap-dcr:5")!.LinkTo("the software statement as submitted by the Client App")
+            .ShouldBe("https://www.udap.org/udap-dynamic-client-registration-stu1.html#:~:text=the%20software%20statement%20as%20submitted%20by%20the%20Client%20App");
+
+        // '-' is text-fragment syntax, so it is encoded.
+        SpecCatalog.TextFragment("JWT-Based").ShouldBe("JWT%2DBased");
+    }
+
     // ---------- Catalog ----------
 
     [Fact]
